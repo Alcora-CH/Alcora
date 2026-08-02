@@ -1,0 +1,21 @@
+# Fins de ligne, decidees ici et non par la configuration de chaque poste.
+#
+# Sans ce fichier, le resultat depend de « core.autocrlf » de celui qui clone : le depot
+# finit par contenir un melange, et le jour ou quelqu'un travaille sur un autre systeme,
+# un diff annonce que la totalite du projet a change alors que rien n'a bouge.
+* text=auto eol=lf
+
+# Scripts destines au shell de Windows : lui, il veut du CRLF.
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binaires : aucune conversion, sous aucun pretexte.
+*.ico binary
+*.png binary
+*.jpg binary
+*.mp4 binary
+
+# Les verrous de dependances sont engendres : les afficher en entier dans une revue
+# n'apprend rien a personne.
+package-lock.json linguist-generated=true diff=none

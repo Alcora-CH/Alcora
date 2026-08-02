@@ -1,0 +1,255 @@
+<title>Alcora — la recherche fine</title>
+<style>
+  :root {
+    --bg:#1b1e23; --card:#23272e; --card2:#2a2f37; --line:#353b44; --line2:#434a55;
+    --ink:#dad5cb; --muted:#9a958b; --soft:#75716a;
+    --accent:#d2a263; --accent-d:#e6b877; --accent-soft:rgba(210,162,99,.16);
+    --ok:#8fae5a; --warn:#d0a215; --bad:#d8685a;
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         font-size:14.5px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .page { max-width:1180px; margin:0 auto; padding:40px 22px 90px; }
+  .eyebrow { font-size:11px; font-weight:650; letter-spacing:.09em; text-transform:uppercase;
+             color:var(--soft); margin:0 0 8px; }
+  h1 { margin:0 0 8px; font-size:27px; font-weight:640; letter-spacing:-.015em; }
+  .sous { color:var(--muted); margin:0; max-width:72ch; }
+  h2 { font-size:15px; font-weight:640; margin:46px 0 6px; padding-top:22px;
+       border-top:1px solid var(--line); color:var(--muted); }
+  h2 + p.sous { margin-bottom:16px; }
+  .scroll { overflow-x:auto; }
+  code { font-family:var(--mono); font-size:12.5px; background:var(--card2);
+         border:1px solid var(--line); border-radius:4px; padding:1px 6px; }
+  table { border-collapse:collapse; width:100%; margin-top:14px; }
+  th,td { text-align:left; padding:8px 11px; border-bottom:1px solid var(--line);
+          font-size:13px; vertical-align:top; }
+  th { font-size:10.5px; font-weight:650; letter-spacing:.07em; text-transform:uppercase; color:var(--soft); }
+  td.n { font-family:var(--mono); text-align:right; white-space:nowrap; }
+
+  /* ---- l'ecran ---- */
+  .ecran { background:var(--card); border:1px solid var(--line); border-radius:12px;
+           overflow:hidden; margin-top:18px; min-width:860px; }
+  .corps { display:grid; grid-template-columns:250px 1fr; }
+  .filtres { border-right:1px solid var(--line); padding:14px; }
+  .filtres h4 { margin:16px 0 8px; font-size:10.5px; font-weight:650; letter-spacing:.07em;
+                text-transform:uppercase; color:var(--soft); }
+  .filtres h4:first-child { margin-top:0; }
+  .champ { width:100%; background:var(--card2); border:1px solid var(--line);
+           border-radius:7px; padding:6px 10px; color:var(--ink); font-size:12.5px; }
+  .puces { display:flex; flex-wrap:wrap; gap:5px; }
+  .puce { font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid var(--line);
+          color:var(--soft); display:inline-flex; align-items:center; gap:5px; }
+  .puce.on { background:var(--accent-soft); color:var(--accent); border-color:transparent; }
+  .puce b { font-family:var(--mono); font-size:10px; font-weight:500; opacity:.75; }
+  .pastilles { display:flex; flex-wrap:wrap; gap:6px; }
+  .pastille { width:24px; height:24px; border-radius:6px; border:1px solid var(--line2);
+              position:relative; }
+  .pastille span { position:absolute; bottom:-13px; left:50%; transform:translateX(-50%);
+                   font-family:var(--mono); font-size:9px; color:var(--soft); }
+  .curseur { height:4px; border-radius:99px; background:var(--card2); position:relative;
+             margin:14px 0 8px; }
+  .curseur i { position:absolute; left:0; top:0; bottom:0; width:34%; border-radius:99px;
+               background:var(--accent); }
+  .curseur b { position:absolute; left:34%; top:-5px; width:14px; height:14px; margin-left:-7px;
+               border-radius:50%; background:var(--accent-d); border:2px solid var(--bg); }
+
+  /* ---- la grille ---- */
+  .grille { padding:14px; display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
+  .vig { border-radius:8px; overflow:hidden; background:var(--card2); position:relative;
+         border:1px solid transparent; }
+  .vig .im { aspect-ratio:16/9; background:linear-gradient(145deg,#1a1e25,#2b313a); }
+  .vig .haut { position:absolute; left:5px; top:5px; right:5px; display:flex; gap:5px;
+               font-family:var(--mono); font-size:9px; }
+  .vig .haut span { background:rgba(10,12,15,.72); color:#c9c3b8; padding:1px 5px; border-radius:4px; }
+  .vig .bas { position:absolute; left:5px; bottom:5px; right:5px; display:flex;
+              align-items:center; gap:5px; }
+  .vig .bas .quoi { background:rgba(10,12,15,.72); padding:1px 6px; border-radius:4px; font-size:10px; }
+  .vig .bas .conf { margin-left:auto; background:rgba(10,12,15,.72); padding:1px 5px;
+                    border-radius:4px; font-family:var(--mono); font-size:9.5px; }
+  .barre { display:flex; align-items:center; gap:10px; padding:11px 14px;
+           border-bottom:1px solid var(--line); }
+
+  .notes { display:grid; gap:9px; margin-top:16px; }
+  .note { display:grid; grid-template-columns:26px 1fr; gap:11px; align-items:start;
+          font-size:13px; color:var(--muted); }
+  .note b { color:var(--ink); font-weight:600; }
+  .num { width:22px; height:22px; border-radius:50%; display:grid; place-items:center;
+         font-family:var(--mono); font-size:11px; background:var(--accent-soft); color:var(--accent); }
+  .fait { border-left:2px solid var(--accent); padding:2px 0 2px 18px; margin:22px 0 0;
+          color:var(--muted); font-size:13.5px; }
+  .fait b { color:var(--ink); }
+  .alerte { border-left:2px solid var(--warn); padding:2px 0 2px 18px; margin:18px 0 0;
+            color:var(--muted); font-size:13.5px; }
+  .alerte b { color:var(--warn); }
+  footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--line);
+           color:var(--soft); font-size:12px; }
+</style>
+<div class="page">
+
+  <p class="eyebrow">Alcora — la recherche fine</p>
+  <h1>Retrouver une détection</h1>
+  <p class="sous">Dessinée sur la mesure V-Attributs du 29.07.2026, et non sur les captures
+  de Protect. La différence compte : leurs filtres proposent une liste théorique, les nôtres
+  ne proposeront que ce qui est <b>réellement passé devant ces caméras</b>.</p>
+
+  <h2>Les deux faits qui commandent tout</h2>
+
+  <div class="scroll"><table>
+    <thead><tr><th>Mesuré</th><th>Conséquence</th></tr></thead>
+    <tbody>
+      <tr><td><code>smartDetectTypes=person</code> fait passer 624 à 310 — <b>honoré</b></td>
+          <td>Le filtre par sujet part au <b>contrôleur</b>. C'est lui qui rend la recherche
+          tenable : sans lui, il faudrait tirer ~266 détections par jour pour en garder trois.</td></tr>
+      <tr><td><code>minScore=80</code> rend 624, identique — <b>ignoré</b></td>
+          <td>Le seuil se calcule <b>ici</b>, sur ce qui est descendu. Il affine, il ne
+          cherche pas.</td></tr>
+      <tr><td>Les sons ont un score de <b>zéro</b> : 615 « parole », 2 aboiements, 1 klaxon</td>
+          <td>Le seuil <b>ne s'applique jamais aux sons</b>. Sinon le premier cran les ferait
+          tous disparaître, en silence.</td></tr>
+      <tr><td>Les attributs vivent dans <code>metadata.detectedThumbnails[]</code></td>
+          <td>Une détection peut porter <b>plusieurs objets</b> — 1405 objets pour 1242
+          détections. La grille montre des OBJETS, pas des événements.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>L'écran</h2>
+
+  <div class="scroll">
+  <div class="ecran">
+    <div class="barre">
+      <span style="font-size:13.5px">Recherche</span>
+      <span style="font-family:var(--mono);font-size:11.5px;color:var(--soft)">
+        321 véhicules · 7 derniers jours</span>
+      <span style="margin-left:auto;font-size:11.5px;color:var(--soft)">
+        filtré par le contrôleur, affiné ici</span>
+    </div>
+
+    <div class="corps">
+      <div class="filtres">
+        <h4>Chercher</h4>
+        <input class="champ" placeholder="plaque, ou nom…" />
+        <p style="margin:5px 0 0;font-size:11px;color:var(--soft)">
+          Recherche tolérante : le contrôleur rend plusieurs lectures possibles d'une même
+          plaque. Taper <span style="font-family:var(--mono)">O</span> trouvera aussi
+          <span style="font-family:var(--mono)">0</span>.</p>
+
+        <h4>Sujet</h4>
+        <div class="puces">
+          <span class="puce on">Véhicule <b>321</b></span>
+          <span class="puce">Personne <b>391</b></span>
+          <span class="puce">Animal <b>63</b></span>
+          <span class="puce">Visage <b>12</b></span>
+          <span class="puce">Plaque <b>159</b></span>
+          <span class="puce">Parole <b>615</b></span>
+          <span class="puce">Aboiement <b>2</b></span>
+        </div>
+
+        <h4>Confiance minimale</h4>
+        <div class="curseur"><i></i><b></b></div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);
+                    font-size:10px;color:var(--soft)"><span>0</span><span>30</span><span>100</span></div>
+        <p style="margin:6px 0 0;font-size:11px;color:var(--soft)">
+          Ne s'applique qu'aux sujets visuels. Les détections sonores n'ont pas de score —
+          les filtrer par confiance les supprimerait toutes.</p>
+
+        <h4>Type de véhicule</h4>
+        <div class="puces">
+          <span class="puce on">SUV <b>221</b></span>
+          <span class="puce">Voiture <b>37</b></span>
+          <span class="puce">Fourgon <b>15</b></span>
+          <span class="puce">Moto <b>12</b></span>
+          <span class="puce">Vélo <b>6</b></span>
+          <span class="puce">Camion <b>1</b></span>
+        </div>
+
+        <h4 style="margin-bottom:14px">Couleur</h4>
+        <div class="pastilles">
+          <span class="pastille" style="background:#8a8a8a"><span>104</span></span>
+          <span class="pastille" style="background:#e8e6e1"><span>80</span></span>
+          <span class="pastille" style="background:#1d1f22"><span>43</span></span>
+          <span class="pastille" style="background:#3f6fa8"><span>18</span></span>
+          <span class="pastille" style="background:#d8c14a"><span>7</span></span>
+        </div>
+
+        <h4 style="margin-top:26px">Caméra</h4>
+        <div class="puces">
+          <span class="puce on">Toutes</span>
+          <span class="puce">G6 Bullet</span>
+          <span class="puce">G5 Turret</span>
+        </div>
+
+        <h4>Période</h4>
+        <div class="puces">
+          <span class="puce">Aujourd’hui</span>
+          <span class="puce on">7 jours</span>
+          <span class="puce">30 jours</span>
+          <span class="puce">Choisir…</span>
+        </div>
+      </div>
+
+      <div class="grille" id="grille"></div>
+    </div>
+  </div>
+  </div>
+
+  <div class="notes">
+    <div class="note"><span class="num">1</span><div><b>Chaque filtre porte son compte réel.</b>
+      « Camion 1 », « Vélo 6 » : ce sont tes sept derniers jours, pas une liste de possibilités.
+      Protect propose berline, camion, fourgonnette, moto, SUV, vélo — sans jamais dire lesquels
+      sont passés. Cocher un filtre vide est une impasse qu'on peut éviter.</div></div>
+    <div class="note"><span class="num">2</span><div><b>Les couleurs se montrent, elles ne
+      s'écrivent pas.</b> Cinq pastilles avec leur compte valent mieux qu'une liste de mots —
+      et c'est aussi ce que fait Protect, à raison.</div></div>
+    <div class="note"><span class="num">3</span><div><b>La confiance affichée est celle de
+      l'ATTRIBUT, pas celle de la détection.</b> Le contrôleur donne les deux, et elles diffèrent
+      souvent : un véhicule reconnu à 82 peut avoir sa couleur devinée à 69. C'est la seconde qui
+      compte quand on cherche « une voiture blanche ».</div></div>
+    <div class="note"><span class="num">4</span><div><b>La recherche de plaque est tolérante.</b>
+      Le contrôleur ne rend pas une plaque mais une liste de lectures possibles, chacune avec sa
+      confiance — les confusions O/0, I/1, S/5 y sont explicites. Chercher le texte exact ne
+      trouverait rien la moitié du temps.</div></div>
+    <div class="note"><span class="num">5</span><div><b>La grille montre des objets, pas des
+      événements.</b> 1405 objets pour 1242 détections : une même détection peut contenir deux
+      voitures et un piéton. Les fondre en une seule vignette perdrait l'un des trois.</div></div>
+  </div>
+
+  <p class="alerte"><b>Un point à trancher, et il t'appartient.</b> Le contrôleur reconnaît des
+  visages et des plaques, et il leur associe des NOMS — <code>matchedName</code>. Il conserve
+  même une empreinte biométrique de 512 nombres par visage. Alcora peut afficher ces noms, ou
+  s'en tenir à « une personne ». Ce n'est pas une question technique : c'est ce que tu veux
+  qu'un écran affiche chez ton père, et ce qui se retrouverait dans une capture d'écran envoyée
+  à quelqu'un.</p>
+
+  <p class="fait"><b>Ce qui reste pour plus tard, mais qui existe déjà dans les données :</b>
+  <code>routePath.waypoints</code> porte le TRAJET de chaque objet dans l'image — c'est le
+  « Chemin » que Protect propose en superposition. On peut le dessiner sur la vignette, et voir
+  d'un coup d'œil si la voiture entrait ou sortait.</p>
+
+  <footer>Maquette du 29.07.2026. Mesure : <code>docs/contraintes-verifiees.md</code>, section
+  V-Attributs. Tous les nombres viennent du relevé réel de sept jours. Aucune ligne de
+  l'application n'est encore écrite.</footer>
+</div>
+
+<script>
+  /* Grille d'exemple : les proportions suivent le releve reel — SUV majoritaires, gris et
+     blanc dominants — pour que le dessin se juge sur ce qui arrive vraiment. */
+  const OBJETS = [
+    ['08:14', 'G6 Bullet', 'SUV · gris', 82], ['08:41', 'G6 Bullet', 'SUV · blanc', 91],
+    ['09:02', 'G5 Turret', 'Voiture · noir', 74], ['10:26', 'G6 Bullet', 'SUV · gris', 88],
+    ['11:47', 'G6 Bullet', 'Fourgon · blanc', 69], ['12:03', 'G5 Turret', 'SUV · bleu', 79],
+    ['13:29', 'G6 Bullet', 'SUV · gris', 86], ['14:55', 'G6 Bullet', 'Moto · noir', 63],
+    ['16:12', 'G5 Turret', 'SUV · blanc', 90], ['17:38', 'G6 Bullet', 'Voiture · gris', 71],
+    ['18:04', 'G6 Bullet', 'SUV · jaune', 84], ['19:21', 'G5 Turret', 'Vélo · noir', 58],
+  ];
+  document.getElementById('grille').innerHTML = OBJETS.map(([h, cam, quoi, conf], i) => `
+    <div class="vig"${i === 3 ? ' style="border-color:var(--accent)"' : ''}>
+      <div class="im"></div>
+      <div class="haut"><span>${h}</span><span>${cam}</span></div>
+      <div class="bas">
+        <span class="quoi">${quoi}</span>
+        <span class="conf" style="color:${conf >= 80 ? 'var(--ok)' : conf >= 65 ? 'var(--ink)' : 'var(--warn)'}">${conf}%</span>
+      </div>
+    </div>`).join('');
+</script>

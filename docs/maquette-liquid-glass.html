@@ -1,0 +1,435 @@
+<title>ProtectViewer — Liquid Glass</title>
+
+<style>
+  :root {
+    /* Base « Nuit lecture », inchangee : le verre se pose dessus, il ne la remplace pas. */
+    --bg:#1b1e23; --card:#23272e;
+    --line:#353b44; --line2:#434a55;
+    --ink:#dad5cb; --muted:#9a958b; --soft:#75716a;
+    --accent:#d2a263; --accent-d:#e6b877; --accent-soft:#322a1d;
+    --ok:#8fae5a;
+
+    --sans: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, Roboto, sans-serif;
+    --mono: "Cascadia Mono", ui-monospace, Consolas, "SF Mono", monospace;
+
+    /* Reglages du verre, pilotes par les curseurs. */
+    --lg-blur: 16px;
+    --lg-sat: 130%;
+    --lg-tint: 0.07;
+    --lg-edge: 0.38;
+  }
+
+  /*
+   * Theme unique, assume. Cette maquette vit dans un contexte nocturne infrarouge : lui
+   * donner un mode clair trahirait son sujet. Comme une enseigne au neon, elle s'engage
+   * dans un seul monde visuel.
+   */
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: #0d0f12;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .page { max-width: 1220px; margin: 0 auto; padding: 30px 20px 64px; }
+
+  header { margin-bottom: 20px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 650; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--soft); margin: 0 0 8px;
+  }
+  h1 { margin: 0 0 8px; font-size: 26px; font-weight: 640; letter-spacing: -0.02em; }
+  .sous { margin: 0; color: var(--muted); max-width: 66ch; line-height: 1.55; }
+
+  /* ---------------------------------------------------------- scene + habillage */
+
+  .scene {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--line2);
+    box-shadow: 0 30px 80px rgba(0,0,0,.55);
+    isolation: isolate;              /* le backdrop ne remonte pas au-dela de la scene */
+    user-select: none;
+  }
+  #nuit { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /*
+   * La MATIERE — verre depoli propre.
+   *
+   * Flou genereux (le fond devient creme, aucun detail dur a deformer), teinte legere,
+   * saturation mesuree, arete lumineuse nette. AUCUNE deformation ici : c'est ce qui
+   * gardait le texte lisible et evite les eclats. La deformation liquide est reservee a la
+   * puce ronde, plus bas.
+   */
+  .glass {
+    position: relative;
+    background: linear-gradient(
+      140deg,
+      rgba(255,255,255, calc(var(--lg-tint) + .05)),
+      rgba(255,255,255, calc(var(--lg-tint) - .02)) 60%,
+      rgba(210,162,99, .05)
+    );
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(1.06);
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(1.06);
+    border: 1px solid rgba(255,255,255,.11);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255,255,255, var(--lg-edge)),   /* arete lumineuse haute, discrete */
+      inset 0 -1px 0 0 rgba(0,0,0,.12),
+      inset 0 0 34px rgba(255,255,255,.035),
+      0 10px 34px rgba(0,0,0,.40);
+    overflow: hidden;
+  }
+  /* Un seul reflet, une lueur d'angle diffuse. Le trait speculaire net a ete retire :
+     c'est lui qui « criait » sur l'arete. */
+  .glass::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(130% 100% at 10% -10%, rgba(255,255,255,.13), transparent 52%);
+    pointer-events: none;
+  }
+  .veil-off .glass {
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    background: rgba(28,32,38,.92);
+  }
+  .veil-off .glass::before, .veil-off .glass::after { opacity: .25; }
+
+  /* barre laterale */
+  .rail {
+    position: absolute; left: 14px; top: 14px; bottom: 14px;
+    width: 244px; border-radius: 16px; z-index: 4;
+    padding: 15px 14px;
+    transition: transform .55s cubic-bezier(.34,1.56,.64,1), width .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .rail h2 { margin: 0 0 3px; font-size: 15px; font-weight: 640; }
+  .rail .lieu { margin: 0 0 15px; font-size: 11.5px; color: rgba(255,255,255,.5); }
+  .rail .titre {
+    font-size: 10px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: rgba(255,255,255,.42); margin: 0 0 7px;
+  }
+  .cam {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 8px; border-radius: 9px;
+    transition: background .2s;
+  }
+  .cam:hover { background: rgba(255,255,255,.06); }
+  .cam.actif { background: rgba(210,162,99,.16); box-shadow: inset 0 0 0 1px rgba(210,162,99,.35); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px rgba(143,174,90,.8); flex: 0 0 auto; }
+  .cam b { display: block; font-size: 13px; font-weight: 500; }
+  .cam i { font-style: normal; font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.45); }
+  .sep { height: 1px; background: rgba(255,255,255,.10); margin: 13px 2px; }
+  .etat { display: flex; align-items: center; gap: 9px; padding: 2px 4px; font-size: 12.5px; color: rgba(255,255,255,.72); }
+
+  /* incrustations de tuile */
+  .pill {
+    position: absolute; z-index: 5;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 11px; border-radius: 11px;
+    font-size: 12px; font-weight: 520; color: #f4f4f2;
+  }
+  .pill .q {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .04em;
+    padding: 1px 5px; border-radius: 5px;
+    background: rgba(210,162,99,.3); color: var(--accent-d);
+  }
+  .pill.ts { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+
+  #chip-g6 { left: 300px; top: 16px; }
+  #chip-ts { right: 16px; top: 16px; }
+
+  /* barre de commandes flottante */
+  .dock {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+    z-index: 6; display: flex; align-items: center; gap: 4px;
+    padding: 7px; border-radius: 16px;
+  }
+  .key {
+    width: 38px; height: 38px; border-radius: 11px;
+    display: grid; place-items: center; cursor: pointer;
+    color: rgba(255,255,255,.82); font-size: 16px;
+    background: transparent; border: 0;
+    transition: transform .5s cubic-bezier(.34,1.56,.64,1), background .2s, color .2s;
+  }
+  .key:hover { background: rgba(255,255,255,.10); color: #fff; }
+  .key:active { transform: scale(.86); }
+  .key.on { background: rgba(210,162,99,.22); color: var(--accent-d); box-shadow: inset 0 0 0 1px rgba(210,162,99,.4); }
+  .dock .div { width: 1px; height: 22px; background: rgba(255,255,255,.14); margin: 0 5px; }
+
+  /* puce baladeuse : sentir la refraction sur toute la scene */
+  .lens {
+    position: absolute; z-index: 7;
+    left: 300px; top: 150px;
+    width: 132px; height: 132px; border-radius: 50%;
+    cursor: grab;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 600; color: rgba(255,255,255,.82); text-align: center;
+    --lg-edge: .9; --lg-blur: 2px;
+    /* La loupe : deformation liquide douce + une legere magnification du fond. */
+    backdrop-filter: blur(var(--lg-blur)) saturate(150%) brightness(1.08) url(#lg-refract);
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(150%) brightness(1.08);
+    box-shadow:
+      inset 0 2px 1px rgba(255,255,255,.9),
+      inset 0 -6px 12px rgba(0,0,0,.25),
+      inset 0 0 30px rgba(255,255,255,.10),
+      0 12px 30px rgba(0,0,0,.45);
+  }
+  .lens::after { display: none; }               /* pas de trait speculaire sur un disque */
+  .lens:active { cursor: grabbing; }
+  .lens span { pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
+  .veil-off .lens { backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+  /* ---------------------------------------------------------------- pupitre */
+
+  .pupitre {
+    margin-top: 16px; display: flex; flex-wrap: wrap; gap: 14px 26px;
+    align-items: center; padding: 15px 18px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .grp { display: flex; align-items: center; gap: 10px; }
+  .grp > label { font-size: 11px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; color: var(--soft); white-space: nowrap; }
+  input[type=range] { width: 128px; accent-color: var(--accent); }
+  .val { font-family: var(--mono); font-size: 12px; color: var(--ink); min-width: 34px; }
+
+  .bascule {
+    display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+    font-size: 13px; color: var(--ink);
+  }
+  .switch { width: 40px; height: 23px; border-radius: 999px; background: var(--line2); position: relative; transition: background .25s; flex: 0 0 auto; }
+  .switch::after { content:""; position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background:#e9e6df; transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .bascule.on .switch { background: var(--accent); }
+  .bascule.on .switch::after { transform: translateX(17px); }
+
+  .note { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; line-height: 1.6; max-width: 74ch; }
+  .note strong { color: var(--ink); font-weight: 600; }
+  .note code { font-family: var(--mono); font-size: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; color: var(--accent-d); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (max-width: 680px) { .rail { display: none; } #chip-g6 { left: 16px; } }
+</style>
+
+<!-- Le filtre de refraction. feTurbulence engendre un champ de bruit ; feDisplacementMap
+     s'en sert pour deplacer l'arriere-plan echantillonne par le backdrop — donc une vraie
+     courbure de l'image, pas un reflet peint. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="lg-refract" x="-30%" y="-30%" width="160%" height="160%">
+    <!-- Bruit TRES basse frequence, fortement adouci : des ondulations lentes, pas des
+         eclats. C'est la difference entre du verre liquide et du parasite. -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.004 0.005" numOctaves="2" seed="6" result="n"/>
+    <feGaussianBlur in="n" stdDeviation="3.5" result="ns"/>
+    <feDisplacementMap in="SourceGraphic" in2="ns" scale="14"
+                       xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">ProtectViewer — exploration visuelle</p>
+    <h1>Liquid Glass, poussé au maximum</h1>
+    <p class="sous">
+      Réfraction réelle, arêtes lumineuses, animations élastiques — le verre sur tout
+      l'habillage, jamais sur la vidéo. Déplace la puce ronde sur la scène pour sentir la
+      courbure ; règle l'intensité en dessous ; coupe le verre pour comparer.
+    </p>
+  </header>
+
+  <div class="scene" id="scene">
+    <canvas id="nuit"></canvas>
+
+    <!-- barre laterale -->
+    <aside class="rail glass">
+      <h2>Surveillance</h2>
+      <p class="lieu">Réseau local · 2 caméras</p>
+      <p class="titre">Caméras</p>
+      <div class="cam actif"><span class="dot"></span><div><b>G6 Bullet</b><i>3840 × 2160</i></div></div>
+      <div class="cam"><span class="dot"></span><div><b>G5 Turret Ultra</b><i>2688 × 1512</i></div></div>
+      <div class="sep"></div>
+      <p class="titre">État</p>
+      <div class="etat"><span class="dot"></span> Flux vidéo prêt.</div>
+    </aside>
+
+    <!-- incrustations -->
+    <div class="pill glass" id="chip-g6">G6 Bullet <span class="q">HAUTE · 2160p</span></div>
+    <div class="pill ts glass" id="chip-ts">23.07.2026 &nbsp;00:47:12</div>
+
+    <!-- puce de refraction baladeuse -->
+    <div class="lens glass" id="lens"><span>glisse-moi<br>sur la scène</span></div>
+
+    <!-- barre de commandes -->
+    <div class="dock glass">
+      <button class="key on" title="Mosaïque">▦</button>
+      <button class="key" title="Plein écran">⛶</button>
+      <span class="div"></span>
+      <button class="key" title="Zoom moins">−</button>
+      <button class="key" title="Zoom plus">+</button>
+      <span class="div"></span>
+      <button class="key" title="Son">♪</button>
+      <button class="key" title="Détacher">⊞</button>
+    </div>
+  </div>
+
+  <!-- pupitre -->
+  <div class="pupitre" id="pupitre">
+    <div class="bascule on" id="bVerre"><span class="switch"></span> Verre</div>
+    <div class="grp"><label>Réfraction (puce)</label><input type="range" id="rRefr" min="0" max="34" value="14"><span class="val" id="vRefr">14</span></div>
+    <div class="grp"><label>Flou</label><input type="range" id="rBlur" min="4" max="30" step="0.5" value="16"><span class="val" id="vBlur">16</span></div>
+    <div class="grp"><label>Teinte</label><input type="range" id="rTint" min="0" max="24" value="10"><span class="val" id="vTint">.10</span></div>
+    <div class="grp"><label>Arête</label><input type="range" id="rEdge" min="0" max="100" value="55"><span class="val" id="vEdge">.55</span></div>
+  </div>
+
+  <p class="note">
+    <strong>Ce que tu regardes est honnête.</strong> La réfraction est un filtre
+    <code>feDisplacementMap</code> appliqué en <code>backdrop-filter</code> : l'image nocturne
+    est réellement échantillonnée et courbée à travers le verre. C'est portable tel quel dans
+    Electron, même moteur. En revanche, cette matière coûte du GPU à chaque image — c'est
+    pourquoi elle reste sur l'habillage et jamais sur les flux, qui, eux, ont déjà le
+    décodage 4K à assurer.
+  </p>
+</div>
+
+<script>
+  'use strict';
+
+  /* ---- scene nocturne infrarouge, stylisee, engendree (aucune image reelle) ---- */
+  const cv = document.getElementById('nuit');
+  const ctx = cv.getContext('2d');
+
+  function peindreNuit() {
+    const r = cv.getBoundingClientRect();
+    // Ne rien peindre tant que la scene n'a pas de taille reelle : sinon un premier rendu
+    // en 0 pixel resterait fige si l'observateur ne se redeclenche pas. On repasse par une
+    // image d'animation jusqu'a ce que la mise en page soit resolue.
+    if (r.width < 2 || r.height < 2) { requestAnimationFrame(peindreNuit); return; }
+    const w = cv.width = Math.round(r.width * devicePixelRatio);
+    const h = cv.height = Math.round(r.height * devicePixelRatio);
+
+    // ciel sombre -> sol plus clair
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#0a0c0e');
+    g.addColorStop(0.55, '#1b1f22');
+    g.addColorStop(1, '#2c3033');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+
+    // feuillages eclaires par l'infrarouge : une lueur douce, puis un fouillis dense de
+    // touches claires. C'est le contraste vif que le verre aura a refracter.
+    const blob = (cx, cy, rad, lum) => {
+      const glow = ctx.createRadialGradient(cx, cy, rad * 0.1, cx, cy, rad);
+      glow.addColorStop(0, `rgba(${lum},${lum},${lum},0.55)`);
+      glow.addColorStop(0.5, `rgba(${lum},${lum},${lum},0.22)`);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.ellipse(cx, cy, rad, rad * 0.86, 0, 0, 7); ctx.fill();
+
+      // Dispersion aleatoire, biaisee vers le centre : un fouillis de feuilles, pas un
+      // motif. Une distribution deterministe (nombre d'or) dessinait des spirales.
+      for (let i = 0; i < rad * 16; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const rr = rad * Math.pow(Math.random(), 0.65);
+        const x = cx + Math.cos(a) * rr + (Math.random() - 0.5) * 6;
+        const y = cy + Math.sin(a) * rr * 0.82 + (Math.random() - 0.5) * 6;
+        const s = (1 - rr / rad) * 3.4 * devicePixelRatio * Math.random() + 0.5;
+        const l = Math.min(255, lum * (0.5 + 0.6 * (1 - rr / rad)) * (0.7 + 0.5 * Math.random())) | 0;
+        ctx.fillStyle = `rgba(${l},${l},${l},${0.5 + Math.random() * 0.4})`;
+        ctx.beginPath(); ctx.arc(x, y, Math.max(0.5, s), 0, 7); ctx.fill();
+      }
+    };
+    blob(w * 0.30, h * 0.42, w * 0.12, 235);
+    blob(w * 0.52, h * 0.30, w * 0.10, 245);
+    blob(w * 0.80, h * 0.50, w * 0.15, 225);
+    blob(w * 0.68, h * 0.66, w * 0.08, 210);
+
+    // sol texture
+    ctx.fillStyle = 'rgba(120,124,120,0.06)';
+    for (let i = 0; i < w * h / 1400; i++) {
+      const x = (i * 97) % w, y = h * 0.6 + ((i * 131) % (h * 0.4));
+      ctx.fillRect(x, y, devicePixelRatio, devicePixelRatio);
+    }
+
+    // silhouette sombre d'une voiture, en bas a droite
+    ctx.fillStyle = 'rgba(8,9,10,0.92)';
+    ctx.beginPath();
+    const bx = w * 0.62, by = h * 0.82, bw = w * 0.30, bh = h * 0.14;
+    ctx.moveTo(bx, by + bh);
+    ctx.lineTo(bx, by + bh * 0.4);
+    ctx.quadraticCurveTo(bx + bw * 0.22, by - bh * 0.5, bx + bw * 0.5, by - bh * 0.5);
+    ctx.quadraticCurveTo(bx + bw * 0.8, by - bh * 0.5, bx + bw, by + bh * 0.35);
+    ctx.lineTo(bx + bw, by + bh);
+    ctx.closePath(); ctx.fill();
+
+    // rambarde : lignes obliques claires
+    ctx.strokeStyle = 'rgba(190,193,188,0.28)';
+    ctx.lineWidth = devicePixelRatio;
+    for (let i = 0; i < 9; i++) {
+      const x = w * 0.05 + i * w * 0.045;
+      ctx.beginPath(); ctx.moveTo(x, h * 0.80); ctx.lineTo(x + w * 0.03, h * 0.68); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(w * 0.05, h * 0.70); ctx.lineTo(w * 0.5, h * 0.63); ctx.stroke();
+
+    // grain infrarouge
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const n = (Math.sin(i * 12.9898) * 43758.5453 % 1) * 26 - 13;
+      d[i] += n; d[i + 1] += n; d[i + 2] += n;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  peindreNuit();
+  new ResizeObserver(peindreNuit).observe(cv);
+
+  /* ---- pupitre ---- */
+  const root = document.documentElement.style;
+  const lier = (id, vid, fmt, prop, tr) => {
+    const el = document.getElementById(id), out = document.getElementById(vid);
+    const maj = () => { const v = tr(+el.value); root.setProperty(prop, v.css); out.textContent = fmt(+el.value); };
+    el.addEventListener('input', maj); maj();
+  };
+  lier('rRefr', 'vRefr', v => String(v), null, v => ({ css: '' }));   // refraction : cf. ci-dessous
+  lier('rBlur', 'vBlur', v => v.toFixed(1), '--lg-blur', v => ({ css: v + 'px' }));
+  lier('rTint', 'vTint', v => (v / 100).toFixed(2).slice(1), '--lg-tint', v => ({ css: String(v / 100) }));
+  lier('rEdge', 'vEdge', v => (v / 100).toFixed(2).slice(1), '--lg-edge', v => ({ css: String(v / 100) }));
+
+  // La refraction agit sur l'attribut « scale » du filtre SVG, pas sur une variable CSS.
+  const dm = document.querySelector('#lg-refract feDisplacementMap');
+  const rRefr = document.getElementById('rRefr');
+  const majRefr = () => { dm.setAttribute('scale', rRefr.value); document.getElementById('vRefr').textContent = rRefr.value; };
+  rRefr.addEventListener('input', majRefr); majRefr();
+
+  // bascule verre
+  const b = document.getElementById('bVerre'), scene = document.getElementById('scene');
+  b.addEventListener('click', () => { b.classList.toggle('on'); scene.classList.toggle('veil-off', !b.classList.contains('on')); });
+
+  /* ---- puce baladeuse ---- */
+  const lens = document.getElementById('lens');
+  let drag = null;
+  lens.addEventListener('pointerdown', (e) => {
+    const s = scene.getBoundingClientRect();
+    drag = { dx: e.clientX - (lens.offsetLeft), dy: e.clientY - (lens.offsetTop) };
+    lens.setPointerCapture(e.pointerId);
+  });
+  lens.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const s = scene.getBoundingClientRect();
+    let x = e.clientX - drag.dx, y = e.clientY - drag.dy;
+    x = Math.max(4, Math.min(s.width - lens.offsetWidth - 4, x));
+    y = Math.max(4, Math.min(s.height - lens.offsetHeight - 4, y));
+    lens.style.left = x + 'px'; lens.style.top = y + 'px';
+  });
+  lens.addEventListener('pointerup', () => { drag = null; });
+
+  /* ---- barre de commandes : etat visuel ---- */
+  document.querySelectorAll('.dock .key').forEach((k) => {
+    k.addEventListener('click', () => {
+      if (k.title === 'Mosaïque' || k.title === 'Plein écran') {
+        k.parentElement.querySelectorAll('.key').forEach(o => { if (o.title === 'Mosaïque' || o.title === 'Plein écran') o.classList.remove('on'); });
+        k.classList.add('on');
+      } else { k.classList.toggle('on'); }
+    });
+  });
+</script>

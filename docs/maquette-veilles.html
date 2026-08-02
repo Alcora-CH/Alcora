@@ -1,0 +1,282 @@
+<title>Alcora — les veilles (Lot 8)</title>
+<style>
+  :root {
+    --bg:#1b1e23; --card:#23272e; --card2:#2a2f37; --line:#353b44; --line2:#434a55;
+    --ink:#dad5cb; --muted:#9a958b; --soft:#75716a;
+    --accent:#d2a263; --accent-d:#e6b877; --accent-soft:rgba(210,162,99,.16);
+    --ok:#8fae5a; --warn:#d0a215; --bad:#d8685a;
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         font-size:14.5px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .page { max-width:1120px; margin:0 auto; padding:40px 22px 90px; }
+  .eyebrow { font-size:11px; font-weight:650; letter-spacing:.09em; text-transform:uppercase;
+             color:var(--soft); margin:0 0 8px; }
+  h1 { margin:0 0 8px; font-size:27px; font-weight:640; letter-spacing:-.015em; }
+  .sous { color:var(--muted); margin:0; max-width:72ch; }
+  h2 { font-size:15px; font-weight:640; margin:46px 0 6px; padding-top:22px;
+       border-top:1px solid var(--line); color:var(--muted); }
+  h2 + p.sous { margin-bottom:16px; }
+  .scroll { overflow-x:auto; }
+
+  table { border-collapse:collapse; width:100%; margin-top:14px; }
+  th,td { text-align:left; padding:8px 11px; border-bottom:1px solid var(--line);
+          font-size:13px; vertical-align:top; }
+  th { font-size:10.5px; font-weight:650; letter-spacing:.07em; text-transform:uppercase; color:var(--soft); }
+  td.n { font-family:var(--mono); text-align:right; white-space:nowrap; }
+  code { font-family:var(--mono); font-size:12.5px; background:var(--card2);
+         border:1px solid var(--line); border-radius:4px; padding:1px 6px; }
+
+  /* ---- barres de volume ---- */
+  .vol { display:flex; align-items:center; gap:8px; }
+  .vol i { display:block; height:8px; border-radius:2px; background:var(--accent); opacity:.85; }
+  .vol.calme i { background:var(--ok); }
+  .vol.bruyant i { background:var(--bad); }
+
+  /* ---- l'écran ---- */
+  .ecran { background:var(--card); border:1px solid var(--line); border-radius:12px;
+           overflow:hidden; margin-top:18px; min-width:720px; }
+  .bandeau { display:flex; align-items:center; gap:12px; padding:13px 16px;
+             border-bottom:1px solid var(--line); }
+  .inter { display:flex; align-items:center; gap:9px; }
+  .plot { width:38px; height:21px; border-radius:999px; position:relative;
+          background:var(--ok); }
+  .plot::after { content:""; position:absolute; top:2.5px; left:19px; width:16px; height:16px;
+                 border-radius:50%; background:#151a12; }
+  .plot.off { background:var(--card2); }
+  .plot.off::after { left:2.5px; background:#5a5f68; }
+
+  .veille { display:grid; grid-template-columns:20px 1fr auto auto; gap:12px; align-items:center;
+            padding:11px 16px; border-bottom:1px solid var(--line); }
+  .veille:last-child { border-bottom:none; }
+  .pastille { width:9px; height:9px; border-radius:50%; }
+  .veille .titre { font-size:13.5px; }
+  .veille .quoi { font-size:11.5px; color:var(--soft); font-family:var(--mono); }
+  .quand { font-size:11.5px; color:var(--muted); white-space:nowrap; }
+  .prevu { font-family:var(--mono); font-size:11px; white-space:nowrap; }
+
+  /* ---- éditeur ---- */
+  .edit { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  @media (max-width:820px) { .edit { grid-template-columns:1fr; } }
+  .col { padding:15px 17px; }
+  .col + .col { border-left:1px solid var(--line); }
+  .col h4 { margin:0 0 10px; font-size:11px; font-weight:650; letter-spacing:.07em;
+            text-transform:uppercase; color:var(--soft); }
+  .choix { display:flex; flex-wrap:wrap; gap:7px; }
+  .puce { font-size:12.5px; padding:4px 11px; border-radius:999px; border:1px solid var(--line);
+          color:var(--soft); }
+  .puce.on { background:var(--accent-soft); color:var(--accent); border-color:transparent; }
+  .ligne { display:flex; align-items:center; gap:9px; font-size:13px; padding:5px 0; }
+  .ligne .v { margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--muted); }
+
+  /* ---- grille horaire ---- */
+  .semaine { display:grid; grid-template-columns:34px 1fr; gap:3px; margin-top:8px; }
+  .semaine .j { font-size:10.5px; color:var(--soft); line-height:16px; }
+  .piste { position:relative; height:16px; border-radius:3px; background:var(--card2); }
+  .piste i { position:absolute; top:0; bottom:0; border-radius:3px; background:var(--accent); opacity:.7; }
+  .echelle { display:flex; justify-content:space-between; font-family:var(--mono);
+             font-size:9.5px; color:var(--soft); margin:5px 0 0 37px; }
+
+  /* ---- bulle Windows ---- */
+  .toast { width:340px; border-radius:9px; border:1px solid var(--line2); background:#20242b;
+           padding:11px 13px; display:flex; gap:11px; box-shadow:0 12px 30px rgba(0,0,0,.45); }
+  .toast .im { flex:0 0 76px; aspect-ratio:16/9; border-radius:5px;
+               background:linear-gradient(145deg,#1a1e25,#2b313a); }
+  .toast .t1 { font-size:13px; }
+  .toast .t2 { font-size:11.5px; color:var(--soft); font-family:var(--mono); }
+  .toast .t3 { font-size:11px; color:var(--accent-d); margin-top:4px; }
+
+  .notes { display:grid; gap:9px; margin-top:16px; }
+  .note { display:grid; grid-template-columns:26px 1fr; gap:11px; align-items:start;
+          font-size:13px; color:var(--muted); }
+  .note b { color:var(--ink); font-weight:600; }
+  .num { width:22px; height:22px; border-radius:50%; display:grid; place-items:center;
+         font-family:var(--mono); font-size:11px; background:var(--accent-soft); color:var(--accent); }
+  .fait { border-left:2px solid var(--accent); padding:2px 0 2px 18px; margin:22px 0 0;
+          color:var(--muted); font-size:13.5px; }
+  .fait b { color:var(--ink); }
+  footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--line);
+           color:var(--soft); font-size:12px; }
+</style>
+<div class="page">
+
+  <p class="eyebrow">Alcora — Lot 8, maquette</p>
+  <h1>Les veilles</h1>
+  <p class="sous">Dessinées après avoir lu les six écrans d'alarme de Protect, et sur les
+  volumes réels relevés dans ta propre liste. Le principe : Alcora ne refait pas leur moteur
+  d'alarmes — elle fait la seule chose qu'aucun d'eux ne fait, <b>prévenir sur ce PC, sans
+  passer par le nuage d'Ubiquiti</b>.</p>
+
+  <h2>Le chiffre qui décide de tout</h2>
+  <p class="sous">Relevé dans ta liste d'alarmes, colonne « Déclenchements (24h) ». C'est ce
+  qui rend le tri par sujet inutile : la nature du sujet fait déjà le tri.</p>
+
+  <div class="scroll"><table>
+    <thead><tr><th>Déclencheur</th><th style="width:46%">Sur 24 heures</th><th class="n">Nombre</th><th>Ce que ça vaut comme alerte</th></tr></thead>
+    <tbody>
+      <tr><td>Motion</td><td><div class="vol bruyant"><i style="width:100%"></i></div></td><td class="n">157</td><td>Inutilisable en notification : une toutes les neuf minutes.</td></tr>
+      <tr><td>Vehicle</td><td><div class="vol"><i style="width:25.5%"></i></div></td><td class="n">40</td><td>Une toutes les 36 min. Supportable seulement la nuit.</td></tr>
+      <tr><td>Animal</td><td><div class="vol calme"><i style="width:4.5%"></i></div></td><td class="n">7</td><td>Anecdotique, et plutôt agréable.</td></tr>
+      <tr><td>Vehicle of interest</td><td><div class="vol calme"><i style="width:1.3%"></i></div></td><td class="n">2</td><td>Une plaque reconnue. Rare et signifiant.</td></tr>
+      <tr><td><b style="color:var(--ink)">Person</b></td><td><div class="vol calme"><i style="width:0.7%"></i></div></td><td class="n">1</td><td><b style="color:var(--ok)">Une par jour.</b> Aucun filtre n'est nécessaire.</td></tr>
+      <tr><td>Barking</td><td><div class="vol calme"><i style="width:0.7%"></i></div></td><td class="n">1</td><td>Rare chez toi.</td></tr>
+      <tr><td>Glass Breakage, Siren, Smoke, CO…</td><td><div class="vol calme"><i style="width:0"></i></div></td><td class="n">0</td><td>Jamais déclenchés — et ce sont les seuls vrais signaux d'urgence.</td></tr>
+    </tbody>
+  </table></div>
+
+  <p class="fait">Je te disais hier « 266 par jour, notifier tout serait intenable ». C'était
+  juste pour le mouvement, et <b>faux pour ce qui compte</b> : une personne détectée, c'est
+  une bulle par jour. Le filtre élaboré que j'imaginais n'a pas lieu d'être.</p>
+
+  <h2>Ce que je prends chez eux, et ce que je laisse</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Chez Protect</th><th>Dans Alcora</th></tr></thead>
+    <tbody>
+      <tr><td>Sept familles de déclencheurs, combinables par « ET »</td><td><b>Une liste plate de sujets</b> — personne, véhicule, animal, bris de verre, parole, aboiement, sirène, fumée. Le « ET » sert à construire des règles savantes ; ici on veut savoir qu'il y a quelqu'un.</td></tr>
+      <tr><td>Périmètre : inclure / exclure des appareils</td><td><b>Repris</b>, réduit à cocher des caméras. Deux caméras ne méritent pas un moteur d'ensembles.</td></tr>
+      <tr><td>Profils d'alarme = horaires hebdomadaires nommés</td><td><b>Repris, et c'est leur meilleure idée.</b> Ton profil « Nuit » 00:00→06:00 dit bien mieux les choses qu'un interrupteur. Alcora a ses propres profils, indépendants des leurs.</td></tr>
+      <tr><td>Planning : Toujours · Personnalisé · Lorsque Armé</td><td><b>Repris à l'identique</b>, ce sont les trois cas réels.</td></tr>
+      <tr><td>Actions : Notifier, Webhook, Son, Lumière, Déverrouiller, PTZ</td><td><b>Bulle Windows, et un son au choix.</b> Le reste pilote du matériel — c'est le métier de Protect, pas celui d'un client de bureau.</td></tr>
+      <tr><td>Destinataires, contenu personnalisé, alerte critique</td><td><b>Laissé.</b> Il y a un utilisateur, devant un PC. Des destinataires n'auraient personne à qui écrire.</td></tr>
+      <tr><td>« Ignorer les Actions Répétées »</td><td><b>Repris</b>, et réglé en clair : « au plus une bulle toutes les N minutes par sujet ».</td></tr>
+      <tr><td>Rien n'annonce le VOLUME d'un déclencheur</td><td><b>C'est là qu'on fait mieux.</b> Chaque sujet affiche ce qu'il a produit ces sept derniers jours, avant qu'on ne l'active.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>L'écran</h2>
+
+  <div class="scroll">
+  <div class="ecran">
+    <div class="bandeau">
+      <div class="inter"><span class="plot"></span><span style="font-size:13.5px">Veille active</span></div>
+      <span style="font-size:12px;color:var(--soft)">profil <b style="color:var(--accent-d)">Nuit</b> — 00:00 à 06:00, tous les jours</span>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--soft)">3 bulles ces 7 derniers jours</span>
+    </div>
+
+    <div class="veille">
+      <span class="pastille" style="background:var(--accent-d)"></span>
+      <div><div class="titre">Une personne est détectée</div>
+           <div class="quoi">G5 Turret Ultra · G6 Bullet</div></div>
+      <span class="quand">lorsque la veille est active</span>
+      <span class="prevu" style="color:var(--ok)">~1 / jour</span>
+    </div>
+
+    <div class="veille">
+      <span class="pastille" style="background:#b98fc9"></span>
+      <div><div class="titre">Bris de verre, sirène, fumée</div>
+           <div class="quoi">toutes les caméras</div></div>
+      <span class="quand">toujours</span>
+      <span class="prevu" style="color:var(--ok)">0 / jour</span>
+    </div>
+
+    <div class="veille">
+      <span class="pastille" style="background:#7fa8c9"></span>
+      <div><div class="titre">Un véhicule arrive</div>
+           <div class="quoi">G5 Turret Ultra</div></div>
+      <span class="quand">lorsque la veille est active</span>
+      <span class="prevu" style="color:var(--warn)">~40 / jour en journée</span>
+    </div>
+
+    <div class="veille" style="opacity:.45">
+      <span class="pastille" style="background:#5c626c"></span>
+      <div><div class="titre">Mouvement</div>
+           <div class="quoi">désactivée</div></div>
+      <span class="quand">—</span>
+      <span class="prevu" style="color:var(--bad)">~157 / jour</span>
+    </div>
+  </div>
+  </div>
+
+  <div class="notes">
+    <div class="note"><span class="num">1</span><div><b>Une veille se lit comme une phrase.</b>
+      « Une personne est détectée », pas « smartDetectZone : person ». Le nom du champ appartient
+      au contrôleur ; l'écran appartient à celui qui regarde.</div></div>
+    <div class="note"><span class="num">2</span><div><b>Le volume prévu est affiché avant d'activer</b>,
+      calculé sur les sept derniers jours du journal — que l'application lit déjà. C'est la seule
+      information qui empêche de se noyer, et Protect ne la donne nulle part.</div></div>
+    <div class="note"><span class="num">3</span><div><b>Une veille désactivée reste visible</b>, grisée,
+      avec son volume. On voit pourquoi on l'a éteinte, et ce qu'il en coûterait de la rallumer.</div></div>
+    <div class="note"><span class="num">4</span><div><b>L'interrupteur du haut est celui d'Alcora</b>,
+      pas celui de Protect. S'ils divergent — Protect désarmé, Alcora en veille — l'écran le dit
+      en toutes lettres au lieu de laisser deviner.</div></div>
+  </div>
+
+  <h2>Régler une veille</h2>
+
+  <div class="scroll">
+  <div class="ecran">
+    <div class="bandeau"><span style="font-size:13.5px">Une personne est détectée</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--soft)">~1 bulle par jour attendue</span></div>
+    <div class="edit">
+      <div class="col">
+        <h4>Ce qui déclenche</h4>
+        <div class="choix">
+          <span class="puce on">Personne</span><span class="puce">Véhicule</span>
+          <span class="puce">Animal</span><span class="puce">Colis</span>
+          <span class="puce">Bris de verre</span><span class="puce">Sirène</span>
+          <span class="puce">Fumée</span><span class="puce">Aboiement</span>
+          <span class="puce">Parole</span><span class="puce">Mouvement</span>
+        </div>
+
+        <h4 style="margin-top:18px">Sur quelles caméras</h4>
+        <div class="choix">
+          <span class="puce on">G5 Turret Ultra</span><span class="puce on">G6 Bullet</span>
+        </div>
+
+        <h4 style="margin-top:18px">Quand</h4>
+        <div class="choix">
+          <span class="puce">Toujours</span>
+          <span class="puce on">Lorsque la veille est active</span>
+          <span class="puce">Horaire à moi</span>
+        </div>
+        <div class="semaine" style="margin-top:12px">
+          <span class="j">Lun</span><div class="piste"><i style="left:0;width:25%"></i></div>
+          <span class="j">Mar</span><div class="piste"><i style="left:0;width:25%"></i></div>
+          <span class="j">Mer</span><div class="piste"><i style="left:0;width:25%"></i></div>
+          <span class="j">Jeu</span><div class="piste"><i style="left:0;width:25%"></i></div>
+          <span class="j">Ven</span><div class="piste"><i style="left:0;width:25%"></i></div>
+          <span class="j">Sam</span><div class="piste"><i style="left:0;width:33%"></i></div>
+          <span class="j">Dim</span><div class="piste"><i style="left:0;width:33%"></i></div>
+        </div>
+        <div class="echelle"><span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>24h</span></div>
+      </div>
+
+      <div class="col">
+        <h4>Ce que ça fait</h4>
+        <div class="ligne"><span>Bulle Windows</span><span class="v">toujours</span></div>
+        <div class="ligne"><span>Son</span><span class="v">discret</span></div>
+        <div class="ligne"><span>Vignette dans la bulle</span><span class="v">oui</span></div>
+        <div class="ligne"><span>Au plus une bulle toutes les</span><span class="v">5 min</span></div>
+
+        <h4 style="margin-top:18px">À quoi ça ressemblera</h4>
+        <div class="toast">
+          <div class="im"></div>
+          <div>
+            <div class="t1">Une personne — G6 Bullet</div>
+            <div class="t2">à l’instant · 02:14</div>
+            <div class="t3">Cliquer pour voir la séquence</div>
+          </div>
+        </div>
+        <p style="margin:11px 0 0;font-size:12px;color:var(--soft)">
+          Un clic ouvre Alcora directement sur cette détection, dans la relecture.
+          Rien ne transite par Internet : la vignette vient de ton contrôleur, la bulle
+          vient de Windows.</p>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <p class="fait"><b>Ce qui reste à trancher, et qui t'appartient.</b> Alcora aura son propre
+  armement, comme tu l'as demandé — donc deux interrupteurs sur le même mur. Le jour où Protect
+  est désarmé et Alcora en veille, elle préviendra pendant que lui se taira. Je le rendrai
+  visible dans le bandeau, mais c'est un choix à assumer, pas un défaut à corriger.<br><br>
+  <b>Non mesuré :</b> la latence réelle entre la détection et la trame. La sonde corrige sa
+  méthode mais n'a pas encore tourné avec la bonne. À défaut, l'application la consignera
+  elle-même dans le journal.</p>
+
+  <footer>Maquette du 29.07.2026, préalable au Lot 8. Volumes relevés sur la liste d'alarmes
+  réelle du poste de référence. Mesure de la liaison temps réel : <code>docs/contraintes-verifiees.md</code>,
+  section V-Alertes. Aucune ligne de l'application n'est encore écrite.</footer>
+</div>

@@ -1,0 +1,448 @@
+<title>ProtectViewer — la vidéo prend toute la place</title>
+
+<style>
+  :root {
+    /* Palette « Nuit lecture », identique a celle de l'application. */
+    --bg:#1b1e23; --card:#23272e; --card2:#2a2f37;
+    --line:#353b44; --line2:#434a55;
+    --ink:#dad5cb; --muted:#9a958b; --soft:#75716a;
+    --accent:#d2a263; --accent-soft:#322a1d; --accent-d:#e6b877;
+    --ok:#8fae5a; --bad:#d8685a;
+
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", monospace;
+
+    --rail: 52px;
+    --panneau: 268px;
+  }
+
+  /* Theme unique, assume : cette page montre une application qui n'existe qu'en sombre. */
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); font-size: 14px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 36px 20px 64px; }
+
+  header { margin-bottom: 22px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 640; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--soft); margin: 0 0 9px;
+  }
+  h1 { margin: 0 0 8px; font-size: 25px; font-weight: 620; letter-spacing: -0.015em; text-wrap: balance; }
+  .sous { margin: 0; color: var(--muted); max-width: 66ch; }
+
+  /* ---------------------------------------------------------- demonstration */
+
+  .demo {
+    position: relative; height: 460px;
+    border: 1px solid var(--line2); border-radius: 10px; overflow: hidden;
+    background: var(--bg); display: flex;
+  }
+
+  /* La zone video occupe TOUT ce que la barre laterale ne prend pas. */
+  .video {
+    flex: 1 1 auto; min-width: 0; position: relative;
+    padding: 8px; transition: margin-left .18s ease;
+  }
+  .demo[data-etat="epinglee"] .video { margin-left: calc(var(--rail) + var(--panneau)); }
+
+  .mosaique { position: relative; width: 100%; height: 100%; }
+
+  .tuile {
+    position: absolute;
+    background: linear-gradient(155deg, #313842, #232a33);
+    border: 1px solid #3d4653; border-radius: 3px;
+    overflow: hidden;
+    transition: left .18s ease, top .18s ease, width .18s ease, height .18s ease;
+  }
+  .tuile b {
+    position: absolute; left: 6px; top: 5px;
+    font-size: 9.5px; font-weight: 560; color: #b9c0c9;
+    background: rgba(16,16,16,.72); border-radius: 3px; padding: 1px 5px;
+  }
+  .tuile i {
+    position: absolute; right: 6px; bottom: 5px; font-style: normal;
+    font-family: var(--mono); font-size: 9px; color: #7d8794;
+  }
+
+  /* La barre laterale : superposee, jamais poussante. */
+  .aside {
+    position: absolute; inset: 0 auto 0 0; z-index: 3;
+    display: flex; width: calc(var(--rail) + var(--panneau));
+    transform: translateX(calc(-1 * (var(--rail) + var(--panneau))));
+    transition: transform .18s ease;
+  }
+  .demo[data-etat="epinglee"] .aside,
+  .demo[data-revelee="oui"] .aside { transform: translateX(0); }
+  .demo[data-revelee="oui"]:not([data-etat="epinglee"]) .aside {
+    box-shadow: 14px 0 34px rgba(0,0,0,.45);
+  }
+
+  .rail {
+    width: var(--rail); flex: 0 0 auto;
+    background: var(--bg); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 0;
+  }
+  .rail span {
+    width: 32px; height: 32px; border-radius: 6px;
+    display: grid; place-items: center; color: var(--soft); font-size: 13px;
+  }
+  .rail span.actif { background: var(--accent-soft); color: var(--accent); }
+  .rail .pousse { flex: 1; }
+
+  .panneau {
+    width: var(--panneau); flex: 0 0 auto;
+    background: var(--card); border-right: 1px solid var(--line);
+    padding: 13px; overflow: hidden;
+  }
+  .panneau h2 { margin: 0 0 12px; font-size: 14px; font-weight: 620; }
+  .panneau .titre {
+    font-size: 10px; font-weight: 640; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--soft); margin: 0 0 6px;
+  }
+  .cam { display: flex; align-items: center; gap: 8px; padding: 4px 5px; }
+  .pastille { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); flex: 0 0 auto; }
+  .cam div { min-width: 0; }
+  .cam b { display: block; font-size: 12.5px; font-weight: 460; }
+  .cam i { font-style: normal; font-family: var(--mono); font-size: 10px; color: var(--soft); }
+  .sep { height: 1px; background: var(--line); margin: 11px 0; }
+
+  /* Bande de survol : ne se voit pas, se sent. */
+  .lisiere { position: absolute; inset: 0 auto 0 0; width: 16px; z-index: 4; }
+
+  .poignee {
+    position: absolute; left: 8px; top: 8px; z-index: 5;
+    width: 27px; height: 27px; border-radius: 6px;
+    display: grid; place-items: center; cursor: pointer;
+    color: var(--ink); background: rgba(16,16,16,.72);
+    border: 1px solid rgba(255,255,255,.09);
+    font: inherit; font-size: 13px; line-height: 1;
+    transition: left .18s ease, background .12s, opacity .18s;
+  }
+  .demo[data-etat="epinglee"] .poignee { left: calc(var(--rail) + var(--panneau) + 8px); }
+  .demo[data-revelee="oui"]:not([data-etat="epinglee"]) .poignee { left: calc(var(--rail) + var(--panneau) + 8px); }
+  .poignee:hover { background: rgba(30,30,30,.9); }
+  .poignee:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------------------------------------------------------------- reglages */
+
+  .reglages {
+    margin-top: 14px; display: flex; flex-wrap: wrap; gap: 18px 26px;
+    align-items: center; padding: 12px 14px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 9px;
+  }
+  .reglage { display: flex; align-items: center; gap: 8px; }
+  .reglage > span { font-size: 11px; font-weight: 640; letter-spacing: .08em; text-transform: uppercase; color: var(--soft); }
+  .segments { display: flex; gap: 3px; }
+
+  button.seg {
+    font: inherit; font-size: 12.5px; color: var(--muted);
+    background: var(--card2); border: 1px solid var(--line);
+    border-radius: 6px; padding: 4px 9px; cursor: pointer;
+    transition: border-color .12s, color .12s, background .12s;
+  }
+  button.seg:hover { border-color: var(--line2); color: var(--ink); }
+  button.seg[aria-pressed="true"] {
+    background: var(--accent-soft); border-color: var(--accent);
+    color: var(--accent-d); font-weight: 560;
+  }
+  button.seg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .lecture { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--soft); }
+  .lecture b { color: var(--ink); font-weight: 560; }
+
+  /* ------------------------------------------------------------------ chiffres */
+
+  .gain { margin-top: 34px; }
+  .gain h2 { font-size: 16px; font-weight: 620; margin: 0 0 4px; }
+  .gain > p { color: var(--muted); margin: 0 0 14px; max-width: 66ch; }
+
+  .tableau { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { font-size: 11px; font-weight: 640; letter-spacing: .07em; text-transform: uppercase; color: var(--soft); }
+  td { font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  td.nom { font-family: var(--sans); font-size: 13.5px; }
+  td.mieux { color: var(--ok); font-weight: 620; }
+  td.pire { color: var(--bad); }
+
+  section.notes { margin-top: 36px; padding-top: 26px; border-top: 1px solid var(--line); }
+  section.notes h2 { font-size: 16px; font-weight: 620; margin: 0 0 10px; }
+  section.notes p { color: var(--muted); max-width: 68ch; margin: 0 0 14px; }
+  section.notes strong { color: var(--ink); font-weight: 580; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+  @media (max-width: 620px) { .demo { height: 380px; } .lecture { margin-left: 0; } }
+</style>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">ProtectViewer — proposition, deuxième version</p>
+    <h1>La vidéo prend tout ; le reste s'efface</h1>
+    <p class="sous">
+      Tout ce qui n'est pas une image se réduit à rien. La barre latérale revient au survol
+      du bord gauche, ou se fixe d'un clic sur la poignée. Essaie : approche la souris du
+      bord gauche de la démonstration ci-dessous.
+    </p>
+  </header>
+
+  <div class="demo" id="demo" data-etat="reduite" data-revelee="non">
+    <div class="lisiere" id="lisiere"></div>
+
+    <button class="poignee" id="poignee" type="button" aria-label="Fixer la barre latérale">›</button>
+
+    <div class="aside" id="aside">
+      <nav class="rail">
+        <span class="actif">▤</span><span>⌕</span><span>▷</span><span>◔</span>
+        <span class="pousse"></span><span>⚙</span>
+      </nav>
+      <div class="panneau">
+        <h2>Surveillance</h2>
+        <p class="titre">Caméras</p>
+        <div id="liste"></div>
+        <div class="sep"></div>
+        <p class="titre">État</p>
+        <div class="cam"><span class="pastille"></span><div><b>Flux vidéo prêt.</b></div></div>
+      </div>
+    </div>
+
+    <div class="video" id="video"><div class="mosaique" id="mosaique"></div></div>
+  </div>
+
+  <div class="reglages">
+    <div class="reglage">
+      <span>Barre</span>
+      <div class="segments" id="etats"></div>
+    </div>
+    <div class="reglage">
+      <span>Caméras</span>
+      <div class="segments" id="nombres"></div>
+    </div>
+    <p class="lecture" id="lecture"></p>
+  </div>
+
+  <section class="gain">
+    <h2>Ce que la réduction rend à l'image</h2>
+    <p>
+      Surface totale occupée par de la vidéo, pour deux caméras. La barre latérale coûte
+      320 pixels de largeur — une part d'autant plus lourde que l'écran est étroit.
+    </p>
+    <div class="tableau">
+      <table>
+        <thead>
+          <tr><th>Écran</th><th>Barre visible</th><th>Barre réduite</th><th>Gain</th></tr>
+        </thead>
+        <tbody id="chiffres"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>Trois décisions à valider</h2>
+    <p>
+      <strong>La barre révélée se superpose, elle ne repousse pas.</strong> Si elle
+      repoussait la vidéo, chaque survol changerait la largeur des tuiles, donc la qualité
+      demandée au contrôleur, donc une renégociation complète du flux — l'image se figerait
+      une fraction de seconde à chaque passage de souris. En superposition, la vidéo ne
+      bouge pas d'un pixel. Une fois <em>fixée</em> par la poignée, en revanche, elle
+      repousse : c'est un geste délibéré et rare.
+    </p>
+    <p>
+      <strong>La grille suit la forme de la zone.</strong> Une fois la largeur récupérée, il
+      reste à choisir entre une colonne et deux. La règle essaie chaque nombre de colonnes et
+      garde celui qui rend l'image la plus grande. Sur un écran vertical, deux caméras
+      passent d'elles-mêmes en une colonne.
+    </p>
+    <p>
+      <strong>L'état est mémorisé.</strong> Réduite une fois, la barre reste réduite au
+      prochain démarrage — sans quoi il faudrait la replier à chaque lancement.
+    </p>
+  </section>
+</div>
+
+<script>
+  'use strict';
+
+  const RATIO = 16 / 9;
+  const ESPACE = 6;
+  const CAMERAS = [
+    { nom: 'G6 Bullet', def: '3840 × 2160' },
+    { nom: 'G5 Turret Ultra', def: '2688 × 1512' },
+    { nom: 'Entrée', def: '2688 × 1512' },
+    { nom: 'Garage', def: '2688 × 1512' },
+    { nom: 'Jardin', def: '1920 × 1080' },
+    { nom: 'Atelier', def: '1920 × 1080' },
+  ];
+
+  const demo = document.getElementById('demo');
+  const mosaique = document.getElementById('mosaique');
+  const video = document.getElementById('video');
+  const lisiere = document.getElementById('lisiere');
+  const poignee = document.getElementById('poignee');
+  const aside = document.getElementById('aside');
+
+  let nCameras = 2;
+
+  /** La grille qui rend la tuile la plus grande, a proportion conservee. */
+  function meilleureGrille(w, h, n) {
+    let best = null;
+    for (let colonnes = 1; colonnes <= n; colonnes++) {
+      const rangees = Math.ceil(n / colonnes);
+      const cw = (w - ESPACE * (colonnes - 1)) / colonnes;
+      const ch = (h - ESPACE * (rangees - 1)) / rangees;
+      if (cw <= 0 || ch <= 0) continue;
+      const largeur = Math.min(cw, ch * RATIO);
+      const hauteur = largeur / RATIO;
+      if (!best || largeur * hauteur > best.largeur * best.hauteur) {
+        best = { colonnes, rangees, largeur, hauteur };
+      }
+    }
+    return best;
+  }
+
+  function poser() {
+    const w = video.clientWidth - 16;
+    const h = video.clientHeight - 16;
+    if (w <= 0 || h <= 0) return;
+
+    const g = meilleureGrille(w, h, nCameras);
+    if (!g) return;
+
+    const totalW = g.colonnes * g.largeur + ESPACE * (g.colonnes - 1);
+    const totalH = g.rangees * g.hauteur + ESPACE * (g.rangees - 1);
+    const decX = (w - totalW) / 2;
+    const decY = (h - totalH) / 2;
+
+    mosaique.replaceChildren();
+    for (let i = 0; i < nCameras; i++) {
+      const col = i % g.colonnes;
+      const rang = Math.floor(i / g.colonnes);
+      const t = document.createElement('div');
+      t.className = 'tuile';
+      t.style.left = (decX + col * (g.largeur + ESPACE)) + 'px';
+      t.style.top = (decY + rang * (g.hauteur + ESPACE)) + 'px';
+      t.style.width = g.largeur + 'px';
+      t.style.height = g.hauteur + 'px';
+
+      const nom = document.createElement('b');
+      nom.textContent = CAMERAS[i % CAMERAS.length].nom;
+      const dim = document.createElement('i');
+      dim.textContent = Math.round(g.largeur) + '×' + Math.round(g.hauteur);
+      t.append(nom, dim);
+      mosaique.append(t);
+    }
+
+    const part = (nCameras * g.largeur * g.hauteur) / (w * h) * 100;
+    document.getElementById('lecture').innerHTML =
+      'grille <b>' + g.colonnes + ' × ' + g.rangees + '</b> · ' +
+      'image <b>' + Math.round(g.largeur) + ' × ' + Math.round(g.hauteur) + '</b> · ' +
+      'surface <b>' + part.toFixed(0) + ' %</b>';
+  }
+
+  /* ---- barre laterale : survol, fixation ---- */
+
+  const revele = (oui) => demo.setAttribute('data-revelee', oui ? 'oui' : 'non');
+
+  lisiere.addEventListener('pointerenter', () => revele(true));
+  aside.addEventListener('pointerleave', (e) => {
+    if (!e.relatedTarget || !lisiere.contains(e.relatedTarget)) revele(false);
+  });
+  lisiere.addEventListener('pointerleave', (e) => {
+    if (!e.relatedTarget || !aside.contains(e.relatedTarget)) revele(false);
+  });
+
+  function basculer() {
+    const epinglee = demo.getAttribute('data-etat') === 'epinglee';
+    demo.setAttribute('data-etat', epinglee ? 'reduite' : 'epinglee');
+    poignee.textContent = epinglee ? '›' : '‹';
+    poignee.setAttribute('aria-label', epinglee ? 'Fixer la barre latérale' : 'Réduire la barre latérale');
+    if (epinglee) revele(false);
+    majEtats();
+    requestAnimationFrame(poser);
+    setTimeout(poser, 200);   // apres l'animation
+  }
+  poignee.addEventListener('click', basculer);
+
+  /* ---- commandes ---- */
+
+  function segments(hote, items, actif, choisir) {
+    hote.replaceChildren();
+    for (const it of items) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'seg';
+      b.textContent = it.nom !== undefined ? it.nom : it;
+      b.setAttribute('aria-pressed', String(actif(it)));
+      b.addEventListener('click', () => choisir(it));
+      hote.append(b);
+    }
+  }
+
+  function majEtats() {
+    segments(document.getElementById('etats'),
+      [{ id: 'reduite', nom: 'Réduite' }, { id: 'epinglee', nom: 'Fixée' }],
+      (e) => demo.getAttribute('data-etat') === e.id,
+      (e) => { if (demo.getAttribute('data-etat') !== e.id) basculer(); });
+  }
+
+  function majNombres() {
+    segments(document.getElementById('nombres'), [1, 2, 3, 4, 5, 6],
+      (n) => n === nCameras,
+      (n) => { nCameras = n; majNombres(); majListe(); poser(); });
+  }
+
+  function majListe() {
+    const hote = document.getElementById('liste');
+    hote.replaceChildren();
+    for (let i = 0; i < nCameras; i++) {
+      const c = CAMERAS[i % CAMERAS.length];
+      const d = document.createElement('div');
+      d.className = 'cam';
+      const p = document.createElement('span'); p.className = 'pastille';
+      const bloc = document.createElement('div');
+      const n = document.createElement('b'); n.textContent = c.nom;
+      const s = document.createElement('i'); s.textContent = c.def;
+      bloc.append(n, s); d.append(p, bloc); hote.append(d);
+    }
+  }
+
+  /* ---- tableau des gains ---- */
+
+  const ECRANS = [
+    { nom: 'Écran vertical', w: 1080, h: 1920 },
+    { nom: 'Fenêtre par défaut', w: 1320, h: 820 },
+    { nom: 'Portable 1080p', w: 1920, h: 1080 },
+    { nom: 'Écran 1440p', w: 2560, h: 1440 },
+    { nom: 'Ultra-large', w: 3440, h: 1440 },
+  ];
+
+  function chiffrer() {
+    const corps = document.getElementById('chiffres');
+    corps.replaceChildren();
+    for (const e of ECRANS) {
+      const h = e.h - 40;
+      const avec = meilleureGrille(e.w - 320, h, 2);
+      const sans = meilleureGrille(e.w, h, 2);
+      const pa = 2 * avec.largeur * avec.hauteur / ((e.w - 320) * h) * 100;
+      const ps = 2 * sans.largeur * sans.hauteur / (e.w * h) * 100;
+      const gain = (2 * sans.largeur * sans.hauteur) / (2 * avec.largeur * avec.hauteur);
+
+      const tr = document.createElement('tr');
+      const cel = (txt, cls) => { const td = document.createElement('td'); td.textContent = txt; if (cls) td.className = cls; return td; };
+      tr.append(
+        cel(e.nom, 'nom'),
+        cel(Math.round(avec.largeur) + ' × ' + Math.round(avec.hauteur) + '  (' + pa.toFixed(0) + ' %)'),
+        cel(Math.round(sans.largeur) + ' × ' + Math.round(sans.hauteur) + '  (' + ps.toFixed(0) + ' %)'),
+        cel('+' + Math.round((gain - 1) * 100) + ' %', gain >= 1.15 ? 'mieux' : ''),
+      );
+      corps.append(tr);
+    }
+  }
+
+  new ResizeObserver(poser).observe(video);
+  majEtats(); majNombres(); majListe(); chiffrer(); poser();
+</script>

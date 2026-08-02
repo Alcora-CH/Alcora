@@ -1,0 +1,467 @@
+<title>Alcora — avancement du plan</title>
+<style>
+  :root {
+    --bg:#1b1e23; --card:#23272e; --card2:#2a2f37; --line:#353b44; --line2:#434a55;
+    --ink:#dad5cb; --muted:#9a958b; --soft:#75716a;
+    --accent:#d2a263; --accent-d:#e6b877; --ok:#8fae5a; --warn:#d0a215; --bad:#d8685a;
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  /* Theme unique et assume : ce tableau de bord vit dans l'univers nocturne du projet. */
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .page { max-width:1080px; margin:0 auto; padding:38px 22px 80px; }
+  .eyebrow { font-size:11px; font-weight:650; letter-spacing:.09em; text-transform:uppercase;
+             color:var(--soft); margin:0 0 8px; }
+  h1 { margin:0 0 6px; font-size:26px; font-weight:640; letter-spacing:-.015em; }
+  .sous { color:var(--muted); margin:0; max-width:70ch; }
+  .repere { display:flex; flex-wrap:wrap; gap:10px 26px; margin:20px 0 18px; padding:14px 18px;
+            background:var(--card); border:1px solid var(--line); border-radius:10px;
+            font-variant-numeric:tabular-nums; }
+  .repere b { font-family:var(--mono); font-size:19px; font-weight:640; display:block; }
+  .repere span { font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--soft); }
+  .cap { background:var(--card); border:1px solid var(--accent); border-radius:10px;
+         padding:14px 18px; margin:0 0 30px; }
+  .cap p { margin:0; color:var(--muted); }
+  .cap b { color:var(--ink); }
+  h2 { font-size:16px; font-weight:640; margin:36px 0 14px; padding-top:22px; border-top:1px solid var(--line); }
+  .lot { background:var(--card); border:1px solid var(--line); border-radius:10px;
+         padding:15px 17px; margin-bottom:12px; }
+  .lot header { display:flex; align-items:baseline; gap:11px; }
+  .num { font-family:var(--mono); font-size:12px; color:var(--accent-d);
+         background:var(--card2); border:1px solid var(--line); border-radius:6px;
+         padding:1px 7px; flex:0 0 auto; }
+  .lot h3 { margin:0; font-size:14.5px; font-weight:600; flex:1; min-width:0; }
+  .chip { font-size:11px; font-weight:650; letter-spacing:.05em; text-transform:uppercase;
+          border-radius:999px; padding:2px 10px; flex:0 0 auto; }
+  .chip.ok { color:var(--ok); background:rgba(143,174,90,.13); }
+  .resume { margin:9px 0 0; color:var(--muted); font-size:13px; }
+  details { margin-top:10px; }
+  summary { cursor:pointer; font-size:12px; color:var(--soft); }
+  summary:hover { color:var(--ink); }
+  details ul { margin:9px 0 0; padding-left:0; list-style:none; display:flex;
+               flex-direction:column; gap:5px; }
+  details li { font-size:12.5px; color:var(--muted); padding-left:20px; position:relative; }
+  details li::before { position:absolute; left:0; font-family:var(--mono); }
+  li.ok::before { content:"✓"; color:var(--ok); }
+  li.reste::before { content:"○"; color:var(--soft); }
+  table { border-collapse:collapse; width:100%; }
+  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line);
+           font-size:13px; vertical-align:top; }
+  th { font-size:11px; font-weight:650; letter-spacing:.07em; text-transform:uppercase; color:var(--soft); }
+  td:first-child { font-family:var(--mono); white-space:nowrap; color:var(--accent-d); }
+  .etatD { white-space:nowrap; font-size:12px; font-weight:600; }
+  .t { color:var(--ok); } .o { color:var(--warn); }
+  .horsplan li { margin-bottom:6px; color:var(--muted); font-size:13px; }
+  footer { margin-top:44px; padding-top:18px; border-top:1px solid var(--line);
+           color:var(--soft); font-size:12px; }
+  .tablo { overflow-x:auto; }
+</style>
+<div class="page">
+  <p class="eyebrow">Alcora — plan de travail</p>
+  <h1>Avancement, confronté au code</h1>
+  <p class="sous">Plan issu de l'étude du 22.07.2026 (<code>docs/plan-travail.md</code>),
+  confronté au code à chaque révision. Dernière confrontation le <b>02.08.2026</b>, à la
+  version 2.20.2, dossier public préparé et dépôt des versions purgé. Celle du 31.07 avait
+  corrigé quatre affirmations devenues fausses — dont une qui m'avait fait proposer un chantier déjà livré.</p>
+
+  <div class="repere">
+    <div><b style="color:var(--ok)">9</b><span>lots faits</span></div>
+    <div><b style="color:var(--warn)">1</b><span>en cours</span></div>
+    <div><b style="color:var(--soft)">2</b><span>à faire</span></div>
+    <div><b style="color:var(--accent-d)">2.20.2</b><span>version publiée</span></div>
+    <div><b style="color:var(--accent-d)">13</b><span>suites hors ligne</span></div>
+  </div>
+
+  <div class="cap">
+    <p><b>Première installation sur machine vierge : ÉPROUVÉE le 02.08.2026</b>, sur la
+    Surface ARM64 de test. Installation 2.18.2 depuis GitHub sans friction, mise à jour
+    automatique vers 2.19.0 toute seule à froid, « Ce qui a changé » apparue pour sa
+    première sortie réelle, vidéo fluide en émulation x64, aucune demande du pare-feu (le
+    relais n'écoute qu'en local). SmartScreen ne s'est PAS montré sur cette machine — bonne
+    nouvelle à ne pas généraliser : la section du guide d'installation reste.</p>
+    <p><b>Le prochain geste qui compte : la préparation de l'ouverture publique</b> —
+    LICENSE, README, SECURITY.md, site one-page, i18n — après les restes du Lot 10.
+    Restent à éprouver sur un poste : la coupure réseau en pleine session, le réveil après
+    veille, et la lecture d'une séquence sur la G6 (V-Decode).</p>
+  </div>
+
+  <div class="cap" style="border-left:3px solid var(--warn)">
+    <p><b>Ce que cette révision a corrigé dans ce document.</b> Un artefact d'avancement qui
+    dérive est pire qu'aucun : il fait décider sur du faux. Les quatre écarts relevés le
+    31.07 méritent d'être nommés, parce qu'ils disent COMMENT un tel document dérive.</p>
+    <ul class="horsplan">
+      <li><b>Une contradiction interne.</b> Le Lot 9 annonçait le son du direct livré en
+      2.14.0 ; le Lot 10 le listait encore parmi ses restes, sous « piste négociée mais
+      jamais restituée ». Deux lots édités à des dates différentes, jamais relus ensemble.</li>
+      <li><b>Une fiabilité affirmée alors qu'elle était démentie.</b> Le Lot 11 déclarait le
+      critère de fin « atteint et prouvé plusieurs fois en conditions réelles » — pendant
+      que la mise à jour automatique refusait huit versions d'affilée sur le poste, du 29 au
+      31.07. C'est l'écart le plus dangereux : une réussite passée, écrite au présent.</li>
+      <li><b>Un cap dépassé.</b> « Le prochain geste qui compte : l'écran de détections
+      avancé » — livré en 2.15.0, deux jours avant cette relecture.</li>
+      <li><b>Des chiffres figés.</b> Version 2.14.0, sept lots faits : trois versions et un
+      lot de retard.</li>
+    </ul>
+  </div>
+
+  <h2>Les douze lots</h2>
+
+  <article class="lot">
+    <header>
+      <span class="num">1</span>
+      <h3>Assainissement + mise sous contrôle de version</h3>
+      <span class="chip ok">livré · 28.07</span>
+    </header>
+    <p class="resume"><b>Le dépôt existe.</b> Premier commit le 28.07.2026 sur <code>main</code> :
+    83 fichiers, 321 Ko, arbre de travail propre. Signé du prénom seul, avec l'adresse de
+    redirection GitHub — le compte reste joignable, l'identité complète et l'adresse
+    professionnelle n'entrent pas dans un historique public qui ne se nettoie plus.
+    L'adresse réelle de la console a été purgée des documents (13 occurrences), la v1 C#
+    écartée (D3), <code>cfg.json</code> retiré. Vérifié dans le contenu <em>committé</em>,
+    pas seulement sur le disque : aucune adresse réelle, aucun nom, aucune clé, aucun mot
+    de passe. Aucun distant : rien n'est en ligne tant que le Lot 12 n'est pas fait.</p>
+    <p class="resume"><b>Ce que ce lot a révélé au passage.</b> Le contrôle des types
+    n'examinait <em>aucun fichier</em> : le <code>tsconfig.json</code> de <code>v2/web</code>
+    est un fichier de références (<code>files: []</code>), sur lequel <code>tsc --noEmit</code>
+    se termine en succès sans rien lire — et <code>build.mjs</code> appelait
+    <code>vite.build()</code>, qui ne vérifie pas les types du tout. Un feu vert vide depuis
+    des semaines. Corrigé des deux côtés (<code>tsc -b --force</code>, bloquant à la
+    construction), et les quatre erreurs qu'il masquait corrigées avec. Le garde-fou a été
+    éprouvé par une erreur volontaire : <code>tsc</code> sort en 2, la construction s'arrête
+    et ne produit rien.</p>
+    <details>
+      <summary>13 livré(s) · 1 restant(s)</summary>
+      <ul><li class="ok">Alias RTSP retirés de v2/desktop/test-relay.js : sources via variables d'environnement, sortie en erreur si absents</li><li class="ok">Adresses réelles purgées du code v2 : champ hôte vide + placeholder générique, garde canTest corrigée</li><li class="ok">.gitignore : /publish/, /releases/, signature/, v2/relay/, *.log, journaux de poste</li><li class="ok">t.js supprimé et son bug consigné (écouter close, pas exit)</li><li class="ok">Notices complètes (mediamtx « aler9 », Velopack, Tailwind) + garde de build qui échoue si une licence manque</li><li class="ok">28.07 — L'icône ne dépend plus de src/ : v2/desktop/assets/alcor.ico, générée par scripts/icone.mjs depuis la géométrie de la marque, sans dépendance externe</li></ul>
+      <ul><li class="ok">28.07 — Premier commit sur <code>main</code> : 83 fichiers, 321 Ko, aucun secret, aucun node_modules, aucun binaire hormis l'icône</li><li class="ok">28.07 — Adresse réelle de la console purgée de docs/ (13 occurrences dans 7 documents)</li><li class="ok">28.07 — D3 tranchée : v1 C# (src/, tests/, publish/, .sln — 844 Mo) mise à la corbeille, pas effacée définitivement</li><li class="ok">28.07 — cfg.json retiré de la racine ; manifeste racine sans numéro de version, pour qu'un seul endroit fasse foi</li><li class="ok">28.07 — .gitattributes : les fins de ligne ne dépendent plus de la configuration du poste qui clone</li><li class="ok">28.07 — Le contrôle des types examinait ZÉRO fichier et la construction ne le lançait pas ; corrigé, rendu bloquant, et éprouvé par une erreur volontaire</li><li class="ok">28.07 — Les 4 erreurs de type ainsi révélées (CameraTile.tsx) corrigées</li></ul>
+      <ul><li class="reste">Rotation des alias RTSP sur la console UniFi : à faire à la main sur la console (désactiver/réactiver le RTSP par caméra). Ne bloque plus rien — les alias ne sont plus dans le code.</li></ul>
+    </details>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">2</span>
+      <h3>Socle multilingue</h3>
+      <span class="chip ok">livré · 2.22.0</span>
+    </header>
+    <p class="resume">L'infrastructure est livrée en 2.21.0, sans bibliothèque : un dictionnaire
+    plat (fr.ts, source de vérité) et sa traduction typée <code>Record&lt;Cle, string&gt;</code> —
+    le compilateur EST le contrat, une clé manquante arrête <code>npm test</code>. La langue suit
+    Windows par défaut, se choisit dans les réglages, et bascule à chaud (useSyncExternalStore).
+    Convertis : rail de navigation, commandes vidéo, « Ce qui a changé », Réglages entiers,
+    écran de connexion (2.21.1), tout le direct (2.21.2), la relecture et le lecteur
+    d'extraits (2.21.3), les détections, les alertes et l'introduction (2.21.4) —
+    <strong>tous les écrans sont bilingues</strong>, 289 clés au contrat.
+    L'historique des versions (fr[]/en[] côte à côte, parité vérifiée note pour note) et
+    tous les messages du processus principal (v2/desktop/i18n.js : relais, bulles,
+    erreurs typées, étapes du test, veilles semées) sont bilingues en 2.21.5. Le journal
+    de diagnostic passe à l'anglais en 2.21.6 — la langue des rapports de défaut d'un
+    projet ouvert —, gardes de test-maj.js mis au diapason à l'identique près.
+    <strong>Le lot est clos</strong>, puis dépassé : la 2.22.0 ajoute l'allemand et
+    l'italien, resserre la plomberie en deux registres (une langue de plus = traduire
+    deux fichiers + deux lignes), et documente le tout — docs/i18n.md pour les
+    contributeurs, CLAUDE.md à la racine pour qui touche au code. Huit versions
+    (2.21.0 → 2.22.0) en un week-end. Défaut = langue de Windows ; historique fr + en.</p>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">3</span>
+      <h3>Fiabilité du direct</h3>
+      <span class="chip ok">livré · 2.6.0</span>
+    </header>
+    <p class="resume">Le cœur est livré en 2.5.0 : une image qui se fige est repérée et le flux
+    repris seul, caméra par caméra. C&rsquo;était la panne la plus grave de l&rsquo;application —
+    « en direct » s&rsquo;affichait avant toute image décodée, et une vue gelée le restait
+    indéfiniment sans que rien ne le signale. Les huit points restants côté processus
+    principal ont suivi en 2.6.0 : ports du relais sondés une seule fois, reprise après
+    veille avec période de grâce, cause réelle remontée par refresh(), délai du contrôleur
+    respecté, écriture de session gardée, configuration écrite de façon atomique (absent et
+    illisible distingués), sortie du relais traitée par un seul chemin, et le bloc d&rsquo;état
+    déplacé au centre — il était invisible panneau replié ou en plein écran.</p>
+    <p class="resume"><strong>Deux comportements attendent le poste réel :</strong> reprise
+    après une coupure réseau, et réveil après veille. Ils ne se simulent pas honnêtement
+    ici. Voir <em>Ce qui reste à constater</em>.</p>
+    <details>
+      <summary>13 livré(s) · 0 restant(s)</summary>
+      <ul><li class="ok">2.5.0 — Détection de gel sur les images RÉELLEMENT décodées (getStats/framesDecoded, sonde 2 s) ; « direct » n&rsquo;est plus annoncé avant la première image</li><li class="ok">2.5.0 — Reprise par tuile, attente croissante bornée et gigue entre tuiles ; une caméra en échec est réessayée seule au lieu de rester hors ligne jusqu&rsquo;au prochain lancement</li><li class="ok">2.5.0 — Fuite RTCPeerConnection fermée : elle n&rsquo;était close que sur refus HTTP, un délai dépassé ou une erreur réseau en abandonnait une vivante à chaque reprise</li><li class="ok">2.5.0 — DELETE de la ressource WHEP à la fermeture (le relais gardait la session ouverte) et négociation bornée à 10 s (un relais muet laissait la vue en « Connexion… » pour toujours)</li><li class="ok">2.5.0 — Décision de reprise extraite dans video/sante.ts et éprouvée seule : 6 cas, dont fenêtre masquée (pas de boucle) et « disconnected » toléré comme transitoire</li></ul>
+      <ul><li class="ok">2.6.0 — Ports du relais sondés UNE fois et conservés : la reprise retombe sur les mêmes, le lecteur n&rsquo;a plus à redécouvrir l&rsquo;adresse</li><li class="ok">2.6.0 — Réveil après veille (powerMonitor) avec période de grâce de 4 s : la carte réseau n&rsquo;est pas encore revenue quand Windows annonce le réveil</li><li class="ok">2.6.0 — Cause réelle conservée par refresh() au lieu d&rsquo;un booléen : le journal dit enfin POURQUOI la session est tombée</li><li class="ok">2.6.0 — Délai imposé par le contrôleur respecté (RateLimitedError.retryAfterSeconds) : réessayer plus vite ne faisait que prolonger le verrou</li><li class="ok">2.6.0 — Écriture de session gardée : un disque plein ne fait plus échouer une connexion par ailleurs réussie</li><li class="ok">2.6.0 — Configuration écrite de façon atomique (fichier provisoire, fsync, renommage) et « absent » distingué d&rsquo;« illisible » : un fichier tronqué n&rsquo;écrase plus l&rsquo;empreinte du contrôleur</li><li class="ok">2.6.0 — Sortie du relais traitée par un seul chemin, quelle qu&rsquo;en soit la cause, et message typé avec chemins copiables</li><li class="ok">2.6.0 — Bloc d&rsquo;état et Réessayer déplacés au centre : ils étaient invisibles panneau replié ou en plein écran, c&rsquo;est-à-dire exactement quand la panne survient</li></ul>
+    </details>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">4</span>
+      <h3>Client persistant + Journal des détections</h3>
+      <span class="chip ok">livré · 2.7.0</span>
+    </header>
+    <p class="resume">Le client authentifié survit à la découverte au lieu d'être jeté :
+    la moindre question posée au contrôleur n'exige plus une reconnexion. V-Events a mesuré
+    le terrain avant le dessin — ~266 détections par jour, jusqu'à 428 sur une journée,
+    réparties de façon très inégale entre les caméras (rapport de 4,4), et un bruit
+    d'événements de console qui n'apprend rien sur ce qui s'est passé devant les objectifs.
+    D'où le filtre en tête, le chargement par pages et l'écart des types non-caméra.
+    L'onglet affiche le journal réel, vignettes comprises.</p>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">5</span>
+      <h3>Détections : recherche fine, et le panneau vivant</h3>
+      <span class="chip ok">livré · 2.16.0</span>
+    </header>
+    <p class="resume">V-Attributs a mesuré ce que le contrôleur sait vraiment d'une
+    détection, et le dessin en découle : les filtres ne proposent que ce qui est
+    <em>réellement</em> passé, avec son compte en regard — là où Protect offre une liste
+    théorique dont la plupart des cases sont vides. La recherche de plaque est tolérante
+    (le contrôleur en donne plusieurs lectures ; les derniers chiffres suffisent), et les
+    plaques comme les noms reconnus ne sortent jamais du processus principal.</p>
+    <p class="resume">Le mode <em>Journal</em> a été <strong>supprimé</strong> : la Recherche
+    faisait tout ce qu'il faisait, en mieux. Ce qu'il apportait d'irremplaçable — voir passer
+    le récent — a migré dans le panneau de gauche, qui reprend la sidebar de Protect en plus
+    dense : détections en direct avec leur image, activité heure par heure, profondeur réelle
+    de l'archive, part en pleine définition, remplissage du disque, débit d'écriture,
+    armement de Protect, versions. Deux précisions que Protect ne donne pas : une heure non
+    couverte par la lecture se dit <em>inconnue</em> au lieu de se dessiner vide, et la
+    rétention annoncée n'apparaît que lorsqu'elle contredit la profondeur mesurée.</p>
+    <p class="resume">Détail qui commandait le reste : la vignette d'un événement n'existe
+    qu'<em>après</em> sa fin (404 pendant, mesuré le 21.07). Une détection en cours affiche
+    donc l'instantané de sa caméra, puis bascule sur la vraie image.</p>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">6</span>
+      <h3>Relecture d'un extrait</h3>
+      <span class="chip ok">livré · 2.8.0</span>
+    </header>
+    <p class="resume">V-Export a tranché le dessin : le contrôleur ignore <code>Range</code> et
+    place l'index en queue de fichier, l'extrait est donc obtenu <em>entier</em> avant la
+    première image — mais il produit à 77× le temps réel, soit ~4 Mo et une fraction de
+    seconde pour une détection de quinze secondes. Cliquer une ligne du journal ouvre la
+    séquence ; trois secondes de marge l'encadrent, parce qu'une détection commence quand le
+    mouvement est <em>confirmé</em>, pas quand il débute. Lecture, pause, image par image,
+    0,25×–2×, déplacement libre, enregistrement sur le disque. Les plages sont servies
+    localement sur le fichier obtenu (le lecteur les exige pour chercher une position) et
+    vérifiées hors ligne : <code>npm test</code>, 34 contrôles.</p>
+    <p class="resume"><strong>Réserve assumée :</strong> le codec n'a été mesuré que sur la
+    G5 Turret Ultra (H.264 + AAC, confirmé par lecture de l'arborescence de boîtes). Si la
+    G6 exportait en AV1 ou H.265, Electron ne saurait pas la décoder. Le lecteur constate
+    donc l'échec et le <em>dit</em>, en proposant l'enregistrement — plutôt qu'un cadre noir
+    sans explication. À constater sur le poste.</p>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">7</span>
+      <h3>Relecture étendue</h3>
+      <span class="chip ok">livré · 2.11.0</span>
+    </header>
+    <p class="resume">V-Frise a renversé le dessin avant qu'il ne commence :
+    <code>recordingStartLQ</code> est le vrai début de l'archive — <strong>162 jours</strong>
+    sur ce matériel — tandis que <code>recordingStart</code>, malgré son nom, marque la fin de
+    la haute définition, à 29 jours. Prendre le second pour bord gauche aurait amputé la frise
+    de 133 jours de vidéo qui existe et se lit. Au-delà de cette frontière l'export rend
+    640×360 là où il rendait 3840×2160 : la frise l'annonce plutôt que de le laisser
+    découvrir.</p>
+    <p class="resume">Navigation un jour à la fois, frise zoomable, détections repérées au
+    survol. La lecture continue enchaîne des morceaux de trente secondes sur deux lecteurs
+    alternés, préparés à l'avance : la coupure toutes les dix secondes de la première
+    version a disparu.</p>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">8</span>
+      <h3>Alertes en direct — « les veilles »</h3>
+      <span class="chip ok">livré · 2.13.0</span>
+    </header>
+    <p class="resume">V-Alertes a tranché : la liaison temps réel de Protect
+    (<code>ws/updates</code>) s'ouvre au compte applicatif et porte les détections. Le lot
+    s'est donc fait en temps réel, pas par interrogation. Client WebSocket <b>écrit à la
+    main</b> — Electron 33 embarque un Node sans objet WebSocket, et l'application n'a
+    aucune dépendance d'exécution qu'on souhaite dépenser pour ça. Décodeur du format
+    binaire de Protect, non publié, donc lu par observation : tout ce qui ne se comprend
+    pas est ignoré et consigné, jamais deviné.</p>
+    <p class="resume"><b>Le chiffre qui a renversé la conception :</b> relevé dans la liste
+    d'alarmes réelle du poste de référence — Motion 157/jour, Vehicle 40, Animal 7, <b>Person 1</b>.
+    « Notifier tout serait intenable » n'était vrai que du mouvement. Le filtre élaboré
+    qu'on imaginait n'avait pas lieu d'être ; en revanche l'écran affiche le <b>volume
+    attendu de chaque sujet avant de l'activer</b>, ce que Protect ne dit nulle part.</p>
+    <p class="resume">Repris de Protect : périmètre par appareils, profils horaires nommés,
+    les trois plannings, l'anti-répétition. Laissé : le « ET » entre déclencheurs, les
+    actions matérielles, les destinataires — il y a un utilisateur, devant un PC.
+    <b>Réserve assumée :</b> Alcora a son propre armement, à la demande du mainteneur. Deux
+    interrupteurs sur le même mur, et l'écran le dit en toutes lettres.</p>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">9</span>
+      <h3>Confort des alertes et audio</h3>
+      <span class="chip ok">livré · 2.18.0</span>
+    </header>
+    <p class="resume">L'audio de la <b>relecture</b> fonctionnait déjà sans qu'on l'ait
+    remarqué : V-Export avait relevé « H.264 + <b>AAC</b> », donc la piste est là et le
+    lecteur la joue. Correction d'une affirmation fausse de ma part le 29.07.</p>
+    <p class="resume">Le son du <b>direct</b> est livré en 2.14.0, et il se DÉCOUVRE plutôt
+    que de se supposer : le flux RTSP porte deux pistes (AAC 16 kHz, puis Opus 48 kHz) et
+    WebRTC ne transporte que la seconde. <b>V-Opus est levée le 01.08.2026</b>, non par une
+    sonde mais par l'usage — le retour du poste : « tous les flux vidéos ont du son, je ne vois nulle
+    part où je peux lire un flux sans le son ». Le relais republie donc bien la piste Opus,
+    et le message « ce flux ne porte pas de son » ne sert plus que de garde-fou.</p>
+    <p class="resume">Reste V-Audio, pour la fumée et le bris de verre : la liste d'alarmes
+    de Protect les propose, ils ne se sont jamais déclenchés sur le poste de référence, et rien ne dit
+    qu'ils remontent par le même canal. Cela ne bloque pas le lot — c'est une mesure, pas un
+    manque.</p>
+    <p class="resume"><b>La preuve du lot, et elle vaut mieux qu'une mesure :</b> le
+    01.08.2026, quelqu'un est rentré au domicile pendant que les caméras étaient regardées. Alcora a
+    émis sa notification Windows <b>trois secondes avant celle de Protect</b>. C'est ce que
+    l'architecture locale devait donner — la liaison temps réel sur le contrôleur, contre un
+    aller-retour par le nuage d'Ubiquiti — et c'est la première fois qu'on le constate sur
+    un vrai passage.</p>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">10</span>
+      <h3>Confort fenêtre, disposition, entrées</h3>
+      <span class="chip" style="color:var(--warn);background:rgba(208,162,21,.13)">en cours</span>
+    </header>
+    <p class="resume">Chantier bien avancé : plein écran, isolement, espacement, réorganisation
+    mémorisée, panneau au survol — et, livrés en 2.4.0, la fenêtre qui se remet exactement où
+    elle était (multi-écrans compris) et le démarrage avec Windows. Livrés depuis : les commandes de chaque caméra dans son
+    bandeau, les captures en pleine définition, l'écoute caméra par caméra, le halo
+    d'activité, les raccourcis clavier (chiffres, zoom, transport) et le filtre de
+    caméras. Reste le détachement multi-fenêtres, précédé de V-Decode.</p>
+    <details>
+      <summary>12 livré(s) · 1 restant(s)</summary>
+      <ul><li class="ok">Plein écran F11 + isolement double-clic + Échap par crans (2.0.3)</li><li class="ok">Espacement réglable 0-24 px, zéro par défaut (2.0.7, figé en 2.0.9)</li><li class="ok">Réorganisation à la souris, ordre mémorisé, caméra hors ligne qui garde sa place (2.0.8)</li><li class="ok">Panneau révélé au survol du bord, sans déplacer l'image ni renégocier les flux (2.1.0)</li><li class="ok">Préférences hors config.json : panneau, espacement, ordre en localStorage</li><li class="ok">2.4.0 — Fenêtre retrouvée : taille, position, écran, état agrandi/plein écran (fenetre.js) ; la position n'est reprise que si elle retombe sur un écran encore présent (8 cas testés, dont coordonnées négatives et écran débranché), sinon recentrage ; bornes normales mémorisées, jamais celles de l'état agrandi</li><li class="ok">2.4.0 — Ouvrir avec Windows : inscription visant le LANCEUR STABLE au-dessus de current\ (survit aux mises à jour), état relu du registre après chaque bascule, nettoyage de la clé Run à la désinstallation, interrupteur dans les réglages</li><li class="ok">2.5.0 — Identité stable dans la barre des tâches : l&rsquo;AppUserModelID est déclaré (velopack.&lt;packId&gt;, relevé sur les raccourcis réels). Sans lui Windows le déduisait du chemin de l&rsquo;exe, qui traverse current\ et change à chaque mise à jour : l&rsquo;icône épinglée se dédoublait</li><li class="ok">2.14.0 — Écouter une caméra, une seule à la fois : la tuile DÉCOUVRE si le flux reçu porte une piste audio, plutôt que de le supposer. S&rsquo;il n&rsquo;y en a pas, le bouton le dit — « ce flux ne porte pas de son » — au lieu de ne rien faire. Le son reste éteint par défaut, réglable. Cette ligne figurait encore dans les restes le 31.07, alors que le Lot 9 l&rsquo;annonçait livrée : c&rsquo;est cette contradiction qui a fait proposer un chantier déjà fait</li><li class="ok">2.18.0 — <b>Le halo d&rsquo;activité.</b> Un trait lumineux parcourt le cadre de la caméra où quelque chose se passe, tant que ça dure — repris de Protect, choisi parmi trois traitements (docs/maquette-activite.html). Les deux bouts viennent de la liaison temps réel, celle qui prévient trois secondes avant Protect ; un garde-fou de deux minutes éteint le halo si la trame de fin n&rsquo;arrive jamais. L&rsquo;étiquette dit CE QUI est détecté, ce que Protect ne fait pas</li><li class="ok">2.18.0 — <b>Les commandes partout.</b> Zoom, son et capture existaient dans le seul direct ; ils sont désormais dans la relecture et dans la séquence d&rsquo;une détection — là où l&rsquo;on cherche justement un détail. Le zoom RECADRE dans les pixels de la source (canevas) au lieu d&rsquo;étirer l&rsquo;affichage, et dit quand il se met à interpoler. En relecture il suit le lecteur à l&rsquo;antenne, les deux se relayant toutes les trente secondes. <b>Livré MORT en 2.18.0</b> — l&rsquo;indicateur changeait, l&rsquo;image non : l&rsquo;élément vidéo était capturé avant que React n&rsquo;attache sa référence, et le rappel d&rsquo;image ne se déclenche jamais sur une vidéo en pause. Réparé en 2.18.1, et le mode démonstration a reçu une <b>vraie vidéo de mire</b> (ffmpeg, compteur + 440 Hz) précisément parce qu&rsquo;aucun pixel réel n&rsquo;existait en développement pour voir ce défaut avant de le livrer</li></ul>
+      <ul><li class="ok">2.20.0 — Raccourcis clavier : chiffres 1-9 pour isoler une caméra dans l&rsquo;ordre AFFICHÉ (0 ramène la mosaïque), +/− pour zoomer (caméra isolée, relecture, séquence), espace et flèches pour le transport de la relecture. Jamais quand un champ de saisie a le focus</li><li class="ok">2.20.0 — Filtre de caméras : un œil dans le panneau masque une image de la mosaïque. On cache une IMAGE, pas une caméra — veilles, détections et relecture continuent — et la dernière visible ne se masque pas</li><li class="reste">Détacher sur un autre écran — précédé de V-Decode</li></ul>
+    </details>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">11</span>
+      <h3>Mise à jour automatique</h3>
+      <span class="chip" style="color:var(--ok);background:rgba(143,174,90,.13)">fait — reste 11b</span>
+    </header>
+    <p class="resume">Critère de fin atteint, <b>perdu, puis regagné</b>. Une version publiée
+    arrive seule sur le poste installé — y compris à travers le renommage du canal, y compris
+    pendant la nuit. Mais du 29 au 31.07.2026 ce n'était plus vrai : <b>huit versions
+    d'affilée</b> ont été refusées au démarrage, et il fallait passer par les réglages à
+    chaque fois. Ce paragraphe affirmait pourtant, pendant ces trois jours, une fiabilité
+    « prouvée plusieurs fois en conditions réelles ». C'est la dérive la plus dangereuse d'un
+    artefact d'avancement : une réussite passée, écrite au présent.</p>
+    <p class="resume">Réparé en 2.17.3, confirmé en 2.17.4 par le journal du poste —
+    téléchargement accepté du premier coup, appliqué neuf secondes plus tard, sans
+    intervention. Reste le sous-lot 11b (delta, canal de préversion, retrait d'une version
+    fautive).</p>
+    <details>
+      <summary>17 livré(s) · 3 restant(s)</summary>
+      <ul><li class="ok">Chaîne complète : manifeste releases.win.json, téléchargement .part+renommage, SHA-256 avant toute application, Update.exe apply au redémarrage</li><li class="ok">2.0.9 — Mise à jour AU LANCEMENT, automatique et sans échappatoire (D8 tranchée), écran dédié qui rend compte ; recherche bornée à 3 s pour ne jamais retarder les caméras</li><li class="ok">2.1.0 — Verrou majImminente : la découverte ne peut plus relancer le relais pendant qu'une mise à jour s'applique</li><li class="ok">2.2.x — Filtre par PackageId : sans lui, une installation comparait des numéros et aurait avalé le paquet d'un autre produit (constaté au renommage) ; manifeste étranger signalé au journal</li><li class="ok">2.2.3 — Un seul téléchargement par version (verrou de promesse) : deux vérifications simultanées s'entremêlaient dans le même fichier temporaire, paquet corrompu constaté sur le poste réel</li><li class="ok">2.2.3 — Fichier temporaire nommé par processus + reprise automatique (2 essais) sur empreinte fausse + balayage des .part orphelins + diagnostic chiffré (octets reçus vs attendus)</li><li class="ok">Version mémorisée (derniereVersion, 2.1.1) : garde contre les copies périmées qui écrasaient la configuration</li><li class="ok">Publication : gh release create, README de dépôt avec mention de non-affiliation, refus de remplacer une étiquette diffusée</li><li class="ok">Canal renommé : alcora-ch/Alcora-releases, redirection GitHub vérifiée par requête réelle (3 sauts, 200), constante DEPOT accordée entre maj.js et publier.mjs</li><li class="ok">Signature de bout en bout, désormais CN=Alcora (28.07, valable 2036), horodatée</li><li class="ok">Invitation en session (bandeau « Redémarrer maintenant ») pour les mises à jour trouvées en cours d'usage</li><li class="ok">Rappels installeur --veloapp-* traités avant tout, avec nettoyage de la clé Run à la désinstallation (2.4.0)</li><li class="ok">V-MAJ validée en réel : chaînes 2.0.7→…→2.4.0 appliquées seules sur le poste de référence, y compris une pendant la nuit (25.07, 03h47)</li><li class="ok">2.17.3 — <b>La panne des trois jours, et sa cause enfin reproduite.</b> Le téléchargement avait DEUX consommateurs du même morceau : un écouteur qui hachait <i>synchronement</i>, et le flux de fichier qui écrivait <i>plus tard</i>. Les morceaux du <code>net.fetch</code> d&rsquo;Electron viennent de Chromium, qui recycle ses tampons : l&rsquo;empreinte restait juste, la longueur aussi, et le fichier recevait d&rsquo;autres octets. Seulement au démarrage, là où l&rsquo;écriture prend du retard sur le relais et deux flux 4K. Corrigé par une copie défensive — un seul consommateur, une mémoire qui nous appartient. Deux diagnostics faux l&rsquo;ont précédé (2.17.0, 2.17.2) ; ce qui a tranché n&rsquo;est pas un raisonnement mais une expérience : le même chemin d&rsquo;écriture, isolé en Node pur, n&rsquo;a jamais divergé en trois passes de 148 Mo</li><li class="ok">2.17.3 — Les paquets appliqués ne s&rsquo;accumulent plus. Il y en avait DIX-SEPT sur le poste, à 148 Mo pièce — 2,5 Go immobilisés. Seul le paquet en cours est conservé, et le balayage a lieu AVANT l&rsquo;écriture, pour libérer la place plutôt que de l&rsquo;exiger en plus</li><li class="ok">31.07 — <code>test-maj.js</code>, 28 contrôles hors ligne : ce chemin n&rsquo;en avait AUCUN, alors que c&rsquo;est celui dont la panne coûte le plus cher — une application qui ne se met plus à jour ne reçoit plus aucune correction. L&rsquo;invariant tenu est que l&rsquo;empreinte rendue décrive TOUJOURS le fichier écrit ; il est éprouvé en réinjectant le défaut, avec une source qui reprend sa mémoire</li></ul>
+      <ul><li class="reste">11b — Delta jamais consommé par le client (Full uniquement, choix assumé) : ~55 Ko au lieu de 148 Mo, à activer maintenant que la chaîne a prouvé sa fiabilité</li><li class="ok">2.19.0 — « Ce qui a changé » à l'ouverture : après une mise à jour, une fenêtre présente l'historique depuis la dernière version VUE. Jamais à la première installation, et l'écart survit à une fermeture sans lecture — le point de départ est gravé avant le marquage de version, faille attrapée par le test avant d'exister en vrai</li><li class="reste">11b — Canal de préversion (aucune notion de canal)</li><li class="reste">11b — Retrait d'une version fautive / retour arrière (V-Downgrade non levée)</li></ul>
+    </details>
+  </article>
+
+  <article class="lot">
+    <header>
+      <span class="num">12</span>
+      <h3>Ouverture publique du dépôt</h3>
+      <span class="chip" style="color:var(--warn);background:rgba(208,162,21,.13)">préparé — reste le geste</span>
+    </header>
+    <p class="resume"><b>Le dossier public est PRÊT depuis le 02.08.2026</b> — préparé sans
+    rien mettre en ligne, l'ouverture restant le geste du mainteneur. Décisions prises ce
+    jour-là : domaine <b>alcora.ch</b> (acquis), licence <b>GPL-3.0</b> — aucun fork fermé
+    ne s'appropriera le travail. Dans le dépôt : LICENSE (texte canonique GNU), README.md
+    anglais + README.fr.md croisés, SECURITY.md (security@alcora.ch, bilingue), le site
+    one-page bilingue à bascule mémorisée (site/index.html + CNAME — vérifié jusqu'au rendu
+    mobile, et le lien de téléchargement « latest » rend 200), et site/DEPLOIEMENT.md avec
+    les trois étapes Pages + DNS.</p>
+    <p class="resume"><b>Exécuté le 02.08 au soir, sur demande du mainteneur.</b> L'historique
+    des versions est RÉÉCRIT pour le public — les notes parlaient de son poste, de son
+    disque, de ses mesures ; elles décrivent désormais l'application, et les séries de
+    correctifs sont regroupées (2.20.1). Le dépôt des versions est PURGÉ : 40 versions en
+    ligne → 2 (chaque ancien binaire emportait les notes de son époque), chaîne de mise à
+    jour revérifiée après coup — manifeste et paquets à 200. Le site est EN LIGNE côté
+    GitHub : poussé sur le dépôt public, Pages actif, domaine posé — seul le DNS chez le
+    registraire reste, et il n'appartient qu'au mainteneur. L'adresse security@alcora.ch est
+    créée. Et le projet a quitté le compte personnel : l'organisation <b>alcora-ch</b>
+    (créée par le mainteneur) porte le dépôt des versions depuis le 02.08 au soir — transfert
+    GitHub avec redirections durables, vérifiées par requête réelle : aucun poste installé
+    n'a rien à faire. Le canal, le site et les documents pointent tous sur le nouveau
+    foyer (2.20.2).</p>
+    <p class="resume">Balayage du contenu committé refait le 02.08 : aucun nom de réseau,
+    aucune adresse mail, aucun journal de poste — seules des adresses d'exemple. Restent
+    avant le geste : la redirection <b>security@alcora.ch</b> (AVANT l'ouverture — une
+    adresse de contact qui rebondit est pire qu'aucune), le dépôt public et son push,
+    Pages + DNS, et le Lot 2 (i18n de l'application), qui a retrouvé son motif.</p>
+  </article>
+
+  <h2>Livré hors plan — l'identité (24–28.07)</h2>
+  <ul class="horsplan"><li><b style="color:var(--ink)">Le nom : Alcora.</b> Choisi après recherche (59 candidats, 18 jugés sur 3 axes, 13 tués par collision réelle — Blue Iris, TRENDnet Mira, FLIR Horizon…) ; Alcor est l'étoile-test d'acuité visuelle de la Grande Ourse. Renommage EXÉCUTÉ le 28.07 pendant qu'une seule installation existait : packId, exécutable, dossier de données avec reprise automatique (config, secrets ET la clé Local State — leçon apprise : safeStorage chiffre par dossier, pas par compte), certificat CN=Alcora, dépôt renommé.</li><li><b style="color:var(--ink)">La marque « L'écart ».</b> Plaque d'or, Mizar et Alcor en creux, reliées par le trait des atlas. Icône Windows générée par scripts/icone.mjs (rastérisation maison, 16→256 px, Alcor survit à 16 px avec 4 pixels percés) ; marque animée (rotation lente) en tête du rail et dans les réglages ; couleur = l'accent réel de l'application #d2a263.</li><li><b style="color:var(--ink)">L'introduction (2.3.0).</b> La Grande Ourse aux positions J2000 réelles se dessine dans un ciel de 120 étoiles — une étoile par étape RÉELLEMENT franchie (jalons IPC session/inventaire ajoutés au processus principal), puis le ciel zoome (similitude ×3,09, 10,4°) et Mizar/Alcor deviennent les deux vides du logo. Tempo contemplatif retenu ; rien ne se saute — ni l'introduction ni la mise à jour, pour qu'aucune version périmée ne tourne (2.6.0) ; les caméras se connectent SOUS le voile ; un échec d'ouverture efface l'intro. Validée en réel le 28.07.</li><li><b style="color:var(--ink)">Robustesse gagnée en route.</b> Sauvegarde/restauration de la connexion à la remise à zéro (2.1.1) ; garde contre les copies périmées, avec journalisation du chemin d'exécution (2.1.1) ; message pare-feu qui n'accuse plus l'antivirus à tort (2.1.1) ; thème verre permanent, étiquettes hors image, état en tête de panneau (2.0.9).</li></ul>
+
+  <h2>Livré hors plan — ce qui n'était vérifié par personne (31.07)</h2>
+  <p class="resume">Quatre défauts en quatre jours sont partis en production non pas faute de
+  garde-fou, mais parce que le garde-fou <b>ne s'exécutait pas</b> — ou pas sur tout le
+  terrain. « Vert » a voulu dire « non vérifié » quatre fois de suite. Revue systématique
+  avant que d'autres postes que le poste de référence ne reçoivent cette application.</p>
+  <ul class="horsplan">
+    <li><b style="color:var(--ink)">Les quatre angles morts.</b>
+    <code>tsc --noEmit</code> examinait ZÉRO fichier (tsconfig de références, <code>files: []</code>) —
+    quatre erreurs de type ont survécu des semaines, corrigé par <code>tsc -b --force</code>.
+    <code>react/rules-of-hooks</code> était configuré mais oxlint n'était jamais lancé — écran
+    noir en 2.10.0, livré sur le poste de référence. Le contrat processus principal ↔ page n'était vérifié par
+    RIEN, le contrat étant en TypeScript et <code>main.js</code> en JavaScript — six champs
+    calculés, déclarés, affichés, et jetés au passage du pont. Et la chaîne de mise à jour
+    n'avait aucun test, alors que c'est le chemin dont la panne coûte le plus cher.</li>
+    <li><b style="color:var(--ink)">oxlint ne regardait que l'interface.</b> Il tournait sur
+    <code>v2/web/src</code> depuis toujours : les <b>9 428 lignes</b> de JavaScript du
+    processus principal — main.js, la chaîne de mise à jour, le client Protect, le relais,
+    les scripts de construction — n'étaient analysées par rien. Précisément la moitié du code
+    où vivent les défauts les plus coûteux. Désormais lancé sur tout, dans les tests ET la
+    construction, avec les <b>avertissements bloquants</b> : une règle qui prévient sans
+    arrêter est un garde-fou à moitié posé.</li>
+    <li><b style="color:var(--ink)">Le pont IPC.</b> Trente-deux canaux, aucun contrôle. Un
+    canal renommé d'un seul côté laisse les types justes des DEUX côtés, le compilateur muet,
+    et le bouton silencieusement inerte. <code>test-contrat.js</code> compare les canaux
+    traités, invoqués, émis et écoutés, plus les méthodes de <code>ProtectBridge</code> face à
+    celles du preload.</li>
+    <li><b style="color:var(--ink)">La configuration et les secrets.</b>
+    <code>store.js</code>, 262 lignes, aucun test — et c'est lui qui garde l'adresse du
+    contrôleur, le compte, le mot de passe, la clé à deux facteurs et l'empreinte de clé
+    publique. Ses commentaires racontaient TROIS incidents survenus sur le poste réel (la
+    copie périmée qui a effacé les identifiants, le fichier tronqué qui faisait perdre
+    l'empreinte, la reprise de dossier sans « Local State »), sans que rien ne garantisse
+    qu'ils ne reviennent. 45 contrôles les verrouillent, plus trois propriétés que personne
+    n'avait écrites : sans chiffrement on REFUSE d'écrire un secret plutôt que de le poser en
+    clair, une clé déjà en place n'est jamais remplacée, et une seconde remise à zéro
+    d'affilée ne détruit pas la sauvegarde.</li>
+    <li><b style="color:var(--ink)">La discipline retenue.</b> Un garde-fou ajouté est
+    <b>prouvé en réinjectant le défaut</b> : il doit échouer, et échouer en nommant le
+    problème. Fait pour chacun de ceux ci-dessus. <code>npm test</code> compte désormais
+    <b>11 suites</b> hors ligne.</li>
+  </ul>
+
+  <h2>Décisions</h2>
+  <div class="tablo"><table>
+    <thead><tr><th>#</th><th>Sujet</th><th>État</th><th>Détail</th></tr></thead>
+    <tbody><tr><td>D1</td><td>Emplacement des versions</td><td class="etatD t">tranchée</td><td>Dépôt public alcora-ch/Alcora-releases (renommé le 28.07, redirection vérifiée).</td></tr><tr><td>D2</td><td>Titulaire du droit d'auteur</td><td class="etatD t">tranchée</td><td>Thomas, à titre personnel. Le fichier LICENSE portera son nom.</td></tr><tr><td>D3</td><td>Sort de la v1 (C#/WPF)</td><td class="etatD t">tranchée et exécutée</td><td>Supprimée le 28.07 — src/, tests/, publish/ et le .sln, 844 Mo, mis à la <b>corbeille</b> et non effacés définitivement : réversible tant que la corbeille n'est pas vidée. Le prototype portait l'adresse réelle d'une console en dur ; le dépôt démarre donc sans lui.</td></tr><tr><td>D4</td><td>Langues de l'application</td><td class="etatD t">tranchée</td><td>Français + anglais au lancement.</td></tr><tr><td>D5</td><td>Langue du dépôt public</td><td class="etatD o">ouverte</td><td>Recommandation : README en anglais, docs/ conservées en français.</td></tr><tr><td>D6</td><td>Nom du projet</td><td class="etatD t">tranchée ET exécutée</td><td>Alcora, le 24.07 ; renommage complet le 28.07, au coût minimal : une seule installation existait. Canal, dossier de données et identité migrés.</td></tr><tr><td>D7</td><td>Signature pour diffusion publique</td><td class="etatD o">ouverte — avancée</td><td>Certificat refait CN=Alcora (valable 2036), approuvé sur le poste de référence. Pour des inconnus : SmartScreen subsiste — OV/EV ou sources seules, à trancher au lot 12.</td></tr><tr><td>D8</td><td>Modèle de mise à jour</td><td class="etatD t">tranchée et livrée</td><td>Au lancement : automatique, sans échappatoire (choix du mainteneur, 2.0.9). En session : silencieuse + invitation.</td></tr><tr><td>D9</td><td>Emplacement des extraits exportés</td><td class="etatD t">tranchée</td><td>Cache interne au dossier de données, 24 extraits conservés au plus (~0,26 Mo par seconde de vidéo). Ce que l'utilisateur veut GARDER, il l'enregistre lui-même où il veut, par le bouton du lecteur. Rien ne s'accumule à son insu.</td></tr><tr><td>D10</td><td>Canal d'export pour le zoom en relecture</td><td class="etatD t">tranchée</td><td>Le canal haute définition, sans choix offert : /video/export rend ce que la caméra a enregistré, et le zoom se fait donc dans l'image la plus fine disponible. Un sélecteur de qualité n'aurait rien à sélectionner.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Vérifications matérielles</h2>
+  <p class="sous">Chacune précède son lot : une mesure courte sur le vrai matériel avant de s'engager.</p>
+  <div class="tablo" style="margin-top:12px"><table>
+    <thead><tr><th>Vérif.</th><th>Avant</th><th>État</th><th>Question</th></tr></thead>
+    <tbody><tr><td>V-MAJ</td><td>lot 11</td><td class="etatD t">validée (complets)</td><td>Chaîne appliquée seule, plusieurs fois, en conditions réelles — dont une pendant la nuit. Non couvert : un vrai delta, et une seconde machine.</td></tr><tr><td>V-Events</td><td>lot 4</td><td class="etatD t">mesurée</td><td>Oui. Ordre ascendant, la limite garde les PLUS RÉCENTS. ~266/jour, jusqu'à 428, rapport de 4,4 entre caméras, 7 sujets intelligents, et du bruit d'événements de console à écarter.</td></tr><tr><td>V-Export</td><td>lot 6</td><td class="etatD t">mesurée</td><td>Oui. Range IGNORÉ, index en queue de fichier — mais 77,5× le temps réel à 19,1 Mo/s, ce qui rend l'obtention entière indolore. H.264 + AAC sur la G5, confirmé par lecture des boîtes. <b>Non couvert : la G6.</b></td></tr><tr><td>V-Opus</td><td>lot 10</td><td class="etatD o">à faire</td><td>La piste audio reçue porte-t-elle le micro ou le retour haut-parleur ? ~5 min.</td></tr><tr><td>V-Decode</td><td>lot 10</td><td class="etatD o">à faire</td><td>Le PC décode-t-il plus de deux flux 4K en matériel ? ~10 min.</td></tr><tr><td>V-Alertes</td><td>lot 8</td><td class="etatD o">à faire</td><td>Canal temps réel, latence, notification sur build installé. ~1 h.</td></tr><tr><td>V-Audio</td><td>lot 9</td><td class="etatD o">à faire</td><td>Les caméras émettent-elles fumée/bris de verre ? Les entendent-elles ? ~10 min.</td></tr><tr><td>V-Downgrade</td><td>lot 11b</td><td class="etatD o">à faire</td><td>Revenir en arrière d'une version : possible, à quel coût ? ~20 min.</td></tr>
+    </tbody>
+  </table></div>
+
+  <footer>Mis à jour le 29.07.2026 au soir, version 2.14.0 publiée. Dépôt sous contrôle de
+  version, huit commits, aucun distant. 254 vérifications hors ligne.
+  Le plan de référence complet reste <code>docs/plan-travail.md</code> ; cette page en est la photographie d'avancement.
+  Détail des lots 2, 4 à 9 : relevé du 23.07, inchangé depuis.</footer>
+</div>

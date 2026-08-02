@@ -1,0 +1,14 @@
+{
+  "name": "alcora",
+  "private": true,
+  "//version": "Volontairement absent : la seule version qui existe est celle de v2/desktop/package.json, que la construction et la publication lisent. Un second numero ici ne pourrait que mentir.",
+  "description": "Alcora — lanceurs de developpement",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "publier": "node scripts/publier.mjs",
+    "web": "npm --prefix v2/web run dev",
+    "test": "node scripts/test.mjs",
+    "install:all": "npm --prefix v2/web install && npm --prefix v2/desktop install"
+  }
+}

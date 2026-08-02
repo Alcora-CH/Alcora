@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Thème « Nuit lecture » — charbon chaud, texte ivoire, accent ambre.
+   Repris du registre de thèmes de DS-Manage, même nommage.
+
+   Deux familles de couleurs, à ne jamais mélanger :
+     · le châssis (bg / card / ink / accent…)   — chaud
+     · la rampe « on » (on-veil / on-1…)        — strictement neutre,
+       réservée à ce qui flotte AU-DESSUS de la vidéo. Une pastille
+       chaude posée sur une image infrarouge jurerait.
+   ============================================================ */
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card2: var(--card2);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-soft: var(--soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-d: var(--accent-d);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+
+  --color-on-1: var(--on-1);
+  --color-on-2: var(--on-2);
+  --color-on-3: var(--on-3);
+
+  --font-sans: "Inter Variable", "Inter", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+}
+
+:root {
+  --bg: #1b1e23;
+  --card: #23272e;
+  --card2: #2a2f37;
+  --line: #353b44;
+  --line2: #434a55;
+  --ink: #dad5cb;
+  --muted: #9a958b;
+  --soft: #75716a;
+  --accent: #d2a263;
+  --accent-soft: #322a1d;
+  --accent-d: #e6b877;
+  --ok: #8fae5a;
+  --ok-soft: #232a18;
+  --info: #78a6e0;
+  --info-soft: #1a2636;
+  --warn: #d0a215;
+  --warn-soft: #2e2811;
+  --bad: #d8685a;
+  --bad-soft: #2e1c19;
+
+  /* rampe neutre, au-dessus de la vidéo uniquement */
+  --on-veil: rgba(16, 16, 16, 0.72);
+  --on-1: #f2f2f0;
+  --on-2: #d6d6d4;
+  --on-3: #a8a8a6;
+
+  /* Réglages de l'habillage flottant. Neutres par défaut : le thème « Effet verre » les
+     redéfinit, aucun autre code n'a à savoir qu'il existe. */
+  --on-brd: transparent;
+  --on-blur: none;
+}
+
+/* ------------------------------------------------------------------ Effet verre
+
+   Thème optionnel, éteint par défaut. Quand il est actif, l'habillage devient translucide
+   et se pose AU-DESSUS de la vidéo pleine page — c'est la seule façon d'avoir un vrai effet
+   de verre, puisqu'il faut quelque chose derrière à diffuser. Le flou en fond coûte du GPU :
+   c'est assumé, et c'est pourquoi il se coupe d'un clic.
+   ---------------------------------------------------------------------------------------- */
+
+.theme-verre {
+  --on-veil: rgba(255, 255, 255, 0.10);
+  --on-brd: rgba(255, 255, 255, 0.16);
+  --on-blur: blur(14px) saturate(140%);
+}
+
+/* Toute surface flottante partage cette matière. */
+.veil {
+  background: var(--on-veil);
+  border: 1px solid var(--on-brd);
+  -webkit-backdrop-filter: var(--on-blur);
+  backdrop-filter: var(--on-blur);
+}
+
+/* La bande d'icônes et le panneau flottent au-dessus de la vidéo. */
+.theme-verre .app-rail,
+.theme-verre .app-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  background: rgba(33, 37, 44, 0.52);
+  border-color: rgba(255, 255, 255, 0.10);
+  -webkit-backdrop-filter: blur(20px) saturate(128%);
+  backdrop-filter: blur(20px) saturate(128%);
+}
+.theme-verre .app-rail { left: 0; }
+.theme-verre .app-panel {
+  left: 56px;                          /* largeur de la bande d'icônes */
+  border-radius: 0 18px 18px 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),   /* arête douce, non criarde */
+    24px 0 44px rgba(0, 0, 0, 0.34);
+}
+/* Lueur d'angle diffuse — le seul reflet, sans trait spéculaire net. */
+.theme-verre .app-panel::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(130% 90% at 8% -8%, rgba(255, 255, 255, 0.10), transparent 50%);
+  pointer-events: none;
+}
+
+/*
+ * Le fond de la scène. Sans lui, la zone autour des images restait le charbon plat du
+ * thème de base : le verre n'avait rien à diffuser hors de la vidéo, et l'ensemble se
+ * voyait « à moitié fait ». Un dégradé sombre et lent donne au verre de la matière
+ * partout, pour un coût nul — c'est un fond statique, composé une fois.
+ */
+.theme-verre .app-scene {
+  background:
+    radial-gradient(55% 45% at 18% 0%, rgba(210, 162, 99, 0.06), transparent 70%),
+    radial-gradient(50% 55% at 88% 100%, rgba(120, 166, 224, 0.05), transparent 70%),
+    linear-gradient(160deg, #232830, #14161a);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Barres de défilement discrètes : celles du système cassent l'ensemble. */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--soft); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Barre de progression sans durée connue : elle balaie, elle ne promet rien. */
+@keyframes balayage {
+  0%   { margin-left: -32%; }
+  100% { margin-left: 100%; }
+}
+
+/* ------------------------------------------------------------------ La marque
+
+   Le couple d'astres pivote lentement dans sa plaque. L'origine est le centre du viewBox :
+   sans « transform-box: view-box », la rotation se ferait autour du coin et sortirait du
+   cadre. L'icone Windows reste figee — seule la marque a l'ecran est animee. */
+.marque-rotor { transform-box: view-box; transform-origin: 50% 50%; }
+.marque-anime .marque-rotor { animation: marque-tourne 16s linear infinite; }
+@keyframes marque-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .marque-anime .marque-rotor { animation: none; }
+}
+
+/* ---------------------------------------------------- L'activité en cours
+
+   Reprise du halo de Protect, choisi le 01.08.2026 parmi trois traitements
+   (docs/maquette-activite.html) : un segment lumineux parcourt le cadre tant que la
+   détection dure.
+
+   Le halo est posé sur le CADRE, jamais en voile sur l'image : masquer ce qu'on veut
+   justement faire regarder serait un contresens. Le masque à deux couches découpe
+   l'intérieur du dégradé conique, si bien que seule la bordure de deux pixels reçoit la
+   lumière.
+
+   `@property` est nécessaire : un angle déclaré comme simple variable CSS n'est pas
+   interpolable, et l'animation sauterait de 0 à 360° sans passer par les valeurs
+   intermédiaires. Chromium le gère depuis longtemps, et Alcora n'a que lui.
+
+   Deux minutes de garde-fou côté application : si la trame de fin n'arrive jamais —
+   liaison coupée — le halo s'éteint seul plutôt que de tourner toute la nuit. */
+@property --angle-activite {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.halo-activite {
+  padding: 2px;
+  background: conic-gradient(from var(--angle-activite),
+              transparent 0deg 250deg,
+              var(--accent) 300deg,
+              var(--accent-d) 332deg,
+              transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: halo-tourne 2.6s linear infinite;
+}
+@keyframes halo-tourne { to { --angle-activite: 360deg; } }
+
+.point-activite { animation: point-respire 1.4s ease-in-out infinite; }
+@keyframes point-respire { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+
+/* Le mouvement peut gêner, et l'information ne doit pas en dépendre : à défaut de rotation,
+   le cadre reste allumé en continu. Ce qui compte est de savoir OÙ il se passe quelque
+   chose, pas que ça tourne. */
+@media (prefers-reduced-motion: reduce) {
+  .halo-activite {
+    animation: none;
+    background: var(--accent);
+  }
+  .point-activite { animation: none; }
+}

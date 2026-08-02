@@ -1,0 +1,45 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+TestResults/
+*.binlog
+
+node_modules/
+
+# Interface construite, recopiee dans l'application a chaque construction
+v2/desktop/ui/
+v2/web/dist/
+
+# Sorties de construction
+v2/dist/
+v2/releases/
+
+# Artefacts de la version 1.x (C#/WPF), ancres a la racine.
+#   /publish/  ~284 Mo : arbre LibVLC redistribue
+#   /releases/ ~671 Mo : anciens installeurs Velopack, dont des fichiers > 100 Mo que
+#              GitHub refuse. C'est aussi la base des differentiels 1.x : a archiver hors
+#              du depot AVANT de s'y fier, si l'on veut pouvoir encore les produire.
+/publish/
+/releases/
+
+# Cle de signature : ne doit JAMAIS quitter le poste de construction.
+# Seul « ProtectViewer-signature.cer », qui est public, se transmet — a la main.
+signature/
+
+# Le relais : son binaire se telecharge separement (voir docs/), et tout ce qu'il ecrit
+# ici — cle privee, configuration engendree, journaux — contient l'adresse du controleur
+# et les alias RTSP des cameras. Rien de ce dossier ne doit sortir du poste.
+v2/relay/
+
+*.log
+
+# Journaux rapatries d'un poste pour diagnostic. Ils contiennent les identifiants des
+# cameras, les adresses de toutes les interfaces reseau et le nom du controleur.
+journal-poste*.txt
+.claude/

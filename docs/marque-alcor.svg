@@ -1,0 +1,19 @@
+<!--
+  Marque Alcor — concept « L'écart », retenu le 24.07.2026.
+
+  Construction en negatif : la plaque est PLEINE, les deux astres et leur liaison sont des
+  VIDES perces dedans (fill-rule evenodd). Le grand trou est Mizar, le petit est Alcor, et
+  le trait fin qui les joint est la notation des atlas pour une etoile double.
+
+  Geometrie verifiee : Mizar centre (25,37) r11 ; Alcor centre (45,22) r4.4 ; la barre de
+  liaison garde 1.67 unite de marge avec chacun des deux astres. Ce jeu est indispensable :
+  avec evenodd, deux vides qui se chevauchent REPASSENT en plein et laissent un ergot.
+
+  Monochrome et sans texte : la couleur vient de currentColor, jamais du fichier.
+  Source maitresse pour l'icone Windows (.ico) et l'avatar du depot.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Alcor">
+  <path fill="currentColor" fill-rule="evenodd"
+        d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+</svg>

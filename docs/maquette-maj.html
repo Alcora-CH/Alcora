@@ -1,0 +1,290 @@
+<title>ProtectViewer — écran de mise à jour</title>
+
+<style>
+  :root {
+    --bg:#1b1e23; --card:#23272e; --card2:#2a2f37;
+    --line:#353b44; --line2:#434a55;
+    --ink:#dad5cb; --muted:#9a958b; --soft:#75716a;
+    --accent:#d2a263; --accent-d:#e6b877;
+    --ok:#8fae5a; --warn:#d0a215; --bad:#d8685a;
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+  }
+  /* Theme unique et assume : l'application n'existe qu'en sombre. */
+  * { box-sizing: border-box; }
+  body { margin:0; background:#101215; color:var(--ink); font-family:var(--sans);
+         font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .page { max-width:1000px; margin:0 auto; padding:34px 20px 70px; }
+
+  .eyebrow { font-size:11px; font-weight:650; letter-spacing:.09em; text-transform:uppercase;
+             color:var(--soft); margin:0 0 8px; }
+  h1 { margin:0 0 8px; font-size:25px; font-weight:640; letter-spacing:-.015em; }
+  .sous { margin:0; color:var(--muted); max-width:68ch; }
+
+  /* ---- la fenetre simulee ---- */
+  .fenetre {
+    position:relative; margin-top:22px; aspect-ratio:16/9;
+    border:1px solid var(--line2); border-radius:12px; overflow:hidden;
+    background:var(--bg); box-shadow:0 28px 70px rgba(0,0,0,.55);
+  }
+  .barre-titre {
+    height:30px; display:flex; align-items:center; gap:8px; padding:0 11px;
+    background:rgba(0,0,0,.35); border-bottom:1px solid rgba(255,255,255,.05);
+    font-size:11.5px; color:var(--soft);
+  }
+  .pastilles { display:flex; gap:6px; }
+  .pastilles i { width:9px; height:9px; border-radius:50%; background:var(--line2); }
+
+  .corps { position:absolute; inset:30px 0 0; display:grid; place-items:center; }
+
+  /* ---- l'ecran de demarrage ---- */
+  .demarrage { width:min(420px, 78%); text-align:center; transition:opacity .35s; }
+  .marque { font-size:19px; font-weight:600; letter-spacing:-.01em; margin:0 0 3px; }
+  .version { font-family:var(--mono); font-size:11.5px; color:var(--soft); margin:0 0 26px; }
+
+  .piste { height:3px; border-radius:99px; background:rgba(255,255,255,.09); overflow:hidden; }
+  .jauge { height:100%; width:0%; border-radius:99px; background:var(--accent);
+           transition:width .25s linear; }
+  .piste.indef .jauge { width:32%; animation:va 1.1s ease-in-out infinite; }
+  @keyframes va { 0%{margin-left:-32%} 100%{margin-left:100%} }
+
+  .etat { margin:13px 0 0; font-size:13px; color:var(--ink); min-height:20px; }
+  .detail { margin:3px 0 0; font-family:var(--mono); font-size:11px; color:var(--soft); min-height:16px; }
+
+  /* ---- l'application, une fois prete ---- */
+  .app { position:absolute; inset:30px 0 0; display:flex; opacity:0; pointer-events:none;
+         transition:opacity .45s; }
+  .app.on { opacity:1; }
+  .rail { width:44px; background:rgba(33,37,44,.52); backdrop-filter:blur(20px) saturate(128%);
+          border-right:1px solid rgba(255,255,255,.10); display:flex; flex-direction:column;
+          align-items:center; gap:6px; padding:9px 0; }
+  .rail i { width:24px; height:24px; border-radius:6px; background:rgba(255,255,255,.07); display:block; }
+  .rail i.on { background:rgba(210,162,99,.22); }
+  .panneau { width:150px; background:rgba(33,37,44,.52); backdrop-filter:blur(20px) saturate(128%);
+             border-right:1px solid rgba(255,255,255,.10); padding:10px 11px; font-size:10px; }
+  .panneau h4 { margin:0 0 8px; font-size:11px; font-weight:600; }
+  .lig { display:flex; align-items:center; gap:6px; margin-bottom:6px; color:var(--muted); }
+  .dot { width:5px; height:5px; border-radius:50%; background:var(--ok); }
+  .mur { flex:1; display:grid; grid-template-columns:1fr 1fr; }
+  .vue { background:linear-gradient(150deg,#2f353d,#1d2126); position:relative; }
+  .vue::after { content:""; position:absolute; inset:0;
+                background:radial-gradient(60% 50% at 30% 40%, rgba(255,255,255,.10), transparent 70%); }
+
+  /* ---- pupitre ---- */
+  .pupitre { margin-top:14px; display:flex; flex-wrap:wrap; gap:10px 8px; align-items:center;
+             padding:13px 15px; background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  button { font:inherit; font-size:12.5px; color:var(--muted); background:var(--card2);
+           border:1px solid var(--line); border-radius:7px; padding:6px 11px; cursor:pointer;
+           transition:border-color .12s,color .12s,background .12s; }
+  button:hover { border-color:var(--line2); color:var(--ink); }
+  button.actif { background:rgba(210,162,99,.16); border-color:var(--accent); color:var(--accent-d); font-weight:560; }
+  button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .chrono { margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--soft);
+            font-variant-numeric:tabular-nums; }
+  .chrono b { color:var(--ink); font-weight:600; }
+
+  /* ---- notes ---- */
+  h2 { font-size:16px; font-weight:640; margin:34px 0 12px; padding-top:22px; border-top:1px solid var(--line); }
+  .grille2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+  .note { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .note h3 { margin:0 0 6px; font-size:13.5px; font-weight:620; }
+  .note p { margin:0; font-size:12.5px; color:var(--muted); }
+  .note .cas { font-family:var(--mono); font-size:10.5px; color:var(--accent-d);
+               text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:5px; }
+  code { font-family:var(--mono); font-size:12px; background:var(--card2); border:1px solid var(--line);
+         border-radius:4px; padding:1px 5px; color:var(--accent-d); }
+  @media (prefers-reduced-motion: reduce) { *{transition:none!important;animation:none!important} }
+</style>
+
+<div class="page">
+  <p class="eyebrow">ProtectViewer — maquette</p>
+  <h1>Mise à jour au lancement, sans rien demander</h1>
+  <p class="sous">
+    L'application vérifie, télécharge, applique et redémarre d'elle-même, puis s'ouvre à jour.
+    Un seul écran, sobre, qui disparaît dès que possible. Choisis un cas ci-dessous pour le
+    voir se dérouler en temps réel.
+  </p>
+
+  <div class="fenetre">
+    <div class="barre-titre">
+      <span class="pastilles"><i></i><i></i><i></i></span>
+      ProtectViewer
+    </div>
+
+    <div class="corps">
+      <div class="demarrage" id="ecran">
+        <p class="marque">ProtectViewer</p>
+        <p class="version" id="ver">2.0.8</p>
+        <div class="piste" id="piste"><div class="jauge" id="jauge"></div></div>
+        <p class="etat" id="etat">…</p>
+        <p class="detail" id="detail"></p>
+      </div>
+    </div>
+
+    <div class="app" id="app">
+      <nav class="rail"><i class="on"></i><i></i><i></i><i></i></nav>
+      <div class="panneau">
+        <h4>Surveillance</h4>
+        <div class="lig"><span class="dot"></span> Flux vidéo prêt.</div>
+        <div class="lig"><span class="dot"></span> G5 Turret Ultra</div>
+        <div class="lig"><span class="dot"></span> G6 Bullet</div>
+      </div>
+      <div class="mur"><div class="vue"></div><div class="vue"></div></div>
+    </div>
+  </div>
+
+  <div class="pupitre">
+    <button id="b1" class="actif">Une mise à jour existe</button>
+    <button id="b2">Aucune mise à jour</button>
+    <button id="b3">Hors ligne</button>
+    <button id="b4">Mise à jour lourde</button>
+    <span class="chrono">écoulé <b id="chrono">0,0 s</b></span>
+  </div>
+
+  <h2>Les quatre cas, et ce que voit l'utilisateur</h2>
+  <div class="grille2">
+    <div class="note">
+      <span class="cas">Une mise à jour existe</span>
+      <h3>Il ne fait rien, l'application est à jour</h3>
+      <p>Vérification, téléchargement avec progression réelle, application, redémarrage.
+      L'application s'ouvre ensuite normalement, dans sa nouvelle version. Aucun clic.</p>
+    </div>
+    <div class="note">
+      <span class="cas">Aucune mise à jour</span>
+      <h3>Le cas courant : il ne voit presque rien</h3>
+      <p>La vérification prend moins d'une seconde. L'écran s'efface aussitôt.
+      C'est le cas de tous les jours : il doit être invisible.</p>
+    </div>
+    <div class="note">
+      <span class="cas">Hors ligne</span>
+      <h3>On n'attend jamais le réseau</h3>
+      <p>Au-delà de trois secondes sans réponse, on abandonne et on démarre.
+      Une panne d'Internet ne doit jamais retarder l'accès aux caméras.</p>
+    </div>
+    <div class="note">
+      <span class="cas">Mise à jour lourde</span>
+      <h3>Le seul cas où il patiente</h3>
+      <p>Le pourcentage et les mégaoctets avancent : l'attente est justifiée et lisible.
+      Un différentiel ramènera ce cas à quelques secondes.</p>
+    </div>
+  </div>
+
+  <h2>Trois règles tenues</h2>
+  <div class="grille2">
+    <div class="note">
+      <h3>Rapide par construction</h3>
+      <p>La vérification est bornée à <code>3 s</code>. Passé ce délai, on démarre et la
+      recherche se poursuit en arrière-plan — comme aujourd'hui.</p>
+    </div>
+    <div class="note">
+      <h3>Jamais bloquant</h3>
+      <p>Réseau coupé, dépôt injoignable, empreinte invalide : on démarre l'application.
+      Une mise à jour ratée n'empêche jamais de voir ses caméras.</p>
+    </div>
+    <div class="note">
+      <h3>Honnête sur l'attente</h3>
+      <p>Tant qu'on ignore la durée, la barre balaie sans promettre. Dès que la taille est
+      connue, elle devient une vraie progression chiffrée.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const piste = $('piste'), jauge = $('jauge'), etat = $('etat'), detail = $('detail');
+  const app = $('app'), ecran = $('ecran'), ver = $('ver'), chrono = $('chrono');
+
+  let jeton = 0;
+  const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function indefini(oui) { piste.classList.toggle('indef', oui); if (oui) jauge.style.width = ''; }
+
+  async function jouer(cas) {
+    const moi = ++jeton;
+    const t0 = performance.now();
+    const minuteur = setInterval(() => {
+      if (moi !== jeton) return clearInterval(minuteur);
+      chrono.textContent = ((performance.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s';
+    }, 60);
+    const vivant = () => moi === jeton;
+
+    // etat initial
+    app.classList.remove('on');
+    ecran.style.opacity = '1';
+    ver.textContent = '2.0.8';
+    jauge.style.width = '0%';
+    detail.textContent = '';
+
+    // 1. verification
+    indefini(true);
+    etat.textContent = 'Recherche d’une mise à jour…';
+    await dormir(cas === 'horsligne' ? 3000 : 800);
+    if (!vivant()) return;
+
+    if (cas === 'horsligne') {
+      indefini(false); jauge.style.width = '100%';
+      etat.textContent = 'Pas de connexion — démarrage.';
+      detail.textContent = 'la recherche reprendra en arrière-plan';
+      await dormir(700);
+    } else if (cas === 'aucune') {
+      indefini(false); jauge.style.width = '100%';
+      etat.textContent = 'À jour.';
+      await dormir(300);
+    } else {
+      const taille = cas === 'lourde' ? 145 : 42;
+      indefini(false);
+      etat.textContent = 'Téléchargement de la version 2.0.9…';
+
+      const pas = cas === 'lourde' ? 26 : 60;
+      for (let p = 0; p <= 100; p += 100 / pas) {
+        if (!vivant()) return;
+        jauge.style.width = p + '%';
+        detail.textContent = `${Math.round(taille * p / 100)} / ${taille} Mo`;
+        await dormir(cas === 'lourde' ? 90 : 26);
+      }
+      if (!vivant()) return;
+
+      etat.textContent = 'Vérification du paquet…';
+      detail.textContent = 'empreinte SHA-256';
+      await dormir(450);
+      if (!vivant()) return;
+
+      indefini(true);
+      etat.textContent = 'Installation…';
+      detail.textContent = '';
+      await dormir(900);
+      if (!vivant()) return;
+
+      etat.textContent = 'Redémarrage…';
+      await dormir(700);
+      if (!vivant()) return;
+
+      // la nouvelle version reprend la main
+      ver.textContent = '2.0.9';
+      indefini(true);
+      etat.textContent = 'Connexion au contrôleur…';
+      detail.textContent = '';
+      await dormir(900);
+    }
+    if (!vivant()) return;
+
+    // 2. l'application prend la place
+    ecran.style.opacity = '0';
+    await dormir(320);
+    if (!vivant()) return;
+    app.classList.add('on');
+    clearInterval(minuteur);
+  }
+
+  const boutons = { b1: 'maj', b2: 'aucune', b3: 'horsligne', b4: 'lourde' };
+  for (const [id, cas] of Object.entries(boutons)) {
+    $(id).addEventListener('click', () => {
+      Object.keys(boutons).forEach((k) => $(k).classList.toggle('actif', k === id));
+      jouer(cas);
+    });
+  }
+
+  jouer('maj');
+</script>

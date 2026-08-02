@@ -1,0 +1,495 @@
+<title>Alcora — relecture et état du système (Lot 7)</title>
+<style>
+  :root {
+    --bg:#1b1e23; --card:#23272e; --card2:#2a2f37; --line:#353b44; --line2:#434a55;
+    --ink:#dad5cb; --muted:#9a958b; --soft:#75716a;
+    --accent:#d2a263; --accent-d:#e6b877; --accent-soft:rgba(210,162,99,.16);
+    --ok:#8fae5a; --warn:#d0a215; --bad:#d8685a;
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         font-size:14.5px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .page { max-width:1180px; margin:0 auto; padding:40px 22px 90px; }
+  .eyebrow { font-size:11px; font-weight:650; letter-spacing:.09em; text-transform:uppercase;
+             color:var(--soft); margin:0 0 8px; }
+  h1 { margin:0 0 8px; font-size:27px; font-weight:640; letter-spacing:-.015em; }
+  .sous { color:var(--muted); margin:0; max-width:72ch; }
+  h2 { font-size:15px; font-weight:640; margin:46px 0 6px; padding-top:22px;
+       border-top:1px solid var(--line); color:var(--muted); }
+  h2 + p.sous { margin-bottom:18px; }
+  .scroll { overflow-x:auto; }
+
+  /* ================= l'ecran de relecture ================= */
+  .ecran { background:var(--card); border:1px solid var(--line); border-radius:12px;
+           overflow:hidden; margin-top:18px; min-width:760px; }
+  .barre { display:flex; align-items:center; gap:10px; padding:11px 14px;
+           border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .onglet { font-size:12.5px; color:var(--soft); padding:4px 11px; border-radius:999px; }
+  .onglet.actif { background:var(--accent-soft); color:var(--accent); }
+  .jour { display:flex; align-items:center; gap:2px; margin-left:auto; }
+  .fleche { width:28px; height:28px; display:grid; place-items:center; border-radius:6px;
+            color:var(--soft); border:1px solid transparent; font-size:15px; }
+  .fleche.mort { color:#40454d; }
+  .date { font-size:13px; padding:4px 12px; border:1px solid var(--line); border-radius:7px;
+          font-variant-numeric:tabular-nums; }
+
+  .corps { display:grid; grid-template-columns:1fr 186px; }
+  .image { aspect-ratio:16/9; background:linear-gradient(160deg,#12151a,#1d2129 60%,#171b21);
+           position:relative; display:grid; place-items:center; }
+  .image .faux { color:#3d434c; font-size:12px; letter-spacing:.16em; text-transform:uppercase; }
+  .surimp { position:absolute; left:13px; top:11px; font-family:var(--mono); font-size:12px;
+            color:#c9c3b8; background:rgba(10,12,15,.6); padding:3px 9px; border-radius:6px; }
+  .qualite { position:absolute; right:13px; top:11px; font-size:11px; padding:3px 9px;
+             border-radius:6px; background:rgba(10,12,15,.6); color:var(--muted); }
+  .qualite.reduite { color:var(--warn); }
+
+  .transport { display:flex; align-items:center; gap:8px; padding:9px 13px;
+               border-top:1px solid var(--line); }
+  .bouton { height:28px; min-width:28px; padding:0 8px; display:grid; place-items:center;
+            border-radius:6px; background:var(--card2); color:var(--muted); font-size:11.5px;
+            font-family:var(--mono); }
+  .bouton.fort { background:var(--accent-soft); color:var(--accent); }
+  .vitesses { margin-left:auto; display:flex; gap:3px; }
+
+  .cams { border-left:1px solid var(--line); padding:11px; display:flex;
+          flex-direction:column; gap:9px; }
+  .cam { border-radius:7px; overflow:hidden; border:1px solid transparent; }
+  .cam.actif { border-color:var(--accent); }
+  .cam .vue { aspect-ratio:16/9; background:linear-gradient(150deg,#171b21,#232830); }
+  .cam .nom { font-size:11px; padding:4px 6px; color:var(--soft); text-align:center; }
+  .cam.actif .nom { color:var(--accent); }
+
+  /* ---- la frise ---- */
+  .frise-zone { padding:13px 15px 14px; border-top:1px solid var(--line); }
+  .frise { position:relative; height:44px; border-radius:7px; overflow:hidden;
+           background:var(--card2); cursor:crosshair; }
+  .plein { position:absolute; inset:0; background:
+      repeating-linear-gradient(90deg, rgba(210,162,99,.13) 0 2px, rgba(210,162,99,.09) 2px 4px); }
+  .vide { position:absolute; top:0; bottom:0; background:
+      repeating-linear-gradient(135deg, transparent 0 5px, rgba(255,255,255,.045) 5px 10px); }
+  .heures { position:absolute; inset:0; }
+  .tick { position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,.07); }
+  .tick.majeur { background:rgba(255,255,255,.14); }
+  .hlabel { position:absolute; bottom:3px; transform:translateX(-50%); font-family:var(--mono);
+            font-size:9.5px; color:var(--soft); pointer-events:none; }
+  .rep { position:absolute; top:5px; width:3px; height:15px; border-radius:2px; }
+  .rep.person  { background:var(--accent-d); }
+  .rep.vehicle { background:#7fa8c9; }
+  .rep.animal  { background:var(--ok); }
+  .rep.son     { background:#b98fc9; }
+  .rep.motion  { background:#5c626c; height:8px; top:12px; }
+  .tete { position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--accent);
+          box-shadow:0 0 9px rgba(210,162,99,.75); }
+  .tete::before { content:""; position:absolute; top:-4px; left:-4px; width:10px; height:10px;
+                  border-radius:50%; background:var(--accent); }
+  .direct { position:absolute; right:0; top:0; bottom:0; width:2px; background:var(--ok); }
+  .direct::after { content:"DIRECT"; position:absolute; right:5px; top:4px; font-size:8.5px;
+                   font-weight:700; letter-spacing:.09em; color:var(--ok); }
+  .bulle { position:absolute; bottom:50px; transform:translateX(-50%); white-space:nowrap;
+           background:#0f1115; border:1px solid var(--line2); border-radius:7px;
+           padding:5px 10px; font-family:var(--mono); font-size:11.5px; z-index:3; }
+  .bulle b { color:var(--accent-d); font-weight:600; }
+  .legende { display:flex; flex-wrap:wrap; gap:5px 15px; margin-top:10px;
+             font-size:11.5px; color:var(--soft); align-items:center; }
+  .legende i { display:inline-block; width:9px; height:9px; border-radius:2px;
+               margin-right:5px; vertical-align:-1px; }
+
+  /* ---- bande de vignettes ---- */
+  .bande { border-top:1px solid var(--line); padding:11px 15px 14px; }
+  .bande-tete { display:flex; align-items:center; gap:9px; margin-bottom:9px; }
+  .puce { font-size:11.5px; color:var(--soft); padding:3px 9px; border-radius:999px;
+          border:1px solid var(--line); }
+  .puce.actif { background:var(--accent-soft); color:var(--accent); border-color:transparent; }
+  .rangee { display:flex; gap:8px; overflow-x:auto; padding-bottom:3px; }
+  .vig { flex:0 0 118px; border-radius:6px; overflow:hidden; background:var(--card2);
+         border:1px solid transparent; }
+  .vig.actif { border-color:var(--accent); }
+  .vig .im { aspect-ratio:16/9; background:linear-gradient(145deg,#1a1e25,#272c34); position:relative; }
+  .vig .h { position:absolute; left:4px; top:4px; font-family:var(--mono); font-size:9.5px;
+            color:#bdb7ac; background:rgba(10,12,15,.66); padding:1px 5px; border-radius:4px; }
+  .vig .t { position:absolute; left:4px; bottom:4px; font-size:9px; color:#bdb7ac;
+            background:rgba(10,12,15,.66); padding:1px 5px; border-radius:4px; }
+
+  /* ================= la colonne d'etat ================= */
+  .duo { display:grid; grid-template-columns:1fr 318px; gap:20px; align-items:start; }
+  @media (max-width:900px) { .duo { grid-template-columns:1fr; } }
+  .colonne { background:var(--card); border:1px solid var(--line); border-radius:12px;
+             overflow:hidden; }
+  .bloc { padding:13px 15px; border-bottom:1px solid var(--line); }
+  .bloc:last-child { border-bottom:none; }
+  .bloc h4 { margin:0 0 9px; font-size:12px; font-weight:640; color:var(--muted); }
+  .ligne { display:flex; align-items:baseline; gap:10px; font-size:13px; padding:3px 0; }
+  .ligne .k { color:var(--muted); }
+  .ligne .v { margin-left:auto; font-family:var(--mono); font-size:12.5px; }
+  .ligne .v.ok { color:var(--ok); }
+  .ligne .v.warn { color:var(--warn); }
+  .jauge { height:6px; border-radius:99px; background:var(--card2); overflow:hidden; margin:7px 0 4px; }
+  .jauge > i { display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-d)); }
+  .badges { display:flex; gap:6px; margin-top:8px; }
+  .badge { font-family:var(--mono); font-size:10.5px; padding:2px 7px; border-radius:5px;
+           background:var(--card2); color:var(--muted); }
+  .badge b { color:var(--ink); }
+  .spark { height:46px; display:flex; align-items:flex-end; gap:2px; margin:4px 0 6px; }
+  .spark i { flex:1; background:linear-gradient(180deg,var(--accent-d),rgba(210,162,99,.18));
+             border-radius:2px 2px 0 0; }
+  .histo { height:56px; display:flex; align-items:flex-end; gap:2px; }
+  .histo i { flex:1; background:var(--accent); opacity:.75; border-radius:2px 2px 0 0; min-height:2px; }
+  .histo-x { display:flex; justify-content:space-between; font-family:var(--mono);
+             font-size:9.5px; color:var(--soft); margin-top:5px; }
+  .recent { display:flex; gap:9px; align-items:center; padding:6px 0; }
+  .recent .im { flex:0 0 52px; aspect-ratio:16/9; border-radius:4px;
+                background:linear-gradient(145deg,#1a1e25,#272c34); }
+  .recent .q { font-size:12.5px; }
+  .recent .c { font-size:10.5px; color:var(--soft); font-family:var(--mono); }
+  .recent .d { margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--soft); }
+  .souverain { color:var(--ok); font-size:12.5px; }
+
+  /* ---- annotations ---- */
+  .notes { display:grid; gap:9px; margin-top:16px; }
+  .note { display:grid; grid-template-columns:26px 1fr; gap:11px; align-items:start;
+          font-size:13px; color:var(--muted); }
+  .note b { color:var(--ink); font-weight:600; }
+  .num { width:22px; height:22px; border-radius:50%; display:grid; place-items:center;
+         font-family:var(--mono); font-size:11px; background:var(--accent-soft); color:var(--accent); }
+  .cas { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:14px; margin-top:16px; }
+  .kart { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:15px 17px; }
+  .kart h3 { margin:0 0 3px; font-size:13.5px; font-weight:620; }
+  .kart p { margin:0; font-size:12.5px; color:var(--muted); }
+  .kart .mini { margin:11px 0 9px; height:24px; border-radius:5px; position:relative; overflow:hidden;
+                background:var(--card2); }
+  .fait { border-left:2px solid var(--accent); padding:2px 0 2px 18px; margin:22px 0 0;
+          color:var(--muted); font-size:13.5px; }
+  .fait b { color:var(--ink); }
+  table { border-collapse:collapse; width:100%; margin-top:14px; }
+  th,td { text-align:left; padding:8px 11px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:top; }
+  th { font-size:10.5px; font-weight:650; letter-spacing:.07em; text-transform:uppercase; color:var(--soft); }
+  td:first-child { color:var(--accent-d); white-space:nowrap; font-weight:600; }
+  code { font-family:var(--mono); font-size:12.5px; background:var(--card2);
+         border:1px solid var(--line); border-radius:4px; padding:1px 6px; }
+  footer { margin-top:48px; padding-top:18px; border-top:1px solid var(--line);
+           color:var(--soft); font-size:12px; }
+</style>
+<div class="page">
+
+  <p class="eyebrow">Alcora — Lot 7, maquette</p>
+  <h1>Relecture, et état du système</h1>
+  <p class="sous">Deuxième version, corrigée après avoir vu l'interface d'Ubiquiti. Elle apporte
+  une confirmation indépendante : leur colonne affiche « Enregistrement le Plus Ancien —
+  <b>5 m 12 j</b> », soit exactement les 162 jours que ma sonde a trouvés. Les 29 jours
+  qu'annonçait le champ évident auraient bien été un mensonge.</p>
+
+  <h2>Ce qu'ils font, et ce que j'en garde</h2>
+  <table>
+    <thead><tr><th>Chez Protect</th><th>Décision pour Alcora</th></tr></thead>
+    <tbody>
+      <tr><td>Frise verticale</td><td><b>Horizontale.</b> Le temps se lit de gauche à droite dans toutes les autres interfaces qu'utilise une personne ordinaire — un axe vertical demande un apprentissage que rien ne justifie.</td></tr>
+      <tr><td>Zoom continu + défilement</td><td><b>Un jour à la fois.</b> Leur curseur de zoom est une commande cachée qui, mal manœuvrée, perd l'utilisateur dans cinq mois d'archive sans repère pour revenir. Une journée, deux flèches, un calendrier : rien à comprendre.</td></tr>
+      <tr><td>Bande de vignettes du jour</td><td><b>Reprise telle quelle</b> — c'est leur meilleure idée. On <i>voit</i> ce qui s'est passé au lieu de deviner. Les vignettes sont déjà servies depuis le Lot 5.</td></tr>
+      <tr><td>Ancrage « LIVE »</td><td><b>Repris.</b> Le bord droit de la journée du jour porte un repère « direct ».</td></tr>
+      <tr><td>Liste des caméras à droite</td><td><b>Reprise.</b> Changer de caméra sans quitter l'instant qu'on regarde.</td></tr>
+      <tr><td>−10 s / +10 s, vitesse « Auto »</td><td>Alcora fait déjà <b>plus</b> : 0,25× à 2× et l'avance image par image (Lot 6).</td></tr>
+      <tr><td>Baisse de définition passée sous silence</td><td><b>Dite.</b> C'est là qu'on fait mieux : au-delà de 29 jours, la barre change de trame et l'étiquette l'annonce.</td></tr>
+      <tr><td>« Archive Cloud »</td><td><b>Jamais.</b> C'est précisément ce contre quoi Alcora existe.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>L'écran de relecture</h2>
+  <p class="sous">Un jour à la fois, la caméra changeable sans perdre l'instant, et ce qui s'est
+  passé montré plutôt que résumé.</p>
+
+  <div class="scroll">
+  <div class="ecran">
+    <div class="barre">
+      <span class="onglet actif">Relecture</span>
+      <span class="onglet">Direct</span>
+      <span class="onglet">Détections</span>
+      <div class="jour">
+        <span class="fleche">‹</span>
+        <span class="date">mardi 28 juillet 2026</span>
+        <span class="fleche mort">›</span>
+      </div>
+    </div>
+
+    <div class="corps">
+      <div>
+        <div class="image">
+          <span class="faux">image de la caméra</span>
+          <span class="surimp" id="surimp">28.07.2026&nbsp;&nbsp;14:23:07</span>
+          <span class="qualite">2688 × 1512</span>
+        </div>
+        <div class="transport">
+          <span class="bouton fort">❚❚</span>
+          <span class="bouton">−10 s</span>
+          <span class="bouton">+10 s</span>
+          <span class="bouton">◀ img</span>
+          <span class="bouton">img ▶</span>
+          <span class="bouton" style="font-family:var(--sans)">Enregistrer</span>
+          <span class="vitesses">
+            <span class="bouton">0,25×</span><span class="bouton">0,5×</span>
+            <span class="bouton fort">1×</span><span class="bouton">2×</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="cams">
+        <div class="cam actif"><div class="vue"></div><div class="nom">G5 Turret Ultra</div></div>
+        <div class="cam"><div class="vue"></div><div class="nom">G6 Bullet</div></div>
+      </div>
+    </div>
+
+    <div class="frise-zone">
+      <div class="frise" id="frise">
+        <div class="plein"></div>
+        <div class="heures" id="heures"></div>
+        <div class="rep motion"  style="left:9.2%"></div>
+        <div class="rep person"  style="left:26.4%"></div>
+        <div class="rep motion"  style="left:31.1%"></div>
+        <div class="rep vehicle" style="left:34.8%"></div>
+        <div class="rep person"  style="left:35.9%"></div>
+        <div class="rep animal"  style="left:44.0%"></div>
+        <div class="rep motion"  style="left:52.7%"></div>
+        <div class="rep person"  style="left:59.9%"></div>
+        <div class="rep son"     style="left:61.4%"></div>
+        <div class="rep vehicle" style="left:71.2%"></div>
+        <div class="rep motion"  style="left:76.5%"></div>
+        <div class="rep person"  style="left:78.1%"></div>
+        <div class="rep motion"  style="left:88.3%"></div>
+        <div class="direct"></div>
+        <div class="tete" id="tete" style="left:59.9%"></div>
+        <div class="bulle" id="bulle" style="left:59.9%">14:23:07&nbsp; <b>Personne</b></div>
+      </div>
+      <div class="legende">
+        <span><i style="background:var(--accent-d)"></i>Personne</span>
+        <span><i style="background:#7fa8c9"></i>Véhicule</span>
+        <span><i style="background:var(--ok)"></i>Animal</span>
+        <span><i style="background:#b98fc9"></i>Son</span>
+        <span><i style="background:#5c626c"></i>Mouvement</span>
+        <span style="margin-left:auto;font-family:var(--mono)">83 détections ce jour</span>
+      </div>
+    </div>
+
+    <div class="bande">
+      <div class="bande-tete">
+        <span class="puce actif">Tout</span>
+        <span class="puce">Personnes</span>
+        <span class="puce">Véhicules</span>
+        <span class="puce">Animaux</span>
+        <span class="puce">Sons</span>
+        <span style="margin-left:auto;font-size:11.5px;color:var(--soft)">ce que la journée a vu</span>
+      </div>
+      <div class="rangee" id="rangee"></div>
+    </div>
+  </div>
+  </div>
+
+  <div class="notes">
+    <div class="note"><span class="num">1</span><div><b>Toute la barre est cliquable</b>, les repères
+      n'étant que des indications posées dessus. Viser un trait de trois pixels serait un piège ;
+      viser une barre de mille pixels ne s'apprend pas.</div></div>
+    <div class="note"><span class="num">2</span><div><b>Les vignettes disent, les repères situent.</b>
+      Deux lectures du même jour : la bande du bas montre <i>quoi</i>, la barre montre <i>quand</i>.
+      Cliquer une vignette pose la tête de lecture sur l'instant correspondant.</div></div>
+    <div class="note"><span class="num">3</span><div><b>Le mouvement seul est atténué.</b> Sur ~266
+      détections par jour il domine, et à pleine intensité il noierait les personnes et les véhicules —
+      les seules qu'on cherche vraiment.</div></div>
+    <div class="note"><span class="num">4</span><div><b>La flèche du lendemain est éteinte, pas cachée.</b>
+      Une commande qui disparaît laisse croire à une panne ; une commande éteinte explique où l'on est.</div></div>
+    <div class="note"><span class="num">5</span><div><b>La définition obtenue est affichée en permanence.</b>
+      C'est ce qui rend honnête le cas du jour ancien, ci-dessous — et c'est ce que Protect ne fait pas.</div></div>
+  </div>
+
+  <h2>Les trois jours qui ne se ressemblent pas</h2>
+  <p class="sous">Deux frontières que la mesure a révélées, et que l'interface doit dire au lieu de les subir.</p>
+
+  <div class="cas">
+    <div class="kart">
+      <h3 style="color:var(--ok)">Moins de 29 jours — haute définition</h3>
+      <div class="mini"><div class="plein"></div></div>
+      <p>Le cas ordinaire. Barre pleine, image nette, rien à signaler. L'étiquette indique
+      <code>2688 × 1512</code> et personne n'a besoin d'y prêter attention.</p>
+    </div>
+    <div class="kart">
+      <h3 style="color:var(--warn)">Au-delà de 29 jours — <code>640 × 360</code></h3>
+      <div class="mini"><div class="plein" style="opacity:.45"></div>
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(208,162,21,.11) 6px 12px)"></div></div>
+      <p>Mesuré, pas supposé : la G6 passe de <code>3840 × 2160</code> à <code>640 × 360</code>,
+      soit <b>trente-six fois moins de pixels</b> ; la G5, dix-huit fois moins. Ce n'est pas une
+      dégradation progressive, c'est un autre flux. Trame discrète, étiquette en
+      <span style="color:var(--warn)">640 × 360 · définition réduite</span>.
+      <b>Protect ne le signale nulle part.</b></p>
+    </div>
+    <div class="kart">
+      <h3 style="color:var(--soft)">Avant le 16 février — plus rien</h3>
+      <div class="mini"><div class="vide" style="left:0;width:58%"></div>
+        <div class="plein" style="left:58%;width:42%;right:auto"></div></div>
+      <p>Le bord de la rétention. La partie sans vidéo est hachurée, non cliquable, et le calendrier
+      grise les jours antérieurs. La flèche du jour précédent s'éteint à son tour.</p>
+    </div>
+  </div>
+
+  <h2>La colonne d'état</h2>
+  <p class="sous">Reprise de leur panneau, dans la langue et la sobriété d'Alcora. J'ai gardé tout
+  ce qui renseigne, écarté ce qui vend : « Focus » est un service de leur écosystème, et
+  « Archive Cloud » est l'exact contraire du projet.</p>
+
+  <div class="duo">
+    <div>
+      <div class="notes" style="margin-top:0">
+        <div class="note"><span class="num">1</span><div><b>« Depuis quand ai-je de la vidéo »
+          est l'information la plus utile de tout le panneau</b>, et c'est celle que leur interface
+          place le plus haut. Elle répond à la question qu'on se pose vraiment quand on cherche
+          quelque chose d'ancien. Alcora l'affiche avec sa date, pas seulement sa durée.</div></div>
+        <div class="note"><span class="num">2</span><div><b>Le disque avec une jauge, pas un chiffre.</b>
+          « 5,45 To sur 5,94 » ne dit rien à personne ; une barre presque pleine se comprend d'un
+          coup d'œil. La mention « rotation automatique » évite la panique : c'est normal qu'un
+          enregistreur soit plein.</div></div>
+        <div class="note"><span class="num">3</span><div><b>Les mises à jour sont montrées, jamais
+          imposées ici.</b> Celle d'Alcora s'applique seule au lancement ; celles du contrôleur
+          appartiennent à Ubiquiti et se font chez eux. On informe, on ne prétend pas agir.</div></div>
+        <div class="note"><span class="num">4</span><div><b>L'histogramme du jour remplace un chiffre.</b>
+          « 83 détections » ne dit pas si la journée a été calme ou agitée, ni à quelle heure. Vingt-quatre
+          barres le disent, et cliquer l'une d'elles emmène la frise à cette heure-là.</div></div>
+        <div class="note"><span class="num">5</span><div><b>Une ligne que Protect n'a pas.</b>
+          À la place de « Archive Cloud » : la confirmation que rien ne sort du réseau. C'est la
+          raison d'être du projet ; elle mérite d'être visible plutôt que sous-entendue.</div></div>
+      </div>
+    </div>
+
+    <div class="colonne">
+      <div class="bloc">
+        <div class="ligne"><span class="k">Contrôleur</span><span class="v ok">en ligne</span></div>
+        <div class="ligne"><span class="k">Caméras</span><span class="v">2 sur 2</span></div>
+        <div class="ligne"><span class="k">Heure</span><span class="v">23:49 · 23,3 °C</span></div>
+      </div>
+
+      <div class="bloc">
+        <h4>Enregistrements</h4>
+        <div class="ligne"><span class="k">Le plus ancien</span><span class="v">16.02.2026</span></div>
+        <div class="ligne"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
+        <div class="ligne"><span class="k">Pleine définition</span><span class="v warn">29 derniers jours</span></div>
+        <div class="ligne"><span class="k">Au-delà</span><span class="v warn">640 × 360</span></div>
+        <div class="jauge"><i style="width:91%"></i></div>
+        <div class="ligne"><span class="k">Disque</span><span class="v">5,45 / 5,94 To</span></div>
+        <p style="margin:4px 0 0;font-size:11.5px;color:var(--soft)">Rotation automatique : le plus
+        ancien s'efface pour laisser place au plus récent. Un disque plein est normal.</p>
+      </div>
+
+      <div class="bloc">
+        <h4>Débit en direct</h4>
+        <div class="spark" id="spark"></div>
+        <div class="ligne"><span class="k">Actuel</span><span class="v">12,3 Mbit/s</span></div>
+        <div class="badges">
+          <span class="badge"><b>2K</b> ×1</span>
+          <span class="badge"><b>4K</b> ×1</span>
+        </div>
+      </div>
+
+      <div class="bloc">
+        <h4>Détections aujourd'hui</h4>
+        <div class="histo" id="histo"></div>
+        <div class="histo-x"><span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>now</span></div>
+        <div class="ligne" style="margin-top:7px"><span class="k">Total</span><span class="v">83</span></div>
+      </div>
+
+      <div class="bloc">
+        <h4>Dernières détections</h4>
+        <div class="recent"><div class="im"></div><div><div class="q">Personne</div><div class="c">G5 Turret Ultra</div></div><div class="d">21 min</div></div>
+        <div class="recent"><div class="im"></div><div><div class="q">Véhicule</div><div class="c">G6 Bullet</div></div><div class="d">22 min</div></div>
+        <div class="recent"><div class="im"></div><div><div class="q">Animal</div><div class="c">G5 Turret Ultra</div></div><div class="d">1 h</div></div>
+      </div>
+
+      <div class="bloc">
+        <h4>Versions</h4>
+        <div class="ligne"><span class="k">Alcora</span><span class="v ok">2.8.0 — à jour</span></div>
+        <div class="ligne"><span class="k">Protect</span><span class="v">7.1.87</span></div>
+        <div class="ligne"><span class="k">UniFi OS</span><span class="v warn">5.1.19 → 5.2</span></div>
+      </div>
+
+      <div class="bloc">
+        <h4>Vos images</h4>
+        <p class="souverain" style="margin:0">Tout reste sur votre réseau. Aucune image, aucune
+        détection, aucun identifiant n'est transmis à un service extérieur.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="fait"><b>Plus rien n'est ouvert.</b> La dernière mesure est tombée le 29.07 : la
+  définition chute de <code>3840 × 2160</code> à <code>640 × 360</code> au-delà de 29 jours, et
+  le codec est <code>avc1</code> partout — y compris sur la G6, ce qui lève au passage la réserve
+  du Lot 6 sur un extrait potentiellement indéchiffrable. Le modèle de la frise est complet :
+  bord gauche <code>recordingStartLQ</code>, frontière de qualité <code>recordingStart</code>,
+  bord droit <code>recordingEnd</code>.<br><br>
+  <b>Hors périmètre du Lot 7</b>, et repéré dans leur deuxième écran : le seuil de confiance
+  réglable, les attributs de véhicule (type, couleur), la lecture des plaques et des visages.
+  C'est un lot à part entière — à ouvrir quand tu voudras, pas à glisser ici.</p>
+
+  <footer>Maquette du 28.07.2026, deuxième version, préalable au Lot 7. Mesure :
+  <code>docs/contraintes-verifiees.md</code>, section V-Frise. Sonde : <code>v2/desktop/test-frise.js</code>.
+  Aucune ligne de l'application n'est encore écrite.</footer>
+</div>
+
+<script>
+  // ---- graduations horaires ----
+  const h = document.getElementById('heures');
+  for (let i = 0; i <= 24; i++) {
+    const x = (i / 24) * 100;
+    const t = document.createElement('div');
+    t.className = 'tick' + (i % 3 === 0 ? ' majeur' : '');
+    t.style.left = x + '%';
+    h.appendChild(t);
+    if (i % 3 === 0 && i < 24) {
+      const l = document.createElement('div');
+      l.className = 'hlabel';
+      l.style.left = x + '%';
+      l.textContent = String(i).padStart(2, '0') + 'h';
+      h.appendChild(l);
+    }
+  }
+
+  // ---- bande de vignettes du jour ----
+  const SUJETS = [[26.4,'Personne'],[34.8,'Véhicule'],[44.0,'Animal'],[59.9,'Personne'],
+                  [61.4,'Son'],[71.2,'Véhicule'],[78.1,'Personne']];
+  const rangee = document.getElementById('rangee');
+  for (const [p, quoi] of SUJETS) {
+    const s = (p / 100) * 86400;
+    const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+    const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const v = document.createElement('div');
+    v.className = 'vig' + (p === 59.9 ? ' actif' : '');
+    v.innerHTML = '<div class="im"><span class="h">' + hh + ':' + mm + '</span>' +
+                  '<span class="t">' + quoi + '</span></div>';
+    rangee.appendChild(v);
+  }
+
+  // ---- courbe de debit et histogramme, formes stables (aucun hasard) ----
+  const spark = document.getElementById('spark');
+  for (let i = 0; i < 34; i++) {
+    const v = 52 + 26 * Math.sin(i / 3.1) + 13 * Math.sin(i / 1.4);
+    spark.insertAdjacentHTML('beforeend', '<i style="height:' + Math.max(12, Math.min(100, v)) + '%"></i>');
+  }
+  const histo = document.getElementById('histo');
+  const PARHEURE = [0,0,1,0,2,3,5,4,7,6,9,12,8,5,4,6,3,7,11,9,6,4,2,1];
+  const maxi = Math.max(...PARHEURE);
+  for (const n of PARHEURE) histo.insertAdjacentHTML('beforeend', '<i style="height:' + (n / maxi * 100) + '%"></i>');
+
+  // ---- la tete de lecture suit le curseur ----
+  const frise = document.getElementById('frise');
+  const tete = document.getElementById('tete');
+  const bulle = document.getElementById('bulle');
+  const surimp = document.getElementById('surimp');
+  frise.addEventListener('mousemove', (e) => {
+    const r = frise.getBoundingClientRect();
+    const p = Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100));
+    tete.style.left = p + '%';
+    bulle.style.left = p + '%';
+    const s = (p / 100) * 86400;
+    const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+    const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const ss = String(Math.floor(s % 60)).padStart(2, '0');
+    const proche = SUJETS.find((x) => Math.abs(x[0] - p) < 0.8);
+    bulle.innerHTML = hh + ':' + mm + ':' + ss + (proche ? '&nbsp; <b>' + proche[1] + '</b>' : '');
+    surimp.textContent = '28.07.2026  ' + hh + ':' + mm + ':' + ss;
+  });
+</script>

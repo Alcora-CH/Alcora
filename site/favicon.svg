@@ -1,0 +1,6 @@
+<!-- La marque Alcor, tracé maître (docs/marque-alcor.svg) : la plaque est pleine, les
+     astres et leur liaison sont des vides (evenodd). Or fixe : un favicon n'hérite pas. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <path fill="#d2a263" fill-rule="evenodd"
+        d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+</svg>

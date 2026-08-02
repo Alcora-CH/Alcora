@@ -1,0 +1,445 @@
+<title>Alcora — proposition d'identité</title>
+
+<style>
+  :root {
+    --nuit:      #EAECEA;
+    --plaque:    #F7F8F6;
+    --encre:     #101A21;
+    --encre-2:   #55666F;
+    --encre-3:   #8496A0;
+    --trait:     #CFD6D4;
+    --trait-2:   #E2E7E4;
+    --accent:    #1E8E97;
+    --accent-2:  #0F6B73;
+    --halo:      rgba(30,142,151,.10);
+    --tuile:     #0D141C;
+    --tuile-ink: #E6EDF2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --nuit:      #0B1118;
+      --plaque:    #121B24;
+      --encre:     #E4EBF0;
+      --encre-2:   #93A5B2;
+      --encre-3:   #64757F;
+      --trait:     #223040;
+      --trait-2:   #1A2532;
+      --accent:    #4FD6DE;
+      --accent-2:  #86E6EB;
+      --halo:      rgba(79,214,222,.10);
+      --tuile:     #060A0F;
+      --tuile-ink: #E6EDF2;
+    }
+  }
+  :root[data-theme="light"] {
+    --nuit:#EAECEA; --plaque:#F7F8F6; --encre:#101A21; --encre-2:#55666F;
+    --encre-3:#8496A0; --trait:#CFD6D4; --trait-2:#E2E7E4; --accent:#1E8E97;
+    --accent-2:#0F6B73; --halo:rgba(30,142,151,.10); --tuile:#0D141C; --tuile-ink:#E6EDF2;
+  }
+  :root[data-theme="dark"] {
+    --nuit:#0B1118; --plaque:#121B24; --encre:#E4EBF0; --encre-2:#93A5B2;
+    --encre-3:#64757F; --trait:#223040; --trait-2:#1A2532; --accent:#4FD6DE;
+    --accent-2:#86E6EB; --halo:rgba(79,214,222,.10); --tuile:#060A0F; --tuile-ink:#E6EDF2;
+  }
+
+  .feuille {
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", "Consolas", monospace;
+    background: var(--nuit);
+    color: var(--encre);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.62;
+    padding: clamp(28px, 5vw, 64px) clamp(18px, 5vw, 40px) 80px;
+  }
+  .feuille * { box-sizing: border-box; }
+  .colonne { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--encre-3); margin: 0 0 14px;
+  }
+  .feuille h1 {
+    font-family: var(--serif);
+    font-size: clamp(52px, 11vw, 88px);
+    line-height: .95; letter-spacing: -.015em; font-weight: 500;
+    margin: 0; text-wrap: balance;
+  }
+  .feuille h1 .fin { color: var(--accent); }
+  .these {
+    font-family: var(--serif); font-size: clamp(17px, 2.4vw, 21px);
+    line-height: 1.5; color: var(--encre-2); margin: 18px 0 0; max-width: 34em;
+    text-wrap: pretty;
+  }
+  .feuille h2 {
+    font-family: var(--serif); font-weight: 500;
+    font-size: 25px; line-height: 1.2; margin: 0; letter-spacing: -.01em;
+  }
+  .feuille p { margin: 0; }
+  .feuille p + p { margin-top: .8em; }
+
+  /* ---------- carte du ciel ---------- */
+  .ciel {
+    margin-top: 40px; padding: 26px 22px 18px;
+    background: var(--plaque); border: 1px solid var(--trait);
+    border-radius: 3px; overflow-x: auto;
+  }
+  .ciel svg { display: block; width: 100%; min-width: 440px; height: auto; }
+  .ciel figcaption {
+    font-family: var(--mono); font-size: 11.5px; color: var(--encre-3);
+    margin-top: 14px; letter-spacing: .02em;
+  }
+
+  /* ---------- concepts ---------- */
+  .concept { display: flex; flex-direction: column; gap: 22px; }
+  .concept + .concept { border-top: 1px solid var(--trait-2); padding-top: 44px; }
+  .titre-rang { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .etiquette {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 2px; padding: 3px 8px;
+    white-space: nowrap;
+  }
+
+  .planche { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 620px) { .planche { grid-template-columns: 1fr; } }
+  .tuile {
+    display: grid; place-items: center; padding: 34px 18px;
+    border-radius: 3px; border: 1px solid transparent; position: relative;
+  }
+  .tuile.sombre { background: var(--tuile); color: var(--tuile-ink); border-color: var(--trait); }
+  .tuile.claire { background: #F2F3F1; color: #0F1820; border-color: var(--trait); }
+  .tuile span {
+    position: absolute; bottom: 9px; left: 11px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; opacity: .42;
+  }
+  .marque { display: block; }
+
+  .echelle {
+    display: flex; align-items: flex-end; gap: 26px; flex-wrap: wrap;
+    padding: 20px 22px; background: var(--tuile); color: var(--tuile-ink);
+    border: 1px solid var(--trait); border-radius: 3px;
+  }
+  .pas { display: flex; flex-direction: column; align-items: center; gap: 9px; }
+  .pas b {
+    font-family: var(--mono); font-weight: 400; font-size: 10.5px;
+    letter-spacing: .08em; opacity: .45;
+  }
+
+  .notes { display: grid; grid-template-columns: 1.35fr 1fr; gap: 28px; }
+  @media (max-width: 620px) { .notes { grid-template-columns: 1fr; gap: 18px; } }
+  .notes p { color: var(--encre-2); }
+  dl.fiche { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  dl.fiche div { display: flex; flex-direction: column; gap: 2px; }
+  dl.fiche dt {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--encre-3);
+  }
+  dl.fiche dd { margin: 0; font-size: 13.5px; color: var(--encre); }
+
+  /* ---------- mises en situation ---------- */
+  .situ { display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-end; }
+  .barre {
+    display: flex; align-items: center; gap: 12px;
+    background: #0A1017; border: 1px solid var(--trait); border-radius: 3px;
+    padding: 7px 13px; color: #E6EDF2;
+  }
+  .barre i { width: 16px; height: 16px; border-radius: 3px; background: #2A3644; display: block; }
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #0A1017; color: #E6EDF2; border: 1px solid var(--trait);
+    display: grid; place-items: center;
+  }
+  .legende { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+             text-transform: uppercase; color: var(--encre-3); margin-top: 9px; }
+
+  /* ---------- pied ---------- */
+  .bilan {
+    border-left: 2px solid var(--accent); padding: 2px 0 2px 20px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .bilan p { color: var(--encre-2); }
+  .bilan strong { color: var(--encre); font-weight: 600; }
+  ul.puces { margin: 0; padding-left: 18px; color: var(--encre-2); display: flex;
+             flex-direction: column; gap: 7px; }
+  ul.puces code {
+    font-family: var(--mono); font-size: 12.5px; color: var(--encre);
+    background: var(--halo); padding: 1px 5px; border-radius: 2px;
+  }
+</style>
+
+<div class="feuille">
+<div class="colonne">
+
+  <header>
+    <p class="eyebrow">Proposition d'identité — ProtectViewer</p>
+    <h1>Alcor<span class="fin">a</span></h1>
+    <p class="these">
+      Alcor est la petite étoile accolée à Mizar, dans la queue de la Grande Ourse.
+      Depuis l'Antiquité, la distinguer à l'œil nu est le test de vue le plus ancien
+      que l'on connaisse : qui voit Alcor voit net.
+    </p>
+
+    <figure class="ciel">
+      <svg viewBox="0 0 620 190" role="img"
+           aria-label="La Grande Ourse, avec Mizar et sa voisine Alcor signalées dans la queue.">
+        <g stroke="currentColor" stroke-opacity=".26" stroke-width="1" fill="none">
+          <path d="M52 128 L150 96 L262 88 L346 108 L346 108 L470 62 L508 152 L346 108 M470 62 L508 152 M346 108 L360 168 L508 152" />
+        </g>
+        <g fill="currentColor" fill-opacity=".82">
+          <circle cx="52" cy="128" r="4.2" />
+          <circle cx="262" cy="88" r="4.6" />
+          <circle cx="346" cy="108" r="3.4" />
+          <circle cx="360" cy="168" r="4.4" />
+          <circle cx="470" cy="62" r="5.2" />
+          <circle cx="508" cy="152" r="4.8" />
+        </g>
+        <circle cx="150" cy="96" r="5.4" fill="currentColor" />
+        <circle cx="163" cy="82" r="2.5" fill="var(--accent)" />
+        <g stroke="var(--accent)" stroke-width="1" fill="none" stroke-opacity=".85">
+          <path d="M168 78 L206 58 L248 58" />
+        </g>
+        <text x="256" y="62" fill="var(--accent)"
+              style="font-family:var(--mono);font-size:12.5px;letter-spacing:.12em">ALCOR</text>
+        <text x="120" y="122" fill="currentColor" fill-opacity=".5"
+              style="font-family:var(--mono);font-size:12.5px;letter-spacing:.12em">MIZAR</text>
+      </svg>
+      <figcaption>
+        ζ Ursae Majoris — l'écart entre les deux astres mesure 11,8 minutes d'arc.
+      </figcaption>
+    </figure>
+  </header>
+
+  <!-- ============================ concept 1 ============================ -->
+  <section class="concept">
+    <div class="titre-rang">
+      <h2>L'écart</h2>
+      <span class="etiquette">Deux vides, une liaison</span>
+    </div>
+
+    <div class="planche">
+      <div class="tuile sombre">
+        <svg class="marque" width="132" height="132" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+        </svg>
+        <span>sur fond sombre</span>
+      </div>
+      <div class="tuile claire">
+        <svg class="marque" width="132" height="132" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+        </svg>
+        <span>sur fond clair</span>
+      </div>
+    </div>
+
+    <div class="echelle">
+      <div class="pas">
+        <svg class="marque" width="96" height="96" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+        </svg><b>96 px</b>
+      </div>
+      <div class="pas">
+        <svg class="marque" width="32" height="32" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+        </svg><b>32 px</b>
+      </div>
+      <div class="pas">
+        <svg class="marque" width="16" height="16" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+        </svg><b>16 px</b>
+      </div>
+    </div>
+
+    <div class="notes">
+      <p>
+        La plaque est pleine ; les deux astres sont des trous. Le grand se voit d'emblée,
+        le petit demande qu'on regarde — et le trait fin qui les relie est la notation
+        des atlas pour une étoile double. C'est la marque la plus littérale des trois :
+        elle raconte le nom sans l'illustrer.
+      </p>
+      <dl class="fiche">
+        <div><dt>Plein</dt><dd>La plaque</dd></div>
+        <div><dt>Vide</dt><dd>Mizar, Alcor, leur liaison</dd></div>
+        <div><dt>À 16 px</dt><dd>Deux points ; la liaison disparaît</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============================ concept 2 ============================ -->
+  <section class="concept">
+    <div class="titre-rang">
+      <h2>La visée</h2>
+      <span class="etiquette">Inversion du plein et du vide</span>
+    </div>
+
+    <div class="planche">
+      <div class="tuile sombre">
+        <svg class="marque" width="132" height="132" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M4 32a28 28 0 1 0 56 0a28 28 0 1 0 -56 0ZM39 11a14 14 0 1 0 28 0a14 14 0 1 0 -28 0ZM45.8 14a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0Z"/>
+        </svg>
+        <span>sur fond sombre</span>
+      </div>
+      <div class="tuile claire">
+        <svg class="marque" width="132" height="132" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M4 32a28 28 0 1 0 56 0a28 28 0 1 0 -56 0ZM39 11a14 14 0 1 0 28 0a14 14 0 1 0 -28 0ZM45.8 14a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0Z"/>
+        </svg>
+        <span>sur fond clair</span>
+      </div>
+    </div>
+
+    <div class="echelle">
+      <div class="pas">
+        <svg class="marque" width="96" height="96" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M4 32a28 28 0 1 0 56 0a28 28 0 1 0 -56 0ZM39 11a14 14 0 1 0 28 0a14 14 0 1 0 -28 0ZM45.8 14a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0Z"/>
+        </svg><b>96 px</b>
+      </div>
+      <div class="pas">
+        <svg class="marque" width="32" height="32" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M4 32a28 28 0 1 0 56 0a28 28 0 1 0 -56 0ZM39 11a14 14 0 1 0 28 0a14 14 0 1 0 -28 0ZM45.8 14a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0Z"/>
+        </svg><b>32 px</b>
+      </div>
+      <div class="pas">
+        <svg class="marque" width="16" height="16" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M4 32a28 28 0 1 0 56 0a28 28 0 1 0 -56 0ZM39 11a14 14 0 1 0 28 0a14 14 0 1 0 -28 0ZM45.8 14a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0Z"/>
+        </svg><b>16 px</b>
+      </div>
+    </div>
+
+    <div class="notes">
+      <p>
+        Un disque entamé par un vide circulaire, et dans ce vide, un point resté plein.
+        Le rapport s'inverse : ce qu'on cherche est la seule chose qui subsiste là où
+        tout le reste a été retiré. C'est la plus abstraite des trois, et la plus
+        difficile à confondre avec une autre marque.
+      </p>
+      <dl class="fiche">
+        <div><dt>Plein</dt><dd>Le disque, et l'astre isolé</dd></div>
+        <div><dt>Vide</dt><dd>L'échancrure qui l'entoure</dd></div>
+        <div><dt>À 16 px</dt><dd>Silhouette mordue, point détaché</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============================ concept 3 ============================ -->
+  <section class="concept">
+    <div class="titre-rang">
+      <h2>Le seuil</h2>
+      <span class="etiquette">La marque exécute le test</span>
+    </div>
+
+    <div class="planche">
+      <div class="tuile sombre">
+        <svg class="marque" width="132" height="132" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM9.5 46a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0ZM23.8 35a6.2 6.2 0 1 0 12.4 0a6.2 6.2 0 1 0 -12.4 0ZM35.2 26.5a4.3 4.3 0 1 0 8.6 0a4.3 4.3 0 1 0 -8.6 0ZM43.2 20.5a2.8 2.8 0 1 0 5.6 0a2.8 2.8 0 1 0 -5.6 0ZM49.3 16a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z"/>
+        </svg>
+        <span>sur fond sombre</span>
+      </div>
+      <div class="tuile claire">
+        <svg class="marque" width="132" height="132" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM9.5 46a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0ZM23.8 35a6.2 6.2 0 1 0 12.4 0a6.2 6.2 0 1 0 -12.4 0ZM35.2 26.5a4.3 4.3 0 1 0 8.6 0a4.3 4.3 0 1 0 -8.6 0ZM43.2 20.5a2.8 2.8 0 1 0 5.6 0a2.8 2.8 0 1 0 -5.6 0ZM49.3 16a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z"/>
+        </svg>
+        <span>sur fond clair</span>
+      </div>
+    </div>
+
+    <div class="echelle">
+      <div class="pas">
+        <svg class="marque" width="96" height="96" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM9.5 46a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0ZM23.8 35a6.2 6.2 0 1 0 12.4 0a6.2 6.2 0 1 0 -12.4 0ZM35.2 26.5a4.3 4.3 0 1 0 8.6 0a4.3 4.3 0 1 0 -8.6 0ZM43.2 20.5a2.8 2.8 0 1 0 5.6 0a2.8 2.8 0 1 0 -5.6 0ZM49.3 16a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z"/>
+        </svg><b>96 px</b>
+      </div>
+      <div class="pas">
+        <svg class="marque" width="32" height="32" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM9.5 46a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0ZM23.8 35a6.2 6.2 0 1 0 12.4 0a6.2 6.2 0 1 0 -12.4 0ZM35.2 26.5a4.3 4.3 0 1 0 8.6 0a4.3 4.3 0 1 0 -8.6 0ZM43.2 20.5a2.8 2.8 0 1 0 5.6 0a2.8 2.8 0 1 0 -5.6 0ZM49.3 16a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z"/>
+        </svg><b>32 px</b>
+      </div>
+      <div class="pas">
+        <svg class="marque" width="16" height="16" viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM9.5 46a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0ZM23.8 35a6.2 6.2 0 1 0 12.4 0a6.2 6.2 0 1 0 -12.4 0ZM35.2 26.5a4.3 4.3 0 1 0 8.6 0a4.3 4.3 0 1 0 -8.6 0ZM43.2 20.5a2.8 2.8 0 1 0 5.6 0a2.8 2.8 0 1 0 -5.6 0ZM49.3 16a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z"/>
+        </svg><b>16 px</b>
+      </div>
+    </div>
+
+    <div class="notes">
+      <p>
+        Cinq trous décroissants sur la diagonale, comme une échelle de magnitudes.
+        Réduite, la marque perd ses derniers vides l'un après l'autre : elle fait
+        subir au regard l'épreuve dont elle tire son nom. C'est aussi son risque —
+        à 16 px le cinquième trou tombe à 0,85 px et disparaît, le quatrième tient
+        à 1,4 px de justesse.
+      </p>
+      <dl class="fiche">
+        <div><dt>Plein</dt><dd>La plaque</dd></div>
+        <div><dt>Vide</dt><dd>Cinq astres décroissants</dd></div>
+        <div><dt>À 16 px</dt><dd>Quatre trous ; le cinquième cède</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============================ en situation ============================ -->
+  <section class="concept">
+    <div class="titre-rang">
+      <h2>En situation</h2>
+      <span class="etiquette">L'écart, à sa taille réelle</span>
+    </div>
+    <div class="situ">
+      <div>
+        <div class="barre">
+          <i></i><i></i>
+          <svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true">
+            <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+          </svg>
+          <i></i><i></i>
+        </div>
+        <p class="legende">Barre des tâches</p>
+      </div>
+      <div>
+        <div class="avatar">
+          <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true">
+            <path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/>
+          </svg>
+        </div>
+        <p class="legende">Dépôt GitHub</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ bilan ============================ -->
+  <section class="concept">
+    <div class="titre-rang"><h2>Ce que vaut le nom</h2></div>
+    <div class="bilan">
+      <p>
+        <strong>Vérifié :</strong> aucun produit de vidéosurveillance, aucun logiciel de
+        sécurité ne porte ce nom. Le seul occupant notable est Alcora Corporation,
+        cosmétiques et bien-être — aucun risque de confusion. L'Alcora est par ailleurs
+        une ville de la région de Castellón.
+      </p>
+      <p>
+        <strong>Non vérifié :</strong> le dépôt de marque proprement dit. Je ne suis pas
+        juriste et je ne parle que de risque apparent.
+      </p>
+      <p>
+        <strong>Une seule orthographe, une seule prononciation</strong> — al-ko-ra en
+        français, al-KOR-uh en anglais. Pas d'accent à trancher entre les deux langues,
+        contrairement à Belvédère.
+      </p>
+    </div>
+
+    <div class="titre-rang" style="margin-top:14px"><h2>Ce que coûte le renommage</h2></div>
+    <ul class="puces">
+      <li><strong>Irréversible</strong> — l'identifiant <code>ProtectViewer2</code> et le
+          nom de l'exécutable : le canal de mise à jour de tes deux installations est rompu,
+          il faut réinstaller à la main. Une fois.</li>
+      <li><strong>À écrire</strong> — la reprise du dossier
+          <code>%APPDATA%\ProtectViewer2</code>, sinon ton père se retrouve à l'écran de
+          connexion sans sa clé à deux facteurs.</li>
+      <li><strong>Simple</strong> — une trentaine d'occurrences dans les scripts de
+          construction, les manifestes, l'interface et la documentation.</li>
+    </ul>
+  </section>
+
+</div>
+</div>

@@ -1,0 +1,31 @@
+{
+  "name": "alcora-desktop",
+  "version": "2.22.0",
+  "private": true,
+  "description": "Alcora",
+  "//packId": "Identifiant du paquet ET canal de mise a jour. Lu par scripts/build.mjs, scripts/publier.mjs et maj.js : un seul endroit, sinon un renommage en oublie forcement un. En changer rompt le lien avec les installations existantes.",
+  "packId": "Alcora",
+  "author": "Thomas",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test:totp": "node test-totp.js",
+    "test:archive": "node test-archive.js",
+    "test:extraits": "node test-extraits.js",
+    "test:relay": "node test-relay.js",
+    "test:client": "node test-client.js",
+    "test:events": "node test-events.js",
+    "test:export": "node test-export.js",
+    "test:frise": "node test-frise.js",
+    "test:alertes": "node test-alertes.js",
+    "test:websocket": "node test-websocket.js",
+    "test:updates": "node test-updates.js",
+    "test:veilles": "node test-veilles.js",
+    "test:attributs": "node test-attributs.js",
+    "test:recherche": "node test-recherche.js"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.0.3",
+    "electron": "^33.3.1"
+  }
+}

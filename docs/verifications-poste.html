@@ -1,0 +1,162 @@
+<title>Alcora — ce qui reste à éprouver sur le poste</title>
+<style>
+  :root {
+    --bg:#1b1e23; --card:#23272e; --card2:#2a2f37; --line:#353b44; --line2:#434a55;
+    --ink:#dad5cb; --muted:#9a958b; --soft:#75716a;
+    --accent:#d2a263; --accent-d:#e6b877; --ok:#8fae5a; --warn:#d0a215; --bad:#d8685a;
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  /* Theme unique et assume : ce document vit dans l'univers nocturne du projet. */
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         font-size:14.5px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .page { max-width:860px; margin:0 auto; padding:40px 22px 90px; }
+  .eyebrow { font-size:11px; font-weight:650; letter-spacing:.09em; text-transform:uppercase;
+             color:var(--soft); margin:0 0 8px; }
+  h1 { margin:0 0 8px; font-size:27px; font-weight:640; letter-spacing:-.015em; }
+  .sous { color:var(--muted); margin:0; max-width:68ch; }
+
+  h2 { font-size:15px; font-weight:640; margin:40px 0 14px; padding-top:22px;
+       border-top:1px solid var(--line); color:var(--muted); }
+
+  .essai { background:var(--card); border:1px solid var(--line); border-radius:10px;
+           padding:17px 19px; margin-bottom:14px; }
+  .essai > header { display:flex; align-items:baseline; gap:11px; margin-bottom:4px; }
+  .essai h3 { margin:0; font-size:15px; font-weight:600; flex:1; min-width:0; }
+  .ver { font-family:var(--mono); font-size:11.5px; color:var(--accent-d);
+         background:var(--card2); border:1px solid var(--line); border-radius:6px;
+         padding:1px 7px; flex:0 0 auto; }
+  .pourquoi { color:var(--muted); font-size:13.5px; margin:0 0 14px; }
+
+  dl { margin:0; display:flex; flex-direction:column; gap:11px; }
+  dt { font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+       color:var(--soft); margin-bottom:2px; }
+  dd { margin:0; font-size:13.5px; }
+  dd.geste { color:var(--ink); }
+  dd.attendu { color:var(--ok); }
+  dd.rate { color:var(--muted); }
+  code { font-family:var(--mono); font-size:12.5px; background:var(--card2);
+         border:1px solid var(--line); border-radius:4px; padding:1px 6px; color:var(--ink); }
+  .bloc { display:block; padding:9px 12px; margin-top:5px; overflow-x:auto;
+          white-space:pre; line-height:1.5; }
+
+  .fait { background:var(--card); border:1px solid var(--line); border-radius:10px;
+          padding:15px 19px; }
+  .fait ul { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .fait li { font-size:13.5px; color:var(--muted); padding-left:22px; position:relative; }
+  .fait li::before { content:"✓"; position:absolute; left:0; color:var(--ok);
+                     font-family:var(--mono); }
+  .fait b { color:var(--ink); font-weight:600; }
+
+  .note { border-left:2px solid var(--accent); padding:2px 0 2px 18px; margin-top:28px;
+          color:var(--muted); font-size:13.5px; }
+  .note b { color:var(--ink); }
+  footer { margin-top:46px; padding-top:18px; border-top:1px solid var(--line);
+           color:var(--soft); font-size:12px; }
+</style>
+<div class="page">
+
+  <p class="eyebrow">Alcora — version 2.8.0</p>
+  <h1>Ce qui reste à éprouver</h1>
+  <p class="sous">Cinq comportements qui ne se prouvent pas depuis une machine de
+  développement : ils demandent une vraie mise en veille, une vraie coupure, un vrai
+  redémarrage, une vraie caméra. Rien ne presse — mais tant qu'ils ne sont pas passés, ils
+  restent des promesses. Chacun indique ce qu'il faut voir, et où regarder si ça rate.</p>
+
+  <h2>À faire quand tu auras un moment</h2>
+
+  <article class="essai">
+    <header><h3>Le démarrage avec Windows</h3><span class="ver">2.4.0</span></header>
+    <p class="pourquoi">L'inscription vise le lanceur stable, au-dessus de <code>current\</code>,
+    pour survivre aux mises à jour. Viser l'exécutable versionné aurait cassé à la première
+    version installée — c'est le point que je voulais vérifier avant d'annoncer quoi que ce soit.</p>
+    <dl>
+      <div><dt>Le geste</dt><dd class="geste">Réglages → <b>Démarrage</b> → activer « Ouvrir Alcora avec Windows ». Redémarrer le PC.</dd></div>
+      <div><dt>Attendu</dt><dd class="attendu">Alcora s'ouvre seule à l'ouverture de session, avec son introduction.</dd></div>
+      <div><dt>Si ça rate</dt><dd class="rate">L'interrupteur montre l'état réel lu du registre : s'il est resté éteint, l'inscription a été refusée. Sinon, vérifier l'entrée :
+        <code class="bloc">reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v Alcora</code>
+        Elle doit pointer sur <code>...\Alcora\Alcora.exe</code> — et surtout <b>pas</b> sur <code>...\current\Alcora.exe</code>.</dd></div>
+    </dl>
+  </article>
+
+  <article class="essai">
+    <header><h3>La reprise après une coupure réseau</h3><span class="ver">2.5.0</span></header>
+    <p class="pourquoi">C'était la panne la plus grave : « en direct » s'affichait avant toute
+    image décodée, et une vue gelée le restait indéfiniment sans que rien ne le signale. Dans
+    un outil de surveillance, une panne qui ne se voit pas est une panne qui dure.</p>
+    <dl>
+      <div><dt>Le geste</dt><dd class="geste">Débrancher le câble réseau (ou couper le Wi-Fi) une dizaine de secondes, puis rebrancher. Laisser l'application ouverte et visible.</dd></div>
+      <div><dt>Attendu</dt><dd class="attendu">Les vues passent en « Connexion… » puis reviennent seules, sans aucun clic. Les deux caméras ne repartent pas exactement en même temps — c'est voulu, pour ne pas frapper le relais ensemble.</dd></div>
+      <div><dt>Si ça rate</dt><dd class="rate">La console de la page consigne chaque décision, reprise dans le journal :
+        <code class="bloc">[tuile G6 Bullet] plus d’image — reprise dans 1240 ms
+[tuile G6 Bullet] première image décodée</code>
+        Sans la première ligne, le gel n'a pas été détecté ; sans la seconde, la reconnexion n'aboutit pas.</dd></div>
+    </dl>
+  </article>
+
+  <article class="essai">
+    <header><h3>Le réveil après mise en veille</h3><span class="ver">2.6.0</span></header>
+    <p class="pourquoi">Au retour, les sessions sont mortes et la carte réseau n'est pas encore
+    prête. L'application se reconnectait dans la seconde, échouait à coup sûr, et enclenchait
+    l'attente croissante : on retrouvait une application annonçant une panne alors que tout
+    allait bien.</p>
+    <dl>
+      <div><dt>Le geste</dt><dd class="geste">Mettre le PC en veille quelques minutes, application ouverte. Réveiller.</dd></div>
+      <div><dt>Attendu</dt><dd class="attendu">« Reprise après la mise en veille… » pendant quatre secondes, puis les images reviennent. Aucune erreur affichée entre-temps.</dd></div>
+      <div><dt>Si ça rate</dt><dd class="rate">Le journal doit porter :
+        <code class="bloc">info   reprise   sortie de veille : reconnexion dans 4 s</code>
+        Si cette ligne manque, Windows n'a pas émis l'événement de réveil — c'est alors la détection de gel des vues (essai précédent) qui doit prendre le relais.</dd></div>
+    </dl>
+  </article>
+
+  <article class="essai">
+    <header><h3>L'icône de la barre des tâches</h3><span class="ver">2.5.0</span></header>
+    <p class="pourquoi">Windows regroupe les fenêtres par identifiant d'application, pas par
+    exécutable. Sans déclaration, il le déduisait du chemin — qui traverse <code>current\</code>
+    et change à chaque mise à jour, d'où l'icône qui se dédoublait.</p>
+    <dl>
+      <div><dt>Le geste</dt><dd class="geste">Désépingler Alcora de la barre des tâches, la rouvrir depuis le menu Démarrer, la réépingler. <b>Une seule fois</b> — c'est le temps que Windows raccorde l'épingle au nouvel identifiant. Puis attendre la prochaine mise à jour.</dd></div>
+      <div><dt>Attendu</dt><dd class="attendu">Après la mise à jour suivante, la fenêtre reste groupée sous l'icône épinglée. Plus de seconde icône, plus de réépinglage.</dd></div>
+      <div><dt>Si ça rate</dt><dd class="rate">Comparer les deux identités, qui doivent être rigoureusement égales. Celle déclarée par l'application est au journal (<code>identité barre des tâches : velopack.Alcora</code>) ; celle du raccourci se lit ainsi :
+        <code class="bloc">$sh = New-Object -ComObject Shell.Application
+$d = $sh.NameSpace("$env:APPDATA\Microsoft\Windows\Start Menu\Programs")
+$d.ParseName("Alcora.lnk").ExtendedProperty("System.AppUserModel.ID")</code></dd></div>
+    </dl>
+  </article>
+
+  <article class="essai">
+    <header><h3>La lecture d'une séquence sur la G6 Bullet</h3><span class="ver">2.8.0</span></header>
+    <p class="pourquoi"><b>Le risque de codec est levé</b> depuis la mesure du 29.07 : la sonde
+    V-Frise a lu le format de huit extraits, sur les deux caméras et à quatre profondeurs — c'est
+    du <code>avc1</code> (H.264) partout, y compris pour la G6 en 3840 × 2160. Elle n'exporte ni
+    en AV1 ni en H.265. Reste à éprouver ce qu'aucune mesure ne dit : que le lecteur, lui,
+    fonctionne bout en bout sous ta main.</p>
+    <dl>
+      <div><dt>Le geste</dt><dd class="geste">Détections → filtrer sur <b>G6 Bullet</b> → cliquer une ligne. Puis recommencer sur une ligne de la G5, pour comparer.</dd></div>
+      <div><dt>Attendu</dt><dd class="attendu">La séquence s'ouvre en une fraction de seconde et se lit. Trois secondes avant la détection, trois après. La barre de lecture répond au clic, les vitesses 0,25× à 2× fonctionnent, les flèches avancent image par image.</dd></div>
+      <div><dt>Si ça rate</dt><dd class="rate">Deux échecs différents, à ne pas confondre. « <b>Cette séquence ne peut pas être lue ici</b> » ne devrait plus jamais apparaître sur ton matériel — si elle sort quand même, c'est un vrai imprévu et je veux le savoir. « <b>Aucun enregistrement sur cette période</b> » = le contrôleur n'a rien à cette heure-là, ce qui est une réponse valable et non une panne.</dd></div>
+    </dl>
+  </article>
+
+  <h2>Déjà éprouvé en conditions réelles</h2>
+  <div class="fait">
+    <ul>
+      <li><b>La mise à jour automatique</b> — appliquée seule plusieurs fois, dont une pendant ton sommeil (25.07, 03h47) et une à travers le renommage du canal.</li>
+      <li><b>L'introduction</b> — la constellation, la fusion en marque, au tempo contemplatif.</li>
+      <li><b>La reprise de la connexion au renommage</b> — elle a échoué en 2.2.0 (clé de chiffrement laissée en arrière), ce qui a permis de la corriger en 2.2.1.</li>
+      <li><b>La mémoire de la fenêtre</b> — taille, position et écran retrouvés, sur ton poste à quatre écrans.</li>
+      <li><b>Le certificat</b> — <code>CN=Alcora</code> reconnu par Windows après <code>confiance.ps1</code>.</li>
+      <li><b>Le journal des détections</b> — la liste et « Voir plus ancien » à 100 %, sur tes ~266 détections par jour.</li>
+    </ul>
+  </div>
+
+  <p class="note"><b>Pourquoi cette liste existe.</b> Tout ce qui a réellement cassé dans ce
+  projet — la clé de chiffrement oubliée, le paquet corrompu par deux téléchargements
+  simultanés, l'icône qui se dédouble, le faux coupable désigné à l'antivirus — a été trouvé
+  parce que tu as lancé l'application, pas parce que je l'ai raisonnée. Ces cinq-là
+  attendent le même traitement.</p>
+
+  <footer>Établi le 28.07.2026, mis à jour en 2.8.0. Le plan complet reste
+  <code>docs/plan-avancement.html</code>.</footer>
+</div>
