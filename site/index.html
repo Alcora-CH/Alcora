@@ -66,8 +66,10 @@
   .page{max-width:1480px;margin:0 auto;padding:0 clamp(20px,3.5vw,56px) 90px}
   a{color:var(--accent-d);text-decoration:none}
   a:hover{text-decoration:underline}
-  html[lang="fr"] .en{display:none !important}
-  html[lang="en"] .fr{display:none !important}
+  html[lang="fr"] .en,html[lang="fr"] .de,html[lang="fr"] .it{display:none !important}
+  html[lang="en"] .fr,html[lang="en"] .de,html[lang="en"] .it{display:none !important}
+  html[lang="de"] .fr,html[lang="de"] .en,html[lang="de"] .it{display:none !important}
+  html[lang="it"] .fr,html[lang="it"] .en,html[lang="it"] .de{display:none !important}
 
   /* ------------------------------------------------- la barre, qui suit ---- */
   header.site{position:sticky;top:0;z-index:60;margin:0 calc(-1*clamp(20px,3.5vw,56px));
@@ -385,12 +387,16 @@
     <nav class="lang" aria-label="Langue">
       <button id="btn-fr" aria-pressed="true" onclick="langue('fr')">FR</button>
       <button id="btn-en" aria-pressed="false" onclick="langue('en')">EN</button>
+      <button id="btn-de" aria-pressed="false" onclick="langue('de')">DE</button>
+      <button id="btn-it" aria-pressed="false" onclick="langue('it')">IT</button>
     </nav>
   </header>
 
   <section class="hero">
     <h1 class="fr">UniFi Protect sur Windows.<br><em>En local, sans le nuage.</em></h1>
     <h1 class="en">UniFi Protect on Windows.<br><em>Local, without the cloud.</em></h1>
+    <h1 class="de">UniFi Protect auf Windows.<br><em>Lokal, ohne die Cloud.</em></h1>
+    <h1 class="it">UniFi Protect su Windows.<br><em>In locale, senza cloud.</em></h1>
     <p class="sous fr">Alcora est une application Windows native pour les caméras UniFi
     Protect. Elle parle directement à votre console, sur votre réseau : pas de compte
     Ubiquiti, pas de navigateur, pas de dépendance à Internet. Direct, relecture,
@@ -399,69 +405,97 @@
     It talks directly to your console, on your own network: no Ubiquiti account, no
     browser, no dependency on the Internet. Live view, replay, detections, search and
     alerts.</p>
+    <p class="sous de">Alcora ist eine native Windows-Anwendung für UniFi-Protect-Kameras.
+    Sie spricht direkt mit deiner Konsole, in deinem Netzwerk: kein Ubiquiti-Konto, kein
+    Browser, keine Abhängigkeit vom Internet. Live, Wiedergabe, Erkennungen, Suche und
+    Alarme.</p>
+    <p class="sous it">Alcora è un'applicazione Windows nativa per le telecamere UniFi
+    Protect. Parla direttamente alla tua console, sulla tua rete: nessun account
+    Ubiquiti, nessun browser, nessuna dipendenza da Internet. Diretta, riproduzione,
+    rilevamenti, ricerca e avvisi.</p>
     <div class="boutons">
       <a class="btn btn-or fr" href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">Télécharger pour Windows</a>
       <a class="btn btn-or en" href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">Download for Windows</a>
+      <a class="btn btn-or de" href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">Für Windows herunterladen</a>
+      <a class="btn btn-or it" href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">Scarica per Windows</a>
       <button class="btn btn-ligne fr" onclick="document.getElementById('demo').scrollIntoView()">Voir la démonstration</button>
       <button class="btn btn-ligne en" onclick="document.getElementById('demo').scrollIntoView()">See the demonstration</button>
+      <button class="btn btn-ligne de" onclick="document.getElementById('demo').scrollIntoView()">Zur Demonstration</button>
+      <button class="btn btn-ligne it" onclick="document.getElementById('demo').scrollIntoView()">Vedi la dimostrazione</button>
     </div>
     <p class="note-dl fr">Gratuit · open source, GPL-3.0 · mises à jour automatiques vérifiées par empreinte</p>
     <p class="note-dl en">Free · open source, GPL-3.0 · automatic updates verified by checksum</p>
+    <p class="note-dl de">Gratis · Open Source, GPL-3.0 · automatische Updates, per Prüfsumme verifiziert</p>
+    <p class="note-dl it">Gratuito · open source, GPL-3.0 · aggiornamenti automatici verificati per impronta</p>
   </section>
 
   <!-- ================================================== LA DÉMONSTRATION ==== -->
   <section id="demo">
     <h2 class="sec fr">La démonstration</h2>
     <h2 class="sec en">The demonstration</h2>
+    <h2 class="sec de">Die Demonstration</h2>
+    <h2 class="sec it">La dimostrazione</h2>
     <p class="sec fr">Une reproduction de l'interface, sur des données simulées — deux
     images fixes tiennent lieu de caméras. Les gestes sont ceux de l'application :
     molette pour zoomer dans l'image, glisser pour s'y déplacer, double-clic ou touches
     1/2/0 pour isoler, la relecture sur sa frise, la recherche et ses filtres.
-    L'application est aujourd'hui en français ; l'anglais accompagne l'ouverture du code.</p>
+    L'application parle français, anglais, allemand et italien — comme cette page.</p>
     <p class="sec en">A reproduction of the interface, on simulated data — two still
     images stand in for cameras. The gestures are the application's own: mouse-wheel to
     zoom into the image, drag to move around, double-click or keys 1/2/0 to isolate,
-    replay on its timeline, search and its filters. The application is currently in
-    French; English accompanies the source release.</p>
+    replay on its timeline, search and its filters. The application speaks French,
+    English, German and Italian — like this page.</p>
+    <p class="sec de">Eine Nachbildung der Oberfläche, mit simulierten Daten — zwei
+    Standbilder vertreten die Kameras. Die Gesten sind die der Anwendung: Mausrad zum
+    Zoomen ins Bild, Ziehen zum Bewegen, Doppelklick oder Tasten 1/2/0 zum Isolieren,
+    die Wiedergabe auf ihrer Zeitleiste, die Suche und ihre Filter. Die Anwendung
+    spricht Französisch, Englisch, Deutsch und Italienisch — wie diese Seite.</p>
+    <p class="sec it">Una riproduzione dell'interfaccia, su dati simulati — due immagini
+    fisse fanno da telecamere. I gesti sono quelli dell'applicazione: rotella per
+    zoomare nell'immagine, trascinare per muoversi, doppio clic o tasti 1/2/0 per
+    isolare, la riproduzione sulla sua linea del tempo, la ricerca e i suoi filtri.
+    L'applicazione parla francese, inglese, tedesco e italiano — come questa pagina.</p>
 
     <div class="demo-cadre">
       <div class="ruban">
         <span class="fr"><b>Démonstration</b> — données simulées, aucune caméra réelle.</span>
         <span class="en"><b>Demonstration</b> — simulated data, no real camera.</span>
-        <button onclick="demoReinit()"><span class="fr">Réinitialiser</span><span class="en">Reset</span></button>
+        <span class="de"><b>Demonstration</b> — simulierte Daten, keine echte Kamera.</span>
+        <span class="it"><b>Dimostrazione</b> — dati simulati, nessuna telecamera reale.</span>
+        <button onclick="demoReinit()"><span class="fr">Réinitialiser</span><span class="en">Reset</span><span class="de">Zurücksetzen</span><span class="it">Reimposta</span></button>
       </div>
       <div class="demo-scroll">
         <div class="alcapp" id="alcapp" tabindex="0">
 
           <div class="rail">
             <svg class="logo" viewBox="0 0 64 64"><path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/></svg>
-            <button data-esp="direct" title="Direct" aria-current="true"><svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><path d="m17 9 5-3v12l-5-3"/></svg></button>
-            <button data-esp="recherche" title="Détections"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
-            <button data-esp="relecture" title="Relecture"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l2 4M14 5l2 4"/></svg></button>
-            <button data-esp="alertes" title="Alertes"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></button>
+            <button data-esp="direct" data-titre="esp.direct" title="Direct" aria-current="true"><svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><path d="m17 9 5-3v12l-5-3"/></svg></button>
+            <button data-esp="recherche" data-titre="esp.recherche" title="Détections"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+            <button data-esp="relecture" data-titre="esp.relecture" title="Relecture"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l2 4M14 5l2 4"/></svg></button>
+            <button data-esp="alertes" data-titre="esp.alertes" title="Alertes"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></button>
             <span class="pousse"></span>
-            <button data-esp="reglages" title="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.5a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.5h4l.4-2.5a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></button>
+            <button data-esp="reglages" data-titre="esp.reglages" title="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.5a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.5h4l.4-2.5a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></button>
           </div>
 
           <div class="panneau">
-            <h4>État</h4>
-            <div class="ligne"><span class="point"></span><span class="k">Flux vidéo prêt.</span></div>
-            <h4>Caméras</h4>
+            <h4 data-t="p.etat">État</h4>
+            <div class="ligne"><span class="point"></span><span class="k" data-t="p.fluxPret">Flux vidéo prêt.</span></div>
+            <h4 data-t="p.cameras">Caméras</h4>
             <div id="liste-cams"></div>
-            <h4>Détections récentes</h4>
+            <h4 data-t="p.recentes">Détections récentes</h4>
             <div id="liste-vives"></div>
-            <h4>Aujourd'hui · <span id="compte-jour">0</span></h4>
+            <h4><span data-t="p.aujourdhui">Aujourd'hui</span> · <span id="compte-jour">0</span></h4>
             <div class="histo" id="histo"></div>
-            <h4>Enregistrements</h4>
-            <div class="ligne"><span class="k">Le plus ancien</span><span class="v">16.02.26</span></div>
-            <div class="ligne"><span class="k">Profondeur</span><span class="v">5 mois 14 j</span></div>
-            <div class="ligne"><span class="k">Pleine définition</span><span class="v" style="color:var(--accent-d)">30 j</span></div>
+            <h4 data-t="p.enregistrements">Enregistrements</h4>
+            <div class="ligne"><span class="k" data-t="p.plusAncien">Le plus ancien</span><span class="v">16.02.26</span></div>
+            <div class="ligne"><span class="k" data-t="p.profondeur">Profondeur</span><span class="v" data-t="p.profondeurV">5 mois 14 j</span></div>
+            <div class="ligne"><span class="k" data-t="p.pleineDef">Pleine définition</span><span class="v" style="color:var(--accent-d)" data-t="p.pleineDefV">30 j</span></div>
             <div class="jauge"><i></i></div>
-            <div class="ligne"><span class="k">Disque</span><span class="v">5,71 / 5,94 To</span></div>
-            <h4>Versions</h4>
-            <div class="ligne"><span class="k">Alcora</span><span class="v" style="color:var(--ok)">2.20.2</span></div>
+            <div class="ligne"><span class="k" data-t="p.disque">Disque</span><span class="v" data-t="p.disqueV">5,71 / 5,94 To</span></div>
+            <h4 data-t="p.versions">Versions</h4>
+            <div class="ligne"><span class="k">Alcora</span><span class="v" style="color:var(--ok)">2.22.0</span></div>
             <div class="ligne"><span class="k">Protect</span><span class="v">7.1.87</span></div>
-            <p class="pied-panneau">Aucune image ne quitte votre réseau.</p>
+            <p class="pied-panneau" data-t="p.pied">Aucune image ne quitte votre réseau.</p>
           </div>
 
           <div class="scene" id="scene">
@@ -469,11 +503,11 @@
             <div class="espace-vue" data-vue="recherche">
               <div class="rech">
                 <div class="rech-filtres">
-                  <h4 style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin:0 0 7px">Chercher</h4>
+                  <h4 style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin:0 0 7px" data-t="r.chercher">Chercher</h4>
                   <input id="rech-texte" placeholder="plaque, ou nom…" aria-label="Chercher">
-                  <h4 style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin:14px 0 0">Sujet</h4>
+                  <h4 style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin:14px 0 0" data-t="r.sujet">Sujet</h4>
                   <div class="puces" id="puces-sujets"></div>
-                  <h4 style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin:14px 0 0">Caméra</h4>
+                  <h4 style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin:14px 0 0" data-t="r.camera">Caméra</h4>
                   <div class="puces" id="puces-cams"></div>
                 </div>
                 <div class="rech-resultats" id="rech-resultats"></div>
@@ -482,7 +516,7 @@
             <div class="espace-vue" data-vue="relecture">
               <div class="rel-haut">
                 <div class="choix-cam" id="rel-cams"></div>
-                <span class="jour">Aujourd'hui</span>
+                <span class="jour" data-t="p.aujourdhui">Aujourd'hui</span>
               </div>
               <div class="rel-image" id="rel-image">
                 <div class="flux" id="rel-flux"></div>
@@ -498,7 +532,7 @@
                 <div class="vitesses" id="rel-vitesses"></div>
               </div>
               <div class="frise-zone">
-                <div class="frise-titre"><span>journée entière</span><span id="rel-heure-titre"></span></div>
+                <div class="frise-titre"><span data-t="rel.journee">journée entière</span><span id="rel-heure-titre"></span></div>
                 <div class="frise" id="frise">
                   <div class="rempli"></div>
                   <div class="tete" id="tete"></div>
@@ -511,16 +545,16 @@
             <div class="espace-vue" data-vue="reglages">
               <div class="regl">
                 <div class="bloc">
-                  <h5>Version</h5>
-                  <p>Alcora <b style="color:var(--ok)">2.20.2</b> — à jour. La mise à jour se
-                  vérifie à chaque lancement, se contrôle par empreinte et s'applique seule.</p>
-                  <p style="margin-top:8px"><button class="btn btn-ligne" style="padding:6px 14px;font-size:12px" onclick="ouvrirNouveautes()">Voir « Ce qui a changé »</button></p>
+                  <h5 data-t="g.version">Version</h5>
+                  <p>Alcora <b style="color:var(--ok)">2.22.0</b><span data-t="g.aJour"> — à jour. La mise à jour se
+                  vérifie à chaque lancement, se contrôle par empreinte et s'applique seule.</span></p>
+                  <p style="margin-top:8px"><button class="btn btn-ligne" style="padding:6px 14px;font-size:12px" onclick="ouvrirNouveautes()" data-t="g.voirNouveautes">Voir « Ce qui a changé »</button></p>
                 </div>
                 <div class="bloc">
-                  <h5>Historique</h5>
-                  <div class="hist-v"><b>2.20.2</b> · 02.08.2026 — Le projet emménage chez alcora-ch.</div>
-                  <div class="hist-v"><b>2.20.0</b> · 02.08.2026 — Raccourcis clavier, filtre de caméras.</div>
-                  <div class="hist-v"><b>2.18.2</b> · 02.08.2026 — Halo d'activité, commandes partout.</div>
+                  <h5 data-t="g.historique">Historique</h5>
+                  <div class="hist-v"><b>2.22.0</b> · 03.08.2026 — <span data-t="g.h1">L'application parle quatre langues.</span></div>
+                  <div class="hist-v"><b>2.21.0</b> · 02.08.2026 — <span data-t="g.h2">La langue suit Windows, réglable.</span></div>
+                  <div class="hist-v"><b>2.20.2</b> · 02.08.2026 — <span data-t="g.h3">Le projet emménage chez alcora-ch.</span></div>
                 </div>
               </div>
             </div>
@@ -535,6 +569,8 @@
   <!-- ================================================== FONCTIONS =========== -->
   <h2 class="sec fr">Fonctions</h2>
   <h2 class="sec en">Features</h2>
+  <h2 class="sec de">Funktionen</h2>
+  <h2 class="sec it">Funzioni</h2>
   <div class="traits">
     <div class="trait fr"><h3>Le direct</h3>
       <p>Les caméras en mosaïque, dimensionnées automatiquement, réorganisables à la
@@ -552,6 +588,22 @@
       <li>Per-camera audio, off by default</li>
       <li>Still capture at source definition</li>
       <li>Keyboard: 1–9 isolates a camera, 0 restores the mosaic, +/− zooms</li></ul></div>
+    <div class="trait de"><h3>Live</h3>
+      <p>Die Kameras im automatisch dimensionierten Mosaik, mit der Maus umzuordnen. Ein
+      Lichtstreifen umrahmt die Kamera, auf der gerade eine Erkennung läuft, mit ihrem
+      Motiv als Etikett.</p>
+      <ul><li>Mausrad-Zoom in die Quellpixel — ein Zuschnitt, keine Vergrösserung</li>
+      <li>Ton pro Kamera, standardmässig aus</li>
+      <li>Standbild in Quellauflösung</li>
+      <li>Tastatur: 1–9 isoliert eine Kamera, 0 stellt das Mosaik wieder her, +/− zoomt</li></ul></div>
+    <div class="trait it"><h3>La diretta</h3>
+      <p>Le telecamere in un mosaico dimensionato automaticamente, riordinabile con il
+      mouse. Un tratto luminoso circonda la telecamera dove un rilevamento è in corso,
+      con il suo soggetto in etichetta.</p>
+      <ul><li>Zoom con la rotella nei pixel della sorgente — un ritaglio, non un ingrandimento</li>
+      <li>Audio telecamera per telecamera, spento per impostazione</li>
+      <li>Cattura d'immagine alla definizione della sorgente</li>
+      <li>Tastiera: 1–9 isola una telecamera, 0 ripristina il mosaico, +/− zooma</li></ul></div>
     <div class="trait fr"><h3>La relecture</h3>
       <p>Une journée entière se parcourt sur une frise, les détections en repères. La
       lecture s'enchaîne sans coupure, de 0,25× à 2×, avec l'audio et l'image par image.</p>
@@ -564,6 +616,20 @@
       <ul><li>One day at a time, across the archive's full depth</li>
       <li>The full-definition boundary is indicated on the timeline</li>
       <li>Still capture at recording definition</li></ul></div>
+    <div class="trait de"><h3>Die Wiedergabe</h3>
+      <p>Ein ganzer Tag lässt sich auf einer Zeitleiste durchlaufen, die Erkennungen als
+      Marken. Die Wiedergabe läuft ohne Schnitt, von 0.25× bis 2×, mit Ton und Bild für
+      Bild.</p>
+      <ul><li>Ein Tag nach dem anderen, über die ganze Tiefe des Archivs</li>
+      <li>Die Grenze der vollen Auflösung ist auf der Zeitleiste markiert</li>
+      <li>Standbild in Aufzeichnungsauflösung</li></ul></div>
+    <div class="trait it"><h3>La riproduzione</h3>
+      <p>Una giornata intera si percorre su una linea del tempo, i rilevamenti come
+      riferimenti. La lettura si concatena senza tagli, da 0,25× a 2×, con l'audio e il
+      fotogramma per fotogramma.</p>
+      <ul><li>Navigazione un giorno alla volta, su tutta la profondità dell'archivio</li>
+      <li>Il confine della piena definizione è indicato sulla linea del tempo</li>
+      <li>Cattura d'immagine alla definizione della registrazione</li></ul></div>
     <div class="trait fr"><h3>Les détections</h3>
       <p>Recherche par sujet, type de véhicule, couleur, caméra ou plaque. Les filtres
       ne proposent que ce qui existe dans votre archive, avec leur nombre.</p>
@@ -576,6 +642,18 @@
       <ul><li>Plate search tolerates the controller's ambiguous reads (0/O, 1/I…)</li>
       <li>The last few digits are enough to find a vehicle</li>
       <li>Recognised plates and names are never displayed nor transmitted</li></ul></div>
+    <div class="trait de"><h3>Die Erkennungen</h3>
+      <p>Suche nach Motiv, Fahrzeugtyp, Farbe, Kamera oder Kennzeichen. Die Filter
+      bieten nur an, was in deinem Archiv existiert, mit seiner Anzahl.</p>
+      <ul><li>Die Kennzeichensuche verträgt die mehrdeutigen Lesarten des Controllers (0/O, 1/I…)</li>
+      <li>Die letzten Ziffern genügen, um ein Fahrzeug zu finden</li>
+      <li>Erkannte Kennzeichen und Namen werden nie angezeigt noch übertragen</li></ul></div>
+    <div class="trait it"><h3>I rilevamenti</h3>
+      <p>Ricerca per soggetto, tipo di veicolo, colore, telecamera o targa. I filtri
+      propongono solo ciò che esiste nel tuo archivio, con il loro numero.</p>
+      <ul><li>La ricerca di targa tollera le letture ambigue del controller (0/O, 1/I…)</li>
+      <li>Le ultime cifre bastano a ritrovare un veicolo</li>
+      <li>Targhe e nomi riconosciuti non sono mai mostrati né trasmessi</li></ul></div>
     <div class="trait fr"><h3>Les alertes</h3>
       <p>Des règles propres à Alcora, indépendantes de l'armement de Protect : sujets,
       caméras, plages horaires, son. Chaque règle affiche le volume de notifications
@@ -590,12 +668,28 @@
       <ul><li>Windows notifications, over a direct, persistent link to the console</li>
       <li>No detour through any third-party server</li>
       <li>A snapshot of the moment accompanies each notification</li></ul></div>
+    <div class="trait de"><h3>Die Alarme</h3>
+      <p>Regeln, die Alcora gehören, unabhängig von der Scharfschaltung von Protect:
+      Motive, Kameras, Zeitfenster, Ton. Jede Regel zeigt die Meldungsmenge, die sie
+      erzeugt hätte — gemessen an deinem Archiv.</p>
+      <ul><li>Windows-Benachrichtigungen, über eine direkte, dauerhafte Verbindung zur Konsole</li>
+      <li>Kein Umweg über einen Drittserver</li>
+      <li>Ein Bild des Moments begleitet jede Meldung</li></ul></div>
+    <div class="trait it"><h3>Gli avvisi</h3>
+      <p>Regole proprie di Alcora, indipendenti dall'attivazione di Protect: soggetti,
+      telecamere, fasce orarie, suono. Ogni regola mostra il volume di notifiche che
+      avrebbe prodotto, misurato sul tuo archivio.</p>
+      <ul><li>Notifiche Windows, con collegamento diretto e permanente alla console</li>
+      <li>Nessuna deviazione per un server terzo</li>
+      <li>Un'immagine dell'istante accompagna ogni notifica</li></ul></div>
   </div>
 
   <!-- ================================================== CONFIDENTIALITÉ ===== -->
   <section class="local">
     <h2 class="fr">Aucune image ne quitte votre réseau.</h2>
     <h2 class="en">No image leaves your network.</h2>
+    <h2 class="de">Kein Bild verlässt dein Netzwerk.</h2>
+    <h2 class="it">Nessuna immagine lascia la tua rete.</h2>
     <p class="fr">Alcora communique avec votre console et, pour ses mises à jour, avec
     GitHub. Avec rien d'autre. L'identité de la console est épinglée après le premier
     appairage ; les identifiants sont chiffrés par Windows, liés à votre session ; le
@@ -605,11 +699,23 @@
     With nothing else. The console's identity is pinned after first pairing; credentials
     are encrypted by Windows, bound to your session; the video relay listens on localhost
     only. <span class="vert">Without Internet, everything works — only updates wait.</span></p>
+    <p class="de">Alcora kommuniziert mit deiner Konsole und, für die Updates, mit GitHub.
+    Mit sonst nichts. Die Identität der Konsole wird nach der ersten Kopplung angeheftet;
+    die Zugangsdaten sind von Windows verschlüsselt, an deine Sitzung gebunden; das
+    Videorelais hört nur lokal. <span class="vert">Ohne Internet funktioniert alles —
+    nur die Updates warten.</span></p>
+    <p class="it">Alcora comunica con la tua console e, per gli aggiornamenti, con GitHub.
+    Con nient'altro. L'identità della console è fissata dopo il primo abbinamento; le
+    credenziali sono cifrate da Windows, legate alla tua sessione; il relè video ascolta
+    solo in locale. <span class="vert">Senza Internet, tutto funziona — solo gli
+    aggiornamenti attendono.</span></p>
   </section>
 
   <!-- ================================================== INSTALLATION ======== -->
   <h2 class="sec fr">Installation</h2>
   <h2 class="sec en">Installation</h2>
+  <h2 class="sec de">Installation</h2>
+  <h2 class="sec it">Installazione</h2>
   <div class="etapes">
     <div class="etape fr"><div><b>Téléchargez et lancez l'installeur.</b> Windows peut
       afficher un avertissement SmartScreen : l'installeur est signé, mais d'un
@@ -619,23 +725,45 @@
       SmartScreen warning: the installer is signed, but with a self-issued certificate —
       “More info”, then “Run anyway”. Every update is then verified by SHA-256
       checksum.</div></div>
+    <div class="etape de"><div><b>Lade den Installer herunter und starte ihn.</b> Windows
+      kann eine SmartScreen-Warnung zeigen: der Installer ist signiert, aber mit einem
+      selbst ausgestellten Zertifikat — «Weitere Informationen», dann «Trotzdem
+      ausführen». Jedes Update wird danach per SHA-256-Prüfsumme verifiziert.</div></div>
+    <div class="etape it"><div><b>Scarica e avvia l'installer.</b> Windows può mostrare
+      un avviso SmartScreen: l'installer è firmato, ma con un certificato auto-emesso —
+      «Ulteriori informazioni», poi «Esegui comunque». Ogni aggiornamento è poi
+      verificato per impronta SHA-256.</div></div>
     <div class="etape fr"><div><b>Préparez la console :</b> le RTSP activé sur chaque
       caméra (Protect → caméra → Avancé), et un compte local dédié à Alcora, avec droits
       de visionnage — pas votre compte propriétaire.</div></div>
     <div class="etape en"><div><b>Prepare the console:</b> RTSP enabled on each camera
       (Protect → camera → Advanced), and a dedicated local account for Alcora, with
       viewing rights — not your owner account.</div></div>
+    <div class="etape de"><div><b>Bereite die Konsole vor:</b> RTSP auf jeder Kamera
+      aktiviert (Protect → Kamera → Erweitert), und ein eigenes lokales Konto für
+      Alcora, mit Anzeigerechten — nicht dein Besitzerkonto.</div></div>
+    <div class="etape it"><div><b>Prepara la console:</b> l'RTSP attivato su ogni
+      telecamera (Protect → telecamera → Avanzate), e un account locale dedicato ad
+      Alcora, con diritti di visione — non il tuo account proprietario.</div></div>
     <div class="etape fr"><div><b>Connectez Alcora :</b> l'adresse de la console, le
       compte dédié, et sa clé à deux facteurs s'il en a une — les codes sont générés
       localement, une fois pour toutes.</div></div>
     <div class="etape en"><div><b>Connect Alcora:</b> the console's address, the
       dedicated account, and its two-factor key if it has one — codes are generated
       locally, once and for all.</div></div>
+    <div class="etape de"><div><b>Verbinde Alcora:</b> die Adresse der Konsole, das
+      eigene Konto, und sein Zwei-Faktor-Schlüssel, falls vorhanden — die Codes werden
+      lokal erzeugt, ein für alle Mal.</div></div>
+    <div class="etape it"><div><b>Collega Alcora:</b> l'indirizzo della console,
+      l'account dedicato, e la sua chiave a due fattori se ne ha una — i codici sono
+      generati localmente, una volta per tutte.</div></div>
   </div>
 
   <!-- ================================================== QUESTIONS =========== -->
   <h2 class="sec fr">Questions</h2>
   <h2 class="sec en">Questions</h2>
+  <h2 class="sec de">Fragen</h2>
+  <h2 class="sec it">Domande</h2>
   <div class="faq">
     <details class="fr"><summary>Pourquoi un avertissement Windows à l'installation ?</summary>
       <p>Le certificat de signature est auto-émis plutôt qu'acheté à une autorité
@@ -645,64 +773,229 @@
       <p>The signing certificate is self-issued rather than bought from a commercial
       authority. The signature guarantees the binary's integrity; the warning only says
       Windows does not know the publisher.</p></details>
+    <details class="de"><summary>Warum eine Windows-Warnung bei der Installation?</summary>
+      <p>Das Signaturzertifikat ist selbst ausgestellt statt bei einer kommerziellen
+      Stelle gekauft. Die Signatur garantiert die Unversehrtheit der Binärdatei; die
+      Warnung sagt nur, dass Windows den Herausgeber nicht kennt.</p></details>
+    <details class="it"><summary>Perché un avviso di Windows all'installazione?</summary>
+      <p>Il certificato di firma è auto-emesso invece che comprato da un'autorità
+      commerciale. La firma garantisce l'integrità del binario; l'avviso dice solo che
+      Windows non conosce l'editore.</p></details>
     <details class="fr"><summary>Sans Internet, que se passe-t-il ?</summary>
       <p>Tout fonctionne : Alcora ne dépend que de votre réseau local. Internet ne sert
       qu'aux mises à jour, qui attendent sans gêner le reste.</p></details>
     <details class="en"><summary>Without Internet, what happens?</summary>
       <p>Everything works: Alcora only depends on your local network. The Internet is
       only used for updates, which simply wait.</p></details>
+    <details class="de"><summary>Was passiert ohne Internet?</summary>
+      <p>Alles funktioniert: Alcora hängt nur von deinem lokalen Netzwerk ab. Das
+      Internet dient nur den Updates, die einfach warten.</p></details>
+    <details class="it"><summary>Senza Internet, cosa succede?</summary>
+      <p>Tutto funziona: Alcora dipende solo dalla tua rete locale. Internet serve solo
+      agli aggiornamenti, che semplicemente attendono.</p></details>
     <details class="fr"><summary>Sur ARM64 (Surface, etc.) ?</summary>
       <p>Alcora est construite pour x64 et fonctionne en émulation sur Windows ARM64 —
       vérifié en conditions réelles, lecture vidéo comprise.</p></details>
     <details class="en"><summary>On ARM64 (Surface, etc.)?</summary>
       <p>Alcora is built for x64 and runs emulated on Windows ARM64 — verified in real
       conditions, video playback included.</p></details>
+    <details class="de"><summary>Auf ARM64 (Surface usw.)?</summary>
+      <p>Alcora ist für x64 gebaut und läuft emuliert auf Windows ARM64 — unter realen
+      Bedingungen geprüft, Videowiedergabe inbegriffen.</p></details>
+    <details class="it"><summary>Su ARM64 (Surface, ecc.)?</summary>
+      <p>Alcora è costruita per x64 e funziona in emulazione su Windows ARM64 —
+      verificato in condizioni reali, lettura video compresa.</p></details>
     <details class="fr"><summary>Le code est-il public ?</summary>
-      <p>Alcora est sous licence GPL-3.0. Le dépôt du code ouvre prochainement ; les
-      binaires signés et leur manifeste de vérification sont déjà publics.</p></details>
+      <p>Oui : <a href="https://github.com/alcora-ch/Alcora">github.com/alcora-ch/Alcora</a>,
+      sous licence GPL-3.0. Les binaires signés et leur manifeste de vérification sont
+      publiés à côté.</p></details>
     <details class="en"><summary>Is the code public?</summary>
-      <p>Alcora is licensed under GPL-3.0. The source repository opens soon; the signed
-      binaries and their verification manifest are already public.</p></details>
+      <p>Yes: <a href="https://github.com/alcora-ch/Alcora">github.com/alcora-ch/Alcora</a>,
+      under GPL-3.0. The signed binaries and their verification manifest are published
+      alongside.</p></details>
+    <details class="de"><summary>Ist der Code öffentlich?</summary>
+      <p>Ja: <a href="https://github.com/alcora-ch/Alcora">github.com/alcora-ch/Alcora</a>,
+      unter GPL-3.0. Die signierten Binärdateien und ihr Prüfmanifest werden daneben
+      veröffentlicht.</p></details>
+    <details class="it"><summary>Il codice è pubblico?</summary>
+      <p>Sì: <a href="https://github.com/alcora-ch/Alcora">github.com/alcora-ch/Alcora</a>,
+      sotto GPL-3.0. I binari firmati e il loro manifesto di verifica sono pubblicati
+      accanto.</p></details>
   </div>
 
   <footer class="site">
     <span class="fr">Alcora n'est ni affilié ni approuvé par Ubiquiti Inc. « UniFi » et
     « UniFi Protect » sont des marques de Ubiquiti Inc.<br>
     Open source sous <a href="https://www.gnu.org/licenses/gpl-3.0">GPL-3.0</a> ·
+    <a href="https://github.com/alcora-ch/Alcora">Code source</a> ·
     <a href="https://github.com/alcora-ch/Alcora-releases/releases">Versions</a> ·
     Sécurité : <a href="mailto:security@alcora.ch">security@alcora.ch</a></span>
     <span class="en">Alcora is not affiliated with, nor endorsed by, Ubiquiti Inc.
     “UniFi” and “UniFi Protect” are trademarks of Ubiquiti Inc.<br>
     Open source under <a href="https://www.gnu.org/licenses/gpl-3.0">GPL-3.0</a> ·
+    <a href="https://github.com/alcora-ch/Alcora">Source code</a> ·
     <a href="https://github.com/alcora-ch/Alcora-releases/releases">Releases</a> ·
     Security: <a href="mailto:security@alcora.ch">security@alcora.ch</a></span>
+    <span class="de">Alcora ist weder mit Ubiquiti Inc. verbunden noch von ihr gebilligt.
+    «UniFi» und «UniFi Protect» sind Marken von Ubiquiti Inc.<br>
+    Open Source unter <a href="https://www.gnu.org/licenses/gpl-3.0">GPL-3.0</a> ·
+    <a href="https://github.com/alcora-ch/Alcora">Quellcode</a> ·
+    <a href="https://github.com/alcora-ch/Alcora-releases/releases">Versionen</a> ·
+    Sicherheit: <a href="mailto:security@alcora.ch">security@alcora.ch</a></span>
+    <span class="it">Alcora non è né affiliata né approvata da Ubiquiti Inc. «UniFi» e
+    «UniFi Protect» sono marchi di Ubiquiti Inc.<br>
+    Open source sotto <a href="https://www.gnu.org/licenses/gpl-3.0">GPL-3.0</a> ·
+    <a href="https://github.com/alcora-ch/Alcora">Codice sorgente</a> ·
+    <a href="https://github.com/alcora-ch/Alcora-releases/releases">Versioni</a> ·
+    Sicurezza: <a href="mailto:security@alcora.ch">security@alcora.ch</a></span>
   </footer>
 </div>
 
 <script>
 /* ------------------------------------------------------------------ langue */
+const LANGUES = ['fr','en','de','it'];
 function langue(l){
+  if (!LANGUES.includes(l)) l = 'en';
   document.documentElement.lang = l;
-  document.getElementById('btn-fr').setAttribute('aria-pressed', String(l==='fr'));
-  document.getElementById('btn-en').setAttribute('aria-pressed', String(l==='en'));
+  LANGUES.forEach(c=>document.getElementById('btn-'+c).setAttribute('aria-pressed', String(l===c)));
   try{ localStorage.setItem('alcora.langue', l); }catch(e){}
+  /* La demo parle aussi : tout ce qu'elle a dessine se retraduit. */
+  if (window.demoPrete) retraduireDemo();
 }
 try{
   const memo = localStorage.getItem('alcora.langue');
-  if (memo) langue(memo);
-  else if (!(navigator.language||'fr').toLowerCase().startsWith('fr')) langue('en');
+  if (memo && LANGUES.includes(memo)) langue(memo);
+  else {
+    const nav = (navigator.language||'en').toLowerCase().slice(0,2);
+    if (nav !== 'fr') langue(LANGUES.includes(nav) ? nav : 'en');
+  }
 }catch(e){}
+
+
+/* ------------------------------------------------- les mots de la demo ----
+   Quatre langues, comme l'application. tr() lit la langue de la page ; tout ce
+   que la demo dessine passe par lui, et retraduireDemo() redessine a la bascule. */
+const T = {
+fr:{ 'esp.direct':'Direct','esp.recherche':'Détections','esp.relecture':'Relecture','esp.alertes':'Alertes','esp.reglages':'Réglages',
+'p.etat':'État','p.fluxPret':'Flux vidéo prêt.','p.cameras':'Caméras','p.recentes':'Détections récentes','p.aujourdhui':"Aujourd'hui",
+'p.enregistrements':'Enregistrements','p.plusAncien':'Le plus ancien','p.profondeur':'Profondeur','p.profondeurV':'5 mois 14 j',
+'p.pleineDef':'Pleine définition','p.pleineDefV':'30 j','p.disque':'Disque','p.disqueV':'5,71 / 5,94 To','p.versions':'Versions',
+'p.pied':'Aucune image ne quitte votre réseau.',
+'cam.allee':'Allée','cam.bureaux':'Bureaux',
+'sujet.personne':'Personne','sujet.vehicule':'Véhicule','sujet.animal':'Animal','sujet.son':'Parole',
+'t.revoir':'Revoir cette caméra','t.detections':'Ses détections','t.capturer':'Enregistrer une image',
+'t.sonOn':'Couper le son','t.sonOff':'Activer le son','t.pasDeSon':'Ce flux ne porte pas de son',
+'t.interpole':'interpolé','t.imageEnregistree':'Image enregistrée — démonstration',
+'o.derniere':'La dernière caméra visible ne se masque pas','o.reafficher':'Réafficher','o.masquer':'Masquer de la mosaïque',
+'v.instant':'à l’instant',
+'veille1.nom':'Personnes, la nuit','veille1.det':'Personne · toutes caméras · 22h–06h · avec son',
+'veille2.nom':'Véhicules sur l’allée','veille2.det':'Véhicule · Allée · toute la journée',
+'veille3.nom':'Tout mouvement','veille3.det':'Mouvement · toutes caméras · en continu',
+'v.notif1':'≈ {n} notification / jour, mesuré sur l’archive','v.notifN':'≈ {n} notifications / jour, mesuré sur l’archive',
+'v.independantes':'Les règles d’Alcora sont indépendantes de l’armement de Protect.',
+'r.chercher':'Chercher','r.sujet':'Sujet','r.camera':'Caméra','r.placeholder':'plaque, ou nom…','r.rien':'Rien ne correspond aux filtres.',
+'rel.journee':'journée entière','rel.lecture':'Lecture',
+'g.version':'Version','g.aJour':' — à jour. La mise à jour se vérifie à chaque lancement, se contrôle par empreinte et s’applique seule.',
+'g.voirNouveautes':'Voir « Ce qui a changé »','g.historique':'Historique',
+'g.h1':'L’application parle quatre langues.','g.h2':'La langue suit Windows, réglable.','g.h3':'Le projet emménage chez alcora-ch.',
+'n.titre':'Alcora s’est mise à jour','n.depuis':'Ce qui a changé depuis la version 2.21.6',
+'n.b1':'L’allemand et l’italien rejoignent le français et l’anglais, partout.',
+'n.b2':'Le réglage « Automatique » suit la langue de Windows.','n.compris':'Compris',
+locale:'fr-CH', virg:',' },
+en:{ 'esp.direct':'Live','esp.recherche':'Detections','esp.relecture':'Replay','esp.alertes':'Alerts','esp.reglages':'Settings',
+'p.etat':'Status','p.fluxPret':'Video stream ready.','p.cameras':'Cameras','p.recentes':'Recent detections','p.aujourdhui':'Today',
+'p.enregistrements':'Recordings','p.plusAncien':'Oldest','p.profondeur':'Depth','p.profondeurV':'5 mo 14 d',
+'p.pleineDef':'Full definition','p.pleineDefV':'30 d','p.disque':'Disk','p.disqueV':'5.71 / 5.94 TB','p.versions':'Versions',
+'p.pied':'No image ever leaves your network.',
+'cam.allee':'Driveway','cam.bureaux':'Offices',
+'sujet.personne':'Person','sujet.vehicule':'Vehicle','sujet.animal':'Animal','sujet.son':'Speech',
+'t.revoir':'Replay this camera','t.detections':'Its detections','t.capturer':'Save a still image',
+'t.sonOn':'Mute','t.sonOff':'Enable sound','t.pasDeSon':'This stream carries no audio',
+'t.interpole':'interpolated','t.imageEnregistree':'Image saved — demonstration',
+'o.derniere':'The last visible camera cannot be hidden','o.reafficher':'Show again','o.masquer':'Hide from the mosaic',
+'v.instant':'just now',
+'veille1.nom':'People, at night','veille1.det':'Person · all cameras · 22:00–06:00 · with sound',
+'veille2.nom':'Vehicles on the driveway','veille2.det':'Vehicle · Driveway · all day',
+'veille3.nom':'Any motion','veille3.det':'Motion · all cameras · continuous',
+'v.notif1':'≈ {n} notification / day, measured on the archive','v.notifN':'≈ {n} notifications / day, measured on the archive',
+'v.independantes':'Alcora’s rules are independent from Protect’s arming.',
+'r.chercher':'Search','r.sujet':'Subject','r.camera':'Camera','r.placeholder':'plate, or name…','r.rien':'Nothing matches the filters.',
+'rel.journee':'whole day','rel.lecture':'Play',
+'g.version':'Version','g.aJour':' — up to date. The update checks itself at every launch, verifies by checksum and applies on its own.',
+'g.voirNouveautes':'See “What changed”','g.historique':'History',
+'g.h1':'The application speaks four languages.','g.h2':'The language follows Windows, adjustable.','g.h3':'The project moves to alcora-ch.',
+'n.titre':'Alcora has been updated','n.depuis':'What changed since version 2.21.6',
+'n.b1':'German and Italian join French and English, everywhere.',
+'n.b2':'The “Automatic” setting follows the Windows language.','n.compris':'Got it',
+locale:'en-GB', virg:'.' },
+de:{ 'esp.direct':'Live','esp.recherche':'Erkennungen','esp.relecture':'Wiedergabe','esp.alertes':'Alarme','esp.reglages':'Einstellungen',
+'p.etat':'Status','p.fluxPret':'Videostream bereit.','p.cameras':'Kameras','p.recentes':'Jüngste Erkennungen','p.aujourdhui':'Heute',
+'p.enregistrements':'Aufzeichnungen','p.plusAncien':'Ältestes','p.profondeur':'Tiefe','p.profondeurV':'5 Mt. 14 T',
+'p.pleineDef':'Volle Auflösung','p.pleineDefV':'30 T','p.disque':'Disk','p.disqueV':'5.71 / 5.94 TB','p.versions':'Versionen',
+'p.pied':'Kein Bild verlässt je dein Netzwerk.',
+'cam.allee':'Einfahrt','cam.bureaux':'Büros',
+'sujet.personne':'Person','sujet.vehicule':'Fahrzeug','sujet.animal':'Tier','sujet.son':'Sprache',
+'t.revoir':'Diese Kamera wiedergeben','t.detections':'Ihre Erkennungen','t.capturer':'Standbild speichern',
+'t.sonOn':'Ton aus','t.sonOff':'Ton einschalten','t.pasDeSon':'Dieser Stream führt keinen Ton',
+'t.interpole':'interpoliert','t.imageEnregistree':'Bild gespeichert — Demonstration',
+'o.derniere':'Die letzte sichtbare Kamera lässt sich nicht ausblenden','o.reafficher':'Wieder anzeigen','o.masquer':'Aus dem Mosaik ausblenden',
+'v.instant':'soeben',
+'veille1.nom':'Personen, nachts','veille1.det':'Person · alle Kameras · 22–06 Uhr · mit Ton',
+'veille2.nom':'Fahrzeuge auf der Einfahrt','veille2.det':'Fahrzeug · Einfahrt · den ganzen Tag',
+'veille3.nom':'Jede Bewegung','veille3.det':'Bewegung · alle Kameras · durchgehend',
+'v.notif1':'≈ {n} Meldung / Tag, gemessen am Archiv','v.notifN':'≈ {n} Meldungen / Tag, gemessen am Archiv',
+'v.independantes':'Die Regeln von Alcora sind von der Scharfschaltung von Protect unabhängig.',
+'r.chercher':'Suchen','r.sujet':'Motiv','r.camera':'Kamera','r.placeholder':'Kennzeichen oder Name…','r.rien':'Nichts passt zu den Filtern.',
+'rel.journee':'ganzer Tag','rel.lecture':'Wiedergabe',
+'g.version':'Version','g.aJour':' — aktuell. Das Update prüft sich bei jedem Start, verifiziert per Prüfsumme und wendet sich selbst an.',
+'g.voirNouveautes':'«Was sich geändert hat» ansehen','g.historique':'Verlauf',
+'g.h1':'Die Anwendung spricht vier Sprachen.','g.h2':'Die Sprache folgt Windows, einstellbar.','g.h3':'Das Projekt zieht zu alcora-ch.',
+'n.titre':'Alcora wurde aktualisiert','n.depuis':'Was sich seit Version 2.21.6 geändert hat',
+'n.b1':'Deutsch und Italienisch kommen zu Französisch und Englisch, überall.',
+'n.b2':'Die Einstellung «Automatisch» folgt der Windows-Sprache.','n.compris':'Verstanden',
+locale:'de-CH', virg:'.' },
+it:{ 'esp.direct':'Diretta','esp.recherche':'Rilevamenti','esp.relecture':'Riproduzione','esp.alertes':'Avvisi','esp.reglages':'Impostazioni',
+'p.etat':'Stato','p.fluxPret':'Flusso video pronto.','p.cameras':'Telecamere','p.recentes':'Rilevamenti recenti','p.aujourdhui':'Oggi',
+'p.enregistrements':'Registrazioni','p.plusAncien':'Più antico','p.profondeur':'Profondità','p.profondeurV':'5 mesi 14 g',
+'p.pleineDef':'Piena definizione','p.pleineDefV':'30 g','p.disque':'Disco','p.disqueV':'5,71 / 5,94 TB','p.versions':'Versioni',
+'p.pied':'Nessuna immagine lascia mai la tua rete.',
+'cam.allee':'Vialetto','cam.bureaux':'Uffici',
+'sujet.personne':'Persona','sujet.vehicule':'Veicolo','sujet.animal':'Animale','sujet.son':'Voce',
+'t.revoir':'Rivedi questa telecamera','t.detections':'I suoi rilevamenti','t.capturer':'Salva un fermo immagine',
+'t.sonOn':'Silenzia','t.sonOff':'Attiva l’audio','t.pasDeSon':'Questo flusso non porta audio',
+'t.interpole':'interpolato','t.imageEnregistree':'Immagine salvata — dimostrazione',
+'o.derniere':'L’ultima telecamera visibile non si può nascondere','o.reafficher':'Mostra di nuovo','o.masquer':'Nascondi dal mosaico',
+'v.instant':'proprio ora',
+'veille1.nom':'Persone, di notte','veille1.det':'Persona · tutte le telecamere · 22–06 · con suono',
+'veille2.nom':'Veicoli sul vialetto','veille2.det':'Veicolo · Vialetto · tutto il giorno',
+'veille3.nom':'Ogni movimento','veille3.det':'Movimento · tutte le telecamere · in continuo',
+'v.notif1':'≈ {n} notifica / giorno, misurata sull’archivio','v.notifN':'≈ {n} notifiche / giorno, misurate sull’archivio',
+'v.independantes':'Le regole di Alcora sono indipendenti dall’attivazione di Protect.',
+'r.chercher':'Cerca','r.sujet':'Soggetto','r.camera':'Telecamera','r.placeholder':'targa, o nome…','r.rien':'Nulla corrisponde ai filtri.',
+'rel.journee':'giornata intera','rel.lecture':'Riproduci',
+'g.version':'Versione','g.aJour':' — aggiornata. L’aggiornamento si verifica a ogni avvio, si controlla per impronta e si applica da solo.',
+'g.voirNouveautes':'Vedi «Cosa è cambiato»','g.historique':'Cronologia',
+'g.h1':'L’applicazione parla quattro lingue.','g.h2':'La lingua segue Windows, regolabile.','g.h3':'Il progetto trasloca da alcora-ch.',
+'n.titre':'Alcora si è aggiornata','n.depuis':'Cosa è cambiato dalla versione 2.21.6',
+'n.b1':'Tedesco e italiano si uniscono a francese e inglese, ovunque.',
+'n.b2':'L’impostazione «Automatica» segue la lingua di Windows.','n.compris':'Capito',
+locale:'it-CH', virg:',' },
+};
+const tr = (k)=> (T[document.documentElement.lang]||T.fr)[k] ?? T.fr[k] ?? k;
+const nomCam = (c)=> tr('cam.'+c.id);
+const virgule = (n,dec)=> n.toFixed(dec).replace('.', (T[document.documentElement.lang]||T.fr).virg);
+const heureLocale = (d)=> d.toLocaleTimeString((T[document.documentElement.lang]||T.fr).locale);
 
 /* ================================================================== DÉMO ==
    Une reproduction de l'interface d'Alcora, autonome et simulée. Les gestes sont
    les vrais ; deux photographies tiennent lieu de cameras. */
 
 const CAMS = [
-  { id:'allee',   nom:'Allée',   img:'assets/allee.jpg',   def:'4K',  son:true  },
-  { id:'bureaux', nom:'Bureaux', img:'assets/bureaux.jpg', def:'2K',  son:false },
+  { id:'allee',   img:'assets/allee.jpg',   def:'4K',  son:true  },
+  { id:'bureaux', img:'assets/bureaux.jpg', def:'2K',  son:false },
 ];
-const SUJETS = { personne:['Personne','#e6b877'], vehicule:['Véhicule','#7fa8c9'],
-                 animal:['Animal','#8fae5a'], son:['Parole','#b98fc9'] };
+/* Les couleurs des sujets ; leurs noms vivent dans T (quatre langues). */
+const SUJET_COULEUR = { personne:'#e6b877', vehicule:'#7fa8c9', animal:'#8fae5a', son:'#b98fc9' };
 
 /* Un jour de detections, deterministe : le meme pour chaque visiteur. */
 function fabriquerJour(){
@@ -766,11 +1059,11 @@ function tuileHtml(c){
   return `
   <div class="tuile" data-cam="${c.id}">
     <div class="bandeau">
-      <span class="nom-cam">${c.nom}</span><span class="badge-def">${c.def}</span>
-      <button class="cmd" title="Revoir cette caméra" onclick="demoRelecture('${c.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-      <button class="cmd" title="Ses détections" onclick="demoDetections('${c.id}')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
-      <button class="cmd" title="Enregistrer une image" onclick="demoCapture('${c.id}')"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg></button>
-      <button class="cmd cmd-son" title="${c.son?'Activer le son':'Ce flux ne porte pas de son'}" ${c.son?'':'disabled'} onclick="demoSon('${c.id}')"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="ondes" d="M15.5 8.5a5 5 0 0 1 0 7" ${c.son?'':'display="none"'}/></svg></button>
+      <span class="nom-cam">${nomCam(c)}</span><span class="badge-def">${c.def}</span>
+      <button class="cmd" title="${tr('t.revoir')}" onclick="demoRelecture('${c.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="cmd" title="${tr('t.detections')}" onclick="demoDetections('${c.id}')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+      <button class="cmd" title="${tr('t.capturer')}" onclick="demoCapture('${c.id}')"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg></button>
+      <button class="cmd cmd-son" title="${c.son?tr('t.sonOff'):tr('t.pasDeSon')}" ${c.son?'':'disabled'} onclick="demoSon('${c.id}')"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="ondes" d="M15.5 8.5a5 5 0 0 1 0 7" ${c.son?'':'display="none"'}/></svg></button>
     </div>
     <div class="image" data-cam="${c.id}">
       <div class="flux" style="background-image:url('${c.img}')"></div>
@@ -812,7 +1105,7 @@ function appliquerTransforme(el, e){
   if (e.zoom>1.001){
     badge.hidden=false;
     const interp = e.zoom>2.2;
-    badge.innerHTML = e.zoom.toFixed(2).replace('.',',')+'×'+(interp?' · <span class="interp">interpolé</span>':'');
+    badge.innerHTML = virgule(e.zoom,2)+'×'+(interp?' · <span class="interp">'+tr('t.interpole')+'</span>':'');
     el.classList.add('zoomee');
   } else { badge.hidden=true; el.classList.remove('zoomee'); }
 }
@@ -839,7 +1132,7 @@ function brancherImage(c, e, el){
 
 setInterval(()=>{
   const t=new Date();
-  const s=`${String(t.getDate()).padStart(2,'0')}.${String(t.getMonth()+1).padStart(2,'0')}.${t.getFullYear()}  ${t.toLocaleTimeString('fr-CH')}`;
+  const s=`${String(t.getDate()).padStart(2,'0')}.${String(t.getMonth()+1).padStart(2,'0')}.${t.getFullYear()}  ${heureLocale(t)}`;
   $$('.espace-vue[data-vue="direct"] .horodatage').forEach(h=>h.textContent=s);
 },1000);
 
@@ -847,14 +1140,14 @@ function demoCapture(id){
   const el=$(`.image[data-cam="${id}"]`); if(!el) return;
   const f=el.querySelector('.flash'); f.classList.remove('declenche'); void f.offsetWidth; f.classList.add('declenche');
   const c=document.createElement('div'); c.className='confirmation';
-  c.textContent='Image enregistrée — démonstration';
+  c.textContent=tr('t.imageEnregistree');
   el.appendChild(c); setTimeout(()=>c.remove(), 2400);
 }
 function demoSon(id){
   const e=etatTuiles[id]; e.sonActif=!e.sonActif;
   const bt=$(`.tuile[data-cam="${id}"] .cmd-son`);
   bt.classList.toggle('actif', e.sonActif);
-  bt.title = e.sonActif ? 'Couper le son' : 'Activer le son';
+  bt.title = e.sonActif ? tr('t.sonOn') : tr('t.sonOff');
 }
 function demoRelecture(id){ relCam=id; rendreRelecture(); allerEspace('relecture'); }
 function demoDetections(id){ filtreCam=id; rendreRecherche(); allerEspace('recherche'); }
@@ -866,9 +1159,9 @@ function rendrePanneauCams(){
     const derniere=!m && CAMS.length-masquees.size<=1;
     return `<div class="cam-ligne" style="${m?'opacity:.45':''}">
       <span class="point"></span>
-      <span class="cam-nom">${c.nom}<br><span class="cam-def">${c.def==='4K'?'3840 × 2160':'2688 × 1512'}</span></span>
+      <span class="cam-nom">${nomCam(c)}<br><span class="cam-def">${c.def==='4K'?'3840 × 2160':'2688 × 1512'}</span></span>
       <button class="oeil ${m?'actif':''}" ${derniere?'disabled':''}
-        title="${derniere?'La dernière caméra visible ne se masque pas':(m?'Réafficher':'Masquer de la mosaïque')}"
+        title="${derniere?tr('o.derniere'):(m?tr('o.reafficher'):tr('o.masquer'))}"
         onclick="basculerOeil('${c.id}')">
         ${m?'<svg viewBox="0 0 24 24"><path d="m3 3 18 18M10.5 5.2A9.8 9.8 0 0 1 12 5c7 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A16 16 0 0 0 2 12s3 7 10 7a9.9 9.9 0 0 0 4-.8"/></svg>'
               :'<svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>'}
@@ -882,15 +1175,18 @@ function basculerOeil(id){
 }
 
 const vives=[];
-function pousserVive(evt, quand){
-  vives.unshift({...evt, quand});
-  if (vives.length>3) vives.pop();
+function rendreVives(){
   $('#liste-vives').innerHTML = vives.map(v=>`
     <button class="vive" onclick="demoRelecture('${v.cam.id}')">
       <span class="mini" style="background-image:url('${v.cam.img}');background-position:${v.pos}% 40%"></span>
-      <span class="quoi">${SUJETS[v.type][0]}<small>${v.cam.nom}</small></span>
-      <span class="quand">${v.quand}</span>
+      <span class="quoi">${tr('sujet.'+v.type)}<small>${nomCam(v.cam)}</small></span>
+      <span class="quand">${v.instant?tr('v.instant'):v.quand}</span>
     </button>`).join('');
+}
+function pousserVive(evt, quand){
+  vives.unshift({...evt, quand, instant: quand===null});
+  if (vives.length>3) vives.pop();
+  rendreVives();
 }
 
 (function(){
@@ -910,17 +1206,17 @@ function cycleActivite(){
   if (el && espaceActif==='direct'){
     const halo=document.createElement('div'); halo.className='halo';
     const et=document.createElement('div'); et.className='etiquette-halo';
-    et.innerHTML=`<i></i>${SUJETS[type][0]}`;
+    et.innerHTML=`<i></i>${tr('sujet.'+type)}`;
     el.append(halo, et);
     setTimeout(()=>{halo.remove();et.remove();}, 8000);
   }
   const t=new Date();
-  pousserVive({type, cam, pos: 20+Math.floor(Math.random()*55)}, 'à l’instant');
+  pousserVive({type, cam, pos: 20+Math.floor(Math.random()*55)}, null);
   const z=$('#zone-toast');
   z.innerHTML=`<div class="toast">
     <span class="mini" style="background-image:url('${cam.img}');background-position:40% 40%"></span>
-    <span><span class="t1">${SUJETS[type][0]} — ${cam.nom}</span><br>
-    <span class="t2">Alcora · ${t.toLocaleTimeString('fr-CH')}</span></span></div>`;
+    <span><span class="t1">${tr('sujet.'+type)} — ${nomCam(cam)}</span><br>
+    <span class="t2">Alcora · ${heureLocale(t)}</span></span></div>`;
   setTimeout(()=>{z.innerHTML='';}, 4600);
 }
 
@@ -946,19 +1242,19 @@ $('#alcapp').addEventListener('keydown',(e)=>{
 let relCam='allee', relMin=9*60+24, relEnLecture=false, relVitesse=1;
 function rendreRelecture(){
   $('#rel-cams').innerHTML=CAMS.map(c=>
-    `<button class="${relCam===c.id?'actif':''}" onclick="relCam='${c.id}';rendreRelecture()">${c.nom}</button>`).join('');
+    `<button class="${relCam===c.id?'actif':''}" onclick="relCam='${c.id}';rendreRelecture()">${nomCam(c)}</button>`).join('');
   const cam=CAMS.find(c=>c.id===relCam);
   const flux=$('#rel-flux');
   flux.style.backgroundImage=`url('${cam.img}')`;
   flux.style.backgroundPosition='center';
   flux.style.backgroundSize='contain';
   flux.style.backgroundRepeat='no-repeat';
-  $('#rel-horodatage').textContent=`Aujourd'hui  ${hm(relMin)}:${String((relMin*13)%60).padStart(2,'0')}`;
+  $('#rel-horodatage').textContent=`${tr('p.aujourdhui')}  ${hm(relMin)}:${String((relMin*13)%60).padStart(2,'0')}`;
   $('#rel-heure-titre').textContent=hm(relMin);
   $('#tete').style.left=(relMin/1440*100)+'%';
   $('#ic-play').hidden=relEnLecture; $('#ic-pause').hidden=!relEnLecture;
   $('#rel-vitesses').innerHTML=[0.25,0.5,1,2].map(v=>
-    `<button class="${relVitesse===v?'actif':''}" onclick="relVitesse=${v};rendreRelecture()">${String(v).replace('.',',')}×</button>`).join('');
+    `<button class="${relVitesse===v?'actif':''}" onclick="relVitesse=${v};rendreRelecture()">${String(v).replace('.',(T[document.documentElement.lang]||T.fr).virg)}×</button>`).join('');
 }
 function relSauter(s){ relMin=Math.min(1439,Math.max(0,relMin+Math.round(s/60*10))); rendreRelecture(); }
 $('#rel-lecture').addEventListener('click',()=>{ relEnLecture=!relEnLecture; rendreRelecture(); });
@@ -967,21 +1263,22 @@ $('#frise').addEventListener('click',(e)=>{
   const r=$('#frise').getBoundingClientRect();
   relMin=Math.round((e.clientX-r.left)/r.width*1440); rendreRelecture();
 });
-(function(){
+function poserFrise(){
   const f=$('#frise');
+  f.querySelectorAll('.marque-det').forEach(m=>m.remove());
   JOUR.forEach(evt=>{
     const m=document.createElement('i'); m.className='marque-det';
-    m.style.left=(evt.min/1440*100)+'%'; m.style.background=SUJETS[evt.type][1];
-    m.title=`${hm(evt.min)} — ${SUJETS[evt.type][0]}`;
+    m.style.left=(evt.min/1440*100)+'%'; m.style.background=SUJET_COULEUR[evt.type];
+    m.title=`${hm(evt.min)} — ${tr('sujet.'+evt.type)}`;
     m.addEventListener('click',(e)=>{e.stopPropagation(); relMin=evt.min; relCam=evt.cam.id; rendreRelecture();});
     f.appendChild(m);
   });
   $('#pellicule').innerHTML=[...JOUR].reverse().map(evt=>`
     <div class="carte-det" onclick="relMin=${evt.min};relCam='${evt.cam.id}';rendreRelecture()">
       <div class="apercu" style="background-image:url('${evt.cam.img}');background-position:${evt.pos}% 40%"></div>
-      <div class="infos"><b>${hm(evt.min)}</b>${SUJETS[evt.type][0]} · ${evt.cam.nom}</div>
+      <div class="infos"><b>${hm(evt.min)}</b>${tr('sujet.'+evt.type)} · ${nomCam(evt.cam)}</div>
     </div>`).join('');
-})();
+}
 
 /* -------------------------------------------------------------- recherche */
 let filtreSujets=new Set(), filtreCam=null, filtreTexte='';
@@ -990,10 +1287,10 @@ function normaliserPlaque(t){ return t.toUpperCase().replace(/[\s.-]/g,'')
 function rendreRecherche(){
   const comptes={};
   JOUR.forEach(e=>comptes[e.type]=(comptes[e.type]||0)+1);
-  $('#puces-sujets').innerHTML=Object.entries(SUJETS).map(([k,[nom]])=>
-    `<button class="puce ${filtreSujets.has(k)?'actif':''}" onclick="basculerSujet('${k}')">${nom}<small>${comptes[k]||0}</small></button>`).join('');
+  $('#puces-sujets').innerHTML=Object.keys(SUJET_COULEUR).map(k=>
+    `<button class="puce ${filtreSujets.has(k)?'actif':''}" onclick="basculerSujet('${k}')">${tr('sujet.'+k)}<small>${comptes[k]||0}</small></button>`).join('');
   $('#puces-cams').innerHTML=CAMS.map(c=>
-    `<button class="puce ${filtreCam===c.id?'actif':''}" onclick="filtreCam=filtreCam==='${c.id}'?null:'${c.id}';rendreRecherche()">${c.nom}</button>`).join('');
+    `<button class="puce ${filtreCam===c.id?'actif':''}" onclick="filtreCam=filtreCam==='${c.id}'?null:'${c.id}';rendreRecherche()">${nomCam(c)}</button>`).join('');
   const q=normaliserPlaque(filtreTexte);
   const resultats=JOUR.filter(e=>
     (!filtreSujets.size||filtreSujets.has(e.type)) &&
@@ -1002,44 +1299,40 @@ function rendreRecherche(){
   $('#rech-resultats').innerHTML = resultats.length ? resultats.map(e=>`
     <div class="carte-det" onclick="relMin=${e.min};relCam='${e.cam.id}';rendreRelecture();allerEspace('relecture')">
       <div class="apercu" style="background-image:url('${e.cam.img}');background-position:${e.pos}% 40%"></div>
-      <div class="infos"><b>${hm(e.min)} · ${SUJETS[e.type][0]}</b>${e.cam.nom}${e.plaque?' · '+e.plaque:''}</div>
+      <div class="infos"><b>${hm(e.min)} · ${tr('sujet.'+e.type)}</b>${nomCam(e.cam)}${e.plaque?' · '+e.plaque:''}</div>
     </div>`).join('')
-    : `<div class="rech-vide">Rien ne correspond aux filtres.</div>`;
+    : `<div class="rech-vide">${tr('r.rien')}</div>`;
 }
 function basculerSujet(k){ filtreSujets.has(k)?filtreSujets.delete(k):filtreSujets.add(k); rendreRecherche(); }
 $('#rech-texte').addEventListener('input',(e)=>{ filtreTexte=e.target.value; rendreRecherche(); });
 
 /* ---------------------------------------------------------------- veilles */
 const VEILLES=[
-  { nom:'Personnes, la nuit', detail:'Personne · toutes caméras · 22h–06h · avec son', vol:1, on:true },
-  { nom:'Véhicules sur l’allée', detail:'Véhicule · Allée · toute la journée', vol:14, on:true },
-  { nom:'Tout mouvement', detail:'Mouvement · toutes caméras · en continu', vol:157, on:false },
+  { cle:'veille1', vol:1, on:true },
+  { cle:'veille2', vol:14, on:true },
+  { cle:'veille3', vol:157, on:false },
 ];
 function rendreVeilles(){
   $('#veilles').innerHTML=VEILLES.map((v,i)=>`
-    <div class="veille"><div class="haut"><b>${v.nom}</b>
+    <div class="veille"><div class="haut"><b>${tr(v.cle+'.nom')}</b>
       <div class="inter ${v.on?'on':''}" role="switch" aria-checked="${v.on}" onclick="VEILLES[${i}].on=!VEILLES[${i}].on;rendreVeilles()"><i></i></div></div>
-      <div class="detail">${v.detail}</div>
-      <div class="volume">≈ ${v.vol} notification${v.vol>1?'s':''} / jour, mesuré sur l'archive</div>
+      <div class="detail">${tr(v.cle+'.det')}</div>
+      <div class="volume">${tr(v.vol>1?'v.notifN':'v.notif1').replace('{n}', v.vol)}</div>
     </div>`).join('')+
-    `<p style="font-size:11px;color:var(--soft);padding:0 2px">Les règles d'Alcora sont
-    indépendantes de l'armement de Protect.</p>`;
+    `<p style="font-size:11px;color:var(--soft);padding:0 2px">${tr('v.independantes')}</p>`;
 }
 
 /* --------------------------------------------------------- nouveautes */
 function ouvrirNouveautes(){
   $('#zone-modale').innerHTML=`
   <div class="modale"><div class="carte-m">
-    <div class="tete-m"><b>Alcora s'est mise à jour</b></div>
+    <div class="tete-m"><b>${tr('n.titre')}</b></div>
     <div class="corps-m">
-      <p style="color:var(--soft);font-size:11px">Ce qui a changé depuis la version 2.19.0</p>
-      <p style="margin-top:8px"><b style="color:var(--accent-d);font-family:Consolas,monospace">2.20.2</b></p>
-      <ul><li>Le projet emménage dans son propre foyer : alcora-ch.</li></ul>
-      <p><b style="color:var(--accent-d);font-family:Consolas,monospace">2.20.0</b></p>
-      <ul><li>Les chiffres 1 à 9 isolent une caméra, + et − zooment.</li>
-      <li>Un œil masque une image de la mosaïque — jamais la dernière.</li></ul>
+      <p style="color:var(--soft);font-size:11px">${tr('n.depuis')}</p>
+      <p style="margin-top:8px"><b style="color:var(--accent-d);font-family:Consolas,monospace">2.22.0</b></p>
+      <ul><li>${tr('n.b1')}</li><li>${tr('n.b2')}</li></ul>
     </div>
-    <div class="pied-m"><button onclick="document.getElementById('zone-modale').innerHTML=''">Compris</button></div>
+    <div class="pied-m"><button onclick="document.getElementById('zone-modale').innerHTML=''">${tr('n.compris')}</button></div>
   </div></div>`;
 }
 
@@ -1050,9 +1343,20 @@ function demoReinit(){
   $('#rech-texte').value='';
   relCam='allee'; relMin=9*60+24; relEnLecture=false; relVitesse=1;
   vives.length=0; $('#liste-vives').innerHTML='';
-  allerEspace('direct'); rendreMosaique(); rendreRelecture(); rendreRecherche(); rendreVeilles();
+  allerEspace('direct'); retraduireDemo();
 }
-rendreMosaique(); rendreRelecture(); rendreRecherche(); rendreVeilles();
+/* Tout ce que la demo montre repasse par le dictionnaire — appele a chaque bascule. */
+function retraduireDemo(){
+  $$('[data-t]').forEach(el=>{ el.textContent = tr(el.dataset.t); });
+  $$('[data-titre]').forEach(el=>{ el.title = tr(el.dataset.titre); });
+  $('#rech-texte').placeholder = tr('r.placeholder');
+  $('#rech-texte').setAttribute('aria-label', tr('r.chercher'));
+  $('#rel-lecture').setAttribute('aria-label', tr('rel.lecture'));
+  rendreMosaique(); rendreVives(); rendreRelecture(); poserFrise(); rendreRecherche(); rendreVeilles();
+  if ($('#zone-modale').innerHTML) ouvrirNouveautes();
+}
+window.demoPrete = true;
+retraduireDemo();
 setTimeout(cycleActivite, 3500);
 setInterval(cycleActivite, 21000);
 </script>
