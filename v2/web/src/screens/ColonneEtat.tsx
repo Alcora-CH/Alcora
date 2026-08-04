@@ -368,13 +368,15 @@ export function ColonneEtat({ versionAlcora, onOuvrir }: {
               {archive.frontiere !== null && (
                 <Ligne k={t('colonne.pleineDefinition')} v={duree(archive.fin - archive.frontiere)} ton="var(--warn)" />
               )}
+              {/* Le controleur annonce des JOURS FLOTTANTS (393,163460… constate le
+                  03.08) : on arrondit a l'affichage, la comparaison garde le brut. */}
               {ecartHaute !== null && (
-                <Ligne k={t('colonne.pleineDefAnnoncee')} v={`${ecartHaute} ${t('unite.j')}`} ton="var(--warn)" />
+                <Ligne k={t('colonne.pleineDefAnnoncee')} v={`${Math.round(ecartHaute)} ${t('unite.j')}`} ton="var(--warn)" />
               )}
             </>
           )}
           {ecartRetention !== null && (
-            <Ligne k={t('colonne.retentionAnnoncee')} v={`${ecartRetention} ${t('unite.j')}`} ton="var(--warn)" />
+            <Ligne k={t('colonne.retentionAnnoncee')} v={`${Math.round(ecartRetention)} ${t('unite.j')}`} ton="var(--warn)" />
           )}
           {/*
             Un disque qui n'est pas « ok » se dit — mais avec ce qu'il faut pour ne pas

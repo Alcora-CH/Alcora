@@ -135,7 +135,10 @@ const mock: ProtectBridge = {
     return {
       nom: 'UDM-PRO', version: '7.1.87', versionDisponible: null, versionOs: '5.1.26',
       disque: { total: 5_940_000_000_000, utilise: 5_850_000_000_000 },
-      retentionHaute: 29, retentionBasse: 162,
+      /* La retention annoncee est un FLOTTANT brut chez Protect (393,163460…
+         constate en reel le 03.08) et differe de la profondeur mesuree : la
+         ligne « Retention annoncee » doit paraitre, ARRONDIE. */
+      retentionHaute: 29, retentionBasse: 393.16346061196833,
       parJourHaute: 120_000_000_000, parJourBasse: 9_000_000_000,
       parDefinition: { hd: 0, '2k': 1, '4k': 1 },
       armement: 'disarmed', depuis: Date.now() - 41 * JOUR,

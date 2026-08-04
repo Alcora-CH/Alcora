@@ -39,6 +39,18 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.23.2',
+    date: '03.08.2026',
+    fr: [
+      'La rétention annoncée s’affiche arrondie au jour : le contrôleur envoie un ' +
+      'nombre à quatorze décimales, qui débordait et tronquait son étiquette.',
+    ],
+    en: [
+      'The announced retention is now rounded to the day: the controller sends a ' +
+      'number with fourteen decimals, which overflowed and truncated its label.',
+    ],
+  },
+  {
     version: '2.23.1',
     date: '03.08.2026',
     fr: [
