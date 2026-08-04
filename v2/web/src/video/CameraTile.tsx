@@ -520,6 +520,10 @@ export function CameraTile({
    */
   return (
     <div className="flex h-full w-full flex-col">
+      {/* A hauteur nulle (l'invite de la relecture), le bandeau ne se rend pas du
+          tout : son contenu deborderait d'un conteneur a zero pixel et viendrait
+          s'imprimer sur le haut de l'image. */}
+      {hauteurEtiquette > 0 && (
       <div className="flex shrink-0 items-center gap-2 px-1.5 pb-1"
            style={{ height: hauteurEtiquette }}>
         <span className="truncate text-[12.5px]" style={{ color: 'var(--ink)' }}>{camera.name}</span>
@@ -558,6 +562,7 @@ export function CameraTile({
           </div>
         )}
       </div>
+      )}
       <div className="min-h-0 flex-1">{image}</div>
     </div>
   );

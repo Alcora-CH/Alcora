@@ -267,6 +267,55 @@
               0 0 0 1px rgba(0, 0, 0, .35);
 }
 
+/* ------------------------------------------------- Les écrans en îlots de verre
+
+   Grammaire validée sur maquette le 04.08.2026 (docs/maquette-verre-ecrans.html) :
+   plus de pages aux fonds pleins — des îlots qui flottent sur le ciel, avec de
+   l'AIR entre eux. Le verre est celui du panneau (validé, intouché), l'ombre
+   celle des tuiles du direct.
+
+   À l'intérieur d'un îlot, les jetons de séparation et de fond passent en
+   translucide : grâce à « @theme inline », les classes border-line / bg-line /
+   bg-card2 des composants suivent d'elles-mêmes — aucun composant à retoucher,
+   et un écran sorti de son îlot retrouverait ses tons pleins. */
+.ilot {
+  --line: rgba(255, 255, 255, 0.12);
+  --line2: rgba(255, 255, 255, 0.28);
+  --card: rgba(255, 255, 255, 0.05);
+  --card2: rgba(255, 255, 255, 0.08);
+  background: rgba(28, 31, 37, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.60), 0 4px 14px rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(160%);
+}
+
+/* Les cartes-vignettes (résultats, pellicule, caméras de la relecture) :
+   flottantes mais SANS flou d'arrière-plan — l'image les couvre presque en
+   entier, et en flouter des dizaines coûterait du GPU pour rien. */
+.carte-flottante {
+  background: rgba(10, 12, 16, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.50), 0 3px 10px rgba(0, 0, 0, 0.40);
+}
+
+/* Champ posé directement sur le ciel, hors îlot (la date de la relecture). */
+.champ-ciel {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* La rampe lumineuse s'étend à toute la scène — même remède que le panneau
+   (2.23.1) : les tons calibrés pour des cartes opaques se noyaient sur le
+   verre. Les surimpressions vidéo, elles, restent sur la rampe neutre --on-*. */
+.theme-verre .app-scene {
+  --ink: #f4f3f0;
+  --muted: #dedcd7;
+  --soft: #c2c0bb;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 0 12px rgba(0, 0, 0, 0.35);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .planetarium * { animation: none !important; }
 }

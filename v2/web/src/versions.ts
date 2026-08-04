@@ -39,6 +39,29 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.24.0',
+    date: '04.08.2026',
+    fr: [
+      'Tous les écrans flottent désormais sur le ciel : Réglages, Détections, ' +
+      'Relecture et Alertes quittent leurs fonds pleins pour des îlots de verre — ' +
+      'le même verre que le panneau, la même ombre que les images du direct. ' +
+      'Rien ne disparaît : chaque filtre, chaque compte, chaque graduation reste ' +
+      'à sa place.',
+      'L’image de la relecture flotte comme une tuile du direct, le transport et ' +
+      'la frise deviennent des bandeaux de verre détachés, et les vignettes de ' +
+      'résultats se soulèvent au passage de la souris.',
+    ],
+    en: [
+      'Every screen now floats above the sky: Settings, Detections, Playback and ' +
+      'Alerts leave their solid backgrounds for glass islands — the same glass as ' +
+      'the panel, the same shadow as the live tiles. Nothing goes away: every ' +
+      'filter, every count, every tick mark stays in place.',
+      'The playback image floats like a live tile, the transport and the timeline ' +
+      'become detached glass strips, and result thumbnails lift as the mouse ' +
+      'passes over them.',
+    ],
+  },
+  {
     version: '2.23.2',
     date: '03.08.2026',
     fr: [

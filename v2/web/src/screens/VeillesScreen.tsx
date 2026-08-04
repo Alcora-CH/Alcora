@@ -135,8 +135,8 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
   return (
     <div className="mx-auto h-full w-full max-w-[880px] overflow-y-auto px-5 py-5">
 
-      {/* ---- l'interrupteur d'Alcora ---- */}
-      <div className="flex items-center gap-3 rounded-xl border border-line bg-card px-4 py-3">
+      {/* ---- l'interrupteur d'Alcora : l'îlot de tête ---- */}
+      <div className="ilot flex items-center gap-3 px-4 py-3">
         <button
           onClick={() => { void enregistrer({ ...config, armee: !config.armee }); }}
           aria-pressed={config.armee}
@@ -169,12 +169,13 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
       </p>
 
       {/* ---- les veilles ---- */}
-      <div className="mt-5 flex flex-col gap-2">
+      <div className="mt-5 flex flex-col gap-3.5">
         {config.veilles.map((v) => {
           const cout = coutParJour(coutVeille(v, volumes));
           const estOuverte = ouverte === v.id;
           return (
-            <div key={v.id} className="rounded-xl border border-line bg-card"
+            /* Chaque veille est un îlot ; une veille éteinte s'estompe, comme avant. */
+            <div key={v.id} className="ilot"
                  style={{ opacity: v.actif ? 1 : 0.55 }}>
 
               <div className="flex items-center gap-3 px-4 py-3">

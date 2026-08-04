@@ -391,10 +391,10 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col gap-3 p-4">
 
-      {/* ---- navigation par jour ---- */}
-      <div className="flex items-center gap-2 border-b border-line px-5 py-2.5">
+      {/* ---- navigation par jour : posée sur le ciel, sans mur ---- */}
+      <div className="flex items-center gap-2 px-1">
         <span className="text-[13px] text-muted">{camera.name}</span>
         {courant && (
           <button onClick={revenirAuDirect}
@@ -415,7 +415,7 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
                  onChange={(e) => { const v = e.target.valueAsNumber;
                    if (Number.isFinite(v)) setJour(minuit(v + new Date(v).getTimezoneOffset() * 60_000)); }}
                  aria-label={t('relecture.jourARelire')}
-                 className="rounded-md border border-line bg-transparent px-2 py-1 font-mono text-[12px] text-ink" />
+                 className="champ-ciel rounded-md border px-2 py-1 font-mono text-[12px] text-ink" />
           <span className="ml-1 min-w-[104px] text-[12.5px] text-soft">{nomDuJour(jour)}</span>
           <button onClick={() => setJour((j) => j + JOUR_MS)} disabled={!peutAvancer}
                   aria-label={t('relecture.jourSuivant')} title={t('relecture.jourSuivant')}
@@ -426,13 +426,14 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
       </div>
 
       {/* ---- image et liste des caméras ---- */}
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 gap-3">
         <div className="flex min-w-0 flex-1 flex-col">
           {/* « select-none » n'est pas cosmetique : sans lui, un glisser cree une SELECTION
               invisible, et le glisser suivant par-dessus demarre un glisser-depose natif qui
               tue le panoramique par pointercancel. Mesure sur le poste le 02.08.2026. */}
+          {/* L'image flotte comme une tuile du direct : même bord, même ombre. */}
           <div
-            className="relative min-h-0 flex-1 select-none overflow-hidden bg-black"
+            className="tuile-flottante relative min-h-0 flex-1 select-none overflow-hidden rounded-xl border bg-black"
             ref={(el) => { if (el) setLargeurVue(el.clientWidth); }}
             style={{ cursor: vue.agrandi ? 'grab' : 'default' }}
             {...vue.gestes}
@@ -578,8 +579,8 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
             )}
           </div>
 
-          {/* ---- transport ---- */}
-          <div className="flex items-center gap-2 border-t border-line px-4 py-2">
+          {/* ---- transport : un bandeau de verre détaché ---- */}
+          <div className="ilot mt-3 flex items-center gap-2 px-4 py-2">
             <button onClick={basculer} disabled={!courant} aria-label={enLecture ? t('video.pause') : t('video.lecture')}
                     className="grid h-8 w-8 place-items-center rounded-md disabled:opacity-30"
                     style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
@@ -621,12 +622,12 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
 
         {/* ---- caméras : en changer sans perdre l'instant ---- */}
         {cameras.length > 1 && (
-          <div className="flex w-[168px] shrink-0 flex-col gap-2 border-l border-line p-2.5">
+          <div className="flex w-[160px] shrink-0 flex-col gap-2.5">
             {cameras.map((c) => (
               <button key={c.id} onClick={() => setCameraId(c.id)}
-                      className="overflow-hidden rounded-md border text-left transition-colors"
-                      style={{ borderColor: c.id === cameraId ? 'var(--accent)' : 'transparent' }}>
-                <div className="aspect-video" style={{ background: 'var(--card2)' }} />
+                      className="carte-flottante overflow-hidden rounded-lg text-left transition-colors"
+                      style={c.id === cameraId ? { borderColor: 'var(--accent)' } : undefined}>
+                <div className="aspect-video" style={{ background: 'rgba(255,255,255,.06)' }} />
                 <div className="px-1.5 py-1 text-center text-[11px]"
                      style={{ color: c.id === cameraId ? 'var(--accent)' : 'var(--soft)' }}>
                   {c.name}
@@ -645,8 +646,8 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
         onViser={(t) => { void allerA(t); }}
       />
 
-      {/* ---- ce que la journée a vu ---- */}
-      <div className="border-t border-line px-4 pb-3 pt-2.5">
+      {/* ---- ce que la journée a vu : filtres et pellicule sur le ciel ---- */}
+      <div className="px-1">
         <div className="mb-2 flex items-center gap-2">
           {FILTRES.map((f) => (
             <button key={f.id} onClick={() => setFiltre(f.id)} aria-pressed={filtre === f.id}
@@ -662,7 +663,7 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
           </span>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2.5 overflow-x-auto pb-3 pt-1">
           {affichees.length === 0 && (
             <p className="py-3 text-[12.5px] text-soft">{t('relecture.rienDetecte')}</p>
           )}
@@ -673,9 +674,8 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
             return (
               <button key={d.id} onClick={() => { if (d.debut !== null) void allerA(d.debut); }}
                       title={`${etiquette(g)} — ${d.debut ? hms(d.debut) : ''}`}
-                      className="relative w-[112px] shrink-0 overflow-hidden rounded-md border"
-                      style={{ borderColor: enCours ? 'var(--accent)' : 'transparent',
-                               background: 'var(--card2)' }}>
+                      className="carte-flottante relative w-[112px] shrink-0 overflow-hidden rounded-lg"
+                      style={enCours ? { borderColor: 'var(--accent)' } : undefined}>
                 <div className="aspect-video">
                   {d.vignette && (
                     <img src={`/vignette/${d.id}`} alt="" loading="lazy"
@@ -780,7 +780,9 @@ function Frise({ jour, archive, instant, detections, onViser }: {
   const zoome = vue.duree < JOUR_MS;
 
   return (
-    <div className="border-t border-line px-4 pb-1 pt-2.5">
+    /* La frise entière vit dans un îlot : toutes ses couches — graduations, zones
+       enregistré/futur, repères, tête, survol — restent exactement ce qu'elles étaient. */
+    <div className="ilot px-4 pb-1 pt-2.5">
       <div className="mb-1.5 flex items-center gap-2">
         <span className="font-mono text-[10.5px] text-soft">
           {zoome ? `${hms(vue.debut)} → ${hms(fin)}` : t('relecture.journeeEntiere')}

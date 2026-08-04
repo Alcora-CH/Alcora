@@ -128,10 +128,10 @@ export function RechercheScreen({ cameras, cameraInitiale }: {
   );
 
   return (
-    <div className="relative flex h-full min-h-0">
+    <div className="relative flex h-full min-h-0 gap-4 p-4">
 
-      {/* ---- les filtres ---- */}
-      <div className="w-[248px] shrink-0 overflow-y-auto border-r border-line p-3.5">
+      {/* ---- les filtres : un îlot qui flotte à gauche ---- */}
+      <div className="ilot w-[252px] shrink-0 overflow-y-auto p-4">
         <Titre>{t('recherche.chercher')}</Titre>
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2"
@@ -234,7 +234,8 @@ export function RechercheScreen({ cameras, cameraInitiale }: {
 
       {/* ---- les résultats ---- */}
       <div className="min-w-0 flex-1 overflow-y-auto">
-        <div className="flex items-center gap-3 border-b border-line px-4 py-2.5">
+        {/* Le bandeau d'état, en îlot détaché : total, troncature, note de filtrage. */}
+        <div className="ilot flex items-center gap-3 px-4 py-2.5">
           <span className="font-mono text-[11.5px] text-soft">
             {chargement ? t('recherche.enCours')
               : `${total} ${total > 1 ? t('recherche.objetPlusieurs') : t('recherche.objetUn')}`}
@@ -251,7 +252,7 @@ export function RechercheScreen({ cameras, cameraInitiale }: {
         </div>
 
         {erreur && (
-          <div className="m-4 rounded-lg border border-line bg-card p-4">
+          <div className="ilot my-4 p-4">
             <p className="flex gap-2 text-[13px]" style={{ color: 'var(--warn)' }}>
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><span>{erreur}</span>
             </p>
@@ -265,12 +266,12 @@ export function RechercheScreen({ cameras, cameraInitiale }: {
           </p>
         )}
 
-        <div className="grid gap-2.5 p-4"
+        <div className="grid gap-3 py-4"
              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(178px, 1fr))' }}>
           {objets.map((o) => (
+            /* Cartes flottantes : la levée au survol remplace le changement de bord. */
             <button key={o.objectId} onClick={() => ouvrir(o)}
-                    className="relative overflow-hidden rounded-lg border text-left transition-colors hover:border-line2"
-                    style={{ background: 'var(--card2)', borderColor: 'transparent' }}>
+                    className="carte-flottante relative overflow-hidden rounded-xl text-left transition-transform hover:-translate-y-[3px]">
               <div className="aspect-video">
                 {o.vignette && o.id && (
                   <img src={`/vignette/${o.id}`} alt="" loading="lazy"

@@ -71,7 +71,7 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
           <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
             {t('reglages.version.titre')}
           </h2>
-          <div className="rounded-lg border border-line bg-card p-4">
+          <div className="ilot p-5">
             <div className="flex items-center gap-3">
               <Marque taille={28} anime />
               <p className="font-mono text-[17px]" style={{ color: 'var(--accent-d)' }}>
@@ -99,7 +99,7 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
           <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
             {t('reglages.langue.titre')}
           </h2>
-          <div className="rounded-lg border border-line bg-card p-4">
+          <div className="ilot p-5">
             <div className="flex items-center justify-between gap-4">
               <p className="text-[12.5px] text-soft">{t('reglages.langue.detail')}</p>
               {/* Les langues viennent du REGISTRE : en ajouter une n'exige rien ici.
@@ -126,7 +126,7 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
           <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
             {t('reglages.apparence.titre')}
           </h2>
-          <div className="rounded-lg border border-line bg-card p-4">
+          <div className="ilot p-5">
             <div>
               <div className="flex items-baseline justify-between gap-4">
                 <span className="text-[14px]">{t('reglages.apparence.espacement')}</span>
@@ -171,7 +171,7 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
           <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
             {t('reglages.demarrage.titre')}
           </h2>
-          <div className="rounded-lg border border-line bg-card p-4">
+          <div className="ilot p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[14px]">{t('reglages.demarrage.ouvrir')}</p>
@@ -206,7 +206,7 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
           <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
             {t('reglages.confort.titre')}
           </h2>
-          <div className="rounded-lg border border-line bg-card p-4">
+          <div className="ilot p-5">
             <p className="text-[14px]">{t('reglages.confort.dossier')}</p>
             {/* Le dossier des IMAGES de Windows, pas un recoin du dossier de donnees : une
                 capture se prend pour la montrer, elle doit se retrouver la ou l'on cherche. */}
@@ -261,8 +261,8 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
               const enCours = v.version === actuelle;
               return (
                 <article key={v.version}
-                         className="rounded-lg border bg-card p-4"
-                         style={{ borderColor: enCours ? 'var(--accent)' : 'var(--line)' }}>
+                         className="ilot p-5"
+                         style={enCours ? { borderColor: 'var(--accent)' } : undefined}>
                   <div className="mb-2 flex items-baseline gap-2.5">
                     <span className="font-mono text-[13.5px]"
                           style={{ color: enCours ? 'var(--accent-d)' : 'var(--ink)' }}>
@@ -296,7 +296,7 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
           <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
             {t('reglages.connexion.titre')}
           </h2>
-          <div className="rounded-lg border border-line bg-card p-4">
+          <div className="ilot p-5">
             <dl className="flex flex-col gap-2 text-[13px]">
               <div className="flex justify-between gap-4">
                 <dt className="text-soft">{t('reglages.connexion.controleur')}</dt>
@@ -348,7 +348,7 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
           <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
             {t('reglages.probleme.titre')}
           </h2>
-          <div className="rounded-lg border border-line bg-card p-4">
+          <div className="ilot p-5">
             <p className="text-[13px] text-muted">
               {t('reglages.probleme.detail')}
             </p>
