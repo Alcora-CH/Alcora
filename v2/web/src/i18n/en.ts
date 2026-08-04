@@ -103,6 +103,10 @@ export const en: Record<Cle, string> = {
   'reglages.apparence.aucun': 'none',
   'reglages.apparence.detail':
     'At “none”, the images touch each other, frameless — a single wall of images.',
+  'reglages.apparence.fond': 'Animated background',
+  'reglages.apparence.fondDetail':
+    'The planetarium behind the images: stars, shooting stars, nebulae. It freezes ' +
+    'on its own if Windows asks for reduced motion.',
 
   'reglages.demarrage.titre': 'Startup',
   'reglages.demarrage.ouvrir': 'Open Alcora with Windows',

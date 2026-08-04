@@ -14,9 +14,11 @@ import type { Confort, Infos, MajState } from '../types/protect';
  * auparavant un simple bouton qui effacait tout au premier clic — sans confirmation, une
  * main qui derape deconnectait l'application.
  */
-export function ReglagesScreen({ espacement, onEspacementChange, onReconfigurer }: {
+export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFondAnimeChange, onReconfigurer }: {
   espacement: number;
   onEspacementChange: (n: number) => void;
+  fondAnime: boolean;
+  onFondAnimeChange: (actif: boolean) => void;
   onReconfigurer: () => void;
 }) {
   const [infos, setInfos] = useState<Infos | null>(null);
@@ -139,6 +141,27 @@ export function ReglagesScreen({ espacement, onEspacementChange, onReconfigurer 
               <p className="mt-1 text-[12.5px] text-soft">
                 {t('reglages.apparence.detail')}
               </p>
+            </div>
+
+            <div className="my-3.5 h-px bg-line" />
+
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[14px]">{t('reglages.apparence.fond')}</p>
+                <p className="mt-1 text-[12.5px] text-soft">
+                  {t('reglages.apparence.fondDetail')}
+                </p>
+              </div>
+              <button
+                onClick={() => onFondAnimeChange(!fondAnime)}
+                role="switch" aria-checked={fondAnime}
+                aria-label={t('reglages.apparence.fond')}
+                className="relative h-6 w-11 shrink-0 rounded-full transition-colors"
+                style={{ background: fondAnime ? 'var(--accent)' : 'var(--line2)' }}
+              >
+                <span className="absolute top-0.5 h-5 w-5 rounded-full transition-all"
+                      style={{ left: fondAnime ? 22 : 2, background: '#20242a' }} />
+              </button>
             </div>
           </div>
         </section>

@@ -14,6 +14,7 @@ import { CielScreen } from './screens/CielScreen';
 import { ColonneEtat } from './screens/ColonneEtat';
 import { VeillesScreen } from './screens/VeillesScreen';
 import { Marque } from './Marque';
+import { Planetarium } from './Planetarium';
 import { bestChannel } from './video/channel';
 import { meilleureGrille } from './video/grille';
 import { bridge, pontDisponible } from './lib/bridge';
@@ -32,6 +33,8 @@ const ESPACES = [
 
 /** Le repli du panneau survit au redemarrage : le replier chaque fois userait. */
 const CLE_PANNEAU = 'protectviewer.panneau';
+/** Le fond anime (Planetarium) : un choix d'apparence, actif par defaut. */
+const CLE_FOND = 'protectviewer.fond';
 /**
  * Hauteur du bandeau pose AU-DESSUS de chaque vue, hors de l'image.
  *
@@ -165,6 +168,13 @@ export default function App() {
     // Zero par defaut : les images se touchent, un seul mur.
     return brut !== null && Number.isFinite(n) ? Math.min(24, Math.max(0, n)) : 0;
   });
+  /* Le Planetarium, actif par defaut : le verre a besoin d'un ciel a refracter. */
+  const [fondAnime, setFondAnime] = useState(
+    () => localStorage.getItem(CLE_FOND) !== 'fige',
+  );
+  useEffect(() => {
+    localStorage.setItem(CLE_FOND, fondAnime ? 'anime' : 'fige');
+  }, [fondAnime]);
   const [maj, setMaj] = useState<MajState | null>(null);
   const [progression, setProgression] = useState<Progression>({ etape: 'demarrage' });
   /** L'introduction ne se joue qu'une fois par session : jamais au retour des reglages. */
@@ -712,8 +722,12 @@ export default function App() {
       {/* Le panneau reste MONTÉ en permanence : c'est ce qui lui permet de glisser au lieu
           d'apparaître d'un bloc, et cela évite de reconstruire son contenu à chaque survol. */}
 
-      <main className="app-scene relative min-w-0 flex-1"
+      <main className="app-scene isolate relative min-w-0 flex-1"
             style={{ paddingLeft: decalVerre || undefined }}>
+        {/* Le ciel vit SOUS tout le contenu de la scene (z negatif, scene isolee) :
+            derriere les tuiles, derriere le texte des ecrans, sous le verre du
+            panneau qui le floute. Le demonter est un reglage d'apparence. */}
+        {fondAnime && <Planetarium />}
         {/* Ces deux boutons agissent sur l'IMAGE : replier le panneau pour la dégager,
             l'étendre à toute la dalle. Hors du direct ils n'ont pas d'objet, et ils se
             posaient sur la barre de filtres des Détections, masquant le premier d'entre
@@ -812,6 +826,8 @@ export default function App() {
           <ReglagesScreen
             espacement={espacement}
             onEspacementChange={setEspacement}
+            fondAnime={fondAnime}
+            onFondAnimeChange={setFondAnime}
             onReconfigurer={() => {
               void bridge.reconfigure().then(() => { setEspace('direct'); setConfigured(false); });
             }}

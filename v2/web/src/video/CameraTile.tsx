@@ -440,7 +440,7 @@ export function CameraTile({
       /* La cellule est deja dimensionnee a la bonne proportion par la mosaique : imposer
          « aspect-video » ici ferait s'affronter deux regles sur le meme arrondi. */
       className={`group relative h-full w-full select-none overflow-hidden bg-black ${
-        cadre ? 'rounded-md border border-line' : ''}`}
+        cadre ? 'rounded-md border tuile-flottante' : ''}`}
       style={{ cursor: zoomed ? 'grab' : 'default' }}
       {...vue.gestes}
     >

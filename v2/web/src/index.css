@@ -95,17 +95,21 @@
   backdrop-filter: var(--on-blur);
 }
 
-/* La bande d'icônes et le panneau flottent au-dessus de la vidéo. */
+/* La bande d'icônes et le panneau flottent au-dessus de la vidéo.
+   Jetons revus le 03.08.2026 avec le Planétarium : le flou de 20 px ÉTALAIT les
+   étoiles ponctuelles jusqu'à les effacer — c'est lui qui rendait le verre opaque.
+   8 px adoucit sans anéantir, et le voile tombe à presque rien : le ciel EST le
+   fond du panneau, le verre n'est que sa texture. */
 .theme-verre .app-rail,
 .theme-verre .app-panel {
   position: absolute;
   top: 0;
   bottom: 0;
   z-index: 20;
-  background: rgba(33, 37, 44, 0.52);
-  border-color: rgba(255, 255, 255, 0.10);
-  -webkit-backdrop-filter: blur(20px) saturate(128%);
-  backdrop-filter: blur(20px) saturate(128%);
+  background: rgba(28, 31, 37, 0.22);
+  border-color: rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(160%);
 }
 .theme-verre .app-rail { left: 0; }
 .theme-verre .app-panel {
@@ -135,6 +139,114 @@
     radial-gradient(55% 45% at 18% 0%, rgba(210, 162, 99, 0.06), transparent 70%),
     radial-gradient(50% 55% at 88% 100%, rgba(120, 166, 224, 0.05), transparent 70%),
     linear-gradient(160deg, #232830, #14161a);
+}
+
+/*
+ * LE PLANÉTARIUM — le fond animé, validé sur maquette le 03.08.2026 après quatre
+ * passes de dosage (docs/maquette-fond-anime.html). Uniquement transform/opacity :
+ * tout vit sur le compositeur, les flux 4K ne sentent rien. L'interrupteur
+ * « Fond animé » des réglages démonte le composant ; prefers-reduced-motion fige.
+ */
+/* z-index négatif dans une scène ISOLÉE (isolation:isolate sur .app-scene) :
+   le ciel passe au-dessus du fond de la scène mais sous TOUT son contenu, y
+   compris le texte des écrans non positionnés. */
+.planetarium {
+  position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+  background: radial-gradient(120% 90% at 78% 12%, #181d26 0%, #12161c 55%, #0e1116 100%);
+}
+.planetarium * { will-change: transform, opacity; }
+
+/* 1+2 · le ciel qui tourne (un tour par HEURE), trois profondeurs d'étoiles. */
+.plan-ciel { position: absolute; inset: -42%; transform-origin: 76% 22%;
+  animation: plan-tourne 3600s linear infinite; }
+@keyframes plan-tourne { to { transform: rotate(360deg); } }
+.plan-voie { position: absolute; inset: 0; background-repeat: repeat; }
+.plan-p1 { opacity: 1;
+  background-image: url('data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22640%22 height=%22640%22%3E%3Cg fill=%22%23f2efe8%22%3E%3Ccircle cx=%2237%22 cy=%2261%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%22243%22 cy=%2244%22 r=%221.2%22 opacity=%22.75%22/%3E%3Ccircle cx=%22468%22 cy=%2288%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%2286%22 cy=%22287%22 r=%221.1%22 opacity=%22.7%22/%3E%3Ccircle cx=%22333%22 cy=%22279%22 r=%221.5%22 opacity=%22.85%22/%3E%3Ccircle cx=%22611%22 cy=%22293%22 r=%221.2%22 opacity=%22.7%22/%3E%3Ccircle cx=%22183%22 cy=%22512%22 r=%221.3%22 opacity=%22.8%22/%3E%3Ccircle cx=%22452%22 cy=%22516%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%22119%22 cy=%22617%22 r=%221.1%22 opacity=%22.7%22/%3E%3Ccircle cx=%22399%22 cy=%22601%22 r=%221.3%22 opacity=%22.75%22/%3E%3C/g%3E%3C/svg%3E'); }
+.plan-p2 { opacity: .65; background-size: 470px;
+  background-image: url('data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22640%22 height=%22640%22%3E%3Cg fill=%22%23dad5cb%22%3E%3Ccircle cx=%22131%22 cy=%22142%22 r=%221%22 opacity=%22.6%22/%3E%3Ccircle cx=%22355%22 cy=%22190%22 r=%22.9%22 opacity=%22.55%22/%3E%3Ccircle cx=%22598%22 cy=%22161%22 r=%221%22 opacity=%22.6%22/%3E%3Ccircle cx=%22214%22 cy=%22341%22 r=%22.9%22 opacity=%22.5%22/%3E%3Ccircle cx=%22471%22 cy=%22344%22 r=%221%22 opacity=%22.6%22/%3E%3Ccircle cx=%2251%22 cy=%22468%22 r=%22.9%22 opacity=%22.55%22/%3E%3Ccircle cx=%22317%22 cy=%22447%22 r=%22.9%22 opacity=%22.5%22/%3E%3Ccircle cx=%22585%22 cy=%22461%22 r=%221%22 opacity=%22.6%22/%3E%3Ccircle cx=%22262%22 cy=%22655%22 r=%22.9%22 opacity=%22.5%22/%3E%3Ccircle cx=%22540%22 cy=%22648%22 r=%221%22 opacity=%22.55%22/%3E%3C/g%3E%3C/svg%3E');
+  animation: plan-parallaxe-2 700s ease-in-out infinite alternate; }
+.plan-p3 { opacity: .4; background-size: 330px;
+  background-image: url('data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22640%22 height=%22640%22%3E%3Cg fill=%22%23bdb7ac%22%3E%3Ccircle cx=%2290%22 cy=%2280%22 r=%22.7%22 opacity=%22.5%22/%3E%3Ccircle cx=%22280%22 cy=%22150%22 r=%22.6%22 opacity=%22.45%22/%3E%3Ccircle cx=%22500%22 cy=%2260%22 r=%22.7%22 opacity=%22.5%22/%3E%3Ccircle cx=%22160%22 cy=%22330%22 r=%22.6%22 opacity=%22.4%22/%3E%3Ccircle cx=%22420%22 cy=%22280%22 r=%22.7%22 opacity=%22.5%22/%3E%3Ccircle cx=%22600%22 cy=%22380%22 r=%22.6%22 opacity=%22.45%22/%3E%3Ccircle cx=%2260%22 cy=%22560%22 r=%22.7%22 opacity=%22.45%22/%3E%3Ccircle cx=%22340%22 cy=%22500%22 r=%22.6%22 opacity=%22.4%22/%3E%3Ccircle cx=%22560%22 cy=%22610%22 r=%22.7%22 opacity=%22.5%22/%3E%3C/g%3E%3C/svg%3E');
+  animation: plan-parallaxe-3 500s ease-in-out infinite alternate; }
+@keyframes plan-parallaxe-2 { from { transform: translate3d(0,0,0); } to { transform: translate3d(-46px, 26px, 0); } }
+@keyframes plan-parallaxe-3 { from { transform: translate3d(0,0,0); } to { transform: translate3d(60px, -38px, 0); } }
+
+/* 3 · les vivantes — scintillement calme (durée de base ×4, deux dosages). */
+.plan-sc { position: absolute; width: 3px; height: 3px; border-radius: 50%;
+  background: #f2efe8; box-shadow: 0 0 7px 1px rgba(242, 239, 232, .85);
+  animation: plan-scintille calc(var(--d) * 4) ease-in-out infinite var(--a); }
+.plan-brillante { width: 4px; height: 4px;
+  box-shadow: 0 0 12px 3px rgba(242, 239, 232, .9), 0 0 26px 6px rgba(210, 162, 99, .35);
+  animation-name: plan-brille; }
+@keyframes plan-scintille { 0%, 100% { opacity: .12; transform: scale(.65); } 50% { opacity: 1; transform: scale(1.2); } }
+@keyframes plan-brille { 0%, 100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.45); } }
+
+/* 4 · les filantes — une vraie dure une seconde : leur brièveté est leur réalisme. */
+.plan-filante { position: absolute; width: 170px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55) 55%, #fff 82%, transparent);
+  opacity: 0; transform: rotate(var(--r, 16deg));
+  animation: plan-file var(--p) linear infinite var(--a); }
+.plan-filante::after { content: ""; position: absolute; right: 26px; top: -1.5px;
+  width: 5px; height: 5px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 10px 3px rgba(255, 255, 255, .8); }
+@keyframes plan-file {
+  0%   { opacity: 0; transform: translate3d(0,0,0) rotate(var(--r, 16deg)); }
+  1%   { opacity: 1; }
+  7%   { opacity: 0; transform: translate3d(var(--tx, 62vw), var(--ty, 18vw), 0) rotate(var(--r, 16deg)); }
+  100% { opacity: 0; transform: translate3d(var(--tx, 62vw), var(--ty, 18vw), 0) rotate(var(--r, 16deg)); } }
+
+/* 5 · les voiles de nébuleuse — c'est eux qui nourrissent le verre. */
+.plan-voile { position: absolute; mix-blend-mode: screen; border-radius: 50%; }
+.plan-n1 { width: 70vw; height: 46vw; left: 2%; top: -16%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(210,162,99,.34) 0%, rgba(210,162,99,.10) 48%, transparent 72%);
+  animation: plan-nebule1 52s ease-in-out infinite alternate; }
+.plan-n2 { width: 60vw; height: 44vw; left: -18%; top: 34%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(120,166,224,.26) 0%, rgba(120,166,224,.08) 50%, transparent 74%);
+  animation: plan-nebule2 64s ease-in-out infinite alternate; }
+.plan-n3 { width: 48vw; height: 38vw; left: 56%; top: 46%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(155,134,201,.24) 0%, transparent 70%);
+  animation: plan-nebule3 44s ease-in-out infinite alternate; }
+@keyframes plan-nebule1 { from { transform: translate3d(0,0,0) rotate(0deg) scale(1); } to { transform: translate3d(-13vw, 9vh, 0) rotate(9deg) scale(1.22); } }
+@keyframes plan-nebule2 { from { transform: translate3d(0,0,0) rotate(0deg) scale(1.1); } to { transform: translate3d(13vw, -9vh, 0) rotate(-7deg) scale(.9); } }
+@keyframes plan-nebule3 { from { transform: translate3d(0,0,0) scale(.92); } to { transform: translate3d(-9vw, -13vh, 0) scale(1.26); } }
+
+/* 6 · la Grande Ourse — elle ne tourne pas avec le ciel : c'est la marque. */
+.plan-ourse { position: absolute; right: 2vw; top: 34px; width: 600px; height: 400px;
+  opacity: .34; }
+.plan-ourse svg { width: 100%; height: 100%; overflow: visible; }
+.plan-traits { animation: plan-palpite-t 4.5s ease-in-out infinite; }
+.plan-astres { animation: plan-palpite-a 4.5s ease-in-out infinite; }
+.plan-couple circle { animation: plan-pouls 3.2s ease-in-out infinite; }
+.plan-couple circle:last-child { animation-delay: .35s; }
+.plan-halo-couple { animation: plan-pouls-halo 3.2s ease-in-out infinite; }
+@keyframes plan-palpite-t { 0%, 100% { opacity: .45; } 50% { opacity: .85; } }
+@keyframes plan-palpite-a { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
+@keyframes plan-pouls { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.35); } }
+@keyframes plan-pouls-halo { 0%, 100% { opacity: .15; transform: scale(.9); } 45% { opacity: .5; transform: scale(1.25); } }
+
+/* 7 · le satellite — une vraie traversée dure bien 90 secondes. */
+.plan-satellite { position: absolute; left: -4%; top: 64%; width: 2.5px; height: 2.5px;
+  border-radius: 50%; background: #cfd6e2; box-shadow: 0 0 5px 1px rgba(207, 214, 226, .7);
+  animation: plan-passe 88s linear infinite, plan-clignote 1.6s steps(2, jump-none) infinite; }
+@keyframes plan-passe {
+  0% { opacity: 0; transform: translate3d(0,0,0); }
+  2% { opacity: .9; }
+  44% { opacity: .9; transform: translate3d(108vw, -30vh, 0); }
+  45%, 100% { opacity: 0; transform: translate3d(108vw, -30vh, 0); } }
+@keyframes plan-clignote { 50% { opacity: .25; } }
+
+/* Les tuiles FLOTTENT sur le ciel (quand elles ont un cadre) : ombre profonde à
+   deux distances, bord de verre clair — sans cela, des rectangles à bord dur
+   semblaient posés SUR le fond. */
+.tuile-flottante {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .60), 0 4px 14px rgba(0, 0, 0, .45),
+              0 0 0 1px rgba(0, 0, 0, .35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planetarium * { animation: none !important; }
 }
 
 html, body, #root {

@@ -39,6 +39,27 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.23.0',
+    date: '03.08.2026',
+    fr: [
+      'Le Planétarium : un ciel vivant derrière les images — étoiles qui tournent ' +
+      'comme le vrai ciel (un tour par heure), scintillements, étoiles filantes, ' +
+      'voiles de nébuleuse, la Grande Ourse au pouls d’or, un satellite qui passe. ' +
+      'Un réglage d’apparence l’éteint ; il se fige si Windows réduit les animations.',
+      'Le verre du panneau montre enfin ce qui passe derrière lui : flou affiné, ' +
+      'voile presque nul. Les images du direct flottent sur le ciel, portées par ' +
+      'une ombre profonde.',
+    ],
+    en: [
+      'The Planetarium: a living sky behind the images — stars turning like the real ' +
+      'sky (one revolution per hour), twinkles, shooting stars, nebula veils, the Big ' +
+      'Dipper with its golden pulse, a passing satellite. An appearance setting turns ' +
+      'it off; it freezes if Windows reduces motion.',
+      'The panel’s glass finally shows what passes behind it: refined blur, near-zero ' +
+      'veil. Live images float on the sky, carried by a deep shadow.',
+    ],
+  },
+  {
     version: '2.22.0',
     date: '03.08.2026',
     fr: [
