@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette : les écrans en verre flottant</title>
+<style>
+  /*
+   * LES AUTRES PAGES sur le ciel — maquette demandée le 03.08.2026.
+   * Objectif fixé : « libérer de l'espace visuel, alléger et rendre flottant le
+   * contenu affiché tel qu'on a fait pour les flux vidéos en direct ».
+   *
+   * La grammaire, tirée du Direct validé :
+   *  · plus de fonds pleins ni de cartes opaques : des ÎLOTS de verre qui
+   *    flottent sur le Planétarium (ombre profonde à deux distances) ;
+   *  · verre validé intouché : voile ~nul, flou 8 px, bord blanc .18 ;
+   *  · texte en rampe lumineuse + ombre fine (2.23.1) ;
+   *  · séparateurs en cheveux blancs (.10) au lieu des traits pleins ;
+   *  · de l'AIR : le ciel doit respirer entre les îlots.
+   */
+  :root{
+    --ink:#f4f3f0; --muted:#dedcd7; --soft:#c2c0bb;
+    --accent:#d2a263; --accent-soft:#322a1d; --accent-d:#e6b877; --ok:#8fae5a;
+    --warn:#d0a215; --bad:#d8685a;
+    --verre-fond:rgba(28,31,37,.22); --verre-bord:rgba(255,255,255,.18);
+    --verre-flou:blur(8px) saturate(160%);
+    --cheveu:rgba(255,255,255,.10);
+    --flotte:0 24px 60px rgba(0,0,0,.60), 0 4px 14px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{background:#101318;color:var(--ink);overflow:hidden;
+       font:13px/1.5 "Segoe UI",system-ui,sans-serif;
+       text-shadow:0 1px 2px rgba(0,0,0,.55),0 0 12px rgba(0,0,0,.35)}
+
+  /* ------------------------------------------------------- le Planétarium -- */
+  .fond{position:fixed;inset:0;z-index:0;overflow:hidden;
+    background:radial-gradient(120% 90% at 78% 12%,#181d26 0%,#12161c 55%,#0e1116 100%)}
+  .ciel{position:absolute;inset:-42%;transform-origin:76% 22%;
+    animation:tourne 3600s linear infinite}
+  @keyframes tourne{to{transform:rotate(360deg)}}
+  .voie{position:absolute;inset:0;
+    background-image:url('data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22640%22 height=%22640%22%3E%3Cg fill=%22%23f2efe8%22%3E%3Ccircle cx=%2237%22 cy=%2261%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%22243%22 cy=%2244%22 r=%221.2%22 opacity=%22.75%22/%3E%3Ccircle cx=%22468%22 cy=%2288%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%2286%22 cy=%22287%22 r=%221.1%22 opacity=%22.7%22/%3E%3Ccircle cx=%22333%22 cy=%22279%22 r=%221.5%22 opacity=%22.85%22/%3E%3Ccircle cx=%22611%22 cy=%22293%22 r=%221.2%22 opacity=%22.7%22/%3E%3Ccircle cx=%22183%22 cy=%22512%22 r=%221.3%22 opacity=%22.8%22/%3E%3Ccircle cx=%22452%22 cy=%22516%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%22119%22 cy=%22617%22 r=%221.1%22 opacity=%22.7%22/%3E%3Ccircle cx=%22399%22 cy=%22601%22 r=%221.3%22 opacity=%22.75%22/%3E%3C/g%3E%3C/svg%3E')}
+  .voie.l2{opacity:.55;background-size:440px}
+  .voile{position:absolute;mix-blend-mode:screen;border-radius:50%}
+  .voile.n1{width:70vw;height:46vw;left:2%;top:-16%;
+    background:radial-gradient(50% 50% at 50% 50%,rgba(210,162,99,.34) 0%,rgba(210,162,99,.10) 48%,transparent 72%);
+    animation:nebule1 52s ease-in-out infinite alternate}
+  .voile.n2{width:60vw;height:44vw;left:-18%;top:34%;
+    background:radial-gradient(50% 50% at 50% 50%,rgba(120,166,224,.26) 0%,rgba(120,166,224,.08) 50%,transparent 74%);
+    animation:nebule2 64s ease-in-out infinite alternate}
+  @keyframes nebule1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-13vw,9vh,0) scale(1.22)}}
+  @keyframes nebule2{from{transform:translate3d(0,0,0) scale(1.1)}to{transform:translate3d(13vw,-9vh,0) scale(.9)}}
+  .sc{position:absolute;width:3px;height:3px;border-radius:50%;background:#f2efe8;
+    box-shadow:0 0 7px 1px rgba(242,239,232,.85);
+    animation:scintille var(--d) ease-in-out infinite var(--a)}
+  @keyframes scintille{0%,100%{opacity:.12}50%{opacity:1}}
+  .filante{position:absolute;width:170px;height:2px;border-radius:2px;left:-12%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.55) 55%,#fff 82%,transparent);
+    opacity:0;transform:rotate(16deg);animation:file var(--p) linear infinite var(--a)}
+  @keyframes file{0%{opacity:0;transform:translate3d(0,0,0) rotate(16deg)}1%{opacity:1}
+    7%{opacity:0;transform:translate3d(62vw,18vw,0) rotate(16deg)}
+    100%{opacity:0;transform:translate3d(62vw,18vw,0) rotate(16deg)}}
+  @media (prefers-reduced-motion:reduce){.fond *{animation:none !important}}
+
+  /* -------------------------------------------------------- la structure -- */
+  .app{position:relative;z-index:1;height:100%;display:flex}
+  .rail{width:52px;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
+    gap:8px;padding:12px 0;border-right:1px solid var(--verre-bord);
+    background:var(--verre-fond);
+    -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  .rail i{width:36px;height:36px;border-radius:8px;display:block;background:rgba(255,255,255,.04)}
+  .rail i.on{background:var(--accent-soft)}
+  .contenu{flex:1;min-width:0;overflow-y:auto;scrollbar-width:thin}
+  .ecran{display:none;padding:28px clamp(18px,4vw,52px) 60px}
+  .ecran.actif{display:block}
+
+  /* --------------------------------------------------- la grammaire verre -- */
+  .ilot{background:var(--verre-fond);border:1px solid var(--verre-bord);
+    border-radius:14px;box-shadow:var(--flotte);
+    -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  h2.titre{font-size:19px;font-weight:650;margin:0 0 4px}
+  p.soustitre{color:var(--soft);font-size:13px;margin:0 0 26px}
+  h3.sec{font-size:11px;text-transform:uppercase;letter-spacing:.09em;
+    color:var(--soft);font-weight:650;margin:0 0 10px}
+  .cheveu{height:1px;background:var(--cheveu);margin:12px 0}
+  .l{display:flex;justify-content:space-between;gap:14px;font-size:13px;padding:3px 0}
+  .l .k{color:var(--muted)} .l .v{font-family:Consolas,monospace;font-size:12px}
+  .pilule{border:1px solid var(--verre-bord);background:rgba(255,255,255,.04);
+    color:var(--soft);border-radius:99px;padding:4px 13px;font-size:12px;cursor:pointer}
+  .pilule.actif{color:var(--accent-d);border-color:var(--accent);background:var(--accent-soft)}
+  .inter{position:relative;width:40px;height:22px;border-radius:99px;
+    background:rgba(255,255,255,.08);border:1px solid var(--verre-bord);cursor:pointer;flex:0 0 auto}
+  .inter i{position:absolute;top:2.5px;left:3px;width:15px;height:15px;border-radius:50%;
+    background:var(--soft);transition:all .15s}
+  .inter.on{background:var(--accent-soft);border-color:var(--accent)}
+  .inter.on i{left:19px;background:var(--accent)}
+  .bouton{border:1px solid var(--verre-bord);background:rgba(255,255,255,.05);
+    color:var(--muted);border-radius:9px;padding:7px 15px;font-size:12.5px;cursor:pointer}
+  .bouton:hover{color:var(--ink);border-color:var(--accent)}
+
+  /* ------------------------------------------------------------ RÉGLAGES -- */
+  .regl{max-width:660px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+  .regl .ilot{padding:18px 22px}
+  .marque-mini{width:30px;height:30px;border-radius:8px;background:var(--accent);
+    display:inline-grid;place-items:center;color:#1b1e23;font-weight:700;font-size:15px}
+
+  /* ---------------------------------------------------------- DÉTECTIONS -- */
+  /* ISO-CONTENU avec RechercheScreen.tsx : les 7 sections de filtres avec leurs
+     comptes, le bandeau d'état, et les vignettes à badges EN SURIMPRESSION
+     (heure + caméra en haut, sujet · couleur + confiance en bas) — rien ne se perd,
+     seul l'habillage change. Données fictives, gabarit identique. */
+  .rech{display:flex;gap:22px;max-width:1460px;margin:0 auto;align-items:flex-start}
+  .rech-filtres{width:252px;flex:0 0 auto;padding:16px;position:sticky;top:0}
+  .rech-filtres .champ{width:100%;background:rgba(255,255,255,.05);
+    border:1px solid var(--verre-bord);border-radius:9px;color:var(--ink);
+    font-size:12.5px;padding:8px 11px}
+  .rech-filtres .champ::placeholder{color:var(--soft)}
+  .note{color:var(--soft);font-size:11px;line-height:1.55;margin:7px 0 0}
+  .mono{font-family:Consolas,monospace}
+  .puces{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+  .pilule .n{font-family:Consolas,monospace;font-size:10px;opacity:.7;margin-left:5px}
+  .bornes{display:flex;justify-content:space-between;font-family:Consolas,monospace;
+    font-size:10px;color:var(--soft)}
+  .teintes{display:flex;gap:9px;margin:2px 0 24px;flex-wrap:wrap}
+  .teinte{width:26px;height:26px;border-radius:7px;border:2px solid rgba(255,255,255,.22);
+    position:relative;cursor:pointer}
+  .teinte i{position:absolute;left:50%;bottom:-15px;transform:translateX(-50%);
+    font-style:normal;font-family:Consolas,monospace;font-size:9px;color:var(--soft)}
+  .rech-droite{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
+  .bandeau{display:flex;align-items:center;gap:12px;padding:9px 16px;font-size:11.5px}
+  .bandeau .total{font-family:Consolas,monospace;color:var(--soft);white-space:nowrap}
+  .bandeau .tronc{color:var(--warn)}
+  .bandeau .reste{margin-left:auto;color:var(--soft);font-size:11px}
+  .resultats{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:14px}
+  .carte-det{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;
+    border:1px solid var(--verre-bord);box-shadow:var(--flotte);
+    background:rgba(10,12,16,.5);transition:transform .15s ease}
+  .carte-det:hover{transform:translateY(-3px)}
+  .carte-det .apercu{aspect-ratio:16/9;background-size:cover;background-position:center}
+  .carte-det .haut,.carte-det .bas{position:absolute;left:6px;right:6px;display:flex;
+    gap:5px;align-items:center;pointer-events:none}
+  .carte-det .haut{top:6px}.carte-det .bas{bottom:6px}
+  .chip{background:rgba(10,12,15,.72);color:#c9c3b8;border-radius:4px;padding:1.5px 6px;
+    font-family:Consolas,monospace;font-size:9px;white-space:nowrap;text-shadow:none}
+  .chip.quoi{font-family:inherit;font-size:10px;color:#dad5cb;overflow:hidden;
+    text-overflow:ellipsis}
+  .chip.pct{margin-left:auto;font-size:9.5px}
+  .chip.pct.haute{color:var(--ok)}
+  .chip.garde{margin-left:auto;color:var(--accent-d)}
+
+  /* ----------------------------------------------------------- RELECTURE -- */
+  /* ISO-CONTENU avec RelectureScreen.tsx : navigation par jour (‹ date jour ›),
+     retour au direct, horodatage + définition sur l'image, colonne des caméras,
+     transport complet (lecture, ±10 s, image par image, vitesses), frise avec
+     graduations, zones enregistré/futur, repères à deux hauteurs, LECTURE AU
+     SURVOL, puis filtres du jour + pellicule. */
+  .rel{max-width:1150px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  .rel-haut{display:flex;align-items:center;gap:10px}
+  .rel-haut .cam-nom{color:var(--muted);font-size:13px}
+  .rel-haut .direct{display:flex;align-items:center;gap:6px;background:none;border:0;
+    color:var(--ok);font-size:12px;cursor:pointer;padding:4px 8px}
+  .rel-haut .nav{background:none;border:0;color:var(--soft);font-size:15px;cursor:pointer;
+    width:26px;height:26px;border-radius:7px;line-height:1}
+  .rel-haut .nav:hover{color:var(--ink)}
+  .champ-date{border:1px solid var(--verre-bord);background:rgba(255,255,255,.05);
+    border-radius:7px;padding:3px 9px;font-family:Consolas,monospace;font-size:11.5px}
+  .rel-corps{display:flex;gap:14px;align-items:stretch}
+  .rel-image{flex:1;min-width:0;border-radius:14px;overflow:hidden;aspect-ratio:16/8.2;
+    border:1px solid var(--verre-bord);box-shadow:var(--flotte);position:relative;
+    background:#000 center/cover}
+  .sur-image{position:absolute;font-family:Consolas,monospace;font-size:11px;
+    background:var(--verre-fond);border:1px solid var(--verre-bord);border-radius:7px;
+    padding:2px 8px;-webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  .sur-image.horo{left:12px;top:10px}
+  .sur-image.defi{right:12px;top:10px;font-family:"Segoe UI",system-ui,sans-serif;
+    color:var(--muted)}
+  .cmd-video{position:absolute;right:12px;bottom:10px;display:flex;gap:6px}
+  .cmd-video span{background:var(--verre-fond);border:1px solid var(--verre-bord);
+    border-radius:7px;padding:3px 9px;font-size:11px;color:var(--muted);
+    -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  .rel-cams{width:142px;flex:0 0 auto;display:flex;flex-direction:column;gap:10px}
+  .rel-cam{border-radius:10px;overflow:hidden;cursor:pointer;
+    border:1px solid var(--verre-bord);box-shadow:var(--flotte);background:rgba(10,12,16,.5)}
+  .rel-cam .mini{aspect-ratio:16/9;background-size:cover;background-position:center}
+  .rel-cam span{display:block;text-align:center;font-size:11px;color:var(--soft);padding:4px 6px}
+  .rel-cam.actif{border-color:var(--accent)}
+  .rel-cam.actif span{color:var(--accent-d)}
+  .transport{display:flex;align-items:center;gap:8px;padding:10px 16px}
+  .transport .lecture{width:34px;height:34px;display:grid;place-items:center;
+    border-radius:9px;background:var(--accent-soft);color:var(--accent);
+    border:1px solid var(--accent);cursor:pointer;font-size:13px}
+  .transport button:not(.lecture){background:none;border:0;color:var(--muted);
+    font-family:Consolas,monospace;font-size:11.5px;cursor:pointer;padding:4px 8px}
+  .transport button:hover{color:var(--ink)}
+  .frise-zone{padding:12px 16px 8px}
+  .frise-tete{display:flex;align-items:center;gap:10px;margin-bottom:8px;
+    font-size:10.5px;color:var(--soft)}
+  .frise-tete .fenetre{font-family:Consolas,monospace}
+  .frise-tete .astuce{margin-left:auto}
+  .frise{position:relative;height:44px;border-radius:8px;cursor:crosshair;
+    background:rgba(255,255,255,.045);overflow:hidden}
+  .frise .rempli{position:absolute;top:0;bottom:0;left:0;
+    background:repeating-linear-gradient(90deg,rgba(210,162,99,.15) 0 2px,rgba(210,162,99,.09) 2px 4px)}
+  .frise .futur{position:absolute;top:0;bottom:0;right:0;
+    background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.05) 5px 10px)}
+  .frise .grad{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.12);
+    pointer-events:none}
+  .frise .grad-e{position:absolute;bottom:2px;transform:translateX(-50%);
+    font-family:Consolas,monospace;font-size:9.5px;color:var(--soft);pointer-events:none}
+  .frise .m{position:absolute;width:3px;border-radius:2px;pointer-events:none}
+  .frise .m.sujet{top:5px;height:15px}
+  .frise .m.motion{top:12px;height:8px;background:#5c626c}
+  .frise .tete{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--accent);
+    box-shadow:0 0 9px rgba(210,162,99,.75);pointer-events:none}
+  .frise .curseur{position:absolute;top:0;bottom:0;width:1px;
+    background:rgba(255,255,255,.35);pointer-events:none;display:none}
+  .frise-lecture{height:18px;display:flex;justify-content:center;align-items:center;
+    gap:8px;font-size:11px;color:var(--soft);margin-top:4px}
+  .frise-lecture .h{font-family:Consolas,monospace}
+  .filtres-jour{display:flex;align-items:center;gap:8px}
+  .filtres-jour .compte{margin-left:auto;font-family:Consolas,monospace;font-size:11px;
+    color:var(--soft)}
+  .pellicule{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin}
+  .pellicule .carte-det{flex:0 0 auto;width:118px}
+  .pellicule .carte-det.encours{border-color:var(--accent)}
+
+  /* ------------------------------------------------------------- ALERTES -- */
+  .veilles{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+  .veille{padding:16px 20px;display:flex;flex-direction:column;gap:6px}
+  .veille .haut{display:flex;align-items:center;gap:12px}
+  .veille .haut b{font-size:14px;font-weight:600;flex:1}
+  .veille .det{font-size:12px;color:var(--muted)}
+  .veille .vol{font-family:Consolas,monospace;font-size:10.5px;color:var(--soft)}
+
+  /* ------------------------------------------------------- le sélecteur --- */
+  .choix{position:fixed;right:14px;bottom:14px;z-index:9;display:flex;gap:6px;
+    background:rgba(20,23,28,.72);border:1px solid var(--verre-bord);border-radius:10px;
+    padding:8px;-webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  .choix button{background:none;border:1px solid rgba(255,255,255,.14);color:var(--muted);
+    border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer}
+  .choix button[aria-pressed="true"]{color:var(--accent-d);border-color:var(--accent);
+    background:var(--accent-soft)}
+</style>
+<body>
+
+<div class="fond" aria-hidden="true">
+  <div class="ciel"><div class="voie l2"></div><div class="voie"></div></div>
+  <div class="voile n1"></div><div class="voile n2"></div>
+  <i class="sc" style="left:12%;top:18%;--d:10s;--a:0s"></i>
+  <i class="sc" style="left:31%;top:64%;--d:13s;--a:3s"></i>
+  <i class="sc" style="left:47%;top:9%;--d:11s;--a:6s"></i>
+  <i class="sc" style="left:66%;top:76%;--d:14s;--a:1.5s"></i>
+  <i class="sc" style="left:79%;top:31%;--d:12s;--a:8s"></i>
+  <i class="sc" style="left:22%;top:86%;--d:11s;--a:4s"></i>
+  <div class="filante" style="top:14%;--p:13s;--a:0s"></div>
+  <div class="filante" style="top:36%;--p:19s;--a:7s"></div>
+</div>
+
+<div class="app">
+  <div class="rail"><i></i><i></i><i></i><i class="on"></i></div>
+  <div class="contenu">
+
+    <!-- ================================================= RÉGLAGES ======== -->
+    <section class="ecran" data-e="reglages">
+      <div class="regl">
+        <div>
+          <h2 class="titre">Réglages</h2>
+          <p class="soustitre">Version installée, connexion au contrôleur, et où trouver le journal.</p>
+        </div>
+        <div class="ilot">
+          <h3 class="sec">Version</h3>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="marque-mini">A</span>
+            <span style="font-family:Consolas,monospace;font-size:16px;color:var(--accent-d)">Alcora 2.23.2</span>
+          </div>
+          <p style="color:var(--soft);font-size:12.5px;margin-top:8px">L'application vérifie
+          d'elle-même les nouvelles versions, les télécharge en silence, puis propose de redémarrer.</p>
+          <p style="margin-top:12px"><button class="bouton">Vérifier maintenant</button></p>
+        </div>
+        <div class="ilot">
+          <h3 class="sec">Langue</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+            <p style="color:var(--soft);font-size:12.5px">L'interface et les notifications.</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+              <button class="pilule actif">Automatique</button><button class="pilule">Français</button>
+              <button class="pilule">English</button><button class="pilule">Deutsch</button>
+              <button class="pilule">Italiano</button>
+            </div>
+          </div>
+        </div>
+        <div class="ilot">
+          <h3 class="sec">Apparence</h3>
+          <div class="l"><span class="k">Espacement entre les vues</span><span class="v">8 px</span></div>
+          <input type="range" style="width:100%;accent-color:var(--accent)" value="33">
+          <div class="cheveu"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+            <div><div style="font-size:13.5px">Fond animé</div>
+              <div style="color:var(--soft);font-size:12px">Le planétarium derrière les images.</div></div>
+            <div class="inter on" onclick="this.classList.toggle('on')"><i></i></div>
+          </div>
+        </div>
+        <div class="ilot">
+          <h3 class="sec">Connexion</h3>
+          <div class="l"><span class="k">Contrôleur</span><span class="v" style="color:var(--ok)">UDM-PRO</span></div>
+          <div class="l"><span class="k">Compte</span><span class="v">demo@exemple.test</span></div>
+          <div class="l"><span class="k">Identité vérifiée</span><span class="v" style="color:var(--ok)">oui</span></div>
+          <div class="cheveu"></div>
+          <button class="bouton">Modifier la connexion</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================= DÉTECTIONS ====== -->
+    <section class="ecran actif" data-e="detections">
+      <div class="rech">
+        <div class="ilot rech-filtres">
+          <h3 class="sec">Chercher</h3>
+          <input class="champ" placeholder="plaque, ou nom…">
+          <p class="note">Recherche tolérante : le contrôleur rend plusieurs lectures
+            possibles d'une même plaque. Taper <span class="mono">O</span> trouvera aussi
+            <span class="mono">0</span>, et les derniers chiffres suffisent.</p>
+
+          <h3 class="sec" style="margin-top:20px">Sujet</h3>
+          <div class="puces">
+            <button class="pilule">Personne<span class="n">412</span></button>
+            <button class="pilule">Parole<span class="n">356</span></button>
+            <button class="pilule">Véhicule<span class="n">271</span></button>
+            <button class="pilule">Animal<span class="n">47</span></button>
+            <button class="pilule">Visage<span class="n">12</span></button>
+            <button class="pilule">Aboiement<span class="n">6</span></button>
+            <button class="pilule">Klaxon<span class="n">2</span></button>
+          </div>
+
+          <h3 class="sec">Confiance minimale</h3>
+          <input type="range" min="0" max="100" step="5" value="0"
+                 style="width:100%;accent-color:var(--accent)">
+          <div class="bornes"><span>0</span><span>0</span><span>100</span></div>
+          <p class="note" style="margin-bottom:18px">Ne s'applique qu'aux sujets visuels.
+            Les détections sonores n'ont pas de score — les filtrer par confiance les
+            supprimerait toutes.</p>
+
+          <h3 class="sec">Type de véhicule</h3>
+          <div class="puces">
+            <button class="pilule">SUV<span class="n">184</span></button>
+            <button class="pilule">Voiture<span class="n">27</span></button>
+            <button class="pilule">Vélo<span class="n">15</span></button>
+            <button class="pilule">Moto<span class="n">11</span></button>
+            <button class="pilule">Camion<span class="n">6</span></button>
+            <button class="pilule">Fourgon<span class="n">4</span></button>
+          </div>
+
+          <h3 class="sec">Couleur</h3>
+          <div class="teintes">
+            <span class="teinte" style="background:#8a8a8a"><i>88</i></span>
+            <span class="teinte" style="background:#e8e6e1"><i>51</i></span>
+            <span class="teinte" style="background:#1d1f22"><i>39</i></span>
+            <span class="teinte" style="background:#3f6fa8"><i>14</i></span>
+            <span class="teinte" style="background:#d8c14a"><i>3</i></span>
+          </div>
+
+          <h3 class="sec">Caméra</h3>
+          <div class="puces">
+            <button class="pilule actif">Toutes</button><button class="pilule">Allée</button>
+            <button class="pilule">Bureaux</button>
+          </div>
+
+          <h3 class="sec">Période</h3>
+          <div class="puces" style="margin-bottom:0">
+            <button class="pilule">Aujourd'hui</button><button class="pilule actif">7 jours</button>
+            <button class="pilule">30 jours</button>
+          </div>
+        </div>
+
+        <div class="rech-droite">
+          <div class="ilot bandeau">
+            <span class="total">1107 objets</span>
+            <span class="tronc">affichage limité aux 300 plus récents — affine pour tout voir</span>
+            <span class="reste">sujet filtré par le contrôleur, le reste ici</span>
+          </div>
+          <div class="resultats" id="resultats"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================= RELECTURE ======= -->
+    <section class="ecran" data-e="relecture">
+      <div class="rel">
+        <div class="rel-haut">
+          <span class="cam-nom">Allée</span>
+          <button class="direct" title="Revenir à l'image en direct">◉ Revenir au direct</button>
+          <span style="margin-left:auto;display:flex;align-items:center;gap:6px">
+            <button class="nav">‹</button>
+            <span class="champ-date">2026-08-04</span>
+            <span style="color:var(--soft);font-size:12.5px;min-width:88px">Aujourd'hui</span>
+            <button class="nav" style="opacity:.25">›</button>
+          </span>
+        </div>
+
+        <div class="rel-corps">
+          <div class="rel-image" style="background-image:url('../site/assets/allee.jpg')">
+            <span class="sur-image horo">04.08.2026&nbsp;&nbsp;14:32:07</span>
+            <span class="sur-image defi">3840 × 2160</span>
+            <span class="cmd-video"><span>−</span><span>+</span><span>♪</span><span>⛶</span></span>
+          </div>
+          <div class="rel-cams">
+            <div class="rel-cam actif">
+              <div class="mini" style="background-image:url('../site/assets/allee.jpg')"></div>
+              <span>Allée</span>
+            </div>
+            <div class="rel-cam">
+              <div class="mini" style="background-image:url('../site/assets/bureaux.jpg')"></div>
+              <span>Bureaux</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ilot transport">
+          <button class="lecture">▶</button>
+          <button>−10 s</button><button>+10 s</button>
+          <button title="Image précédente">⏮</button><button title="Image suivante">⏭</button>
+          <span style="margin-left:auto;display:flex;gap:4px">
+            <button>0,25×</button><button>0,5×</button>
+            <button style="color:var(--accent-d)">1×</button><button>2×</button>
+          </span>
+        </div>
+
+        <div class="ilot frise-zone">
+          <div class="frise-tete">
+            <span class="fenetre">journée entière</span>
+            <span class="astuce">molette pour zoomer</span>
+          </div>
+          <div class="frise" id="frise">
+            <div class="rempli" style="right:38%"></div>
+            <div class="futur" style="left:62%"></div>
+            <div class="tete" style="left:60.55%"></div>
+            <div class="curseur" id="curseur"></div>
+          </div>
+          <div class="frise-lecture" id="frise-lecture"></div>
+        </div>
+
+        <div class="filtres-jour">
+          <button class="pilule actif">Tout</button>
+          <button class="pilule">Personnes</button>
+          <button class="pilule">Véhicules</button>
+          <button class="pilule">Animaux</button>
+          <button class="pilule">Sons</button>
+          <span class="compte" id="compte-jour"></span>
+        </div>
+        <div class="pellicule" id="pellicule"></div>
+      </div>
+    </section>
+
+    <!-- ================================================= ALERTES ========= -->
+    <section class="ecran" data-e="alertes">
+      <div class="veilles">
+        <div class="ilot" style="padding:14px 20px;display:flex;align-items:center;gap:14px">
+          <div class="inter on" onclick="this.classList.toggle('on')"><i></i></div>
+          <div><div style="font-size:14px">Veille active</div>
+            <div style="color:var(--soft);font-family:Consolas,monospace;font-size:11px">profil Nuit</div></div>
+        </div>
+        <div class="ilot veille">
+          <div class="haut"><b>Personnes, la nuit</b>
+            <div class="inter on" onclick="this.classList.toggle('on')"><i></i></div></div>
+          <div class="det">Personne · toutes caméras · 22h–06h · avec son</div>
+          <div class="vol">≈ 1 notification / jour, mesuré sur l'archive</div>
+        </div>
+        <div class="ilot veille">
+          <div class="haut"><b>Véhicules sur l'allée</b>
+            <div class="inter on" onclick="this.classList.toggle('on')"><i></i></div></div>
+          <div class="det">Véhicule · Allée · toute la journée</div>
+          <div class="vol">≈ 14 notifications / jour, mesuré sur l'archive</div>
+        </div>
+        <div class="ilot veille">
+          <div class="haut"><b>Tout mouvement</b>
+            <div class="inter" onclick="this.classList.toggle('on')"><i></i></div></div>
+          <div class="det">Mouvement · toutes caméras · en continu</div>
+          <div class="vol">≈ 157 notifications / jour, mesuré sur l'archive</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="choix" role="group" aria-label="Écran">
+  <button data-e="reglages" aria-pressed="false">Réglages</button>
+  <button data-e="detections" aria-pressed="true">Détections</button>
+  <button data-e="relecture" aria-pressed="false">Relecture</button>
+  <button data-e="alertes" aria-pressed="false">Alertes</button>
+</div>
+
+<script>
+/*
+ * Vignettes de résultats — iso-contenu avec la vraie grille : heure + caméra en
+ * haut, sujet · couleur + confiance en bas, bouclier quand une plaque est lue.
+ * Les deux images de démo, recadrées différemment pour chaque carte ; les
+ * dernières en « vision nocturne » (les vraies vignettes de nuit sont IR).
+ */
+const CARTES = [
+  // [image, quand, caméra, sujet, %, identifié, nuit]
+  ['allee',  '04.08 14:52','Allée',  'Vélo',          92, 0, 0],
+  ['bureaux','04.08 14:41','Bureaux','Personne',      85, 0, 0],
+  ['allee',  '04.08 14:32','Allée',  'SUV · gray',    77, 1, 0],
+  ['bureaux','04.08 13:58','Bureaux','Parole',      null, 0, 0],
+  ['allee',  '04.08 13:49','Allée',  'SUV · white',   75, 0, 0],
+  ['allee',  '04.08 13:02','Allée',  'Personne',      86, 0, 0],
+  ['bureaux','04.08 12:58','Bureaux','Voiture · gray',78, 1, 0],
+  ['allee',  '04.08 12:41','Allée',  'Personne',      83, 0, 0],
+  ['bureaux','04.08 12:13','Bureaux','Personne',      81, 0, 0],
+  ['allee',  '04.08 11:56','Allée',  'Fourgon · white',75,0, 0],
+  ['allee',  '04.08 11:44','Allée',  'Vélo',          90, 0, 0],
+  ['bureaux','04.08 11:25','Bureaux','Personne',      76, 0, 0],
+  ['allee',  '04.08 10:51','Allée',  'Animal',        87, 0, 0],
+  ['bureaux','04.08 10:49','Bureaux','Animal',        89, 0, 0],
+  ['allee',  '04.08 10:46','Allée',  'Moto',          86, 0, 0],
+  ['bureaux','04.08 10:37','Bureaux','Personne',      92, 0, 0],
+  ['allee',  '04.08 10:21','Allée',  'Visage',        52, 0, 0],
+  ['bureaux','04.08 09:54','Bureaux','SUV · white',   75, 0, 0],
+  ['allee',  '04.08 09:13','Allée',  'Vélo',          93, 0, 0],
+  ['bureaux','04.08 08:29','Bureaux','SUV · gray',    72, 0, 0],
+  ['allee',  '04.08 02:37','Allée',  'Véhicule',      73, 0, 1],
+  ['bureaux','04.08 02:21','Bureaux','Véhicule',      83, 0, 1],
+  ['allee',  '03.08 23:56','Allée',  'SUV',           95, 0, 1],
+  ['bureaux','03.08 22:32','Bureaux','Personne',      79, 0, 1],
+];
+const carte = (c, i, classe = '') => `
+  <div class="carte-det ${classe}">
+    <div class="apercu" style="background-image:url('../site/assets/${c[0]}.jpg');
+      background-position:${15 + (i * 37) % 70}% ${25 + (i * 23) % 50}%;
+      background-size:${120 + (i * 31) % 90}%;
+      ${c[6] ? 'filter:grayscale(1) brightness(.55) contrast(1.4)' : ''}"></div>
+    <div class="haut"><span class="chip">${c[1]}</span><span class="chip">${c[2]}</span>
+      ${c[5] ? '<span class="chip garde" title="Plaque ou nom reconnu">🛡</span>' : ''}</div>
+    <div class="bas"><span class="chip quoi">${c[3]}</span>
+      ${c[4] !== null ? `<span class="chip pct ${c[4] >= 80 ? 'haute' : ''}">${c[4]} %</span>` : ''}</div>
+  </div>`;
+document.getElementById('resultats').innerHTML = CARTES.map((c, i) => carte(c, i)).join('');
+
+/*
+ * La frise — les mêmes couches que la vraie : graduations de trois heures,
+ * repères à deux hauteurs (mouvement plus bas, plus court), tête de lecture,
+ * et la lecture au survol : l'heure sous le curseur, le repère visé, son score.
+ */
+const TEINTE = { person:'#e6b877', vehicle:'#7fa8c9', animal:'#8fae5a', son:'#b98fc9', motion:'#5c626c' };
+const ETIQ   = { person:'Personne', vehicle:'Véhicule', animal:'Animal', son:'Son', motion:'Mouvement' };
+const MARQUES = [ // [minute du jour, genre, score]
+  [47,'motion',null],[86,'son',null],[134,'motion',null],[312,'person',81],
+  [356,'motion',null],[389,'person',87],[402,'vehicle',76],[455,'motion',null],
+  [492,'person',92],[538,'vehicle',84],[561,'motion',null],[590,'animal',88],
+  [622,'person',85],[647,'motion',null],[663,'vehicle',73],[688,'person',90],
+  [701,'son',null],[724,'person',83],[748,'motion',null],[771,'animal',86],
+  [796,'vehicle',77],[812,'person',88],[840,'motion',null],[858,'person',91],
+  [872,'vehicle',69],[883,'motion',null],
+];
+const frise = document.getElementById('frise');
+for (let h = 0; h < 24; h += 3) {
+  frise.insertAdjacentHTML('beforeend',
+    `<div class="grad" style="left:${h / 24 * 100}%"></div>
+     <span class="grad-e" style="left:${h / 24 * 100}%">${String(h).padStart(2, '0')}h</span>`);
+}
+const reperes = MARQUES.map(([mn, g]) => {
+  const el = document.createElement('div');
+  el.className = `m ${g === 'motion' ? 'motion' : 'sujet'}`;
+  el.style.left = `${mn / 1440 * 100}%`;
+  if (g !== 'motion') el.style.background = TEINTE[g];
+  frise.appendChild(el);
+  return el;
+});
+const curseur = document.getElementById('curseur');
+const lecture = document.getElementById('frise-lecture');
+const hms = (mn) => { const s = Math.round(mn * 60);
+  return [s / 3600, s / 60 % 60, s % 60].map((x) => String(Math.floor(x)).padStart(2, '0')).join(':'); };
+frise.addEventListener('mousemove', (e) => {
+  const r = frise.getBoundingClientRect();
+  const f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  curseur.style.display = 'block';
+  curseur.style.left = `${f * 100}%`;
+  const mn = f * 1440, tol = 1440 / r.width * 7;
+  let vise = -1, ecart = Infinity;
+  MARQUES.forEach(([m], i) => {
+    const d = Math.abs(m - mn);
+    if (d < tol && d < ecart) { ecart = d; vise = i; }
+  });
+  reperes.forEach((el, i) => {
+    el.style.width = i === vise ? '5px' : '3px';
+    el.style.boxShadow = i === vise ? `0 0 8px ${TEINTE[MARQUES[i][1]]}` : '';
+  });
+  const v = vise >= 0 ? MARQUES[vise] : null;
+  lecture.innerHTML = `<span class="h">${hms(mn)}</span>` + (v
+    ? ` <span style="color:${TEINTE[v[1]]}">${ETIQ[v[1]]}${v[2] !== null ? ` · ${v[2]} %` : ''}
+        <span style="color:var(--soft)"> — cliquer pour voir</span></span>` : '');
+});
+frise.addEventListener('mouseleave', () => {
+  curseur.style.display = 'none';
+  lecture.textContent = '';
+  reperes.forEach((el) => { el.style.width = '3px'; el.style.boxShadow = ''; });
+});
+
+/* La pellicule du jour — heure en haut, genre en bas, la carte visée cerclée. */
+const JOUR = [
+  ['allee','05:12','person'],['bureaux','06:29','vehicle'],['allee','08:12','person'],
+  ['bureaux','09:50','animal'],['allee','10:22','vehicle'],['bureaux','11:41','son'],
+  ['allee','12:04','person'],['bureaux','13:16','animal'],['allee','14:32','vehicle'],
+];
+document.getElementById('pellicule').innerHTML = JOUR.map(([img, h, g], i) => `
+  <div class="carte-det ${h === '14:32' ? 'encours' : ''}">
+    <div class="apercu" style="background-image:url('../site/assets/${img}.jpg');
+      background-position:${20 + (i * 41) % 60}% ${30 + (i * 29) % 40}%;
+      background-size:${125 + (i * 27) % 80}%"></div>
+    <div class="haut"><span class="chip">${h}</span></div>
+    <div class="bas"><span class="chip" style="color:${TEINTE[g]}">${ETIQ[g]}</span></div>
+  </div>`).join('');
+document.getElementById('compte-jour').textContent = `${MARQUES.length} détections`;
+
+document.querySelectorAll('.choix button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.ecran').forEach(e=>e.classList.toggle('actif', e.dataset.e===b.dataset.e));
+  document.querySelectorAll('.choix button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+}));
+</script>
+</body>
+</html>
