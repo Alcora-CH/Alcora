@@ -129,6 +129,28 @@
 }
 
 /*
+ * Sur le verre, la palette du panneau passe à la rampe LUMINEUSE.
+ *
+ * Les tons du thème (soft, muted) étaient calibrés pour des cartes opaques ;
+ * posés sur une vidéo claire à travers le verre, ils se noyaient — capture du
+ * 03.08.2026 : « Rotation automatique » et les titres de sections illisibles
+ * sur le jardin. Grâce à `@theme inline`, redéfinir les variables ICI remappe
+ * toutes les classes de texte du panneau, sans toucher un composant.
+ *
+ * L'ombre de texte fine fait le reste : elle détache les lettres des zones
+ * brillantes. Le verre, lui, ne change pas — il est validé tel quel.
+ */
+.theme-verre .app-panel,
+.theme-verre .app-rail {
+  --ink: #f4f3f0;
+  --muted: #dedcd7;
+  --soft: #c2c0bb;
+}
+.theme-verre .app-panel {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 0 12px rgba(0, 0, 0, 0.35);
+}
+
+/*
  * Le fond de la scène. Sans lui, la zone autour des images restait le charbon plat du
  * thème de base : le verre n'avait rien à diffuser hors de la vidéo, et l'ensemble se
  * voyait « à moitié fait ». Un dégradé sombre et lent donne au verre de la matière

@@ -1,6 +1,6 @@
 {
   "name": "alcora-desktop",
-  "version": "2.23.0",
+  "version": "2.23.1",
   "private": true,
   "description": "Alcora",
   "//packId": "Identifiant du paquet ET canal de mise a jour. Lu par scripts/build.mjs, scripts/publier.mjs et maj.js : un seul endroit, sinon un renommage en oublie forcement un. En changer rompt le lien avec les installations existantes.",

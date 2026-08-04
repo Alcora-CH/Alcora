@@ -39,6 +39,21 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.23.1',
+    date: '03.08.2026',
+    fr: [
+      'Le texte du panneau passe à une palette lumineuse, avec une fine ombre qui le ' +
+      'détache des vidéos claires : les tons calibrés pour des cartes opaques se ' +
+      'noyaient dans une image de jour vue à travers le verre. Le verre, lui, ne ' +
+      'change pas.',
+    ],
+    en: [
+      'The panel text moves to a luminous palette, with a thin shadow that lifts it ' +
+      'off bright videos: tones calibrated for opaque cards drowned in a daylight ' +
+      'image seen through the glass. The glass itself does not change.',
+    ],
+  },
+  {
     version: '2.23.0',
     date: '03.08.2026',
     fr: [
