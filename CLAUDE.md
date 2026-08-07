@@ -1,8 +1,12 @@
 # Alcora — carte pour qui touche au code
 
-Client Windows (Electron) pour UniFi Protect, entièrement local : direct, relecture,
+Client de bureau (Electron) pour UniFi Protect, entièrement local : direct, relecture,
 détections, veilles. Aucun nuage, aucune télémétrie, aucune image ne quitte le réseau.
 Non affilié à Ubiquiti.
+
+**Windows est la plateforme de référence** (installeur signé, mise à jour automatique).
+**Linux** existe depuis la 2.25.0 : archive `.tar.gz`, sans chaîne de mise à jour — voir
+« Construire pour Linux » plus bas.
 
 ## À lire avant de supposer quoi que ce soit
 
@@ -22,6 +26,33 @@ npm run web       # démo navigateur (mode simulation, sans caméra ni contrôle
 
 `node scripts/test.mjs` lancé depuis `v2/desktop` échoue sur un chemin relatif — piège
 récurrent. Racine, toujours.
+
+## Construire pour Linux
+
+```
+npm run build:linux    # exige WSL (Ubuntu) et v2/relay/mediamtx-linux-x64
+```
+
+- **Les deux binaires du relais cohabitent** dans `v2/relay/` (hors dépôt) :
+  `mediamtx.exe` et `mediamtx-linux-x64`, **même version** — la livraison Linux le
+  renomme `mediamtx`, ce que `main.js` cherche hors Windows.
+- **WSL n'est pas un caprice** : construite depuis Windows, l'archive s'écrirait sur du
+  NTFS, qui n'a pas de bit « exécutable » — Linux refuserait de démarrer le lanceur.
+  L'archive est donc faite dans WSL après `chmod`, et le script **relit les modes dans
+  l'archive produite** avant de la déclarer prête.
+- **Pas de mise à jour automatique hors Windows** : Velopack publie des `.nupkg`, lit
+  `releases.win.json` et confie l'application à `Update.exe`. Rien de tout cela n'existe
+  ailleurs. Le processus principal ne crée donc pas le gestionnaire (`main.js`) et pousse
+  `etat: 'manuelle'` ; les réglages l'annoncent au lieu de laisser croire à une
+  surveillance. Même raison pour le démarrage automatique
+  (`AUTO_DEMARRAGE_POSSIBLE` : `setLoginItemSettings` ne fait rien sous Linux).
+- `releases.win.json` **ne liste pas** l'archive Linux : ce manifeste ne pilote que
+  Velopack. L'archive est un actif de release ordinaire, publié par `npm run publier`
+  s'il la trouve.
+- Éprouvé le 08.08.2026 dans WSLg : l'application démarre, écrit son journal
+  (`no automatic update chain on linux`, écran de connexion, page chargée) et le relais
+  répond. **Jamais lancée sur un vrai bureau Linux** — l'inconnue restante est le rendu
+  vidéo (WebRTC, décodage matériel), que WSLg ne représente pas.
 
 ## Le rituel d'une version
 

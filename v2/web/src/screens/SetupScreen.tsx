@@ -180,8 +180,10 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
             Une remise a zero met la connexion de cote plutot que de la detruire. Tant
             qu'elle est reposable, tout ressaisir n'a aucun sens : on le propose d'abord. */}
         {sauvegarde?.existe && (
-          <section className="rounded-lg border p-4"
-                   style={{ borderColor: 'var(--accent)', background: 'var(--accent-soft)' }}>
+          /* L'ilot de reprise se teinte d'ambre : c'est le chemin qu'on propose d'abord. */
+          <section className="ilot p-5"
+                   style={{ borderColor: 'var(--accent)',
+                            background: 'linear-gradient(rgba(50,42,29,.42), rgba(50,42,29,.42)), rgba(28,31,37,.22)' }}>
             <p className="flex gap-2 text-[13px]">
               <RotateCcw className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--accent)' }} />
               <span>
@@ -207,7 +209,7 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
         )}
 
         {/* ---- contrôleur ---- */}
-        <section className="flex flex-col gap-4">
+        <section className="ilot flex flex-col gap-4 p-5">
           <Field label={t('setup.adresse.label')}
                  hint={t('setup.adresse.hint')}>
             <input className={inputClass} value={host} onChange={(e) => setHost(e.target.value)}
@@ -217,7 +219,7 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
         </section>
 
         {/* ---- compte ---- */}
-        <section className="flex flex-col gap-4">
+        <section className="ilot flex flex-col gap-4 p-5">
           <h2 className="text-[15px] font-semibold">{t('setup.compte.titre')}</h2>
 
           <Field label={t('setup.compte.identifiant')}
@@ -272,7 +274,7 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
         </section>
 
         {/* ---- vérification ---- */}
-        <section className="flex flex-col gap-3">
+        <section className="ilot flex flex-col gap-3 p-5">
           <div className="flex items-center gap-3">
             <h2 className="text-[15px] font-semibold">{t('setup.verification.titre')}</h2>
             {slow && <span className="text-[12px] text-soft">{t('setup.verification.lent')}</span>}
@@ -335,7 +337,7 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
         </section>
 
         {/* ---- divulgation ---- */}
-        <section className="flex flex-col gap-3 border-t border-line pt-6">
+        <section className="ilot flex flex-col gap-3 p-5">
           <h2 className="text-[15px] font-semibold">{t('setup.rester.titre')}</h2>
           <div className="flex flex-col gap-2.5 text-[13px] leading-relaxed text-muted">
             <p>{t('setup.rester.p1')}</p>
@@ -350,8 +352,10 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
           </label>
         </section>
 
-        {/* ---- actions ---- */}
-        <div className="sticky bottom-0 -mx-6 flex items-center justify-end gap-2.5 border-t border-line bg-bg px-6 py-4">
+        {/* ---- actions ----
+            Collantes, mais en ILOT : elles flottent au-dessus du ciel plutot que sur un
+            bandeau plein. Le decollement du bas evite qu'elles paraissent soudees. */}
+        <div className="ilot sticky bottom-3 flex items-center justify-end gap-2.5 px-5 py-3.5">
           <button type="button" onClick={runTest} disabled={!canTest}
                   className="flex h-9 items-center gap-2 rounded-md border border-line2 px-4 text-[13px] disabled:opacity-40">
             {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

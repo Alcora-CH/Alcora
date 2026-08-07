@@ -54,8 +54,9 @@ export function NouveautesScreen({ nouveautes, onFermer }: {
   return (
     <div className="absolute inset-0 z-50 grid place-items-center"
          style={{ background: 'rgba(12,14,18,.72)', backdropFilter: 'blur(3px)' }}>
-      <div className="flex max-h-[78vh] w-[min(560px,92vw)] flex-col overflow-hidden rounded-xl border border-line"
-           style={{ background: 'var(--card)' }}>
+      {/* La boite est un ilot de verre : le voile sombre en dessous garantit la
+          lisibilite quelle que soit la scene. */}
+      <div className="ilot flex max-h-[78vh] w-[min(560px,92vw)] flex-col overflow-hidden">
 
         <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
           <Sparkles className="h-4 w-4 shrink-0" style={{ color: 'var(--accent-d)' }} />

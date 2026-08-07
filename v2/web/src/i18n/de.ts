@@ -91,6 +91,9 @@ export const de: Record<Cle, string> = {
   'reglages.version.repos':
     'Die Anwendung prüft selbständig auf neue Versionen, lädt sie still herunter ' +
     'und schlägt dann einen Neustart vor.',
+  'reglages.version.manuelle':
+    'Auf dieser Plattform erfolgt die Aktualisierung manuell: Lade die neue Version ' +
+    'von alcora.ch herunter und ersetze die Anwendung.',
   'reglages.version.verifier': 'Jetzt prüfen',
 
   'reglages.langue.titre': 'Sprache',

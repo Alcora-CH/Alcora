@@ -44,7 +44,20 @@ const obligatoires = [
   `${PACK_ID}-win-Setup.exe`,
   'releases.win.json',
 ];
-const optionnels = [`${PACK_ID}-${version}-delta.nupkg`];
+/*
+ * L'archive Linux est OPTIONNELLE, et c'est voulu.
+ *
+ * Elle sort d'une autre chaine (« npm run build:linux »), qui exige WSL. La publication
+ * ne doit pas dependre d'un atelier que tout le monde n'a pas : si l'archive est la, elle
+ * part avec le reste ; sinon la version Windows se publie seule, comme avant.
+ *
+ * Elle n'entre PAS dans « releases.win.json » : ce manifeste pilote la mise a jour
+ * automatique de Velopack, qui ne connait que Windows. Un poste Linux ne le lit jamais.
+ */
+const optionnels = [
+  `${PACK_ID}-${version}-delta.nupkg`,
+  `${PACK_ID}-${version}-linux-x64.tar.gz`,
+];
 
 const fichiers = [];
 for (const nom of obligatoires) {

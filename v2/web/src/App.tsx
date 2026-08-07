@@ -485,8 +485,16 @@ export default function App() {
     return <div className="relative h-full">{intro}</div>;
   }
   // La premiere configuration a son propre recit d'etapes : pas d'introduction par-dessus.
+  // Le ciel l'accompagne des le premier ecran : c'est la premiere image qu'on ait
+  // d'Alcora, elle doit deja etre la sienne. Meme scene isolee qu'ailleurs — sans
+  // « isolate », le Planetarium en z:-1 passerait sous le fond et disparaitrait.
   if (!configured) {
-    return <SetupScreen onDone={() => { setConfigured(true); setIntroFinie(true); }} />;
+    return (
+      <div className="app-scene isolate relative h-full">
+        {fondAnime && <Planetarium />}
+        <SetupScreen onDone={() => { setConfigured(true); setIntroFinie(true); }} />
+      </div>
+    );
   }
 
   // L'ordre choisi a la souris s'applique d'abord ; les cameras inconnues de la liste

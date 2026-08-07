@@ -91,6 +91,9 @@ export const en: Record<Cle, string> = {
   'reglages.version.repos':
     'The application checks for new versions on its own, downloads them silently, ' +
     'then offers to restart.',
+  'reglages.version.manuelle':
+    'On this platform, updating is manual: download the new version from alcora.ch, ' +
+    'then replace the application.',
   'reglages.version.verifier': 'Check now',
 
   'reglages.langue.titre': 'Language',

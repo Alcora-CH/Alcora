@@ -90,6 +90,9 @@ export const it: Record<Cle, string> = {
   'reglages.version.repos':
     'L’applicazione verifica da sola le nuove versioni, le scarica in silenzio, ' +
     'poi propone di riavviare.',
+  'reglages.version.manuelle':
+    'Su questa piattaforma l’aggiornamento è manuale: scarica la nuova versione da ' +
+    'alcora.ch, poi sostituisci l’applicazione.',
   'reglages.version.verifier': 'Verifica ora',
 
   'reglages.langue.titre': 'Lingua',

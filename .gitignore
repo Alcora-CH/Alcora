@@ -18,6 +18,7 @@ v2/web/dist/
 
 # Sorties de construction
 v2/dist/
+v2/dist-linux/
 v2/releases/
 
 # Artefacts de la version 1.x (C#/WPF), ancres a la racine.

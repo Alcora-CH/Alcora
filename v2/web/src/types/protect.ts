@@ -282,7 +282,10 @@ export interface ProtectBridge {
 }
 
 export interface MajState {
-  etat: 'aucune' | 'verification' | 'telechargement' | 'controle' | 'application' | 'prete' | 'erreur';
+  /** « manuelle » : la plateforme n'a pas de chaine automatique (Linux) — on le DIT
+   *  plutot que de laisser croire a une verification qui n'aura jamais lieu. */
+  etat: 'aucune' | 'verification' | 'telechargement' | 'controle' | 'application' | 'prete'
+      | 'erreur' | 'manuelle';
   version?: string;
   pourcent?: number;
   message?: string;

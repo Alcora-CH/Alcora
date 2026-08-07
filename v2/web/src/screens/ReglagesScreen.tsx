@@ -84,13 +84,18 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
                     { version: maj.version ?? '', pourcent: maj.pourcent ?? 0 })
                 : maj?.etat === 'prete' ? t('reglages.version.prete', { version: maj.version ?? '' })
                 : maj?.etat === 'erreur' ? t('reglages.version.erreur')
+                : maj?.etat === 'manuelle' ? t('reglages.version.manuelle')
                 : t('reglages.version.repos')}
             </p>
+            {/* Sans chaine automatique, le bouton n'aurait rien a lancer : il disparait
+                plutot que de rester la sans effet. */}
+            {maj?.etat !== 'manuelle' && (
             <button onClick={() => { void bridge.majVerifier(); }}
                     disabled={maj?.etat === 'verification' || maj?.etat === 'telechargement'}
                     className="mt-3 rounded-md border border-line px-3 py-1.5 text-[13px] text-muted transition-colors hover:border-line2 hover:text-ink disabled:opacity-40">
               {t('reglages.version.verifier')}
             </button>
+            )}
           </div>
         </section>
 

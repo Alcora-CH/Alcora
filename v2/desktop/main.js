@@ -171,10 +171,14 @@ if (app.isPackaged && process.env.PROTECTVIEWER_DEV_URL) {
  * Une fois empaquetee, l'application vit dans une archive : les fichiers voisins du code
  * n'y sont plus accessibles comme sur disque. Le binaire du relais est donc livre en
  * ressource externe, et son chemin differe selon le mode.
+ *
+ * Le NOM depend de la plateforme : « .exe » sous Windows, sans extension ailleurs. C'est
+ * le meme mediamtx, telecharge pour l'architecture visee au moment de la construction.
  */
+const NOM_RELAIS = process.platform === 'win32' ? 'mediamtx.exe' : 'mediamtx';
 const RELAY_BINARY = app.isPackaged
-  ? path.join(process.resourcesPath, 'relay', 'mediamtx.exe')
-  : path.join(__dirname, '..', 'relay', 'mediamtx.exe');
+  ? path.join(process.resourcesPath, 'relay', NOM_RELAIS)
+  : path.join(__dirname, '..', 'relay', NOM_RELAIS);
 
 /*
  * L'interface est servie par un protocole applicatif, jamais depuis « file:// ».
@@ -1076,14 +1080,24 @@ function lanceurStable() {
   return fs.existsSync(stable) ? stable : process.execPath;
 }
 
+/*
+ * Le demarrage automatique n'existe que la ou Electron sait l'inscrire.
+ *
+ * « setLoginItemSettings » est documente pour Windows et macOS seulement : sous Linux, il
+ * ne fait rien et « getLoginItemSettings » rend toujours faux. Un interrupteur qui revient
+ * a zero sans un mot est pire que pas d'interrupteur — on le declare indisponible, et
+ * l'ecran des reglages dit alors pourquoi.
+ */
+const AUTO_DEMARRAGE_POSSIBLE = process.platform === 'win32' || process.platform === 'darwin';
+
 ipcMain.handle('protect:autoDemarrage', () => {
-  if (!app.isPackaged) return { actif: false, disponible: false };
+  if (!app.isPackaged || !AUTO_DEMARRAGE_POSSIBLE) return { actif: false, disponible: false };
   const reglages = app.getLoginItemSettings({ path: lanceurStable() });
   return { actif: reglages.openAtLogin, disponible: true };
 });
 
 ipcMain.handle('protect:autoDemarrageChanger', (_event, actif) => {
-  if (!app.isPackaged) return { actif: false, disponible: false };
+  if (!app.isPackaged || !AUTO_DEMARRAGE_POSSIBLE) return { actif: false, disponible: false };
   app.setLoginItemSettings({ openAtLogin: Boolean(actif), path: lanceurStable() });
   const reglages = app.getLoginItemSettings({ path: lanceurStable() });
   journal.info('config',
@@ -1718,7 +1732,17 @@ if (!app.requestSingleInstanceLock()) {
       if (!relay?.state.running) auReveil('session unlocked');
     });
 
-    if (app.isPackaged) {
+    /*
+     * La chaine de mise a jour est celle de Velopack, et Velopack est ici la version
+     * Windows : elle publie des .nupkg, lit « releases.win.json » et confie l'application
+     * a Update.exe. Rien de tout cela n'existe sur une autre plateforme.
+     *
+     * On ne la demarre donc pas ailleurs, et surtout on le DIT : l'ecran des reglages
+     * annonce une mise a jour manuelle plutot que de laisser croire a une surveillance
+     * qui n'aura jamais lieu. Une chaine muette est exactement ce qui a coute trois jours
+     * en juillet — mieux vaut pas de chaine qu'une chaine qui ment.
+     */
+    if (app.isPackaged && process.platform === 'win32') {
       maj = new GestionnaireMaj({
         version: app.getVersion(),
         dossier: path.join(app.getPath('userData'), 'maj'),
@@ -1729,6 +1753,9 @@ if (!app.requestSingleInstanceLock()) {
       });
       void majAuDemarrage();
       setInterval(() => void maj.verifier(), 6 * 3_600_000);
+    } else if (app.isPackaged) {
+      journal.info('update', `no automatic update chain on ${process.platform}`);
+      pushMajState({ etat: 'manuelle' });
     }
   }).catch((e) => {
     journal.erreur('startup', journal.deErreur(e));

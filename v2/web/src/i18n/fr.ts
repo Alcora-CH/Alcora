@@ -105,6 +105,9 @@ export const fr = {
   'reglages.version.repos':
     'L’application vérifie d’elle-même les nouvelles versions, les télécharge en silence, ' +
     'puis propose de redémarrer.',
+  'reglages.version.manuelle':
+    'Sur cette plateforme, la mise à jour est manuelle : télécharge la nouvelle version ' +
+    'depuis alcora.ch, puis remplace l’application.',
   'reglages.version.verifier': 'Vérifier maintenant',
 
   // Les NOMS des langues (Français, English, Deutsch…) ne sont pas ici : chacun

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
+    "build:linux": "node scripts/build-linux.mjs",
     "publier": "node scripts/publier.mjs",
     "web": "npm --prefix v2/web run dev",
     "test": "node scripts/test.mjs",

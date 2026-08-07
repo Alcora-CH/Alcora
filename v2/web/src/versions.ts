@@ -39,6 +39,29 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.25.0',
+    date: '08.08.2026',
+    fr: [
+      'Alcora existe pour Linux : une archive à déplier, qui embarque son relais vidéo. ' +
+      'Sur cette plateforme la mise à jour est manuelle — l’application le dit plutôt ' +
+      'que de laisser croire à une surveillance qui n’existe pas, et le démarrage ' +
+      'automatique s’y déclare indisponible pour la même raison.',
+      'L’écran de connexion rejoint le ciel : le planétarium l’accompagne dès la ' +
+      'première image, et ses sections deviennent des îlots de verre comme le reste ' +
+      'de l’application.',
+      'La fenêtre « Ce qui a changé » passe elle aussi au verre.',
+    ],
+    en: [
+      'Alcora now exists for Linux: an archive to unpack, carrying its own video relay. ' +
+      'On that platform updating is manual — the application says so rather than ' +
+      'implying a watch that does not exist, and start-with-the-system declares itself ' +
+      'unavailable there for the same reason.',
+      'The sign-in screen joins the sky: the planetarium is there from the very first ' +
+      'image, and its sections become glass islands like the rest of the application.',
+      'The « What has changed » window turns to glass as well.',
+    ],
+  },
+  {
     version: '2.24.0',
     date: '04.08.2026',
     fr: [

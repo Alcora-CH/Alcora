@@ -232,6 +232,41 @@
   .veille .det{font-size:12px;color:var(--muted)}
   .veille .vol{font-family:Consolas,monospace;font-size:10.5px;color:var(--soft)}
 
+  /* ------------------------------------------------------------ CONNEXION -- */
+  /* ISO-CONTENU avec SetupScreen.tsx : en-tête + bandeau démo, encadré de
+     reprise, adresse, compte (3 champs + aide DÉPLIÉE ici pour tout montrer),
+     vérification (5 étapes + caméras trouvées), divulgation « rester
+     connecté », actions collantes en verre. Montré à l'état le plus riche :
+     test réussi. */
+  .conn{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+  .conn .ilot{padding:18px 20px}
+  .saisie{height:34px;width:100%;background:rgba(255,255,255,.05);
+    border:1px solid var(--verre-bord);border-radius:8px;color:var(--ink);
+    font-size:13px;padding:0 11px;font-family:inherit}
+  .saisie::placeholder{color:var(--soft)}
+  .saisie.mono{font-family:Consolas,monospace;letter-spacing:.06em}
+  .oeil{position:relative}
+  .oeil .saisie{padding-right:36px}
+  .oeil i{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    font-style:normal;color:var(--soft);cursor:pointer;font-size:13px}
+  .etiq{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--soft);font-weight:650;margin:0 0 6px}
+  .aide-champ{color:var(--soft);font-size:11.5px;margin:6px 0 0}
+  .etape{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:3.5px 0}
+  .etape .ic{width:17px;flex:0 0 auto;text-align:center}
+  .sous-encadre{margin-top:10px;border:1px solid var(--cheveu);border-radius:9px;
+    background:rgba(255,255,255,.04);padding:12px 14px}
+  .conn-actions{position:sticky;bottom:14px;display:flex;align-items:center;
+    justify-content:flex-end;gap:10px;padding:12px 16px;z-index:5}
+  .bouton.principal{background:var(--accent);color:#20242a;font-weight:600;
+    border-color:transparent}
+  .ilot.reprise{border-color:rgba(210,162,99,.55);
+    background:linear-gradient(rgba(50,42,29,.42),rgba(50,42,29,.42)),rgba(28,31,37,.22)}
+  .case{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;margin-top:4px}
+  .case input{width:15px;height:15px;accent-color:var(--accent)}
+  .bandeau-demo{background:rgba(46,40,17,.6);border:1px solid rgba(208,162,21,.4);
+    color:var(--warn);border-radius:8px;padding:8px 12px;font-size:12px}
+
   /* ------------------------------------------------------- le sélecteur --- */
   .choix{position:fixed;right:14px;bottom:14px;z-index:9;display:flex;gap:6px;
     background:rgba(20,23,28,.72);border:1px solid var(--verre-bord);border-radius:10px;
@@ -479,10 +514,124 @@
       </div>
     </section>
 
+    <!-- ================================================= CONNEXION ======= -->
+    <section class="ecran" data-e="connexion">
+      <div class="conn">
+        <div>
+          <h2 class="titre">⛨ Connexion au contrôleur</h2>
+          <p class="soustitre" style="margin-bottom:12px">L'application interroge ton
+            contrôleur pour découvrir les caméras. Rien n'est envoyé ailleurs.</p>
+          <p class="bandeau-demo">Mode démonstration : aucune connexion réelle n'est établie.</p>
+        </div>
+
+        <!-- reprise d'une connexion mise de côté -->
+        <div class="ilot reprise">
+          <p style="display:flex;gap:9px;font-size:13px">
+            <span style="color:var(--accent)">⟲</span>
+            <span>Une connexion précédente est conservée sur ce PC
+              (<span class="mono">10.0.0.1</span>). Tu peux la reprendre sans rien ressaisir.</span>
+          </p>
+          <p style="margin-top:12px"><button class="bouton principal">Reprendre cette connexion</button></p>
+        </div>
+
+        <!-- adresse -->
+        <div class="ilot">
+          <span class="etiq">Adresse du contrôleur</span>
+          <input class="saisie" value="10.0.0.1">
+          <p class="aide-champ">L'adresse IP de ton UDM, Cloud Key ou UNVR.</p>
+        </div>
+
+        <!-- compte -->
+        <div class="ilot">
+          <h3 class="sec" style="font-size:14px;text-transform:none;letter-spacing:0;
+            color:var(--ink);margin-bottom:14px">Compte</h3>
+
+          <span class="etiq">Identifiant</span>
+          <input class="saisie" value="alcora-lecture">
+          <p class="aide-champ" style="margin-bottom:14px">Utilise un compte dédié à cette
+            application, avec des droits limités.</p>
+
+          <span class="etiq">Mot de passe</span>
+          <div class="oeil" style="margin-bottom:14px">
+            <input class="saisie" type="password" value="motdepasse"><i>👁</i>
+          </div>
+
+          <span class="etiq">Clé d'authentification à deux facteurs</span>
+          <div class="oeil">
+            <input class="saisie mono" type="password" value="AAAABBBBCCCCDDDD"><i>👁</i>
+          </div>
+
+          <p style="margin-top:14px;font-size:12px;color:var(--soft);cursor:pointer">
+            ⌄ Où trouver cette clé ?</p>
+          <div class="sous-encadre" style="font-size:12.5px;color:var(--muted);
+            display:flex;flex-direction:column;gap:10px">
+            <p>Sur le site de gestion de ton compte Ubiquiti, lors de l'ajout d'une
+              application d'authentification, choisis « saisie manuelle » plutôt que de
+              scanner le code : la clé s'affiche alors en toutes lettres.</p>
+            <p>Garde cette même clé enrôlée sur ton téléphone. Si cette application en
+              devenait l'unique détentrice, perdre ce PC te bloquerait l'accès à ton compte.</p>
+          </div>
+        </div>
+
+        <!-- vérification -->
+        <div class="ilot">
+          <h3 class="sec" style="font-size:14px;text-transform:none;letter-spacing:0;
+            color:var(--ink);margin-bottom:12px">Vérification</h3>
+          <div class="etape"><span class="ic" style="color:var(--ok)">✓</span>
+            <span>Joindre le contrôleur</span></div>
+          <div class="etape"><span class="ic" style="color:var(--ok)">✓</span>
+            <div><div>Vérifier son identité</div>
+              <div style="font-size:11.5px;color:var(--soft)">certificat auto-signé, empreinte retenue</div></div></div>
+          <div class="etape"><span class="ic" style="color:var(--ok)">✓</span>
+            <span>S'authentifier</span></div>
+          <div class="etape"><span class="ic" style="color:var(--ok)">✓</span>
+            <span>Lire les caméras</span></div>
+          <div class="etape"><span class="ic" style="color:var(--ok)">✓</span>
+            <span>Vérifier les flux</span></div>
+
+          <div class="sous-encadre">
+            <p style="font-size:13px;font-weight:600;margin-bottom:8px">Caméras trouvées</p>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:2px 0">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>
+              <span>Allée</span><span class="mono" style="font-size:11.5px;color:var(--soft)">3840 × 2160</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:2px 0">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>
+              <span>Bureaux</span><span class="mono" style="font-size:11.5px;color:var(--soft)">2688 × 1512</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- divulgation -->
+        <div class="ilot">
+          <h3 class="sec" style="font-size:14px;text-transform:none;letter-spacing:0;
+            color:var(--ink);margin-bottom:12px">Rester connecté</h3>
+          <div style="font-size:12.5px;color:var(--muted);display:flex;
+            flex-direction:column;gap:10px">
+            <p>Pour se reconnecter seule après un redémarrage, l'application conserve sur ce
+              PC ton mot de passe et la clé qui produit les codes à usage unique, chiffrés
+              par Windows pour ton compte Windows uniquement.</p>
+            <p>Concrètement : une personne qui ouvrirait une session sous ton compte Windows
+              pourrait se connecter au contrôleur sans avoir ton téléphone. En revanche, ton
+              compte reste protégé face à quelqu'un qui ne connaîtrait que ton mot de passe.</p>
+          </div>
+          <div class="cheveu"></div>
+          <label class="case"><input type="checkbox" checked> Rester connecté sur ce PC</label>
+        </div>
+
+        <!-- actions, collantes -->
+        <div class="ilot conn-actions">
+          <button class="bouton">Tester la connexion</button>
+          <button class="bouton principal">Enregistrer et démarrer</button>
+        </div>
+      </div>
+    </section>
+
   </div>
 </div>
 
 <div class="choix" role="group" aria-label="Écran">
+  <button data-e="connexion" aria-pressed="false">Connexion</button>
   <button data-e="reglages" aria-pressed="false">Réglages</button>
   <button data-e="detections" aria-pressed="true">Détections</button>
   <button data-e="relecture" aria-pressed="false">Relecture</button>
@@ -615,6 +764,8 @@ document.getElementById('compte-jour').textContent = `${MARQUES.length} détecti
 document.querySelectorAll('.choix button').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.ecran').forEach(e=>e.classList.toggle('actif', e.dataset.e===b.dataset.e));
   document.querySelectorAll('.choix button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  // La connexion precede l'application : ni bande d'icones, ni panneau.
+  document.querySelector('.rail').style.display = b.dataset.e === 'connexion' ? 'none' : '';
 }));
 </script>
 </body>
