@@ -185,6 +185,37 @@
   .btn-ligne:hover{border-color:var(--accent);text-decoration:none}
   .note-dl{margin-top:12px;font-size:12.5px;color:var(--soft)}
 
+  /* ------------------------------------------- le menu de téléchargement --- */
+  .menu-dl{position:relative;display:inline-block}
+  #dl-bouton{display:inline-flex;align-items:center;gap:9px}
+  #dl-bouton .chevron{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;
+    stroke-linecap:round;stroke-linejoin:round;transition:transform .18s ease}
+  #dl-bouton[aria-expanded="true"] .chevron{transform:rotate(180deg)}
+
+  /* La liste est un ÎLOT, comme tout ce qui porte du contenu sur ce ciel. */
+  .dl-liste{position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);
+    z-index:50;min-width:min(430px,86vw);padding:6px;text-align:left;
+    background:var(--carte-verre);border:1px solid var(--verre-bord);border-radius:14px;
+    box-shadow:var(--flotte);
+    -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  .dl-liste[hidden]{display:none}
+  .dl-liste a{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:10px;
+    color:var(--ink);text-decoration:none}
+  .dl-liste a:hover,.dl-liste a:focus-visible{background:rgba(255,255,255,.07);text-decoration:none}
+  .dl-liste .ic-p{width:21px;height:21px;flex:0 0 auto;fill:var(--accent);opacity:.9}
+  .dl-liste .txt{flex:1;min-width:0}
+  .dl-liste b{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600}
+  .dl-liste small{display:block;color:var(--soft);font-size:11.5px;line-height:1.45;margin-top:2px}
+  .dl-liste code{flex:0 0 auto;font-family:Consolas,monospace;font-size:10.5px;color:var(--soft);
+    border:1px solid var(--cheveu);border-radius:6px;padding:2px 7px}
+  /* La plateforme du visiteur, reconnue : un repère, jamais un choix imposé —
+     les autres restent également accessibles, au même rang. */
+  .dl-liste .detecte{font-size:10px;font-weight:600;text-transform:uppercase;
+    letter-spacing:.06em;color:var(--accent-d);background:var(--accent-soft);
+    border-radius:99px;padding:2px 8px}
+  .dl-liste .detecte[hidden]{display:none}
+  @media (prefers-reduced-motion:reduce){ #dl-bouton .chevron{transition:none} }
+
   h2.sec{font-size:clamp(21px,2vw,28px);font-weight:650;letter-spacing:-.01em;margin:84px 0 8px;text-align:center}
   p.sec{color:var(--muted);text-align:center;max-width:72ch;margin:0 auto 26px;font-size:clamp(14.5px,1.1vw,16px)}
 
@@ -599,29 +630,60 @@
     nessun account Ubiquiti, nessun browser, nessuna dipendenza da Internet. Diretta,
     riproduzione, rilevamenti, ricerca e avvisi.</p>
     <div class="boutons">
-      <a class="btn btn-or fr" href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">Télécharger pour Windows</a>
-      <a class="btn btn-or en" href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">Download for Windows</a>
-      <a class="btn btn-or de" href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">Für Windows herunterladen</a>
-      <a class="btn btn-or it" href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">Scarica per Windows</a>
-      <!-- Linux pointe la page des versions plutôt qu'un fichier : le nom de l'archive
-           porte le numéro de version, qu'un lien « latest » ne peut pas deviner. -->
-      <a class="btn btn-ligne fr" href="https://github.com/alcora-ch/Alcora-releases/releases/latest">Télécharger pour Linux</a>
-      <a class="btn btn-ligne en" href="https://github.com/alcora-ch/Alcora-releases/releases/latest">Download for Linux</a>
-      <a class="btn btn-ligne de" href="https://github.com/alcora-ch/Alcora-releases/releases/latest">Für Linux herunterladen</a>
-      <a class="btn btn-ligne it" href="https://github.com/alcora-ch/Alcora-releases/releases/latest">Scarica per Linux</a>
+      <!--
+        UN seul bouton de téléchargement, qui déplie les plateformes.
+        Deux boutons côte à côte ne tenaient plus dès la deuxième plateforme, et
+        n'auraient pas tenu à la troisième.
+
+        Il s'ouvre au CLIC, pas au seul survol : le survol n'existe pas sur un écran
+        tactile et reste inatteignable au clavier. Le survol l'ouvre en plus, sur les
+        pointeurs fins — un confort, jamais l'unique moyen.
+
+        Le détail par plateforme (format, mode de mise à jour) vit ICI, à l'endroit où
+        le choix se fait, plutôt que dans une note sous les boutons que personne ne
+        relie à sa propre machine.
+      -->
+      <div class="menu-dl" id="menu-dl">
+        <button class="btn btn-or" id="dl-bouton" aria-haspopup="true" aria-expanded="false"
+                aria-controls="dl-liste">
+          <span class="fr">Télécharger</span><span class="en">Download</span>
+          <span class="de">Herunterladen</span><span class="it">Scarica</span>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+
+        <div class="dl-liste" id="dl-liste" role="menu" aria-labelledby="dl-bouton" hidden>
+          <a role="menuitem" data-plateforme="windows"
+             href="https://github.com/alcora-ch/Alcora-releases/releases/latest/download/Alcora-win-Setup.exe">
+            <svg class="ic-p" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.7l7.5-1v7.1H3zM11.6 4.5L21 3.2v8.6h-9.4zM3 12.9h7.5V20l-7.5-1zM11.6 12.9H21v8.6l-9.4-1.3z"/></svg>
+            <span class="txt">
+              <b>Windows<span class="detecte" hidden><span class="fr">votre système</span><span class="en">your system</span><span class="de">dein System</span><span class="it">il tuo sistema</span></span></b>
+              <small><span class="fr">Installeur signé · mise à jour automatique vérifiée par empreinte</span><span class="en">Signed installer · automatic updates verified by checksum</span><span class="de">Signierter Installer · automatische Updates, per Prüfsumme verifiziert</span><span class="it">Installer firmato · aggiornamenti automatici verificati per impronta</span></small>
+            </span>
+            <code>.exe</code>
+          </a>
+          <!-- Linux pointe la page des versions plutôt qu'un fichier : le nom de l'archive
+               porte le numéro de version, qu'un lien « latest » ne peut pas deviner. -->
+          <a role="menuitem" data-plateforme="linux"
+             href="https://github.com/alcora-ch/Alcora-releases/releases/latest">
+            <svg class="ic-p" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c2.3 0 3.4 1.9 3.4 4.2 0 1.5.5 2.3 1.3 3.4 1 1.4 2.3 3 2.8 5.3.3 1.4-.1 2.4-.8 2.9-.5.4-1.2.5-1.9.3-.4 1-1.4 1.9-2.9 2.2-1.3.2-2.6.2-3.8 0-1.5-.3-2.5-1.2-2.9-2.2-.7.2-1.4.1-1.9-.3-.7-.5-1.1-1.5-.8-2.9.5-2.3 1.8-3.9 2.8-5.3.8-1.1 1.3-1.9 1.3-3.4 0-2.3 1.1-4.2 3.4-4.2z"/></svg>
+            <span class="txt">
+              <b>Linux<span class="detecte" hidden><span class="fr">votre système</span><span class="en">your system</span><span class="de">dein System</span><span class="it">il tuo sistema</span></span></b>
+              <small><span class="fr">Archive à déplier, x86-64 · mise à jour manuelle</span><span class="en">Archive to unpack, x86-64 · manual updates</span><span class="de">Archiv zum Entpacken, x86-64 · manuelle Updates</span><span class="it">Archivio da estrarre, x86-64 · aggiornamento manuale</span></small>
+            </span>
+            <code>.tar.gz</code>
+          </a>
+        </div>
+      </div>
+
       <button class="btn btn-ligne fr" onclick="document.getElementById('demo').scrollIntoView()">Voir la démonstration</button>
       <button class="btn btn-ligne en" onclick="document.getElementById('demo').scrollIntoView()">See the demonstration</button>
       <button class="btn btn-ligne de" onclick="document.getElementById('demo').scrollIntoView()">Zur Demonstration</button>
       <button class="btn btn-ligne it" onclick="document.getElementById('demo').scrollIntoView()">Vedi la dimostrazione</button>
     </div>
-    <p class="note-dl fr">Gratuit · open source, GPL-3.0 · Windows : installeur signé et mises
-    à jour automatiques vérifiées par empreinte · Linux : archive à déplier, mise à jour manuelle</p>
-    <p class="note-dl en">Free · open source, GPL-3.0 · Windows: signed installer and automatic
-    updates verified by checksum · Linux: archive to unpack, manual updates</p>
-    <p class="note-dl de">Gratis · Open Source, GPL-3.0 · Windows: signierter Installer und
-    automatische Updates, per Prüfsumme verifiziert · Linux: Archiv zum Entpacken, manuelle Updates</p>
-    <p class="note-dl it">Gratuito · open source, GPL-3.0 · Windows: installer firmato e
-    aggiornamenti automatici verificati per impronta · Linux: archivio da estrarre, aggiornamento manuale</p>
+    <p class="note-dl fr">Gratuit · open source, GPL-3.0 · aucune image ne quitte votre réseau</p>
+    <p class="note-dl en">Free · open source, GPL-3.0 · no image ever leaves your network</p>
+    <p class="note-dl de">Gratis · Open Source, GPL-3.0 · kein Bild verlässt dein Netzwerk</p>
+    <p class="note-dl it">Gratuito · open source, GPL-3.0 · nessuna immagine lascia la tua rete</p>
   </section>
 
   <!-- ================================================== LA DÉMONSTRATION ==== -->
@@ -1093,6 +1155,107 @@
 </div>
 
 <script>
+/* ------------------------------------------- le menu de telechargement ----
+ *
+ * Ouvert au CLIC, refermable par Echap, clic exterieur, ou perte de focus. Le
+ * survol l'ouvre EN PLUS, mais seulement la ou un pointeur fin existe : sur un
+ * ecran tactile un « survol » se declenche au premier effleurement et le menu
+ * s'ouvrirait tout seul.
+ *
+ * Le clavier n'est pas une option : le bouton porte aria-expanded, la liste
+ * role=menu, les fleches parcourent les entrees et Echap rend le focus au bouton.
+ */
+(function menuTelechargement(){
+  const enveloppe = document.getElementById('menu-dl');
+  const bouton = document.getElementById('dl-bouton');
+  const liste = document.getElementById('dl-liste');
+  if (!enveloppe || !bouton || !liste) return;
+  const entrees = [...liste.querySelectorAll('a[role="menuitem"]')];
+  const pointeurFin = window.matchMedia('(hover: hover) and (pointer: fine)');
+  let fermeture;
+
+  const ouvrir = () => {
+    clearTimeout(fermeture);
+    liste.hidden = false;
+    bouton.setAttribute('aria-expanded', 'true');
+  };
+  const fermer = ({ rendreLeFocus = false } = {}) => {
+    clearTimeout(fermeture);
+    liste.hidden = true;
+    bouton.setAttribute('aria-expanded', 'false');
+    if (rendreLeFocus) bouton.focus();
+  };
+  const ouvert = () => !liste.hidden;
+
+  bouton.addEventListener('click', (e) => {
+    e.preventDefault();
+    ouvert() ? fermer() : ouvrir();
+  });
+
+  /* Survol : ouverture immediate, fermeture RETARDEE. Sans ce delai, traverser le
+     vide de quelques pixels entre le bouton et la liste referme le menu sous la
+     souris qui allait justement y entrer. */
+  if (pointeurFin.matches) {
+    enveloppe.addEventListener('pointerenter', ouvrir);
+    enveloppe.addEventListener('pointerleave', () => {
+      fermeture = setTimeout(fermer, 220);
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (ouvert() && !enveloppe.contains(e.target)) fermer();
+  });
+
+  enveloppe.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && ouvert()) { e.preventDefault(); fermer({ rendreLeFocus: true }); return; }
+    if (e.key === 'Tab') return;                      // laisser la tabulation sortir
+    if (!['ArrowDown','ArrowUp','Home','End'].includes(e.key)) return;
+    e.preventDefault();
+    if (!ouvert()) ouvrir();
+    const ici = entrees.indexOf(document.activeElement);
+    const dernier = entrees.length - 1;
+    const cible = e.key === 'Home' ? 0
+      : e.key === 'End' ? dernier
+      : e.key === 'ArrowDown' ? (ici < 0 || ici === dernier ? 0 : ici + 1)
+      : (ici <= 0 ? dernier : ici - 1);
+    entrees[cible].focus();
+  });
+
+  /* Le focus quitte l'ensemble : rien ne doit rester ouvert derriere. */
+  enveloppe.addEventListener('focusout', (e) => {
+    if (!enveloppe.contains(e.relatedTarget)) fermer();
+  });
+
+  /*
+   * La plateforme du visiteur, reconnue pour lui EPARGNER une question — jamais
+   * pour choisir a sa place : les deux entrees restent au meme rang, cliquables.
+   * On lit d'abord userAgentData, seule source non devinee ; a defaut, la chaine
+   * d'agent.
+   *
+   * Le mobile se teste AVANT le bureau : une chaine d'agent de telephone contient
+   * « Linux », et sans cette precaution un telephone se verrait proposer l'archive
+   * x86-64 comme etant « son systeme ». Aucune plateforme reconnue : rien n'est
+   * marque, la liste reste telle quelle.
+   */
+  const ua = navigator.userAgent;
+  const mobile = /Android|iPhone|iPad|iPod/i.test(ua);
+  const plateforme = mobile ? 'mobile'
+    : (navigator.userAgentData?.platform
+      || (/Win/i.test(ua) ? 'Windows' : /Linux|X11/i.test(ua) ? 'Linux' : ''));
+  const reconnue = /Win/i.test(plateforme) ? 'windows'
+    : /Linux/i.test(plateforme) ? 'linux'
+    : '';
+  if (reconnue) {
+    const entree = liste.querySelector(`a[data-plateforme="${reconnue}"]`);
+    if (entree) {
+      entree.querySelector('.detecte').hidden = false;
+      // Elle passe en tete : c'est la seule chose que la detection se permet.
+      liste.prepend(entree);
+      entrees.sort((a, b) => (a === entree ? -1 : b === entree ? 1 : 0));
+    }
+  }
+})();
+
 /* ------------------------------------------------------------------ langue */
 const LANGUES = ['fr','en','de','it'];
 function langue(l){
