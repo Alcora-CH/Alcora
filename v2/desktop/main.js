@@ -48,7 +48,9 @@ const { FluxChangements } = require('./protect/updates');
 const { RelaySupervisor } = require('./relay');
 const { ProtectClient } = require('./protect/client');
 const { Session } = require('./protect/session');
-const { fromBootstrap, relayPaths, etatPourInterface } = require('./protect/discovery');
+const {
+  fromBootstrap, relayPaths, etatPourInterface, camerasPourInterface,
+} = require('./protect/discovery');
 const {
   ProtectError, RelayMissingError, PinningFailedError, TimeoutError,
 } = require('./protect/errors');
@@ -833,7 +835,9 @@ ipcMain.handle('protect:save', async (_event, credentials, keepSignedIn) => {
 
 // On attend la fin du demarrage : repondre « aucune camera » a une page qui demande trop
 // tot la laisserait sur un ecran vide sans jamais rien reessayer.
-ipcMain.handle('protect:getCameras', async () => { await demarrage; return cameras; });
+// La projection vit dans protect/discovery.js, avec les autres : elle y est
+// atteignable par un test, sans Electron. Voir « camerasPourInterface ».
+ipcMain.handle('protect:getCameras', async () => { await demarrage; return camerasPourInterface(cameras); });
 
 /**
  * Reglages de confort : ou vont les captures, et le son du direct.

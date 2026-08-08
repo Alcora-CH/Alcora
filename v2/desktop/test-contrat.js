@@ -22,7 +22,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { etatPourInterface, etatSysteme } = require('./protect/discovery');
+const { camerasPourInterface, etatPourInterface, etatSysteme } = require('./protect/discovery');
 
 let echecs = 0;
 
@@ -276,6 +276,42 @@ console.log('\n=== Le compte des caméras vient des caméras, pas du contrôleur
   check('total', 3, e.cameras.total);
   check('en ligne', 2, e.cameras.enLigne);
   check('archives, sans les nulles', 2, e.archive.length);
+}
+
+console.log('\n=== L’alias RTSP ne quitte JAMAIS le processus principal ===');
+{
+  /*
+   * L'alias est un mot de passe : le RTSP de Protect n'a aucune authentification, et
+   * l'alias est le seul secret qui protege le flux. Jusqu'a la 2.27.0 l'inventaire
+   * partait vers la page TEL QUEL, alias compris, alors que l'interface n'en a aucun
+   * usage — le contrat `DiscoveredChannel` ne le declare meme pas.
+   *
+   * Ce test regarde la CHAINE ENTIERE serialisee plutot que les champs un a un : c'est
+   * la seule facon de voir un alias qui reapparaitrait dans un champ ajoute plus tard,
+   * ou imbrique quelque part.
+   */
+  const secret = 'aLiAsQuiNeDoitPasSortir42';
+  const camerasBrutes = [{
+    id: 'cam-1',
+    name: 'Allee',
+    online: true,
+    channels: [
+      { quality: 'high', width: 3840, height: 2160, fps: 30, bitrate: 16000000,
+        rtspAlias: secret, streamable: true },
+      { quality: 'low', width: 640, height: 360, fps: 30, bitrate: 300000,
+        rtspAlias: null, streamable: false },
+    ],
+  }];
+
+  const projete = camerasPourInterface(camerasBrutes);
+  checkBool('l’alias est absent de tout ce qui traverse',
+    !JSON.stringify(projete).includes(secret));
+  checkBool('« streamable » survit, lui', projete[0].channels[0].streamable === true);
+  checkBool('et reste faux quand il doit l’etre', projete[0].channels[1].streamable === false);
+  check('les champs du canal, ni plus ni moins',
+    ['bitrate', 'fps', 'height', 'quality', 'streamable', 'width'],
+    Object.keys(projete[0].channels[0]).sort());
+  check('le reste de la camera passe intact', 'Allee', projete[0].name);
 }
 
 console.log('\n=== Le dictionnaire du principal : memes cles dans TOUTES les langues ===');

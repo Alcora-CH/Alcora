@@ -39,6 +39,26 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.27.0',
+    date: '08.08.2026',
+    fr: [
+      'Une caméra dont le RTSP n’est pas activé le DIT, et dit quoi faire : elle affichait ' +
+      '« aucun flux » sans un mot de plus, ce qui ressemblait à une panne alors qu’il ' +
+      'manque un interrupteur sur la console. L’écran de connexion rappelle désormais les ' +
+      'deux préparatifs à faire côté Protect.',
+      'L’identifiant du flux d’une caméra ne quitte plus le cœur de l’application : il vaut ' +
+      'mot de passe, l’écran n’en a aucun usage, et il lui était pourtant transmis.',
+    ],
+    en: [
+      'A camera whose RTSP is not enabled now SAYS so, and says what to do: it used to show ' +
+      '“no stream” and nothing more, which looked like a failure when a switch is simply ' +
+      'missing on the console. The sign-in screen now recalls the two things to prepare on ' +
+      'the Protect side.',
+      'A camera’s stream identifier no longer leaves the core of the application: it is ' +
+      'worth a password, the screen has no use for it, and it was being handed over anyway.',
+    ],
+  },
+  {
     version: '2.26.0',
     date: '08.08.2026',
     fr: [

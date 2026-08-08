@@ -45,6 +45,10 @@ export const de: Record<Cle, string> = {
   'commun.ouvrirDossier': 'Ordner öffnen',
   'commun.horsLigne': 'offline',
   'commun.aucunFlux': 'kein Stream',
+  'camera.rtspDesactive': 'RTSP deaktiviert',
+  'camera.rtspRemede':
+    'Diese Kamera sendet nicht: Aktiviere RTSP in Protect, an der Kamera, Bereich '
+    + 'Erweitert. Alcora übernimmt sie dann von selbst.',
   'commun.fermer': 'Schliessen',
   'commun.fermerEchap': 'Schliessen (Esc)',
   'commun.toutes': 'Alle',
@@ -167,6 +171,12 @@ export const de: Record<Cle, string> = {
   'setup.adresse.label': 'Adresse des Controllers',
   'setup.adresse.hint': 'Die IP-Adresse deiner UDM, deines Cloud Key oder UNVR.',
 
+  'setup.prealable.titre': 'Auf der Konsole vorzubereiten',
+  'setup.prealable.rtsp':
+    'RTSP auf jeder Kamera aktiviert (Protect → Kamera → Erweitert). Alcora fragt nie '
+    + 'nach einer URL: sie liest die Adressen selbst, aber RTSP muss offen sein.',
+  'setup.prealable.compte':
+    'Ein eigenes Konto für Alcora mit Leserechten — nicht dein Besitzerkonto.',
   'setup.compte.titre': 'Konto',
   'setup.compte.identifiant': 'Benutzername',
   'setup.compte.identifiantHint':

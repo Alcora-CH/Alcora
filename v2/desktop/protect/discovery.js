@@ -300,6 +300,36 @@ function etatPourInterface(systeme, cameras, alcora) {
   };
 }
 
+/**
+ * L'inventaire tel que la PAGE a le droit de le voir — sans les alias RTSP.
+ *
+ * Un alias est un mot de passe : le RTSP de Protect n'a aucune authentification (mesure
+ * du 21.07.2026), et c'est lui seul qui protege le flux. Le relais en a besoin ; la page,
+ * jamais — le contrat `DiscoveredChannel` ne le declare meme pas. L'envoyer quand meme
+ * elargissait l'exposition sans contrepartie : une capture des outils de developpement,
+ * ou une faille d'injection un jour, l'auraient livre.
+ *
+ * La projection est EXPLICITE, jamais une soustraction : on enumere ce qui sort, si bien
+ * qu'un champ sensible ajoute plus tard au canal ne partira pas tout seul. C'est
+ * l'inverse du defaut qui a fait naitre ce fichier de tests — mais le meme remede.
+ *
+ * Vit ici et non dans main.js pour qu'un test puisse l'appeler sans Electron.
+ */
+function camerasPourInterface(cameras) {
+  return (cameras ?? []).map((c) => ({
+    ...c,
+    channels: (c.channels ?? []).map((ch) => ({
+      quality: ch.quality,
+      width: ch.width,
+      height: ch.height,
+      fps: ch.fps,
+      bitrate: ch.bitrate,
+      streamable: Boolean(ch.streamable),
+    })),
+  }));
+}
+
 module.exports = {
   fromBootstrap, mapCamera, relayPaths, bornesArchive, etatSysteme, etatPourInterface,
+  camerasPourInterface,
 };

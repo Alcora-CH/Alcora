@@ -44,6 +44,10 @@ export const it: Record<Cle, string> = {
   'commun.ouvrirDossier': 'Apri la cartella',
   'commun.horsLigne': 'offline',
   'commun.aucunFlux': 'nessun flusso',
+  'camera.rtspDesactive': 'RTSP disattivato',
+  'camera.rtspRemede':
+    'Questa telecamera non trasmette: attiva l’RTSP in Protect, sulla telecamera, '
+    + 'sezione Avanzate. Alcora la riprenderà da sola.',
   'commun.fermer': 'Chiudi',
   'commun.fermerEchap': 'Chiudi (Esc)',
   'commun.toutes': 'Tutte',
@@ -167,6 +171,12 @@ export const it: Record<Cle, string> = {
   'setup.adresse.label': 'Indirizzo del controller',
   'setup.adresse.hint': 'L’indirizzo IP del tuo UDM, Cloud Key o UNVR.',
 
+  'setup.prealable.titre': 'Da preparare sulla console',
+  'setup.prealable.rtsp':
+    'L’RTSP attivo su ogni telecamera (Protect → telecamera → Avanzate). Alcora non '
+    + 'chiede mai un URL: legge gli indirizzi da sola, ma l’RTSP deve essere aperto.',
+  'setup.prealable.compte':
+    'Un account dedicato ad Alcora, con diritti di visione — non il tuo account proprietario.',
   'setup.compte.titre': 'Account',
   'setup.compte.identifiant': 'Nome utente',
   'setup.compte.identifiantHint':

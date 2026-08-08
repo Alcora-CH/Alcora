@@ -741,8 +741,12 @@ export default function App() {
                       style={{ background: c.online ? 'var(--ok)' : 'var(--soft)' }} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px]">{c.name}</div>
-                  <div className="font-mono text-[10.5px] text-soft">
-                    {best ? `${best.width} × ${best.height}` : t('commun.aucunFlux')}
+                  {/* Sans canal diffusable, la CAUSE plutot que le constat : « aucun
+                      flux » laissait croire a une panne alors qu'il manque un
+                      interrupteur sur la console. */}
+                  <div className="font-mono text-[10.5px]"
+                       style={{ color: best ? 'var(--soft)' : 'var(--warn)' }}>
+                    {best ? `${best.width} × ${best.height}` : t('camera.rtspDesactive')}
                   </div>
                 </div>
                 {/* Le masquage retire l'image de la mosaique, RIEN d'autre : les veilles
@@ -761,6 +765,17 @@ export default function App() {
               </div>
             );
           })}
+
+          {/* Le REMEDE, une seule fois pour toutes les cameras concernees.
+              Le repeter sous chacune noierait le panneau ; ne le dire nulle part —
+              ce qui etait le cas jusqu'a la 2.27.0 — laissait un nouvel utilisateur
+              devant des cameras muettes sans le moindre geste a tenter. Le message
+              existait pourtant deja, mais seul un script de developpement le lisait. */}
+          {cameras.some((c) => !bestChannel(c)) && (
+            <p className="mt-2 px-2 text-[11.5px] leading-relaxed" style={{ color: 'var(--warn)' }}>
+              {t('camera.rtspRemede')}
+            </p>
+          )}
 
           {/* Détections en direct, stockage, rétention, activité du jour, versions. Sorti
               dans son propre fichier : le panneau devenait trop long pour rester lisible ici. */}

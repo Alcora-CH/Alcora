@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — activer le flux RTSP sur vos caméras</title>
+<meta name="description" content="Guide animé, étape par étape : activer la sortie RTSPS sur une caméra UniFi Protect pour qu'Alcora puisse l'afficher. Aucune URL à recopier.">
+<link rel="canonical" href="https://alcora.ch/guide-rtsp.html">
+<meta name="theme-color" content="#101318">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+  /*
+   * GUIDE ANIME — activer le RTSP sur une camera Protect.
+   *
+   * La console montree ici est une RECONSTRUCTION dessinee, pas une capture : formes
+   * arrondies, elements surdimensionnes, palette a nous. Deux raisons, et les deux
+   * comptent :
+   *  · l'interface de Protect appartient a Ubiquiti — on n'en redistribue pas d'image ;
+   *  · une capture reelle vieillit a chaque version de Protect, et porte les donnees de
+   *    celui qui l'a prise. Ici tout est fictif : « Allee », « Bureaux », 192.168.1.1,
+   *    et des alias reduits a des points. Un alias est un mot de passe.
+   *
+   * Les LIBELLES, eux, sont ceux de Protect au 08.08.2026 — c'est ce qu'on vient
+   * chercher dans un guide.
+   */
+  :root{
+    --ink:#f4f3f0; --muted:#dedcd7; --soft:#c2c0bb;
+    --accent:#d2a263; --accent-soft:#322a1d; --accent-d:#e6b877;
+    --ok:#8fae5a; --warn:#d0a215;
+    --verre-fond:rgba(28,31,37,.22); --verre-bord:rgba(255,255,255,.18);
+    --verre-flou:blur(8px) saturate(160%);
+    --flotte:0 24px 60px rgba(0,0,0,.60), 0 4px 14px rgba(0,0,0,.45);
+    --cheveu:rgba(255,255,255,.10);
+    /* La console dessinee : volontairement plus claire et plus ronde que le vrai
+       Protect, pour qu'on ne puisse pas les confondre une seconde. */
+    --sim-fond:#2b313b; --sim-panneau:#343b47; --sim-trait:#454e5c;
+    --sim-texte:#e8eaee; --sim-doux:#9aa3b2; --sim-bleu:#5b9bd5;
+    --pose:cubic-bezier(.22,.9,.28,1);
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:radial-gradient(120% 90% at 78% 12%,#181d26 0%,#12161c 55%,#0e1116 100%);
+    color:var(--ink);min-height:100vh;
+    font:16px/1.6 "Segoe UI",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    text-shadow:0 1px 2px rgba(0,0,0,.55)}
+  a{color:var(--accent-d)}
+  .page{max-width:1120px;margin:0 auto;padding:28px clamp(16px,3vw,40px) 70px}
+
+  header.g{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  header.g svg{width:34px;height:34px;color:var(--accent)}
+  header.g .nom{font-size:18px;font-weight:650}
+  header.g .retour{margin-left:auto;font-size:13px}
+
+  h1{font-size:clamp(23px,3vw,33px);font-weight:650;letter-spacing:-.02em;line-height:1.15}
+  h1 em{font-style:normal;color:var(--accent-d)}
+  .chapeau{color:var(--soft);max-width:66ch;margin-top:12px;font-size:15px}
+
+  /* ------------------------------------------------------------- la scene --- */
+  .scene{margin-top:26px;display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  @media (max-width:920px){ .scene{grid-template-columns:1fr} }
+
+  .cadre{background:var(--verre-fond);border:1px solid var(--verre-bord);border-radius:16px;
+    box-shadow:var(--flotte);-webkit-backdrop-filter:var(--verre-flou);
+    backdrop-filter:var(--verre-flou);padding:14px}
+
+  /* La fenetre dessinee. Position relative : le curseur se place dedans. */
+  .console{position:relative;border-radius:13px;overflow:hidden;background:var(--sim-fond);
+    border:1px solid var(--sim-trait);aspect-ratio:16/10;min-height:330px;
+    font-size:12px;color:var(--sim-texte);text-shadow:none;display:flex}
+
+  /* La barre de titre — trois pastilles, comme n'importe quelle fenetre. */
+  .titre-sim{position:absolute;inset-inline:0;top:0;height:26px;display:flex;align-items:center;
+    gap:6px;padding:0 10px;background:#232830;border-bottom:1px solid var(--sim-trait);z-index:3}
+  .titre-sim i{width:8px;height:8px;border-radius:50%;background:#4a5361;display:block}
+  .titre-sim span{margin-left:8px;font-size:10.5px;color:var(--sim-doux)}
+
+  .rail-sim{width:44px;flex:0 0 auto;background:#232830;border-right:1px solid var(--sim-trait);
+    padding-top:34px;display:flex;flex-direction:column;align-items:center;gap:9px}
+  .rail-sim i{width:24px;height:24px;border-radius:7px;background:#39414e;display:block;
+    transition:background .3s var(--pose), box-shadow .3s var(--pose)}
+  .rail-sim i.vise{background:var(--sim-bleu);box-shadow:0 0 0 4px rgba(91,155,213,.25)}
+
+  .corps-sim{flex:1;min-width:0;padding-top:34px;display:flex}
+  .liste-sim{flex:1;min-width:0;padding:0 12px}
+  .entete-sim{display:flex;gap:10px;font-size:10px;color:var(--sim-doux);
+    padding-bottom:7px;border-bottom:1px solid var(--sim-trait)}
+  .entete-sim span:first-child{flex:1}
+  .cam-sim{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:9px;
+    margin-top:6px;transition:background .3s var(--pose)}
+  .cam-sim.vise{background:rgba(91,155,213,.20)}
+  .cam-sim .pastille{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:0 0 auto}
+  .cam-sim .nom{flex:1;font-size:12px}
+  .cam-sim .col{width:74px;font-size:10.5px;color:var(--sim-doux)}
+  .cam-sim .etat-rtsp{font-size:10px;padding:2px 7px;border-radius:99px;
+    background:#3d4553;color:var(--sim-doux);transition:all .4s var(--pose)}
+  .cam-sim .etat-rtsp.on{background:rgba(143,174,90,.22);color:#b6d98a}
+
+  /* Le panneau de droite, qui glisse quand on choisit une camera. */
+  .panneau-sim{width:0;flex:0 0 auto;background:var(--sim-panneau);
+    border-left:1px solid transparent;overflow:hidden;
+    transition:width .45s var(--pose), border-color .45s var(--pose)}
+  .console[data-ouvert="oui"] .panneau-sim{width:210px;border-left-color:var(--sim-trait)}
+  .panneau-sim .dedans{width:210px;padding:10px 11px}
+  .onglets-sim{display:flex;gap:6px;margin-bottom:10px}
+  .onglets-sim i{width:24px;height:22px;border-radius:6px;background:#3d4553;display:block;
+    transition:background .3s var(--pose), box-shadow .3s var(--pose)}
+  .onglets-sim i.vise{background:var(--sim-bleu);box-shadow:0 0 0 4px rgba(91,155,213,.25)}
+  .bloc-sim{border-top:1px solid var(--sim-trait);padding:8px 0;font-size:11px;
+    color:var(--sim-doux);display:flex;align-items:center;justify-content:space-between}
+  .bloc-sim.actif{color:var(--sim-texte)}
+  .bloc-sim .fleche{transition:transform .35s var(--pose);display:inline-block}
+  .bloc-sim.deplie .fleche{transform:rotate(180deg)}
+
+  /* Le repli : hauteur animee par grid, seul moyen sans mesurer en script. */
+  .repli{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--pose)}
+  .repli.ouvert{grid-template-rows:1fr}
+  .repli > div{overflow:hidden}
+
+  .case-sim{display:flex;align-items:flex-start;gap:7px;padding:5px 0;font-size:10.5px;
+    color:var(--sim-texte);line-height:1.35}
+  .case-sim .boite{width:13px;height:13px;border-radius:3.5px;border:1.5px solid #6b7688;
+    flex:0 0 auto;margin-top:1px;position:relative;
+    transition:background .3s var(--pose), border-color .3s var(--pose)}
+  .case-sim .boite::after{content:"";position:absolute;left:3.5px;top:.5px;width:4px;height:8px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);
+    transition:transform .3s var(--pose)}
+  .case-sim.cochee .boite{background:var(--sim-bleu);border-color:var(--sim-bleu)}
+  .case-sim.cochee .boite::after{transform:rotate(45deg) scale(1)}
+  .case-sim.vise .boite{box-shadow:0 0 0 5px rgba(91,155,213,.28)}
+  .sous-cases{padding-left:16px}
+  .lien-sim{font-family:Consolas,monospace;font-size:9px;color:var(--sim-bleu);
+    padding-left:20px;opacity:.85}
+
+  /* Le curseur dessine, qui se deplace d'une etape a l'autre. */
+  .curseur{position:absolute;z-index:8;width:20px;height:20px;pointer-events:none;
+    transition:left .6s var(--pose), top .6s var(--pose), opacity .3s ease;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+  .curseur.clic::after{content:"";position:absolute;left:-8px;top:-8px;width:34px;height:34px;
+    border-radius:50%;border:2px solid var(--accent-d);animation:onde .5s ease-out}
+  @keyframes onde{from{transform:scale(.3);opacity:1}to{transform:scale(1);opacity:0}}
+
+  /* ---------------------------------------------------------- les legendes -- */
+  .etapes{display:flex;flex-direction:column;gap:9px}
+  .etape-c{border:1px solid var(--cheveu);border-radius:12px;padding:11px 13px;
+    background:rgba(255,255,255,.03);cursor:pointer;
+    transition:border-color .3s var(--pose), background .3s var(--pose)}
+  .etape-c[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
+  .etape-c .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;
+    background:rgba(255,255,255,.10);font-size:11px;font-weight:650;margin-right:8px;
+    vertical-align:middle;color:var(--soft)}
+  .etape-c[aria-current="true"] .n{background:var(--accent);color:#20242a}
+  .etape-c b{font-size:13.5px;font-weight:600}
+  .etape-c p{font-size:12.5px;color:var(--soft);margin-top:6px;display:none;line-height:1.5}
+  .etape-c[aria-current="true"] p{display:block}
+
+  .commandes{display:flex;align-items:center;gap:8px;margin-top:12px}
+  .commandes button{background:rgba(255,255,255,.05);border:1px solid var(--verre-bord);
+    color:var(--muted);border-radius:9px;padding:7px 13px;font-size:12.5px;cursor:pointer;
+    font-family:inherit;transition:color .14s,border-color .14s,transform .06s}
+  .commandes button:hover{color:var(--ink);border-color:var(--accent)}
+  .commandes button:active{transform:scale(.97)}
+  .commandes .jauge{flex:1;height:3px;border-radius:99px;background:rgba(255,255,255,.10);
+    overflow:hidden}
+  .commandes .jauge i{display:block;height:100%;width:0;background:var(--accent);
+    transition:width .3s linear}
+
+  .apres{margin-top:34px;border-top:1px solid var(--cheveu);padding-top:22px}
+  .apres h2{font-size:18px;font-weight:650;margin-bottom:10px}
+  .apres p{color:var(--muted);font-size:14px;max-width:74ch;margin-bottom:10px}
+  .avert{border:1px solid rgba(208,162,21,.4);background:rgba(46,40,17,.5);border-radius:11px;
+    padding:12px 15px;font-size:13.5px;color:var(--muted);margin-top:14px}
+  .avert b{color:var(--warn)}
+
+  html[lang="fr"] .en{display:none !important}
+  html[lang="en"] .fr{display:none !important}
+  .lang{margin-left:12px;display:flex;gap:5px}
+  .lang button{background:rgba(255,255,255,.05);border:1px solid var(--verre-bord);
+    color:var(--soft);border-radius:7px;padding:3px 9px;font-size:12px;cursor:pointer}
+  .lang button[aria-pressed="true"]{color:var(--accent-d);border-color:var(--accent)}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition-duration:1ms !important;animation-duration:1ms !important}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="g">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <path fill="currentColor" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4Z"/>
+      <circle cx="25" cy="37" r="11" fill="#101318"/><circle cx="45" cy="22" r="4.4" fill="#101318"/>
+    </svg>
+    <span class="nom">Alcora</span>
+    <span class="retour"><a href="/">← <span class="fr">Retour au site</span><span class="en">Back to the site</span></a></span>
+    <span class="lang">
+      <button id="b-fr" aria-pressed="true">FR</button>
+      <button id="b-en" aria-pressed="false">EN</button>
+    </span>
+  </header>
+
+  <h1 class="fr">Activer le flux RTSP<br><em>sur vos caméras Protect.</em></h1>
+  <h1 class="en">Enable the RTSP stream<br><em>on your Protect cameras.</em></h1>
+
+  <p class="chapeau fr">Alcora affiche vos caméras en lisant leur flux directement sur votre
+  réseau. Pour cela, une seule chose doit être ouverte côté console — et c'est un
+  interrupteur, pas une adresse à recopier. <b>Alcora ne vous demandera jamais d'URL :</b>
+  elle lit les adresses toute seule, mais le flux doit être autorisé.</p>
+  <p class="chapeau en">Alcora shows your cameras by reading their stream directly on your
+  network. For that, one thing has to be open on the console side — and it is a switch, not
+  an address to copy. <b>Alcora will never ask you for a URL:</b> it reads the addresses on
+  its own, but the stream has to be allowed.</p>
+
+  <div class="scene">
+    <!-- ================================================= la console dessinee -->
+    <div class="cadre">
+      <div class="console" id="console" data-ouvert="non">
+        <div class="titre-sim"><i></i><i></i><i></i>
+          <span class="fr">Votre console UniFi — reproduction simplifiée</span>
+          <span class="en">Your UniFi console — simplified reproduction</span>
+        </div>
+
+        <div class="rail-sim">
+          <i id="r0"></i><i id="r1"></i><i id="r2"></i><i id="r3"></i>
+        </div>
+
+        <div class="corps-sim">
+          <div class="liste-sim">
+            <div class="entete-sim">
+              <span class="fr">Nom</span><span class="en">Name</span>
+              <span class="col fr">Modèle</span><span class="col en">Model</span>
+              <span class="col fr">Adresse IP</span><span class="col en">IP address</span>
+              <span class="col">RTSP</span>
+            </div>
+
+            <div class="cam-sim" id="cam1">
+              <span class="pastille"></span>
+              <span class="nom">Allée</span>
+              <span class="col">G6 Bullet</span>
+              <span class="col">192.168.1.11</span>
+              <span class="etat-rtsp" id="rtsp1"><span class="fr">désactivé</span><span class="en">off</span></span>
+            </div>
+
+            <div class="cam-sim" id="cam2">
+              <span class="pastille"></span>
+              <span class="nom">Bureaux</span>
+              <span class="col">G5 Turret</span>
+              <span class="col">192.168.1.12</span>
+              <span class="etat-rtsp" id="rtsp2"><span class="fr">désactivé</span><span class="en">off</span></span>
+            </div>
+          </div>
+
+          <!-- Le panneau de la camera -->
+          <div class="panneau-sim">
+            <div class="dedans">
+              <div class="onglets-sim"><i id="o0"></i><i id="o1"></i><i id="o2"></i><i id="o3"></i></div>
+
+              <div class="bloc-sim"><span class="fr">Microphone</span><span class="en">Microphone</span><span class="fleche">⌄</span></div>
+              <div class="bloc-sim"><span class="fr">Vision nocturne</span><span class="en">Night vision</span><span class="fleche">⌄</span></div>
+              <div class="bloc-sim"><span class="fr">Paramètres avancés</span><span class="en">Advanced settings</span><span class="fleche">⌄</span></div>
+
+              <div class="bloc-sim" id="bloc-partage">
+                <span class="fr">Partager le flux en direct</span>
+                <span class="en">Share Livestream</span>
+                <span class="fleche">⌄</span>
+              </div>
+
+              <div class="repli" id="repli"><div>
+                <div class="case-sim" style="opacity:.55">
+                  <span class="boite"></span>
+                  <span class="fr">Activer le lien de partage public</span>
+                  <span class="en">Enable Public Share Link</span>
+                </div>
+
+                <div class="case-sim" id="case-rtsp">
+                  <span class="boite"></span>
+                  <span><b class="fr">Activer la sortie RTSPS sécurisée</b><b class="en">Enable Secure RTSPS Output</b></span>
+                </div>
+
+                <div class="repli" id="repli-res"><div class="sous-cases">
+                  <div class="case-sim" id="res-h">
+                    <span class="boite"></span>
+                    <span class="fr">Haute résolution (3840×2160)</span>
+                    <span class="en">High Resolution (3840×2160)</span>
+                  </div>
+                  <div class="lien-sim">rtsps://192.168.1.1:7441/••••••••</div>
+                  <div class="case-sim" id="res-m">
+                    <span class="boite"></span>
+                    <span class="fr">Résolution moyenne (1280×720)</span>
+                    <span class="en">Medium Resolution (1280×720)</span>
+                  </div>
+                  <div class="lien-sim">rtsps://192.168.1.1:7441/••••••••</div>
+                  <div class="case-sim" id="res-b">
+                    <span class="boite"></span>
+                    <span class="fr">Basse résolution (640×360)</span>
+                    <span class="en">Low Resolution (640×360)</span>
+                  </div>
+                </div></div>
+              </div></div>
+            </div>
+          </div>
+        </div>
+
+        <svg class="curseur" id="curseur" viewBox="0 0 24 24" style="left:60px;top:200px;opacity:0">
+          <path fill="#fff" stroke="#1b1e23" stroke-width="1.4"
+                d="M5 2.5 19.5 12 13 13.2 16 20 13.3 21 10.4 14.4 5.6 18.6Z"/>
+        </svg>
+      </div>
+
+      <div class="commandes">
+        <button id="prec">←</button>
+        <button id="jouer">⏸</button>
+        <button id="suiv">→</button>
+        <span class="jauge"><i id="jauge"></i></span>
+        <button id="rejouer"><span class="fr">Reprendre</span><span class="en">Restart</span></button>
+      </div>
+    </div>
+
+    <!-- ==================================================== les legendes ----- -->
+    <div class="etapes" id="etapes">
+      <div class="etape-c" data-e="0">
+        <b><span class="n">1</span><span class="fr">Ouvrez Protect, section Appareils</span><span class="en">Open Protect, Devices section</span></b>
+        <p class="fr">Dans votre console UniFi, ouvrez l'application Protect, puis la liste
+        des appareils. Vos caméras y sont toutes listées.</p>
+        <p class="en">In your UniFi console, open the Protect application, then the device
+        list. All your cameras are listed there.</p>
+      </div>
+      <div class="etape-c" data-e="1">
+        <b><span class="n">2</span><span class="fr">Choisissez une caméra</span><span class="en">Pick a camera</span></b>
+        <p class="fr">Cliquez la caméra à ouvrir. Un panneau apparaît à droite, avec son
+        image et son état.</p>
+        <p class="en">Click the camera you want. A panel appears on the right, with its
+        image and its status.</p>
+      </div>
+      <div class="etape-c" data-e="2">
+        <b><span class="n">3</span><span class="fr">Ouvrez ses paramètres</span><span class="en">Open its settings</span></b>
+        <p class="fr">En haut du panneau, quelques onglets. Le dernier — l'engrenage —
+        ouvre les paramètres de la caméra.</p>
+        <p class="en">At the top of the panel, a few tabs. The last one — the gear — opens
+        the camera settings.</p>
+      </div>
+      <div class="etape-c" data-e="3">
+        <b><span class="n">4</span><span class="fr">Dépliez « Partager le flux en direct »</span><span class="en">Expand “Share Livestream”</span></b>
+        <p class="fr">Descendez jusqu'à cette section, tout en bas des paramètres, et
+        dépliez-la.</p>
+        <p class="en">Scroll down to that section, near the bottom of the settings, and
+        expand it.</p>
+      </div>
+      <div class="etape-c" data-e="4">
+        <b><span class="n">5</span><span class="fr">Cochez « Activer la sortie RTSPS sécurisée »</span><span class="en">Tick “Enable Secure RTSPS Output”</span></b>
+        <p class="fr">C'est l'interrupteur qui compte. Ne touchez pas au « lien de partage
+        public » juste au-dessus : celui-là expose la caméra vers l'extérieur, ce dont
+        Alcora n'a aucun besoin.</p>
+        <p class="en">This is the switch that matters. Leave the “public share link” just
+        above it alone: that one exposes the camera outwards, which Alcora has no need
+        for.</p>
+      </div>
+      <div class="etape-c" data-e="5">
+        <b><span class="n">6</span><span class="fr">Gardez au moins deux résolutions</span><span class="en">Keep at least two resolutions</span></b>
+        <p class="fr">Des cases apparaissent, une par qualité. Cochez la <b>haute</b> et la
+        <b>moyenne</b> : Alcora passe de l'une à l'autre selon la taille d'affichage — une
+        vignette dans une mosaïque n'a aucun besoin de 4K.</p>
+        <p class="en">Checkboxes appear, one per quality. Tick <b>high</b> and
+        <b>medium</b>: Alcora switches between them depending on display size — a thumbnail
+        in a grid has no need for 4K.</p>
+      </div>
+      <div class="etape-c" data-e="6">
+        <b><span class="n">7</span><span class="fr">Recommencez pour chaque caméra</span><span class="en">Repeat for each camera</span></b>
+        <p class="fr">Le réglage est par caméra. Une fois fait, rien d'autre à saisir :
+        Alcora lit les adresses toute seule et affiche la caméra à sa prochaine
+        vérification.</p>
+        <p class="en">The setting is per camera. Once done, nothing else to enter: Alcora
+        reads the addresses on its own and shows the camera at its next check.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="apres">
+    <h2 class="fr">Et l'adresse du flux, alors ?</h2>
+    <h2 class="en">So what about the stream address?</h2>
+    <p class="fr">Protect affiche une URL sous chaque résolution. <b>Ne la recopiez nulle
+    part.</b> Alcora la récupère elle-même en interrogeant votre console, et cette adresse
+    contient un identifiant qui vaut mot de passe : le flux RTSP de Protect n'a aucune
+    authentification, cet identifiant est le seul secret qui le protège.</p>
+    <p class="en">Protect shows a URL under each resolution. <b>Do not copy it
+    anywhere.</b> Alcora fetches it itself by querying your console, and that address
+    contains an identifier that is worth a password: Protect's RTSP stream has no
+    authentication, and that identifier is the only secret protecting it.</p>
+
+    <div class="avert">
+      <b class="fr">Une caméra reste muette ?</b><b class="en">A camera stays silent?</b>
+      <span class="fr"> Alcora l'indique en ambre, « RTSP désactivé », sous son nom dans le
+      panneau. Si le réglage vient d'être fait, laissez-lui une vérification — ou relancez
+      l'application.</span>
+      <span class="en"> Alcora says so in amber, “RTSP disabled”, under its name in the
+      panel. If you have just changed the setting, give it one check — or restart the
+      application.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+ * Le deroule. Chaque etape decrit un ETAT de la console dessinee, jamais une suite de
+ * gestes : on peut donc sauter a n'importe laquelle, en avant comme en arriere, sans que
+ * l'illustration se retrouve a moitie dans l'etape precedente.
+ */
+const $ = (s) => document.querySelector(s);
+const cons = $('#console');
+const curseur = $('#curseur');
+
+/** Place le curseur sur un element de la console, avec l'onde de clic. */
+function viser(sel, dx = 8, dy = 8) {
+  const cible = typeof sel === 'string' ? $(sel) : sel;
+  if (!cible) { curseur.style.opacity = '0'; return; }
+  const r = cible.getBoundingClientRect();
+  const rc = cons.getBoundingClientRect();
+  curseur.style.opacity = '1';
+  curseur.style.left = `${r.left - rc.left + Math.min(dx, r.width - 4)}px`;
+  curseur.style.top = `${r.top - rc.top + Math.min(dy, r.height - 4)}px`;
+  curseur.classList.remove('clic');
+  void curseur.offsetWidth;
+  curseur.classList.add('clic');
+}
+
+const ETATS = [
+  // 1 · la liste des appareils
+  () => { cons.dataset.ouvert = 'non'; viser('#r1', 12, 12); },
+  // 2 · une camera choisie
+  () => { cons.dataset.ouvert = 'oui'; $('#cam1').classList.add('vise'); viser('#cam1', 40, 12); },
+  // 3 · l'onglet des parametres
+  () => { $('#o3').classList.add('vise'); viser('#o3', 12, 11); },
+  // 4 · la section depliee
+  () => { $('#bloc-partage').classList.add('deplie', 'actif'); $('#repli').classList.add('ouvert');
+          viser('#bloc-partage', 60, 10); },
+  // 5 · la case maitresse
+  () => { $('#case-rtsp').classList.add('cochee', 'vise'); $('#repli-res').classList.add('ouvert');
+          viser('#case-rtsp', 6, 8); },
+  // 6 · les resolutions
+  () => { $('#res-h').classList.add('cochee'); $('#res-m').classList.add('cochee', 'vise');
+          viser('#res-m', 6, 8); },
+  // 7 · les deux cameras servies
+  () => { cons.dataset.ouvert = 'non';
+          $('#rtsp1').classList.add('on'); $('#rtsp2').classList.add('on');
+          $('#rtsp1').innerHTML = '<span class="fr">activé</span><span class="en">on</span>';
+          $('#rtsp2').innerHTML = '<span class="fr">activé</span><span class="en">on</span>';
+          curseur.style.opacity = '0'; },
+];
+
+/** Remet la console a nu, puis rejoue tous les etats jusqu'a celui vise. */
+function aller(n) {
+  etape = Math.max(0, Math.min(ETATS.length - 1, n));
+
+  cons.dataset.ouvert = 'non';
+  ['#cam1', '#cam2'].forEach((s) => $(s).classList.remove('vise'));
+  ['#r0','#r1','#r2','#r3','#o0','#o1','#o2','#o3'].forEach((s) => $(s).classList.remove('vise'));
+  $('#bloc-partage').classList.remove('deplie', 'actif');
+  ['#repli', '#repli-res'].forEach((s) => $(s).classList.remove('ouvert'));
+  ['#case-rtsp', '#res-h', '#res-m', '#res-b'].forEach((s) =>
+    $(s).classList.remove('cochee', 'vise'));
+  ['#rtsp1', '#rtsp2'].forEach((s) => {
+    $(s).classList.remove('on');
+    $(s).innerHTML = '<span class="fr">désactivé</span><span class="en">off</span>';
+  });
+
+  for (let i = 0; i <= etape; i += 1) ETATS[i]();
+
+  document.querySelectorAll('.etape-c').forEach((e) =>
+    e.setAttribute('aria-current', String(Number(e.dataset.e) === etape)));
+  $('#jauge').style.width = `${((etape + 1) / ETATS.length) * 100}%`;
+}
+
+let etape = 0;
+let minuteur = null;
+const DUREE = 4200;
+
+function jouer(oui) {
+  clearInterval(minuteur);
+  $('#jouer').textContent = oui ? '⏸' : '▶';
+  if (!oui) return;
+  minuteur = setInterval(() => aller(etape >= ETATS.length - 1 ? 0 : etape + 1), DUREE);
+}
+
+$('#prec').onclick = () => { aller(etape - 1); jouer(false); };
+$('#suiv').onclick = () => { aller(etape + 1); jouer(false); };
+$('#jouer').onclick = () => jouer($('#jouer').textContent === '▶');
+$('#rejouer').onclick = () => { aller(0); jouer(true); };
+document.querySelectorAll('.etape-c').forEach((e) =>
+  e.onclick = () => { aller(Number(e.dataset.e)); jouer(false); });
+
+/* La langue. Deux seulement, et c'est assume : les libelles montres dans la console sont
+   ceux de Protect, que l'on n'a verifies qu'en francais et en anglais. En inventer en
+   allemand serait pire que de ne pas les proposer — c'est la meme regle que l'historique
+   des versions de l'application. */
+function langue(l) {
+  document.documentElement.lang = l;
+  $('#b-fr').setAttribute('aria-pressed', String(l === 'fr'));
+  $('#b-en').setAttribute('aria-pressed', String(l === 'en'));
+  try { localStorage.setItem('alcora.langue', l); } catch (e) { /* navigation privee */ }
+}
+$('#b-fr').onclick = () => langue('fr');
+$('#b-en').onclick = () => langue('en');
+try {
+  const memorisee = localStorage.getItem('alcora.langue');
+  langue(memorisee === 'en' || memorisee === 'fr' ? memorisee
+    : (navigator.language || 'fr').startsWith('fr') ? 'fr' : 'en');
+} catch (e) { langue('fr'); }
+
+// Le curseur se replace si la fenetre change de taille : ses coordonnees sont mesurees.
+addEventListener('resize', () => aller(etape));
+
+aller(0);
+jouer(true);
+</script>
+</body>
+</html>

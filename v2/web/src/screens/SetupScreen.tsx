@@ -208,6 +208,24 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
           </section>
         )}
 
+        {/* ---- ce qu'il faut avoir fait AVANT ----
+            Deux gestes se font sur la console, pas ici, et rien ne les rappelait :
+            l'utilisateur remplissait le formulaire, se connectait avec succes, puis
+            se retrouvait devant des cameras muettes. Le site et le README le disaient
+            deja — mais on les lit avant de telecharger, pas a cet instant. */}
+        <section className="ilot flex flex-col gap-3 p-5">
+          <h2 className="text-[15px] font-semibold">{t('setup.prealable.titre')}</h2>
+          <ul className="flex flex-col gap-2.5">
+            {[t('setup.prealable.rtsp'), t('setup.prealable.compte')].map((ligne, i) => (
+              <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-muted">
+                <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full"
+                      style={{ background: 'var(--accent)' }} />
+                <span>{ligne}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         {/* ---- contrôleur ---- */}
         <section className="ilot flex flex-col gap-4 p-5">
           <Field label={t('setup.adresse.label')}
