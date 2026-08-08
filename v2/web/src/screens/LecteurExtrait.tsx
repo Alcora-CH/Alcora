@@ -4,6 +4,7 @@ import { bridge } from '../lib/bridge';
 import { CommandesVideo } from '../video/CommandesVideo';
 import { imageDeLaVideo, useSonVideo } from '../video/outils';
 import { useZoomVideo } from '../video/useZoomVideo';
+import { useFermetureAnimee } from '../lib/fermeture';
 import { localeDates, nombre, t, useLangue } from '../i18n';
 import { nomSujet } from '../i18n/sujets';
 import type { Detection } from '../types/protect';
@@ -40,6 +41,9 @@ export function LecteurExtrait({ detection, onFermer }: {
   onFermer: () => void;
 }) {
   useLangue();
+  /* Le lecteur se referme EN PARTANT : « onFermer » n'est appele qu'une fois
+     l'animation de sortie terminee. */
+  const { part, fermer, ref: cadre } = useFermetureAnimee(onFermer);
   const video = useRef<HTMLVideoElement>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [pourcent, setPourcent] = useState(0);
@@ -91,7 +95,7 @@ export function LecteurExtrait({ detection, onFermer }: {
   /* ---- Échap referme, comme partout ailleurs ---- */
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.stopPropagation(); onFermer(); return; }
+      if (e.key === 'Escape') { e.stopPropagation(); fermer(); return; }
 
       // Un contrôle a le focus : espace l'actionne, les flèches déplacent le curseur de
       // la barre. Lui voler ces touches rendrait le lecteur inutilisable au clavier.
@@ -141,7 +145,9 @@ export function LecteurExtrait({ detection, onFermer }: {
   };
 
   return (
-    <div className="absolute inset-0 z-40 flex flex-col" style={{ background: 'rgba(15,17,21,.93)' }}>
+    <div ref={cadre}
+         className={`m-boite absolute inset-0 z-40 flex flex-col${part ? ' m-part' : ''}`}
+         style={{ background: 'rgba(15,17,21,.93)' }}>
       {/* ---- en-tête ---- */}
       <div className="flex items-center gap-3 border-b border-line px-5 py-3">
         <div className="min-w-0 flex-1">
@@ -157,7 +163,7 @@ export function LecteurExtrait({ detection, onFermer }: {
             <Download className="h-3.5 w-3.5" /> {t('extrait.enregistrer')}
           </button>
         )}
-        <button onClick={onFermer} aria-label={t('commun.fermer')} title={t('commun.fermerEchap')}
+        <button onClick={fermer} aria-label={t('commun.fermer')} title={t('commun.fermerEchap')}
                 className="grid h-8 w-8 place-items-center rounded-md text-soft transition-colors hover:text-ink">
           <X className="h-4.5 w-4.5" />
         </button>

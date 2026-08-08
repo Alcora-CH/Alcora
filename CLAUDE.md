@@ -72,6 +72,17 @@ npm run build:linux    # exige WSL (Ubuntu) et v2/relay/mediamtx-linux-x64
 - **Garde-fous prouvés** : tout nouveau test se prouve en réinjectant le défaut qu'il
   surveille. Un test vert qui n'a jamais rougi ne protège rien — quatre angles morts
   sont nés exactement comme ça.
+- **Mouvement** (`index.css`, jetons `--vive/--douceur/--ample/--montee/--echelle/--cascade`
+  et courbes `--pose/--part/--douce`) : dosage validé sur maquette
+  (`docs/maquette-animations.html`, trois crans comparés). Trois règles :
+  **transform et opacity seulement** (toute autre propriété recalcule la mise en page
+  pendant qu'un flux 4K décode — une exception assumée, le dépliement d'une veille) ;
+  **le mouvement n'attend jamais l'information** (on anime l'arrivée, pas la
+  disponibilité) ; `prefers-reduced-motion` coupe tout sans rien casser.
+  Six classes, pas davantage : `.m-ecran`, `.m-cascade`, `.m-voile`, `.m-boite`,
+  `.m-surgit`, `.m-pression`. Une surface qui s'ouvre doit aussi **partir** animée —
+  `useFermetureAnimee` (`lib/fermeture.ts`) tient l'état, écoute `animationend` plutôt
+  qu'un délai écrit en dur, et garde un secours si l'événement n'arrive jamais.
 - **Jamais de données réelles** (personnes, adresses, domaines, mesures d'un poste
   précis) dans le code, les tests ou les exemples publics. Fixtures fictives.
 - **Erreurs typées** (`protect/errors.js`) : message utilisateur + remède via i18n,

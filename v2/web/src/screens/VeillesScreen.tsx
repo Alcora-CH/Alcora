@@ -169,7 +169,7 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
       </p>
 
       {/* ---- les veilles ---- */}
-      <div className="mt-5 flex flex-col gap-3.5">
+      <div className="m-cascade mt-5 flex flex-col gap-3.5">
         {config.veilles.map((v) => {
           const cout = coutParJour(coutVeille(v, volumes));
           const estOuverte = ouverte === v.id;

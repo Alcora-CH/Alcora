@@ -71,6 +71,117 @@
      redéfinit, aucun autre code n'a à savoir qu'il existe. */
   --on-brd: transparent;
   --on-blur: none;
+
+  /*
+   * LES JETONS DE MOUVEMENT — dosage « marqué », validé sur maquette le 08.08.2026
+   * (docs/maquette-animations.html, trois crans comparés).
+   *
+   * Nommés par leur RÔLE, pas par leur valeur : c'est ce qui permet de redoser tout
+   * le mouvement de l'application en changeant ces six lignes.
+   *
+   * Trois règles que rien ne doit enfreindre :
+   *  1. transform et opacity SEULEMENT. Toute autre propriété force un recalcul de
+   *     mise en page à chaque image — pendant qu'un flux 4K décode. (Une exception
+   *     assumée : le dépliement d'une veille, sur un bloc court, voir plus bas.)
+   *  2. Le mouvement n'attend jamais l'information. On anime l'ARRIVÉE d'un élément,
+   *     jamais sa disponibilité : une erreur est lisible dès la première image.
+   *  3. « prefers-reduced-motion » coupe tout sans rien casser — tout est simplement là.
+   */
+  --vive: 140ms;      /* ce qui répond au doigt : survol, bascule d'un interrupteur */
+  --douceur: 240ms;   /* ce qui se pose : un îlot, une modale, un bandeau */
+  --ample: 330ms;     /* ce qui occupe l'écran : un changement d'espace, le panneau */
+  --montee: 11px;     /* de combien vient ce qui arrive par le bas */
+  --echelle: 0.965;   /* d'où part ce qui s'ouvre au centre */
+  --cascade: 26ms;    /* décalage entre deux éléments d'une même liste */
+
+  /* Ce qui ARRIVE décélère (on le regarde se poser) ; ce qui PART accélère (on n'a
+     pas à l'attendre) ; le reste suit la courbe standard. */
+  --pose: cubic-bezier(.22, .9, .28, 1);
+  --part: cubic-bezier(.55, 0, .9, .3);
+  --douce: cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ==================================================== LE VOCABULAIRE ======
+   Six gestes, pas davantage : un vocabulaire court se retient et reste cohérent.
+   Au-delà, chaque écran invente le sien et l'ensemble se défait. */
+
+/* 1 · MONTE — ce qui prend sa place : un écran, un îlot. Il vient de dessous. */
+@keyframes m-monte {
+  from { opacity: 0; transform: translate3d(0, var(--montee), 0); }
+  to   { opacity: 1; transform: none; }
+}
+/* 2 · SOUFFLE — ce qui s'ouvre PAR-DESSUS. Il grandit très peu depuis son centre ;
+      au-delà, on croit à un zoom. */
+@keyframes m-souffle {
+  from { opacity: 0; transform: scale(var(--echelle)); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-souffle-part {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: scale(var(--echelle)); }
+}
+/* 3 · VOILE — le fond sombre derrière ce qui s'ouvre. */
+@keyframes m-voile      { from { opacity: 0; } to { opacity: 1; } }
+@keyframes m-voile-part { from { opacity: 1; } to { opacity: 0; } }
+/* 4 · SURGIT — ce qui apparaît en surimpression sur une image : court, venu du bas. */
+@keyframes m-surgit {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* L'écran qui arrive. La clé React porte le nom de l'espace : changer d'espace
+   remonte le nœud, et l'animation se rejoue d'elle-même. */
+.m-ecran { animation: m-monte var(--ample) var(--pose) both; }
+
+/* 5 · CASCADE — une liste qui se remplit, l'un après l'autre. C'est ce qui
+      transforme un basculement en ARRIVÉE.
+
+      Écrit en « nth-child » plutôt qu'avec un index passé par React : aucun
+      composant n'a à connaître son rang, et la règle suit n'importe quelle liste.
+      Le décalage est PLAFONNÉ au dixième — sans plafond, trois cents vignettes
+      mettraient huit secondes à paraître. */
+.m-cascade > * { animation: m-monte var(--douceur) var(--pose) both; }
+.m-cascade > *:nth-child(1)  { animation-delay: calc(0  * var(--cascade)); }
+.m-cascade > *:nth-child(2)  { animation-delay: calc(1  * var(--cascade)); }
+.m-cascade > *:nth-child(3)  { animation-delay: calc(2  * var(--cascade)); }
+.m-cascade > *:nth-child(4)  { animation-delay: calc(3  * var(--cascade)); }
+.m-cascade > *:nth-child(5)  { animation-delay: calc(4  * var(--cascade)); }
+.m-cascade > *:nth-child(6)  { animation-delay: calc(5  * var(--cascade)); }
+.m-cascade > *:nth-child(7)  { animation-delay: calc(6  * var(--cascade)); }
+.m-cascade > *:nth-child(8)  { animation-delay: calc(7  * var(--cascade)); }
+.m-cascade > *:nth-child(9)  { animation-delay: calc(8  * var(--cascade)); }
+.m-cascade > *:nth-child(n+10) { animation-delay: calc(9 * var(--cascade)); }
+
+/* 6 · Les surfaces qui s'ouvrent par-dessus : modale, lecteur, « Ce qui a changé ».
+      La SORTIE existe aussi — sans elle, une fenêtre disparaît d'un coup après
+      s'être ouverte en douceur, et le déséquilibre se remarque plus que l'absence
+      totale d'animation. */
+.m-voile   { animation: m-voile var(--douceur) var(--douce) both; }
+.m-boite   { animation: m-souffle var(--douceur) var(--pose) both; }
+.m-part .m-voile,
+.m-voile.m-part { animation: m-voile-part var(--vive) var(--part) both; }
+.m-part .m-boite,
+.m-boite.m-part { animation: m-souffle-part var(--vive) var(--part) both; }
+
+/* Ce qui se pose sur une image : confirmation de capture, étiquette d'activité. */
+.m-surgit { animation: m-surgit var(--douceur) var(--pose) both; }
+
+/* L'ENFONCEMENT d'un bouton — le seul mouvement quasi instantané, parce qu'il
+   répond au doigt. Trop lent, il donne l'impression d'un logiciel en retard. */
+.m-pression { transition: transform 60ms var(--douce); }
+.m-pression:active { transform: scale(.97); }
+
+/*
+ * Rien de tout cela n'est nécessaire à la compréhension. À défaut, tout est
+ * simplement LÀ — c'est la règle 3, et elle vaut pour l'application entière,
+ * y compris le Planétarium et le halo d'activité, traités plus bas.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .m-ecran, .m-cascade > *, .m-voile, .m-boite, .m-surgit {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+  .m-pression { transition: none; }
 }
 
 /* ------------------------------------------------------------------ Effet verre

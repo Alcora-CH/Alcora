@@ -189,6 +189,16 @@ export default function App() {
   const [glisse, setGlisse] = useState<string | null>(null);
   /** Panneau revele au survol du bord. Etat passager : jamais conserve. */
   const [survole, setSurvole] = useState(false);
+  /**
+   * Le repere du rail, qui SUIT l'espace choisi au lieu de sauter.
+   *
+   * C'est ce detail qui relie deux ecrans : sans lui, le basculement reste une
+   * coupure, si douce soit la page qui arrive. On mesure le bouton vise et l'on
+   * ne deplace que la transformee du trait — animer « top » recalculerait la
+   * mise en page a chaque image.
+   */
+  const boutonsRail = useRef(new Map<string, HTMLButtonElement>());
+  const [repere, setRepere] = useState<number | null>(null);
   /** Version installee, pour la colonne d'etat. Tiree une fois : elle ne change pas. */
   const [infosVersion, setInfosVersion] = useState<string | null>(null);
   /**
@@ -350,6 +360,26 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(CLE_PANNEAU, panneauOuvert ? 'ouvert' : 'reduit');
   }, [panneauOuvert]);
+
+  /*
+   * Le repere se replace quand l'espace change — et SEULEMENT alors.
+   *
+   * Les references sont attachees avant que les effets ne s'executent : au premier
+   * rendu la mesure est deja possible. La disposition du rail, elle, ne bouge
+   * jamais (le plein ecran le fait glisser par transformation, ce qui ne change
+   * aucun « offsetTop »), donc rien d'autre ne peut invalider la mesure.
+   *
+   * Surtout : PAS d'effet sans liste de dependances ici. Un effet qui pose un etat
+   * a chaque rendu est le defaut qui a produit un ecran noir en 2.10.0, et la regle
+   * « react-hooks/exhaustive-deps » le refuse maintenant — a juste titre.
+   */
+  useEffect(() => {
+    const cible = boutonsRail.current.get(espace);
+    setRepere(cible ? cible.offsetTop : null);
+    // « configured » compte autant que l'espace : au tout premier rendu le rail
+    // n'existe pas encore — l'ecran de connexion occupe seul la fenetre — et sans
+    // cette dependance le repere resterait absent pour toute la session.
+  }, [espace, configured]);
 
   // L'effet verre est desormais l'apparence de l'application, non plus une option.
   useEffect(() => {
@@ -598,10 +628,19 @@ export default function App() {
              transform: railVisible ? 'none' : `translateX(-${L_RAIL}px)`,
              opacity: railVisible ? 1 : 0,
              pointerEvents: railVisible ? undefined : 'none',
-             transition: 'transform .28s cubic-bezier(.22,.9,.28,1), opacity .22s ease',
+             transition: 'transform var(--ample) var(--pose), opacity var(--douceur) var(--douce)',
            }}>
         {/* La marque signe l'application, animee en permanence — elle manquait des que les
             cameras s'affichaient. L'icone Windows, elle, reste figee : ici c'est l'ecran. */}
+        {/* Le trait qui suit l'espace choisi. Absent tant que rien n'est mesure :
+            mieux vaut pas de repere qu'un repere au mauvais endroit le temps d'une image. */}
+        {repere !== null && (
+          <span aria-hidden
+                className="pointer-events-none absolute left-0 h-10 w-[3px] rounded-r"
+                style={{ top: 0, background: 'var(--accent)',
+                         transform: `translateY(${repere}px)`,
+                         transition: 'transform var(--douceur) var(--pose)' }} />
+        )}
         <div className="mb-2 grid h-10 w-10 place-items-center" title="Alcora">
           <Marque taille={26} anime />
         </div>
@@ -611,7 +650,8 @@ export default function App() {
              camera dont on avait cliqué le bouton, sans que rien ne l'indique. */
           <button key={id} title={t(cle)} onClick={() => { setCameraCible(null); setEspace(id); }}
                   aria-current={espace === id}
-                  className="grid h-10 w-10 place-items-center rounded-md transition-colors"
+                  ref={(el) => { if (el) boutonsRail.current.set(id, el); else boutonsRail.current.delete(id); }}
+                  className="m-pression grid h-10 w-10 place-items-center rounded-md transition-colors"
                   style={espace === id
                     ? { background: 'var(--accent-soft)', color: 'var(--accent)' }
                     : { color: 'var(--soft)' }}>
@@ -623,7 +663,8 @@ export default function App() {
             fautive. Cette porte demande confirmation — ouvrir un ecran ne detruit rien. */}
         <button title={t('espace.reglages')} onClick={() => setEspace('reglages')}
                 aria-current={espace === 'reglages'}
-                className="grid h-10 w-10 place-items-center rounded-md transition-colors"
+                ref={(el) => { if (el) boutonsRail.current.set('reglages', el); else boutonsRail.current.delete('reglages'); }}
+                className="m-pression grid h-10 w-10 place-items-center rounded-md transition-colors"
                 style={espace === 'reglages'
                   ? { background: 'var(--accent-soft)', color: 'var(--accent)' }
                   : { color: 'var(--soft)' }}>
@@ -654,7 +695,7 @@ export default function App() {
             transform: panneauVisible ? 'none' : `translateX(-${L_RAIL + L_PANNEAU}px)`,
             opacity: panneauVisible ? 1 : 0,
             pointerEvents: panneauVisible ? undefined : 'none',
-            transition: 'transform .3s cubic-bezier(.22,.9,.28,1), opacity .24s ease',
+            transition: 'transform var(--ample) var(--pose), opacity var(--douceur) var(--douce)',
           }}>
           <h1 className="mb-4 text-[15px] font-semibold">{t('app.titrePanneau')}</h1>
 
@@ -750,7 +791,7 @@ export default function App() {
              changerait la largeur des tuiles, donc la qualité demandée au contrôleur. */
           <div className="absolute top-2 z-30 flex gap-1.5"
                style={{ left: L_RAIL + (panneauVisible ? L_PANNEAU : 0) + 8,
-                        transition: 'left .3s cubic-bezier(.22,.9,.28,1)' }}>
+                        transition: 'left var(--ample) var(--pose)' }}>
             {/* Toujours visible, au-dessus de la video : c'est ce qui rend le repli
                 reversible sans rien deviner. Discret par defaut, car lorsque la mosaique
                 remplit exactement la zone il se pose sur le coin d'une tuile, la ou figure
@@ -779,7 +820,7 @@ export default function App() {
         {/* Une nouvelle version est prete : on INVITE a redemarrer, on n'impose rien.
             Le telechargement s'est fait en silence, appliquer attend le bon moment. */}
         {maj?.etat === 'prete' && (
-          <div className="veil absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-xl px-4 py-2 text-[13px]"
+          <div className="veil m-surgit absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-xl px-4 py-2 text-[13px]"
                style={{ color: 'var(--on-1)' }}>
             <span>{t('app.versionPrete', { version: maj.version ?? '' })}</span>
             <button onClick={() => { void bridge.majRedemarrer(); }}
@@ -796,7 +837,7 @@ export default function App() {
 
         {/* Rappel fugace : en plein écran plus rien n'indique comment revenir. */}
         {indice && (
-          <div className="veil pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-md px-3 py-1.5 text-[12.5px]"
+          <div className="veil m-surgit pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-md px-3 py-1.5 text-[12.5px]"
                style={{ color: 'var(--on-2)' }}>
             {t('app.echapRevenir')}
           </div>
@@ -811,7 +852,7 @@ export default function App() {
           <div className="absolute right-3 top-3 z-30 flex gap-1.5"
                style={{ opacity: commandes ? 1 : 0,
                         pointerEvents: commandes ? undefined : 'none',
-                        transition: 'opacity .32s ease' }}>
+                        transition: 'opacity var(--ample) var(--douce)' }}>
             <button
               onClick={() => { setPanneauOuvert(true); revelerBord(); }}
               title={t('app.afficherPanneau')} aria-label={t('app.afficherPanneau')}
@@ -830,6 +871,15 @@ export default function App() {
           </div>
         )}
 
+        {/*
+          * L'ecran qui arrive se pose au lieu de surgir.
+          *
+          * La cle porte le nom de l'espace : en changer remonte le nœud, et
+          * l'animation se rejoue d'elle-meme — sans etat, sans minuteur. Le
+          * remontage n'est pas un cout ajoute ici : chaque espace etait DEJA
+          * demonte en quittant, ces branches s'excluant l'une l'autre.
+          */}
+        <div key={espace} className="m-ecran h-full">
         {espace === 'reglages' ? (
           <ReglagesScreen
             espacement={espacement}
@@ -922,6 +972,7 @@ export default function App() {
            </div>
           </div>
         )}
+        </div>
       </main>
 
       {/* Par-dessus tout : une bulle cliquée doit montrer sa séquence sans rien déranger. */}

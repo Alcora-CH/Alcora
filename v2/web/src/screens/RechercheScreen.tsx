@@ -266,7 +266,7 @@ export function RechercheScreen({ cameras, cameraInitiale }: {
           </p>
         )}
 
-        <div className="grid gap-3 py-4"
+        <div className="m-cascade grid gap-3 py-4"
              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(178px, 1fr))' }}>
           {objets.map((o) => (
             /* Cartes flottantes : la levée au survol remplace le changement de bord. */

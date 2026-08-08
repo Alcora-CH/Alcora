@@ -525,7 +525,7 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
             {/* Au CENTRE, comme en direct : discrète dans un coin, elle laissait douter que
                 quelque chose ait été enregistré. */}
             {capture && (
-              <div className="pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center">
+              <div className="m-surgit pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center">
                 <span className="max-w-[86%] truncate rounded-lg px-3 py-1.5 text-[12.5px]"
                       style={{ background: 'rgba(14,17,22,.92)', color: '#eae5db',
                                border: '1px solid rgba(255,255,255,.16)' }}>

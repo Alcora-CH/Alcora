@@ -452,7 +452,7 @@ export function CameraTile({
       {/* Confirmation de capture : au CENTRE, et franche. Discrete dans un coin, elle
           laissait douter que quelque chose ait ete enregistre. */}
       {capture && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center">
+        <div className="m-surgit pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center">
           <span className="max-w-[86%] truncate rounded-lg px-3 py-1.5 text-[12.5px]"
                 style={{ background: 'rgba(14,17,22,.92)', color: '#eae5db',
                          border: '1px solid rgba(255,255,255,.16)' }}>
@@ -499,7 +499,7 @@ export function CameraTile({
         <>
           <div className="halo-activite pointer-events-none absolute inset-0 z-10"
                style={cadre ? { borderRadius: '0.375rem' } : undefined} />
-          <div className="veil pointer-events-none absolute right-2 top-2 z-10 flex items-center gap-1.5 rounded-full px-2 py-[3px]">
+          <div className="veil m-surgit pointer-events-none absolute right-2 top-2 z-10 flex items-center gap-1.5 rounded-full px-2 py-[3px]">
             <span className="point-activite h-1.5 w-1.5 rounded-full"
                   style={{ background: 'var(--accent-d)' }} />
             <span className="text-[11px]" style={{ color: 'var(--on-1)' }}>

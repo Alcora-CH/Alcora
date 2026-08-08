@@ -158,7 +158,7 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex max-w-[620px] flex-col gap-7 px-6 py-10">
+      <div className="m-cascade mx-auto flex max-w-[620px] flex-col gap-7 px-6 py-10">
 
         <header className="flex flex-col gap-2">
           <div className="flex items-center gap-2.5">

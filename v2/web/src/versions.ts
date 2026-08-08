@@ -39,6 +39,29 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.26.0',
+    date: '08.08.2026',
+    fr: [
+      'L’application bouge : les écrans se posent au lieu de surgir, les îlots et les ' +
+      'vignettes arrivent l’un après l’autre, et un repère glisse le long de la bande ' +
+      'd’icônes jusqu’à l’espace choisi — c’est lui qui relie deux pages plutôt que de ' +
+      'les couper.',
+      'Les fenêtres qui s’ouvrent en douceur repartent de même : le lecteur d’extrait et ' +
+      '« Ce qui a changé » s’effacent au lieu de disparaître d’un coup.',
+      'Rien de tout cela ne retarde une information, et si Windows demande de réduire les ' +
+      'animations, tout est simplement là, sans mouvement.',
+    ],
+    en: [
+      'The application moves: screens settle instead of appearing abruptly, islands and ' +
+      'thumbnails arrive one after another, and a marker slides along the icon bar to the ' +
+      'chosen space — it is what links two pages rather than cutting between them.',
+      'Windows that open gently now leave the same way: the clip player and « What has ' +
+      'changed » fade out instead of vanishing at once.',
+      'None of this delays any information, and if Windows asks for reduced motion, ' +
+      'everything is simply there, without movement.',
+    ],
+  },
+  {
     version: '2.25.0',
     date: '08.08.2026',
     fr: [

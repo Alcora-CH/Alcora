@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette : le mouvement</title>
+<style>
+  /*
+   * LE MOUVEMENT — maquette demandée le 08.08.2026.
+   * « Actuellement c'est majoritairement des apparitions brusques, excepté la
+   *   sidebar. » Objectif : des changements de page, des pop-ups et des
+   *   apparitions de boutons doux et animés.
+   *
+   * TROIS RÈGLES que rien ne doit enfreindre :
+   *
+   *  1. transform et opacity SEULEMENT. Toute autre propriété (hauteur, marge,
+   *     flou) force un recalcul de mise en page à chaque image — pendant qu'un
+   *     flux 4K décode. Le Planétarium tient à cette règle ; le mouvement de
+   *     l'interface la suivra.
+   *  2. Le mouvement n'attend jamais l'information. Un message d'erreur, un état
+   *     qui change, un compte qui bouge : c'est là tout de suite, l'animation se
+   *     joue par-dessus. On anime l'ARRIVÉE, jamais la DISPONIBILITÉ.
+   *  3. prefers-reduced-motion coupe tout, sans rien casser : les éléments sont
+   *     simplement là.
+   *
+   * Le doseur en bas règle les trois crans. Le cran du milieu est ma
+   * recommandation ; celui de droite existe pour qu'on voie où est le trop.
+   */
+
+  /* ------------------------------------------------- les jetons de mouvement --
+     Trois durées et trois courbes, nommées par leur RÔLE et non par leur valeur :
+     c'est ce qui permet de redoser l'ensemble en trois lignes. */
+  :root{
+    --ink:#f4f3f0; --muted:#dedcd7; --soft:#c2c0bb;
+    --accent:#d2a263; --accent-soft:#322a1d; --accent-d:#e6b877; --ok:#8fae5a;
+    --warn:#d0a215; --bad:#d8685a;
+    --verre-fond:rgba(28,31,37,.22); --verre-bord:rgba(255,255,255,.18);
+    --verre-flou:blur(8px) saturate(160%);
+    --cheveu:rgba(255,255,255,.10);
+    --flotte:0 24px 60px rgba(0,0,0,.60), 0 4px 14px rgba(0,0,0,.45);
+
+    /* Ce qui ARRIVE décélère (on le regarde se poser) ; ce qui PART accélère
+       (on n'a pas à l'attendre) ; le reste suit la courbe standard. */
+    --pose:cubic-bezier(.22,.9,.28,1);
+    --part:cubic-bezier(.55,0,.9,.3);
+    --douce:cubic-bezier(.4,0,.2,1);
+  }
+  /* --- cran 1 : sobre --- */
+  body[data-dose="sobre"]{
+    --vive:110ms; --douceur:170ms; --ample:230ms;
+    --montee:6px; --echelle:.985; --cascade:12ms;
+  }
+  /* --- cran 2 : marqué (recommandé) --- */
+  body[data-dose="marque"]{
+    --vive:140ms; --douceur:240ms; --ample:330ms;
+    --montee:11px; --echelle:.965; --cascade:26ms;
+  }
+  /* --- cran 3 : ample --- */
+  body[data-dose="ample"]{
+    --vive:190ms; --douceur:340ms; --ample:460ms;
+    --montee:18px; --echelle:.94; --cascade:42ms;
+  }
+
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{background:#101318;color:var(--ink);overflow:hidden;
+       font:13px/1.5 "Segoe UI",system-ui,sans-serif;
+       text-shadow:0 1px 2px rgba(0,0,0,.55),0 0 12px rgba(0,0,0,.35)}
+
+  /* ------------------------------------------------------- le Planétarium --- */
+  .fond{position:fixed;inset:0;z-index:0;overflow:hidden;
+    background:radial-gradient(120% 90% at 78% 12%,#181d26 0%,#12161c 55%,#0e1116 100%)}
+  .ciel{position:absolute;inset:-42%;transform-origin:76% 22%;animation:tourne 3600s linear infinite}
+  @keyframes tourne{to{transform:rotate(360deg)}}
+  .voie{position:absolute;inset:0;
+    background-image:url('data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22640%22 height=%22640%22%3E%3Cg fill=%22%23f2efe8%22%3E%3Ccircle cx=%2237%22 cy=%2261%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%22243%22 cy=%2244%22 r=%221.2%22 opacity=%22.75%22/%3E%3Ccircle cx=%22468%22 cy=%2288%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%2286%22 cy=%22287%22 r=%221.1%22 opacity=%22.7%22/%3E%3Ccircle cx=%22333%22 cy=%22279%22 r=%221.5%22 opacity=%22.85%22/%3E%3Ccircle cx=%22611%22 cy=%22293%22 r=%221.2%22 opacity=%22.7%22/%3E%3Ccircle cx=%22183%22 cy=%22512%22 r=%221.3%22 opacity=%22.8%22/%3E%3Ccircle cx=%22452%22 cy=%22516%22 r=%221.5%22 opacity=%22.9%22/%3E%3Ccircle cx=%22119%22 cy=%22617%22 r=%221.1%22 opacity=%22.7%22/%3E%3Ccircle cx=%22399%22 cy=%22601%22 r=%221.3%22 opacity=%22.75%22/%3E%3C/g%3E%3C/svg%3E')}
+  .voie.l2{opacity:.55;background-size:440px}
+  .voile{position:absolute;mix-blend-mode:screen;border-radius:50%}
+  .voile.n1{width:70vw;height:46vw;left:2%;top:-16%;
+    background:radial-gradient(50% 50% at 50% 50%,rgba(210,162,99,.34) 0%,rgba(210,162,99,.10) 48%,transparent 72%);
+    animation:nebule1 52s ease-in-out infinite alternate}
+  .voile.n2{width:60vw;height:44vw;left:-18%;top:34%;
+    background:radial-gradient(50% 50% at 50% 50%,rgba(120,166,224,.26) 0%,rgba(120,166,224,.08) 50%,transparent 74%);
+    animation:nebule2 64s ease-in-out infinite alternate}
+  @keyframes nebule1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-13vw,9vh,0) scale(1.22)}}
+  @keyframes nebule2{from{transform:translate3d(0,0,0) scale(1.1)}to{transform:translate3d(13vw,-9vh,0) scale(.9)}}
+  .sc{position:absolute;width:3px;height:3px;border-radius:50%;background:#f2efe8;
+    box-shadow:0 0 7px 1px rgba(242,239,232,.85);animation:scintille var(--d) ease-in-out infinite var(--a)}
+  @keyframes scintille{0%,100%{opacity:.12}50%{opacity:1}}
+
+  /* ========================================================================
+     LE VOCABULAIRE DU MOUVEMENT — six gestes, pas davantage.
+     Un vocabulaire court se retient et reste cohérent ; au-delà, chaque écran
+     invente le sien et l'ensemble se défait.
+     ======================================================================== */
+
+  /* 1 · MONTE — ce qui prend sa place : un écran, un îlot. Il vient de dessous,
+        comme s'il se posait. */
+  @keyframes m-monte{from{opacity:0;transform:translate3d(0,var(--montee),0)}
+                     to{opacity:1;transform:none}}
+  /* 2 · SOUFFLE — ce qui s'ouvre PAR-DESSUS : une modale. Elle grandit très peu
+        depuis son centre ; au-delà, on croit à un zoom. */
+  @keyframes m-souffle{from{opacity:0;transform:scale(var(--echelle))}
+                       to{opacity:1;transform:none}}
+  @keyframes m-souffle-part{from{opacity:1;transform:none}
+                            to{opacity:0;transform:scale(var(--echelle))}}
+  /* 3 · VOILE — le fond sombre derrière une modale. */
+  @keyframes m-voile{from{opacity:0}to{opacity:1}}
+  @keyframes m-voile-part{from{opacity:1}to{opacity:0}}
+  /* 4 · CASCADE — une liste qui se remplit. Le décalage est PLAFONNÉ : sans
+        plafond, trois cents vignettes mettraient huit secondes à paraître. */
+  /* 5 · SURGIT — ce qui apparaît en surimpression sur une image (confirmation,
+        étiquette d'activité) : ça vient du bas, court. */
+  @keyframes m-surgit{from{opacity:0;transform:translate3d(0,10px,0)}
+                      to{opacity:1;transform:none}}
+  /* 6 · GLISSE — le panneau latéral, déjà en place dans l'application : la seule
+        chose que Thomas trouve douce aujourd'hui. Le reste s'aligne dessus. */
+
+  /* ---- l'application où tout se joue ---- */
+  .app{position:relative;z-index:1;height:100%;display:flex}
+  .rail{width:56px;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
+    gap:6px;padding:12px 0;border-right:1px solid var(--verre-bord);
+    background:var(--verre-fond);position:relative;
+    -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  .rail button{width:40px;height:40px;border-radius:9px;border:0;background:none;
+    color:var(--soft);cursor:pointer;display:grid;place-items:center;font-size:16px;
+    position:relative;
+    transition:color var(--vive) var(--douce), background-color var(--vive) var(--douce)}
+  .rail button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+  .rail button[aria-current="true"]{background:var(--accent-soft);color:var(--accent)}
+  /* Le repère qui SUIT l'espace choisi au lieu de sauter : un seul trait, qui se
+     déplace. C'est lui qui donne le sentiment de continuité entre les pages. */
+  .rail-repere{position:absolute;left:0;top:0;width:3px;height:40px;border-radius:0 3px 3px 0;
+    background:var(--accent);
+    transition:transform var(--douceur) var(--pose)}
+  .rail .pousse{flex:1}
+
+  .panneau{width:250px;flex:0 0 auto;padding:14px;overflow-y:auto;
+    border-right:1px solid var(--verre-bord);background:var(--verre-fond);
+    -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  .panneau h4{font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--soft);margin:12px 0 6px;font-weight:650}
+  .panneau h4:first-child{margin-top:0}
+  .l{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
+  .l .k{color:var(--muted)} .l .v{font-family:Consolas,monospace;font-size:11px}
+
+  .scene{flex:1;min-width:0;position:relative;overflow:hidden}
+  .ecran{position:absolute;inset:0;padding:22px 26px;overflow-y:auto;display:none}
+  .ecran.actif{display:block;animation:m-monte var(--ample) var(--pose) both}
+
+  /* ---- la grammaire de verre, inchangée ---- */
+  .ilot{background:var(--verre-fond);border:1px solid var(--verre-bord);
+    border-radius:14px;box-shadow:var(--flotte);
+    -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  h2.titre{font-size:19px;font-weight:650;margin:0 0 4px}
+  p.soustitre{color:var(--soft);font-size:13px;margin:0 0 22px}
+  h3.sec{font-size:11px;text-transform:uppercase;letter-spacing:.09em;
+    color:var(--soft);font-weight:650;margin:0 0 10px}
+  .cheveu{height:1px;background:var(--cheveu);margin:12px 0}
+
+  /* Les îlots d'un écran arrivent EN CASCADE, jamais tous ensemble : c'est ce qui
+     transforme un basculement en arrivée. Le délai est posé par le script,
+     plafonné, et REMIS À ZÉRO à chaque visite de l'écran. */
+  .ecran.actif .ilot{animation:m-monte var(--douceur) var(--pose) both;
+    animation-delay:calc(var(--i,0) * var(--cascade))}
+
+  .bouton{border:1px solid var(--verre-bord);background:rgba(255,255,255,.05);
+    color:var(--muted);border-radius:9px;padding:8px 16px;font-size:12.5px;cursor:pointer;
+    font-family:inherit;
+    transition:color var(--vive) var(--douce), border-color var(--vive) var(--douce),
+               background-color var(--vive) var(--douce), transform var(--vive) var(--douce)}
+  .bouton:hover{color:var(--ink);border-color:var(--accent);background:rgba(255,255,255,.09)}
+  /* L'ENFONCEMENT : le seul mouvement qui doit être quasi instantané, parce qu'il
+     répond au doigt. Trop lent, il donne l'impression d'un logiciel en retard. */
+  .bouton:active{transform:scale(.97);transition-duration:60ms}
+  .bouton.or{background:var(--accent);color:#20242a;border-color:transparent;font-weight:600}
+  .bouton.or:hover{background:var(--accent-d)}
+
+  .inter{position:relative;width:42px;height:23px;border-radius:99px;
+    background:rgba(255,255,255,.08);border:1px solid var(--verre-bord);cursor:pointer;
+    flex:0 0 auto;transition:background-color var(--vive) var(--douce),
+                             border-color var(--vive) var(--douce)}
+  .inter i{position:absolute;top:2.5px;left:3px;width:16px;height:16px;border-radius:50%;
+    background:var(--soft);
+    transition:transform var(--douceur) var(--pose), background-color var(--vive) var(--douce)}
+  .inter.on{background:var(--accent-soft);border-color:var(--accent)}
+  /* La pastille se DÉPLACE (transform) au lieu de changer de « left » : même
+     dessin, mais sans recalcul de mise en page à chaque image. */
+  .inter.on i{transform:translateX(19px);background:var(--accent)}
+
+  /* ---- les vignettes, en cascade ---- */
+  .grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .vignette{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;
+    border:1px solid rgba(255,255,255,.16);background:rgba(10,12,16,.5);
+    box-shadow:0 14px 34px rgba(0,0,0,.5), 0 3px 10px rgba(0,0,0,.4);
+    animation:m-monte var(--douceur) var(--pose) both;
+    animation-delay:calc(var(--i,0) * var(--cascade));
+    transition:transform var(--vive) var(--pose)}
+  .vignette:hover{transform:translateY(-3px)}
+  .vignette .apercu{aspect-ratio:16/9;background-size:cover;background-position:center}
+  .vignette .bas{position:absolute;left:6px;bottom:6px;right:6px;display:flex;gap:5px}
+  .chip{background:rgba(10,12,15,.72);color:#c9c3b8;border-radius:4px;padding:1.5px 6px;
+    font-size:9.5px;text-shadow:none;font-family:Consolas,monospace}
+
+  /* ---- la modale ---- */
+  .modale{position:fixed;inset:0;z-index:80;display:grid;place-items:center;
+    background:rgba(12,14,18,.66);
+    animation:m-voile var(--douceur) var(--douce) both}
+  .modale.part{animation:m-voile-part var(--vive) var(--part) both}
+  .modale .boite{width:min(480px,90vw);padding:20px 22px;
+    animation:m-souffle var(--douceur) var(--pose) both}
+  .modale.part .boite{animation:m-souffle-part var(--vive) var(--part) both}
+  .modale h3{font-size:15px;font-weight:650;margin-bottom:4px}
+  .modale p{color:var(--muted);font-size:12.5px}
+
+  /* ---- la confirmation fugace ---- */
+  .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:70;
+    background:rgba(14,17,22,.9);border:1px solid var(--verre-bord);border-radius:10px;
+    padding:8px 14px;font-size:12.5px;
+    -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou);
+    animation:m-surgit var(--douceur) var(--pose) both}
+  .toast.part{animation:m-souffle-part var(--vive) var(--part) both}
+
+  /* ---- le dépliement d'une veille ----
+     « grid-template-rows: 0fr → 1fr » est la seule façon d'animer une hauteur
+     inconnue sans la mesurer en script. Elle touche la mise en page — on ne s'en
+     sert donc QUE sur un bloc court, jamais sur une liste de trois cents lignes. */
+  .veille{padding:14px 18px;margin-bottom:12px}
+  .veille .haut{display:flex;align-items:center;gap:12px}
+  .veille .haut b{font-size:14px;font-weight:600;flex:1;cursor:pointer}
+  .veille .repli{display:grid;grid-template-rows:0fr;
+    transition:grid-template-rows var(--douceur) var(--pose)}
+  .veille.ouverte .repli{grid-template-rows:1fr}
+  .veille .repli > div{overflow:hidden}
+  .veille .detail{padding-top:12px;font-size:12px;color:var(--muted)}
+  .chev{display:inline-block;transition:transform var(--douceur) var(--pose);color:var(--soft)}
+  .veille.ouverte .chev{transform:rotate(180deg)}
+
+  /* ---- le doseur ---- */
+  .doseur{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:90;
+    display:flex;gap:16px;align-items:center;
+    background:rgba(20,23,28,.78);border:1px solid var(--verre-bord);border-radius:12px;
+    padding:9px 14px;-webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
+  .doseur .groupe{display:flex;gap:5px;align-items:center}
+  .doseur span.et{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--soft);font-weight:650}
+  .doseur button{background:none;border:1px solid rgba(255,255,255,.14);color:var(--muted);
+    border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;font-family:inherit;
+    transition:color var(--vive) var(--douce), border-color var(--vive) var(--douce),
+               background-color var(--vive) var(--douce)}
+  .doseur button:hover{color:var(--ink)}
+  .doseur button[aria-pressed="true"]{color:var(--accent-d);border-color:var(--accent);
+    background:var(--accent-soft)}
+  .doseur .sep{width:1px;height:22px;background:var(--cheveu)}
+  .mesure{font-family:Consolas,monospace;font-size:10px;color:var(--soft)}
+
+  /* Rien de tout cela n'est nécessaire à la compréhension : à défaut, tout est
+     simplement LÀ. C'est la règle 3. */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:1ms !important;animation-delay:0ms !important;
+      transition-duration:1ms !important}
+  }
+</style>
+<body data-dose="marque">
+
+<div class="fond" aria-hidden="true">
+  <div class="ciel"><div class="voie l2"></div><div class="voie"></div></div>
+  <div class="voile n1"></div><div class="voile n2"></div>
+  <i class="sc" style="left:12%;top:18%;--d:10s;--a:0s"></i>
+  <i class="sc" style="left:31%;top:64%;--d:13s;--a:3s"></i>
+  <i class="sc" style="left:47%;top:9%;--d:11s;--a:6s"></i>
+  <i class="sc" style="left:66%;top:76%;--d:14s;--a:1.5s"></i>
+  <i class="sc" style="left:79%;top:31%;--d:12s;--a:8s"></i>
+  <i class="sc" style="left:22%;top:86%;--d:11s;--a:4s"></i>
+</div>
+
+<div class="app">
+  <nav class="rail" id="rail">
+    <div class="rail-repere" id="repere"></div>
+    <button data-e="direct" aria-current="true" title="Direct">▣</button>
+    <button data-e="detections" title="Détections">⌕</button>
+    <button data-e="relecture" title="Relecture">▶</button>
+    <button data-e="alertes" title="Alertes">◔</button>
+    <div class="pousse"></div>
+    <button data-e="reglages" title="Réglages">⚙</button>
+  </nav>
+
+  <aside class="panneau">
+    <h4>État</h4>
+    <div class="l"><span class="k">Flux vidéo</span><span class="v" style="color:var(--ok)">prêt</span></div>
+    <h4>Caméras</h4>
+    <div class="l"><span class="k">Allée</span><span class="v">3840 × 2160</span></div>
+    <div class="l"><span class="k">Bureaux</span><span class="v">2688 × 1512</span></div>
+    <h4>Enregistrements</h4>
+    <div class="l"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
+    <div class="l"><span class="k">Rétention annoncée</span><span class="v" style="color:var(--accent-d)">393 j</span></div>
+  </aside>
+
+  <div class="scene" id="scene">
+
+    <!-- ============================================== DIRECT ============ -->
+    <section class="ecran actif" data-e="direct">
+      <h2 class="titre">Direct</h2>
+      <p class="soustitre">Le mouvement se juge ici : les images arrivent, les commandes répondent.</p>
+      <div class="grille" id="tuiles"></div>
+      <div class="ilot" style="padding:16px 20px;margin-top:18px">
+        <h3 class="sec">Les gestes qui répondent</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button class="bouton" onclick="confirmer('Image enregistrée dans Images\\Alcora')">Capturer une image</button>
+          <button class="bouton" onclick="rejouer()">Rejouer l'arrivée des vignettes</button>
+          <button class="bouton or" onclick="ouvrirModale()">Ouvrir « Ce qui a changé »</button>
+        </div>
+        <div class="cheveu"></div>
+        <p style="color:var(--soft);font-size:11.5px">L'enfoncement d'un bouton est volontairement
+        le mouvement le plus court (60 ms) : il répond au doigt, il ne se raconte pas.</p>
+      </div>
+    </section>
+
+    <!-- ============================================== DÉTECTIONS ======== -->
+    <section class="ecran" data-e="detections">
+      <h2 class="titre">Détections</h2>
+      <p class="soustitre">Une liste se remplit en cascade — le décalage est plafonné à 260 ms au total,
+      sans quoi trois cents vignettes mettraient huit secondes à paraître.</p>
+      <div class="grille" id="resultats"></div>
+    </section>
+
+    <!-- ============================================== RELECTURE ========= -->
+    <section class="ecran" data-e="relecture">
+      <h2 class="titre">Relecture</h2>
+      <p class="soustitre">Les îlots arrivent l'un après l'autre, de bas en haut.</p>
+      <div class="ilot" style="padding:0;overflow:hidden;aspect-ratio:16/7;
+        background:#000 center/cover url('../site/assets/allee.jpg')"></div>
+      <div class="ilot" style="padding:12px 16px;margin-top:12px;display:flex;gap:10px;align-items:center">
+        <button class="bouton" style="width:36px;padding:8px 0">▶</button>
+        <button class="bouton">−10 s</button><button class="bouton">+10 s</button>
+        <span style="margin-left:auto;color:var(--soft);font-size:11.5px">04.08.2026 &nbsp;14:32:07</span>
+      </div>
+      <div class="ilot" style="padding:14px 16px;margin-top:12px">
+        <h3 class="sec">Journée entière</h3>
+        <div style="height:34px;border-radius:8px;background:rgba(255,255,255,.05);position:relative">
+          <div style="position:absolute;left:0;right:38%;top:0;bottom:0;border-radius:8px;
+            background:repeating-linear-gradient(90deg,rgba(210,162,99,.15) 0 2px,rgba(210,162,99,.09) 2px 4px)"></div>
+          <div style="position:absolute;left:60%;top:-2px;bottom:-2px;width:2px;background:var(--accent);
+            box-shadow:0 0 9px rgba(210,162,99,.75)"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== ALERTES =========== -->
+    <section class="ecran" data-e="alertes">
+      <h2 class="titre">Alertes</h2>
+      <p class="soustitre">Cliquer un titre déplie son détail — la seule animation de cette maquette
+      qui touche la mise en page, et donc réservée à un bloc court.</p>
+      <div id="veilles"></div>
+    </section>
+
+    <!-- ============================================== RÉGLAGES ========== -->
+    <section class="ecran" data-e="reglages">
+      <h2 class="titre">Réglages</h2>
+      <p class="soustitre">Les interrupteurs déplacent leur pastille (transform), sans recalcul.</p>
+      <div class="ilot" style="padding:16px 20px">
+        <h3 class="sec">Apparence</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+          <div><div style="font-size:13.5px">Fond animé</div>
+            <div style="color:var(--soft);font-size:12px">Le planétarium derrière les images.</div></div>
+          <div class="inter on" onclick="this.classList.toggle('on')"><i></i></div>
+        </div>
+        <div class="cheveu"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+          <div><div style="font-size:13.5px">Mouvement de l'interface</div>
+            <div style="color:var(--soft);font-size:12px">S'aligne sur le réglage de Windows si tu l'as réduit.</div></div>
+          <div class="inter on" onclick="this.classList.toggle('on')"><i></i></div>
+        </div>
+      </div>
+      <div class="ilot" style="padding:16px 20px;margin-top:14px">
+        <h3 class="sec">Connexion</h3>
+        <div class="l"><span class="k">Contrôleur</span><span class="v" style="color:var(--ok)">UDM-PRO</span></div>
+        <div class="l"><span class="k">Identité vérifiée</span><span class="v" style="color:var(--ok)">oui</span></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="zone-modale" id="zone-modale"></div>
+<div class="zone-toast" id="zone-toast"></div>
+
+<div class="doseur">
+  <span class="et">Dose</span>
+  <div class="groupe" id="doses">
+    <button data-d="sobre">Sobre</button>
+    <button data-d="marque" aria-pressed="true">Marqué</button>
+    <button data-d="ample">Ample</button>
+  </div>
+  <div class="sep"></div>
+  <span class="mesure" id="mesure"></span>
+  <div class="sep"></div>
+  <button onclick="document.body.dataset.dose='aucun';majMesure();" title="Comme si Windows demandait de réduire les animations">Sans mouvement</button>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const IMG = ['allee','bureaux'];
+
+/* --------------------------------------------------- le repère du rail ----
+   Il SUIT le bouton choisi. C'est ce détail qui relie deux écrans : sans lui,
+   le basculement reste une coupure, si douce soit la page qui arrive. */
+function poserRepere(bouton){
+  // Le repère est ancré en haut du rail ; on ne déplace que sa transformée, ce
+  // qui reste sur le compositeur — animer « top » recalculerait la mise en page.
+  $('#repere').style.transform = `translateY(${bouton.offsetTop}px)`;
+}
+
+/* ------------------------------------------------- changement d'écran ----
+   L'écran qui arrive rejoue son animation ET celle de ses îlots. Retirer puis
+   remettre la classe ne suffit pas : le navigateur regroupe les deux dans la
+   même image et ne voit aucun changement. Forcer un reflow entre les deux est
+   la façon éprouvée de le lui faire remarquer. */
+function allerA(nom){
+  document.querySelectorAll('.rail button').forEach(b =>
+    b.setAttribute('aria-current', String(b.dataset.e === nom)));
+  const bouton = document.querySelector(`.rail button[data-e="${nom}"]`);
+  if (bouton) poserRepere(bouton);
+
+  document.querySelectorAll('.ecran').forEach(e => e.classList.remove('actif'));
+  const cible = document.querySelector(`.ecran[data-e="${nom}"]`);
+  numeroter(cible);
+  void cible.offsetWidth;
+  cible.classList.add('actif');
+}
+
+/* Le rang de chaque îlot, pour la cascade. PLAFONNÉ : au-delà de dix rangs le
+   décalage n'ajoute plus rien et l'attente devient perceptible. */
+function numeroter(racine){
+  racine.querySelectorAll('.ilot, .vignette').forEach((el, i) => {
+    el.style.setProperty('--i', Math.min(i, 10));
+  });
+}
+
+/* ------------------------------------------------------------- la modale --
+   Elle s'ouvre ET se ferme animée. La fermeture demande un état intermédiaire :
+   sans lui, l'élément disparaît du document avant d'avoir pu s'effacer. */
+function ouvrirModale(){
+  $('#zone-modale').innerHTML = `
+    <div class="modale" id="modale">
+      <div class="boite ilot">
+        <h3>Alcora s'est mise à jour</h3>
+        <p style="color:var(--soft);font-size:11.5px;margin-bottom:12px">Ce qui a changé depuis la 2.24.0</p>
+        <p style="margin-bottom:6px"><b style="color:var(--accent-d);font-family:Consolas,monospace">2.25.0</b></p>
+        <p>Alcora existe pour Linux : une archive à déplier, qui embarque son relais vidéo.</p>
+        <p style="margin-top:6px">L'écran de connexion rejoint le ciel, et ses sections deviennent des îlots de verre.</p>
+        <div class="cheveu"></div>
+        <button class="bouton or" style="width:100%" onclick="fermerModale()">Compris</button>
+      </div>
+    </div>`;
+  $('#modale').addEventListener('click', (e) => { if (e.target.id === 'modale') fermerModale(); });
+}
+function fermerModale(){
+  const m = $('#modale');
+  if (!m) return;
+  m.classList.add('part');
+  // On attend la FIN de l'animation plutôt qu'un délai deviné : le doseur change
+  // les durées, un nombre écrit en dur se désaccorderait au premier cran.
+  m.addEventListener('animationend', () => { $('#zone-modale').innerHTML = ''; }, { once:true });
+}
+
+/* -------------------------------------------------------- la confirmation */
+let minuteurToast;
+function confirmer(texte){
+  clearTimeout(minuteurToast);
+  $('#zone-toast').innerHTML = `<div class="toast" id="toast">${texte}</div>`;
+  minuteurToast = setTimeout(() => {
+    const t = $('#toast');
+    if (!t) return;
+    t.classList.add('part');
+    t.addEventListener('animationend', () => { $('#zone-toast').innerHTML = ''; }, { once:true });
+  }, 2600);
+}
+
+/* ------------------------------------------------------------ le contenu */
+const carte = (i, h, quoi) => `
+  <div class="vignette" style="--i:${Math.min(i,10)}">
+    <div class="apercu" style="background-image:url('../site/assets/${IMG[i%2]}.jpg');
+      background-position:${15+(i*37)%70}% ${25+(i*23)%50}%;background-size:${120+(i*31)%90}%"></div>
+    <div class="bas"><span class="chip">${h}</span><span class="chip">${quoi}</span></div>
+  </div>`;
+
+function rejouer(){
+  const g = $('#tuiles');
+  g.innerHTML = '';
+  void g.offsetWidth;
+  g.innerHTML = [['14:52','Vélo'],['14:41','Personne'],['14:32','SUV · gray'],['13:58','Parole']]
+    .map(([h,q], i) => carte(i, h, q)).join('');
+}
+
+$('#resultats').innerHTML = [
+  ['14:52','Vélo'],['14:41','Personne'],['14:32','SUV · gray'],['13:58','Parole'],
+  ['13:49','SUV · white'],['13:02','Personne'],['12:58','Voiture'],['12:41','Personne'],
+  ['12:13','Personne'],['11:56','Fourgon'],['11:44','Vélo'],['11:25','Personne'],
+].map(([h,q], i) => carte(i, h, q)).join('');
+
+$('#veilles').innerHTML = [
+  ['Personnes, la nuit','Personne · toutes caméras · 22h–06h · avec son','≈ 1 notification / jour'],
+  ['Véhicules sur l\'allée','Véhicule · Allée · toute la journée','≈ 14 notifications / jour'],
+  ['Tout mouvement','Mouvement · toutes caméras · en continu','≈ 157 notifications / jour'],
+].map(([n,d,v], i) => `
+  <div class="ilot veille" style="--i:${i}">
+    <div class="haut">
+      <b onclick="this.closest('.veille').classList.toggle('ouverte')">${n} <span class="chev">⌄</span></b>
+      <div class="inter on" onclick="this.classList.toggle('on')"><i></i></div>
+    </div>
+    <div class="repli"><div><div class="detail">${d}<br><span style="color:var(--soft);
+      font-family:Consolas,monospace;font-size:10.5px">${v}, mesuré sur l'archive</span></div></div></div>
+  </div>`).join('');
+
+rejouer();
+
+/* ------------------------------------------------------------- le doseur */
+function majMesure(){
+  const s = getComputedStyle(document.body);
+  const d = document.body.dataset.dose;
+  if (d === 'aucun'){ $('#mesure').textContent = 'tout est là, sans transition'; return; }
+  $('#mesure').textContent =
+    `vive ${s.getPropertyValue('--vive').trim()} · douce ${s.getPropertyValue('--douceur').trim()}`
+    + ` · ample ${s.getPropertyValue('--ample').trim()} · cascade ${s.getPropertyValue('--cascade').trim()}`;
+}
+document.querySelectorAll('#doses button').forEach(b => b.addEventListener('click', () => {
+  document.body.dataset.dose = b.dataset.d;
+  document.querySelectorAll('#doses button').forEach(x =>
+    x.setAttribute('aria-pressed', String(x === b)));
+  majMesure();
+  // On rejoue l'écran courant pour que le nouveau dosage se voie tout de suite.
+  allerA(document.querySelector('.rail button[aria-current="true"]').dataset.e);
+}));
+
+document.querySelectorAll('.rail button').forEach(b =>
+  b.addEventListener('click', () => allerA(b.dataset.e)));
+
+poserRepere(document.querySelector('.rail button[data-e="direct"]'));
+majMesure();
+</script>
+</body>
+</html>

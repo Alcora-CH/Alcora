@@ -57,7 +57,7 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex max-w-[640px] flex-col gap-8 px-6 py-9">
+      <div className="m-cascade mx-auto flex max-w-[640px] flex-col gap-8 px-6 py-9">
 
         <header>
           <h1 className="text-[19px] font-semibold">{t('reglages.titre')}</h1>
