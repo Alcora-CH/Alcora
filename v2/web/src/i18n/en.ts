@@ -171,6 +171,8 @@ export const en: Record<Cle, string> = {
   'setup.adresse.label': 'Controller address',
   'setup.adresse.hint': 'The IP address of your UDM, Cloud Key or UNVR.',
 
+  'setup.guide.agrandir': 'Enlarge',
+  'setup.guide.reduire': 'Shrink',
   'setup.prealable.titre': 'To prepare on the console',
   'setup.prealable.rtsp':
     'RTSP enabled on each camera (Protect → camera → Advanced). Alcora never asks for '

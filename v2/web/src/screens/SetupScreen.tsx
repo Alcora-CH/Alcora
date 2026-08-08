@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BookOpen, Check, ChevronDown, Eye, EyeOff, Loader2, Minus, RotateCcw, ShieldCheck, X,
+  BookOpen, Check, ChevronDown, Eye, EyeOff, Loader2, Maximize2, Minimize2, Minus,
+  RotateCcw, ShieldCheck, X,
 } from 'lucide-react';
 import { bridge, isMocked } from '../lib/bridge';
 import { useLangue } from '../i18n';
@@ -44,6 +45,65 @@ function Field({
 const inputClass =
   'h-9 w-full rounded-md border border-line2 bg-card2 px-3 text-[13.5px] text-ink ' +
   'outline-none transition-colors placeholder:text-soft focus:border-accent';
+
+/**
+ * Le guide d'activation du RTSP, POSE dans l'ecran de connexion.
+ *
+ * Pas un lien, pas une fenetre : le guide se voit sans qu'on ait rien a demander, et
+ * « agrandir » le deplie sur place. Une seconde fenetre etait une seconde page — ce que
+ * cet ecran n'a aucune raison d'imposer.
+ *
+ * C'est un CADRE sur le fichier embarque (v2/web/public/guide-rtsp.html, copie depuis
+ * site/ a la construction), et non un composant recrit : deux versions du meme guide
+ * finiraient par diverger, et c'est celle qu'on ne relit pas qui resterait fausse.
+ *
+ * « sandbox » sans « allow-same-origin » est le point qui compte : le cadre partagerait
+ * sinon l'origine de l'interface et pourrait atteindre le pont vers le processus
+ * principal. Prive de cette permission, il obtient une origine opaque — ses scripts
+ * tournent, son animation vit, mais il ne voit rien de l'application. Le guide sait deja
+ * se passer de stockage local, qui echoue dans ce cas.
+ */
+function GuideRtsp() {
+  const t = useLangue();
+  const [grand, setGrand] = useState(false);
+
+  return (
+    <section className="ilot flex flex-col gap-3 p-5">
+      <div className="flex items-center gap-3">
+        <BookOpen className="h-4 w-4 shrink-0" style={{ color: 'var(--accent)' }} />
+        <h2 className="flex-1 text-[15px] font-semibold">{t('setup.prealable.titre')}</h2>
+        <button type="button" onClick={() => setGrand((v) => !v)}
+                aria-expanded={grand}
+                className="m-pression flex items-center gap-1.5 rounded-md border border-line
+                           px-2.5 py-1 text-[12px] transition-colors hover:border-line2"
+                style={{ color: 'var(--accent-d)' }}>
+          {grand
+            ? <><Minimize2 className="h-3.5 w-3.5" /> {t('setup.guide.reduire')}</>
+            : <><Maximize2 className="h-3.5 w-3.5" /> {t('setup.guide.agrandir')}</>}
+        </button>
+      </div>
+
+      <p className="text-[12.5px] leading-relaxed text-muted">{t('setup.prealable.rtsp')}</p>
+
+      {/*
+        La hauteur est la SEULE chose qui change entre les deux tailles, et elle est
+        animee : le guide ne se recharge pas, son animation ne repart pas de zero.
+        « 78vh » agrandi laisse voir le formulaire dessous — on reste dans la page.
+      */}
+      <div className="overflow-hidden rounded-xl border border-line"
+           style={{ height: grand ? '78vh' : 300, background: 'rgba(10,12,16,.35)',
+                    transition: 'height var(--ample) var(--pose)' }}>
+        <iframe
+          src="guide-rtsp.html?integre=1"
+          title={t('camera.guide')}
+          sandbox="allow-scripts"
+          className="h-full w-full"
+          style={{ border: 0 }}
+        />
+      </div>
+    </section>
+  );
+}
 
 export function SetupScreen({ onDone }: { onDone: () => void }) {
   const t = useLangue();
@@ -211,29 +271,20 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
         {/* ---- ce qu'il faut avoir fait AVANT ----
             Deux gestes se font sur la console, pas ici, et rien ne les rappelait :
             l'utilisateur remplissait le formulaire, se connectait avec succes, puis
-            se retrouvait devant des cameras muettes. Le site et le README le disaient
-            deja — mais on les lit avant de telecharger, pas a cet instant. */}
-        <section className="ilot flex flex-col gap-3 p-5">
-          <h2 className="text-[15px] font-semibold">{t('setup.prealable.titre')}</h2>
-          <ul className="flex flex-col gap-2.5">
-            {[t('setup.prealable.rtsp'), t('setup.prealable.compte')].map((ligne, i) => (
-              <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-muted">
-                <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full"
-                      style={{ background: 'var(--accent)' }} />
-                <span>{ligne}</span>
-              </li>
-            ))}
-          </ul>
-          {/* Le guide EST dans l'application : il s'ouvre sans le moindre acces reseau,
-              ce qui est bien le minimum pour quelqu'un dont rien ne fonctionne encore. */}
-          <button type="button" onClick={() => { void bridge.ouvrirGuide(); }}
-                  className="m-pression mt-1 flex items-center gap-1.5 self-start rounded-md
-                             border border-line px-3 py-1.5 text-[12.5px] transition-colors
-                             hover:border-line2"
-                  style={{ color: 'var(--accent-d)' }}>
-            <BookOpen className="h-3.5 w-3.5" /> {t('camera.guide')}
-          </button>
-        </section>
+            se retrouvait devant des cameras muettes.
+
+            Le guide n'est pas un LIEN mais l'ilot lui-meme : il se voit sans qu'on ait
+            rien a demander, et « agrandir » le deplie SUR PLACE. Aucune seconde fenetre,
+            aucune seconde page — tout tient dans cet ecran. */}
+        <GuideRtsp />
+
+        {/* Le second prealable ne figure pas dans le guide, qui ne parle que du flux :
+            le retirer avec l'ancienne liste l'aurait fait disparaitre en silence. */}
+        <p className="-mt-3 flex gap-2.5 px-1 text-[12.5px] leading-relaxed text-soft">
+          <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full"
+                style={{ background: 'var(--accent)' }} />
+          <span>{t('setup.prealable.compte')}</span>
+        </p>
 
         {/* ---- contrôleur ---- */}
         <section className="ilot flex flex-col gap-4 p-5">

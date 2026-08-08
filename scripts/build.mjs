@@ -13,6 +13,7 @@ import {
   cpSync, existsSync, mkdirSync, readdirSync, rmSync, readFileSync, statSync, writeFileSync,
 } from 'node:fs';
 import { construireNotices } from './notices.mjs';
+import { embarquerGuide } from './guide.mjs';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
@@ -203,26 +204,9 @@ etape('Contrôle des types');
   console.log('  règles respectées');
 }
 
-/*
- * Le guide d'activation du RTSP voyage AVEC l'application.
- *
- * Il vit dans « site/ » — c'est une page web, et le site le publie aussi. Mais Alcora ne
- * depend d'aucun acces a Internet : renvoyer vers alcora.ch laisserait sans reponse
- * exactement la personne qui en a besoin, celle dont les cameras ne diffusent pas encore.
- *
- * Une seule source, copiee ici : deux exemplaires committes finiraient par diverger, et
- * c'est toujours celui qu'on ne relit pas qui reste faux. La copie est ignoree par git.
- */
-function embarquerGuide() {
-  const source = path.join(racine, 'site', 'guide-rtsp.html');
-  exigerFichier(source, 'le guide d\'activation du RTSP (site/guide-rtsp.html)');
-  const cible = path.join(web, 'public', 'guide-rtsp.html');
-  cpSync(source, cible);
-  console.log(`  guide embarqué (${(statSync(source).size / 1024).toFixed(0)} Ko)`);
-}
-
+/* Le guide voyage AVEC l'application : voir scripts/guide.mjs pour le pourquoi. */
 etape('Guide embarqué');
-embarquerGuide();
+console.log(`  guide embarqué (${(embarquerGuide(racine, web) / 1024).toFixed(0)} Ko)`);
 
 etape('Construction de l\'interface');
 // On appelle l'outil par sa bibliotheque, jamais par son lanceur « .cmd » : celui-ci

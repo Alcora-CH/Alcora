@@ -1123,62 +1123,6 @@ ipcMain.handle('protect:infos', () => {
   };
 });
 
-/**
- * Le guide d'activation du RTSP, dans sa propre fenetre.
- *
- * Il est EMBARQUE (voir scripts/build.mjs) et non pointe sur alcora.ch : Alcora ne depend
- * d'aucun acces a Internet, et celui qui a besoin de ce guide est justement celui dont
- * rien ne marche encore. Il doit s'ouvrir meme sans reseau.
- *
- * Une fenetre SEPAREE, et sans pont : c'est une page de documentation, elle n'a aucune
- * raison de pouvoir parler au processus principal. Sans « preload », le pont n'existe
- * simplement pas pour elle.
- */
-let fenetreGuide = null;
-
-ipcMain.handle('protect:ouvrirGuide', () => {
-  // Deja ouverte : on la ramene devant plutot que d'en empiler une deuxieme.
-  if (fenetreGuide && !fenetreGuide.isDestroyed()) {
-    if (fenetreGuide.isMinimized()) fenetreGuide.restore();
-    fenetreGuide.focus();
-    return true;
-  }
-
-  fenetreGuide = new BrowserWindow({
-    width: 1100,
-    height: 800,
-    minWidth: 620,
-    minHeight: 520,
-    parent: window ?? undefined,
-    backgroundColor: '#101318',
-    autoHideMenuBar: true,
-    title: 'Alcora',
-    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
-  });
-
-  /*
-   * Les memes garde-fous que la fenetre principale, et un peu plus stricts : cette page
-   * ne doit JAMAIS naviguer, meme vers l'interface. Le lien « retour au site » du guide
-   * pointe une adresse publique — il part donc au navigateur du systeme, pas ici.
-   */
-  const dehors = (url) => {
-    if (/^https?:\/\//.test(url)) void shell.openExternal(url);
-  };
-  fenetreGuide.webContents.setWindowOpenHandler(({ url }) => { dehors(url); return { action: 'deny' }; });
-  fenetreGuide.webContents.on('will-navigate', (e, url) => {
-    e.preventDefault();
-    dehors(url);
-    journal.info('ui', 'guide: navigation refused');
-  });
-  fenetreGuide.on('closed', () => { fenetreGuide = null; });
-
-  const adresse = DEV_URL ? `${DEV_URL}/guide-rtsp.html` : `${ORIGINE_UI}/guide-rtsp.html`;
-  fenetreGuide.loadURL(adresse).catch((e) =>
-    journal.erreur('ui', `guide — ${journal.deErreur(e)}`));
-  journal.info('ui', 'RTSP guide opened');
-  return true;
-});
-
 /*
  * Journal des detections.
  *

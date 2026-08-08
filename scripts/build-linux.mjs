@@ -24,6 +24,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { construireNotices } from './notices.mjs';
+import { embarquerGuide } from './guide.mjs';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
@@ -91,15 +92,9 @@ etape('Contrôle des types et des règles');
   console.log('  types conformes, règles respectées');
 }
 
-/* Le guide voyage aussi dans la version Linux — meme source unique, meme raison :
-   l'application ne depend d'aucun acces a Internet. Voir scripts/build.mjs. */
+/* Meme source unique que la chaine Windows. Voir scripts/guide.mjs. */
 etape('Guide embarqué');
-{
-  const source = path.join(racine, 'site', 'guide-rtsp.html');
-  exigerFichier(source, 'le guide d\'activation du RTSP (site/guide-rtsp.html)');
-  cpSync(source, path.join(web, 'public', 'guide-rtsp.html'));
-  console.log(`  guide embarqué (${(statSync(source).size / 1024).toFixed(0)} Ko)`);
-}
+console.log(`  guide embarqué (${(embarquerGuide(racine, web) / 1024).toFixed(0)} Ko)`);
 
 etape('Construction de l\'interface');
 const requireWeb = createRequire(path.join(web, 'package.json'));

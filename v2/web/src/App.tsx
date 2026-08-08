@@ -776,9 +776,11 @@ export default function App() {
               <p className="text-[11.5px] leading-relaxed" style={{ color: 'var(--warn)' }}>
                 {t('camera.rtspRemede')}
               </p>
-              {/* Le geste se fait sur la console, pas ici : le guide montre ou cliquer.
-                  Embarque, donc joignable meme quand rien d'autre ne l'est. */}
-              <button onClick={() => { void bridge.ouvrirGuide(); }}
+              {/* Le guide vit dans l'ecran de CONNEXION, ou l'on prepare la console —
+                  et cet ecran s'atteint par « Modifier la connexion » dans les reglages.
+                  On y renvoie plutot que d'ouvrir une seconde page : l'application n'en
+                  a qu'une. */}
+              <button onClick={() => { setCameraCible(null); setEspace('reglages'); }}
                       className="m-pression mt-1.5 text-[11.5px] underline decoration-dotted
                                  underline-offset-2"
                       style={{ color: 'var(--accent-d)' }}>

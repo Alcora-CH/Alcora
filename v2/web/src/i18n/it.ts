@@ -172,6 +172,8 @@ export const it: Record<Cle, string> = {
   'setup.adresse.label': 'Indirizzo del controller',
   'setup.adresse.hint': 'L’indirizzo IP del tuo UDM, Cloud Key o UNVR.',
 
+  'setup.guide.agrandir': 'Ingrandisci',
+  'setup.guide.reduire': 'Riduci',
   'setup.prealable.titre': 'Da preparare sulla console',
   'setup.prealable.rtsp':
     'L’RTSP attivo su ogni telecamera (Protect → telecamera → Avanzate). Alcora non '

@@ -39,19 +39,31 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.29.0',
+    date: '08.08.2026',
+    fr: [
+      'Le guide est désormais POSÉ dans l’écran de connexion, à la place du rappel des '
+      + 'préparatifs : on le voit en arrivant, et un bouton l’agrandit sur place. Il '
+      + 'n’ouvre plus de seconde fenêtre — l’application n’a qu’une page.',
+    ],
+    en: [
+      'The guide now SITS in the sign-in screen, in place of the list of things to prepare: '
+      + 'you see it on arrival, and a button enlarges it in place. It no longer opens a '
+      + 'second window — the application has a single page.',
+    ],
+  },
+  {
     version: '2.28.0',
     date: '08.08.2026',
     fr: [
       'Un guide animé montre, étape par étape, comment ouvrir le flux d’une caméra sur la '
-      + 'console. Il s’ouvre depuis l’écran de connexion et depuis le panneau, à côté de la '
-      + 'caméra qui reste muette — et il est EMBARQUÉ : il s’affiche même sans accès à '
+      + 'console. Il est embarqué dans l’application : il s’affiche même sans accès à '
       + 'Internet, ce qui est bien le minimum quand rien ne fonctionne encore.',
     ],
     en: [
       'An animated guide shows, step by step, how to open a camera’s stream on the console. '
-      + 'It opens from the sign-in screen and from the panel, next to the camera that stays '
-      + 'silent — and it is BUNDLED: it shows even without Internet access, which is the '
-      + 'least one can ask when nothing works yet.',
+      + 'It is bundled inside the application: it shows even without Internet access, which '
+      + 'is the least one can ask when nothing works yet.',
     ],
   },
   {

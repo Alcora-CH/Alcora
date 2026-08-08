@@ -11,10 +11,20 @@ import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { embarquerGuide } from './guide.mjs';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const URL_DEV = 'http://localhost:5180/';
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
+/* Le guide est copie depuis site/ vers l'interface, comme a la construction : sans
+   cela, `npm run web` sur un depot frais afficherait un cadre vide a l'ecran de
+   connexion — la copie est ignoree par git. Voir scripts/guide.mjs. */
+try {
+  embarquerGuide(racine, path.join(racine, 'v2', 'web'));
+} catch (e) {
+  console.error(`[guide] ${e.message}`);
+}
 
 const enfants = [];
 

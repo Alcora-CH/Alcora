@@ -173,6 +173,38 @@
 
   html[lang="fr"] .en{display:none !important}
   html[lang="en"] .fr{display:none !important}
+
+  /* ------------------------------------------------------- mode INTEGRE -----
+     Le meme fichier, affiche DANS l'application (« ?integre »). On enleve tout ce
+     qui appartient a la page web — en-tete, titre, chapeau, bas de page — pour ne
+     garder que ce qui instruit : la console dessinee et ses etapes.
+
+     Un seul fichier pour les deux usages, jamais deux : c'est celui qu'on ne relit
+     pas qui finirait par mentir. */
+  body.integre{background:none;min-height:0}
+  body.integre .page{padding:0;max-width:none}
+  body.integre header.g,
+  body.integre h1,
+  body.integre .chapeau,
+  body.integre .apres{display:none}
+  body.integre .scene{margin-top:0;gap:14px}
+  body.integre .cadre{background:none;border:0;box-shadow:none;padding:0;
+    -webkit-backdrop-filter:none;backdrop-filter:none}
+  /* En miniature, la colonne des legendes passe SOUS la console : cote a cote,
+     aucune des deux n'aurait la place d'etre lisible. */
+  body.integre.etroit .scene{grid-template-columns:1fr}
+  body.integre.etroit .etape-c p{font-size:12px}
+  /* La console ne s'impose plus une hauteur de page : dans un cadre de 300 px elle
+     debordait, et le cadre se retrouvait avec une barre de defilement horizontale. */
+  body.integre .console{min-height:0;aspect-ratio:16/9.4}
+  /* A l'etroit, on sacrifie ce qui n'instruit pas — le modele et l'adresse IP ne
+     servent qu'a faire vrai. Le nom et l'etat RTSP, eux, portent la demonstration. */
+  body.integre.etroit .cam-sim .col:not(:last-of-type),
+  body.integre.etroit .entete-sim span:nth-child(2),
+  body.integre.etroit .entete-sim span:nth-child(3){display:none}
+  body.integre.etroit .panneau-sim .dedans{width:170px}
+  body.integre.etroit .console[data-ouvert="oui"] .panneau-sim{width:170px}
+  body.integre.etroit .lien-sim{font-size:8px;padding-left:16px}
   .lang{margin-left:12px;display:flex;gap:5px}
   .lang button{background:rgba(255,255,255,.05);border:1px solid var(--verre-bord);
     color:var(--soft);border-radius:7px;padding:3px 9px;font-size:12px;cursor:pointer}
@@ -506,9 +538,25 @@ try {
     : (navigator.language || 'fr').startsWith('fr') ? 'fr' : 'en');
 } catch (e) { langue('fr'); }
 
-// Le curseur se replace si la fenetre change de taille : ses coordonnees sont mesurees.
-addEventListener('resize', () => aller(etape));
+/*
+ * Mode INTEGRE — le meme fichier, affiche dans l'application.
+ *
+ * « ?integre » retire l'habillage de page web ; « etroit » se decide a la LARGEUR
+ * REELLE plutot qu'au parametre, parce que la miniature et la version agrandie
+ * partagent la meme adresse et ne different que par la place disponible.
+ */
+const integre = new URLSearchParams(location.search).has('integre');
+if (integre) document.body.classList.add('integre');
 
+function mesurerLargeur() {
+  if (!integre) return;
+  document.body.classList.toggle('etroit', innerWidth < 760);
+}
+
+// Le curseur se replace si la fenetre change de taille : ses coordonnees sont mesurees.
+addEventListener('resize', () => { mesurerLargeur(); aller(etape); });
+
+mesurerLargeur();
 aller(0);
 jouer(true);
 </script>

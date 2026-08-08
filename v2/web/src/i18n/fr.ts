@@ -189,6 +189,8 @@ export const fr = {
   'setup.adresse.label': 'Adresse du contrôleur',
   'setup.adresse.hint': 'L’adresse IP de ton UDM, Cloud Key ou UNVR.',
 
+  'setup.guide.agrandir': 'Agrandir',
+  'setup.guide.reduire': 'Réduire',
   'setup.prealable.titre': 'À préparer sur la console',
   'setup.prealable.rtsp':
     'Le RTSP activé sur chaque caméra (Protect → caméra → Avancé). Alcora ne demande '
