@@ -55,6 +55,7 @@ export const fr = {
   'commun.horsLigne': 'hors ligne',
   'commun.aucunFlux': 'aucun flux',
   'camera.rtspDesactive': 'RTSP désactivé',
+  'camera.guide': 'Voir le guide, étape par étape',
   'camera.rtspRemede':
     'Cette caméra ne diffuse pas : active le RTSP dans Protect, sur la caméra, '
     + 'section Avancé. Alcora la reprendra toute seule.',

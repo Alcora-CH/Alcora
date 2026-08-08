@@ -46,6 +46,7 @@ export const de: Record<Cle, string> = {
   'commun.horsLigne': 'offline',
   'commun.aucunFlux': 'kein Stream',
   'camera.rtspDesactive': 'RTSP deaktiviert',
+  'camera.guide': 'Zur Anleitung, Schritt für Schritt',
   'camera.rtspRemede':
     'Diese Kamera sendet nicht: Aktiviere RTSP in Protect, an der Kamera, Bereich '
     + 'Erweitert. Alcora übernimmt sie dann von selbst.',

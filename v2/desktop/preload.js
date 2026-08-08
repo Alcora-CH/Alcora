@@ -80,6 +80,8 @@ contextBridge.exposeInMainWorld('protect', {
   journalPath: () => ipcRenderer.invoke('protect:journalPath'),
   infos: () => ipcRenderer.invoke('protect:infos'),
   ouvrirJournal: () => ipcRenderer.invoke('protect:ouvrirJournal'),
+  /* Le guide d'activation du RTSP, embarque : il s'ouvre sans acces a Internet. */
+  ouvrirGuide: () => ipcRenderer.invoke('protect:ouvrirGuide'),
   etats: () => ipcRenderer.invoke('protect:etats'),
 
   // Journal des detections. Les vignettes ne passent PAS par ici : elles sont servies en

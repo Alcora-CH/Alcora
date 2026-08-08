@@ -219,6 +219,8 @@ export interface ProtectBridge {
   infos(): Promise<Infos>;
   /** Ouvre le dossier des donnees dans l'explorateur. */
   ouvrirJournal(): Promise<void>;
+  /** Ouvre le guide d'activation du RTSP, embarque dans l'application. */
+  ouvrirGuide(): Promise<boolean>;
   /** Etat courant des sous-systemes, a tirer au montage de la page. */
   etats(): Promise<{
     relais: RelayState;

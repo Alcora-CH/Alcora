@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Check, ChevronDown, Eye, EyeOff, Loader2, Minus, RotateCcw, ShieldCheck, X,
+  BookOpen, Check, ChevronDown, Eye, EyeOff, Loader2, Minus, RotateCcw, ShieldCheck, X,
 } from 'lucide-react';
 import { bridge, isMocked } from '../lib/bridge';
 import { useLangue } from '../i18n';
@@ -224,6 +224,15 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
               </li>
             ))}
           </ul>
+          {/* Le guide EST dans l'application : il s'ouvre sans le moindre acces reseau,
+              ce qui est bien le minimum pour quelqu'un dont rien ne fonctionne encore. */}
+          <button type="button" onClick={() => { void bridge.ouvrirGuide(); }}
+                  className="m-pression mt-1 flex items-center gap-1.5 self-start rounded-md
+                             border border-line px-3 py-1.5 text-[12.5px] transition-colors
+                             hover:border-line2"
+                  style={{ color: 'var(--accent-d)' }}>
+            <BookOpen className="h-3.5 w-3.5" /> {t('camera.guide')}
+          </button>
         </section>
 
         {/* ---- contrôleur ---- */}

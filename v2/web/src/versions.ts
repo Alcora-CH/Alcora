@@ -39,6 +39,22 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.28.0',
+    date: '08.08.2026',
+    fr: [
+      'Un guide animé montre, étape par étape, comment ouvrir le flux d’une caméra sur la '
+      + 'console. Il s’ouvre depuis l’écran de connexion et depuis le panneau, à côté de la '
+      + 'caméra qui reste muette — et il est EMBARQUÉ : il s’affiche même sans accès à '
+      + 'Internet, ce qui est bien le minimum quand rien ne fonctionne encore.',
+    ],
+    en: [
+      'An animated guide shows, step by step, how to open a camera’s stream on the console. '
+      + 'It opens from the sign-in screen and from the panel, next to the camera that stays '
+      + 'silent — and it is BUNDLED: it shows even without Internet access, which is the '
+      + 'least one can ask when nothing works yet.',
+    ],
+  },
+  {
     version: '2.27.0',
     date: '08.08.2026',
     fr: [

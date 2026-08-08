@@ -268,6 +268,9 @@ const mock: ProtectBridge = {
     };
   },
   async ouvrirJournal() { /* simule */ },
+  /* Hors de l'application, le guide n'est pas embarque : la demonstration ouvre
+     celui du site, qui est le MEME fichier (copie a la construction). */
+  async ouvrirGuide() { window.open('https://alcora.ch/guide-rtsp.html', '_blank'); return true; },
   async etats() {
     return {
       relais: { running: true, message: t('relais.pret') },

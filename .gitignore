@@ -44,3 +44,6 @@ v2/relay/
 # cameras, les adresses de toutes les interfaces reseau et le nom du controleur.
 journal-poste*.txt
 .claude/
+
+# Le guide est copie depuis site/ a la construction : une seule source committee.
+v2/web/public/guide-rtsp.html

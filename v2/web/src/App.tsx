@@ -772,9 +772,19 @@ export default function App() {
               devant des cameras muettes sans le moindre geste a tenter. Le message
               existait pourtant deja, mais seul un script de developpement le lisait. */}
           {cameras.some((c) => !bestChannel(c)) && (
-            <p className="mt-2 px-2 text-[11.5px] leading-relaxed" style={{ color: 'var(--warn)' }}>
-              {t('camera.rtspRemede')}
-            </p>
+            <div className="mt-2 px-2">
+              <p className="text-[11.5px] leading-relaxed" style={{ color: 'var(--warn)' }}>
+                {t('camera.rtspRemede')}
+              </p>
+              {/* Le geste se fait sur la console, pas ici : le guide montre ou cliquer.
+                  Embarque, donc joignable meme quand rien d'autre ne l'est. */}
+              <button onClick={() => { void bridge.ouvrirGuide(); }}
+                      className="m-pression mt-1.5 text-[11.5px] underline decoration-dotted
+                                 underline-offset-2"
+                      style={{ color: 'var(--accent-d)' }}>
+                {t('camera.guide')}
+              </button>
+            </div>
           )}
 
           {/* Détections en direct, stockage, rétention, activité du jour, versions. Sorti

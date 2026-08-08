@@ -45,6 +45,7 @@ export const it: Record<Cle, string> = {
   'commun.horsLigne': 'offline',
   'commun.aucunFlux': 'nessun flusso',
   'camera.rtspDesactive': 'RTSP disattivato',
+  'camera.guide': 'Vedi la guida, passo dopo passo',
   'camera.rtspRemede':
     'Questa telecamera non trasmette: attiva l’RTSP in Protect, sulla telecamera, '
     + 'sezione Avanzate. Alcora la riprenderà da sola.',
