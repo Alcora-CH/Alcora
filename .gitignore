@@ -47,3 +47,8 @@ journal-poste*.txt
 
 # Le guide est copie depuis site/ a la construction : une seule source committee.
 v2/web/public/guide-rtsp.html
+
+# Apercus servis temporairement par Vite pour regarder une maquette dans le
+# navigateur. JAMAIS committes — certains portent des chantiers qui n'ont rien
+# a faire dans ce depot public.
+v2/web/public/apercu-*/
