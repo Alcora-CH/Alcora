@@ -36,6 +36,21 @@ npm run build:linux    # exige WSL (Ubuntu) et v2/relay/mediamtx-linux-x64
 - **Les deux binaires du relais cohabitent** dans `v2/relay/` (hors dépôt) :
   `mediamtx.exe` et `mediamtx-linux-x64`, **même version** — la livraison Linux le
   renomme `mediamtx`, ce que `main.js` cherche hors Windows.
+- **Version épinglée du relais : `v1.20.0`** (montée le 11.08.2026 depuis la 1.19.2).
+  C'est la seule dépendance d'exécution d'Alcora : elle ne s'approvisionne pas toute
+  seule, et rien dans le dépôt ne la vérifie. Le faire à la main, dans cet ordre :
+
+  ```
+  gh release download v1.20.0 --repo bluenviron/mediamtx \
+     -p 'mediamtx_v1.20.0_windows_amd64.zip' -p 'mediamtx_v1.20.0_linux_amd64.tar.gz' -p checksums.sha256
+  sha256sum -c checksums.sha256 --ignore-missing
+  gh attestation verify mediamtx_v1.20.0_windows_amd64.zip --repo bluenviron/mediamtx
+  ```
+
+  **Les sommes seules ne suffisent pas** : elles viennent du même serveur que les
+  archives. L'attestation SLSA, elle, est signée indépendamment — c'est elle qui dit
+  d'où vient réellement le binaire. Éprouvée le 11.08.2026, témoins négatifs compris
+  (fichier non attesté et dépôt erroné rendent tous deux 404).
 - **WSL n'est pas un caprice** : construite depuis Windows, l'archive s'écrirait sur du
   NTFS, qui n'a pas de bit « exécutable » — Linux refuserait de démarrer le lanceur.
   L'archive est donc faite dans WSL après `chmod`, et le script **relit les modes dans
