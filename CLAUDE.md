@@ -27,6 +27,13 @@ npm run web       # démo navigateur (mode simulation, sans caméra ni contrôle
 `node scripts/test.mjs` lancé depuis `v2/desktop` échoue sur un chemin relatif — piège
 récurrent. Racine, toujours.
 
+**Mais PAS `npm --prefix <dossier> install`.** Depuis la racine, npm y voit deux choses :
+le préfixe *où* installer, et le paquet courant *quoi* installer — il ajoute donc
+`"alcora": "file:../.."` aux dépendances de la cible et pose un lien symbolique vers le
+dépôt entier dans son `node_modules`. Constaté le 11.08.2026. Pour installer dans un
+sous-projet : `cd v2/web && npm install`. `npm --prefix … update` et `… run …` ne
+souffrent pas de ce défaut, eux.
+
 ## Construire pour Linux
 
 ```
