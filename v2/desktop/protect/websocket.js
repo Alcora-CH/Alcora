@@ -13,8 +13,14 @@ const { EventEmitter } = require('node:events');
  * protocole dont on a besoin est petit et ferme — on ne fait que RECEVOIR des trames
  * binaires, repondre aux pings et fermer proprement.
  *
- * Pourquoi ce n'etait pas evitable : Electron 33 embarque Node 20.18, ou l'objet WebSocket
- * global n'existe pas. Verifie le 29.07.2026 dans le processus principal.
+ * Pourquoi il reste ecrit a la main, alors que le global existe desormais : depuis la montee
+ * a Electron 43 (Node 24.18), « globalThis.WebSocket » existe, et il honore meme l'option
+ * « headers » — mesure le 11.08.2026, cookie et jeton anti-CSRF bien recus par un serveur
+ * d'essai. Ce n'est donc plus l'absence du global qui l'impose. C'est L'EPINGLAGE : le global
+ * passe par undici et n'accepte pas un « https.Agent », alors que toute la liaison vers la
+ * console repose sur l'agent epinglant de « pinning.js ». Reecrire l'epinglage en
+ * « Dispatcher » undici pour supprimer un lecteur deja eprouve serait un mauvais echange.
+ * (Sous Electron 33 / Node 20.18, le global n'existait pas du tout — verifie le 29.07.2026.)
  *
  * Ce qui casse reellement ce genre de code n'est pas l'analyse d'une trame, c'est que le
  * reseau livre les octets en morceaux ARBITRAIRES : une trame peut arriver en dix paquets,
