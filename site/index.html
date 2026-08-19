@@ -232,7 +232,10 @@
 
   /* Le corps de l'application laisse filtrer la lumière du fond : c'est là que le
      verre se sent — la même direction que prendra l'application elle-même. */
-  .alcapp{min-width:940px;height:clamp(648px,72vh,820px);display:flex;
+  /* min-width:0 et non 940px : le cadre SUIT la largeur disponible. Avec 940 en dur,
+     toute fenetre plus etroite que ~1000 px rognait la demonstration au lieu de la
+     reduire. La mosaique se redimensionne deja seule (dimensionnerMosaique). */
+  .alcapp{min-width:0;height:clamp(648px,72vh,820px);display:flex;
           background:rgba(24,27,33,.66);
           -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou);
           border-radius:10px;overflow:hidden;border:1px solid var(--verre-bord);
@@ -435,8 +438,14 @@
     padding:2px 9px;font-size:11px;cursor:pointer;display:flex;gap:5px;align-items:center}
   .puce.actif{color:var(--accent);border-color:transparent;background:var(--accent-soft)}
   .puce small{font-family:Consolas,monospace;font-size:9px;opacity:.7}
+  /* « grid-auto-rows:max-content » n'est PAS decoratif. Sans lui, les rangees se
+     partagent la hauteur du conteneur et chaque vignette est etiree a une rangee trop
+     courte, puis rognee par son propre overflow:hidden. Mesure du 11.08.2026 sur le
+     site EN LIGNE, a 1265 px de large : 53 px affiches pour 99 px de contenu, sur les
+     38 vignettes. Le defaut ne venait pas de l'ecran etroit — il etait partout. */
   .rech-resultats{flex:1;overflow-y:auto;padding:2px;display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;align-content:start}
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;
+    grid-auto-rows:max-content;align-content:start}
   .rech-vide{grid-column:1/-1;color:var(--soft);font-size:12px;text-align:center;padding:30px 0}
 
   .veilles-liste{padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
@@ -476,6 +485,56 @@
   .carte-m .pied-m{padding:10px 13px;border-top:1px solid var(--line)}
   .carte-m .pied-m button{width:100%;border:0;border-radius:8px;background:var(--accent);
     color:#1b1e23;font-weight:600;font-size:12.5px;padding:8px;cursor:pointer}
+
+  /* ------------------------------------------------------- l'etroit ------ */
+  /* TELEPHONES ET PETITES TABLETTES.
+
+     Jusqu'au 11.08.2026 la demonstration montrait une fenetre de bureau de 940 px de
+     large dans un cadre qui la rognait. Mesure sur un telephone de 375 px : 33 % de
+     visible — la bande d'icones et la liste des cameras — et la scene video commencait
+     a x=324, donc entierement hors ecran. Un visiteur sur telephone ne voyait jamais
+     ce que fait Alcora. C'est le pire decoupage possible : tout le chrome, aucune image.
+
+     Le remede n'enleve RIEN. Les trois parties restent, elles s'empilent : la scene en
+     haut parce que c'est l'image qui explique le produit, la liste des cameras dessous,
+     et la bande d'icones devient une barre en bas. Meme grammaire, a la verticale. */
+  @media (max-width:760px){
+    .alcapp{flex-direction:column;height:clamp(460px,72vh,620px)}
+
+    .scene{order:1;min-height:0}
+
+    /* La liste des cameras reste LISIBLE et defilante : la masquer aurait coute du
+       contenu, ce qu'un habillage ne doit jamais faire. */
+    .panneau{order:2;width:auto;flex:0 0 auto;max-height:31%;
+             border-right:0;border-top:1px solid var(--verre-bord);border-radius:0;
+             box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+
+    .rail{order:3;width:auto;flex:0 0 auto;flex-direction:row;
+          justify-content:space-around;gap:2px;padding:6px;
+          border-right:0;border-top:1px solid var(--verre-bord)}
+    .rail .logo{display:none}    /* la marque est deja en tete de page */
+    .rail .pousse{display:none}  /* le ressort qui poussait Reglages en bas n'a plus d'objet */
+
+    /* Les detections : filtres AU-DESSUS des resultats, plus a cote. */
+    .rech{flex-direction:column}
+    .rech-filtres{width:auto;flex:0 0 auto;max-height:38%}
+
+    /* LA RELECTURE empile cinq bandes : en-tete, image, transport, frise, pellicule.
+       A l'etroit, l'image — le sujet meme de l'ecran — se faisait ecraser a 18 px de
+       haut (mesure du 11.08.2026), les quatre autres bandes etant de hauteur fixe.
+       On lui rend son rapport 16:9 et on laisse l'espace DEFILER, plutot que de retirer
+       la frise ou la pellicule : elles font partie de ce qu'Alcora sait faire, et un
+       habillage ne doit pas couter du contenu. */
+    .espace-vue[data-vue="relecture"]{overflow-y:auto}
+    .rel-image{flex:0 0 auto;aspect-ratio:16/9}
+    /* Sans « 0 0 auto », la pellicule se laisse comprimer par le flex parent des que
+       l'espace defile : mesuree a 24 px, soit ses marges seules, vignettes ecrasees. */
+    .pellicule{flex:0 0 auto}
+
+    /* Cibles tactiles : 38 px suffisent a la souris, pas au doigt. Cinq boutons de
+       44 px tiennent largement dans la barre. */
+    .rail button{width:44px;height:44px}
+  }
 
   /* ----------------------------------------------------- les sections ------ */
   .traits{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:30px}
@@ -1464,6 +1523,34 @@ function dimensionnerMosaique(){
   m.style.gridAutoRows=`${Math.floor(meilleur.th)}px`;
 }
 window.addEventListener('resize', dimensionnerMosaique);
+/*
+ * UN « resize » DE FENETRE NE SUFFIT PAS — surtout sur telephone.
+ *
+ * La hauteur du cadre est en « vh ». Or sur mobile, la barre d'adresse se replie des que
+ * l'on fait defiler : la hauteur utile change donc SANS qu'un evenement resize soit
+ * necessairement emis. La mosaique garderait alors des tuiles calculees pour une autre
+ * boite. Un observateur de boite couvre ce cas, et les autres du meme genre.
+ *
+ * Le recalcul est reporte d'une frame pour que la mise en page soit entierement posee,
+ * et le drapeau fond les rafales en un seul passage. L'ecriture des pistes ne peut pas
+ * boucler : la boite de la mosaique est imposee par son parent, pas par ses colonnes.
+ *
+ * NON EPROUVE, et il faut le dire : le panneau de previsualisation utilise ici ne peint
+ * pas, donc ni requestAnimationFrame ni ResizeObserver n'y sont livres — un observateur
+ * temoin pose a la main n'a pas reçu une seule notification, pas meme celle de la pose.
+ * Le raisonnement tient, la demonstration reste a faire sur un vrai telephone.
+ */
+if (window.ResizeObserver) {
+  const observee = $('#mosaique');
+  if (observee) {
+    let prevu = false;
+    new ResizeObserver(() => {
+      if (prevu) return;
+      prevu = true;
+      requestAnimationFrame(() => { prevu = false; dimensionnerMosaique(); });
+    }).observe(observee);
+  }
+}
 
 function tuileHtml(c){
   return `
