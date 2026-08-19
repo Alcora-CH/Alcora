@@ -147,6 +147,9 @@ function indices(buf) {
   // toujours. La sonde s'en dispense LOCALEMENT — et ne la retablit pas, car la basculer
   // en cours de route laissait la connexion suivante sans certificat a verifier. Plus
   // aucune requete epinglee ne suit ce point. L'application, elle, epingle la cle.
+  // Sonde de DIAGNOSTIC, lancee a la main contre le controleur : rien de ceci n'est
+  // embarque dans l'application, qui epingle la cle publique (protect/pinning.js).
+  // codeql[js/disabling-certificate-validation]
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
   let ws;

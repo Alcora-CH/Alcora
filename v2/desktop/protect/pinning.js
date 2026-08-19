@@ -38,6 +38,12 @@ function computePin(x509) {
 function createPinnedAgent({ pins = [], onFirstUse } = {}) {
   const agent = new https.Agent({
     // La validation standard ne peut pas reussir : la confiance vient de l'epinglage seul.
+    // Elle n'est pas SUPPRIMEE, elle est REMPLACEE — voir « secureConnect » plus bas :
+    // empreinte SHA-256 de la cle publique, comparaison en temps constant, socket detruit
+    // si elle ne correspond pas. Un certificat auto-signe sans l'adresse IP ne peut de
+    // toute facon jamais passer la validation standard ; accepter aveuglement serait le
+    // vrai danger, et c'est precisement ce que l'epinglage empeche.
+    // codeql[js/disabling-certificate-validation]
     rejectUnauthorized: false,
     keepAlive: true,
     maxSockets: 8,
