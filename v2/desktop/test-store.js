@@ -44,7 +44,7 @@ function checkBool(label, condition) {
  * peut contenir : tabulation, sauts de ligne, retour chariot (0x09 a 0x0D).
  *
  * Ecrit en clair plutot qu'en classe d'expression reguliere, et ce n'est pas une
- * preference de style. La version d'avant le 11.08.2026 portait ces bornes en octets
+ * preference de style. La version d'avant le 19.08.2026 portait ces bornes en octets
  * LITTERAUX : le fichier passait pour binaire aux yeux de grep, et oxlint ne voyait
  * rien — sa regle « no-control-regex » ne reconnait que les echappements. Le defaut
  * dormait donc sous un garde-fou actif. L'ecrire ainsi le met hors de portee des deux
