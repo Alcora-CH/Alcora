@@ -223,9 +223,6 @@
   .demo-cadre{border:1px solid var(--verre-bord);border-radius:16px;padding:10px;
     background:rgba(20,23,27,.42);-webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
   .demo-scroll{overflow-x:auto}
-  /* Le sous-titre de carte ne vit qu'a l'etroit : le bandeau du bureau est une barre
-     compacte, il n'a pas la place d'une seconde ligne. */
-  .sous-cam{display:none}
   .ruban{display:flex;justify-content:space-between;align-items:center;gap:10px;
          padding:6px 10px 12px;font-size:12px;color:var(--soft)}
   .ruban b{color:var(--accent-d);font-weight:600}
@@ -235,10 +232,14 @@
 
   /* Le corps de l'application laisse filtrer la lumière du fond : c'est là que le
      verre se sent — la même direction que prendra l'application elle-même. */
-  /* min-width:0 et non 940px : le cadre SUIT la largeur disponible. Avec 940 en dur,
-     toute fenetre plus etroite que ~1000 px rognait la demonstration au lieu de la
-     reduire. La mosaique se redimensionne deja seule (dimensionnerMosaique). */
-  .alcapp{min-width:0;height:clamp(648px,72vh,820px);display:flex;
+  /*
+   * 940 px est la largeur de TRAVAIL de la demonstration : c'est une interface de bureau,
+   * et elle se montre telle quelle, quelle que soit la taille de l'ecran. Sur une fenetre
+   * plus etroite, « .demo-scroll » la fait defiler a l'horizontale plutot que de la
+   * comprimer — une interface reduite de moitie n'apprend rien a personne. Les visiteurs
+   * sur telephone trouvent l'application mobile en images, plus bas dans la page.
+   */
+  .alcapp{min-width:940px;height:clamp(648px,72vh,820px);display:flex;
           background:rgba(24,27,33,.66);
           -webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou);
           border-radius:10px;overflow:hidden;border:1px solid var(--verre-bord);
@@ -501,240 +502,31 @@
      Le remede n'enleve RIEN. Les trois parties restent, elles s'empilent : la scene en
      haut parce que c'est l'image qui explique le produit, la liste des cameras dessous,
      et la bande d'icones devient une barre en bas. Meme grammaire, a la verticale. */
-  @media (max-width:760px){
-    /*
-     * UNE SEULE SURFACE QUI DEFILE — compare aux captures du 25.08.2026 : l'application
-     * est un seul flux vertical, la demonstration etait trois ascenseurs imbriques
-     * (mosaique, panneau, espace) dans un cadre de hauteur figee. Le cadre prend donc la
-     * hauteur de son contenu, les ascenseurs internes disparaissent, et c'est la PAGE qui
-     * defile — la barre d'onglets restant collee en bas, comme celle de l'application.
-     */
-    /*
-     * BORD A BORD. L'application n'est pas un widget dans une page : elle EST l'ecran,
-     * posee sur le ciel. La boite de verre du bureau — bordure, fond, coins ronds,
-     * marges — est donc retiree, et le cadre s'etale sur toute la largeur de l'ecran
-     * (« calc(50% - 50vw) » annule les marges du conteneur, quel qu'il soit).
-     *
-     * « overflow:visible » et non hidden : l'arrondi du bureau confinerait le
-     * « position:sticky » de la barre d'onglets a son propre cadre.
-     */
-    /* 50vw compte la barre de defilement verticale : le bord-a-bord depasserait de
-       quelques pixels et ferait naitre une barre horizontale. On scelle l'axe. */
-    body{overflow-x:clip}
-    /*
-     * L'UNITE FLUIDE — le « dp » de cette vue. Mesure du 25.08.2026 sur le Xiaomi :
-     * son navigateur rend la page dans un viewport d'environ 580 px CSS, pas 393. Des
-     * tailles figees en pixels y paraissent toutes ~1,5 fois trop petites par rapport a
-     * l'ecran — « pas les bonnes proportions », exactement ce que l'oeil voyait.
-     * Toutes les tailles de la vue etroite s'expriment donc en var(--u), calee pour
-     * qu'un ecran de 393 rende exactement comme avant, et que tout autre garde les
-     * MEMES proportions. Le plafond de 520 evite le gigantisme en tablette portrait.
-     * --u est une LONGUEUR (~1 px sur un ecran de 393) : on la multiplie toujours par
-     * un nombre NU. La multiplier par des px rendrait chaque calc invalide au moment
-     * du calcul, et var() ferait alors tomber la propriete sur sa valeur INITIALE —
-     * un logo width:auto en pleine largeur, vu sur capture le 25.08.2026.
-     */
-    .demo-cadre{--u:calc(min(100vw, 520px) / 393)}
-    .demo-cadre{margin:0 calc(50% - 50vw);border:0;border-radius:0;background:none;
-      -webkit-backdrop-filter:none;backdrop-filter:none;padding:0}
-    .ruban{justify-content:center;text-align:center;font-size:calc(var(--u)*12);padding:0 calc(var(--u)*18) calc(var(--u)*10)}
-    .alcapp{flex-direction:column;height:auto;overflow:visible;
-      background:none;border:0;border-radius:0;
-      -webkit-backdrop-filter:none;backdrop-filter:none}
-    .demo-scroll{overflow:visible}
-    .espace-vue{position:static;inset:auto}
-    .espace-vue.actif{min-height:340px}
-    /* Les cartes se posent sur le ciel de la page, pas sur une bande plus sombre. */
-    .scene{order:2;flex:none;min-height:0;height:auto;background:none}
 
-    /* La liste des cameras reste LISIBLE et defilante : la masquer aurait coute du
-       contenu, ce qu'un habillage ne doit jamais faire. */
-    /* Le panneau vit desormais DANS l'onglet Reglages (deplace par reordonnerEtroit) :
-       il y perd son habit de colonne de bureau pour celui d'un bloc de reglages. */
-    .panneau{width:auto;flex:none;overflow:visible;background:none;
-             border:0;border-radius:0;box-shadow:none;padding:4px 2px}
-    /* L'etat est monte dans l'en-tete ; son etiquette seule n'annonce plus rien. */
-    #titre-etat{display:none}
-
-    .rail{order:4;width:auto;flex:0 0 auto;flex-direction:row;
-          justify-content:space-around;gap:calc(var(--u)*2);padding:calc(var(--u)*8) calc(var(--u)*4) calc(var(--u)*11);
-          border-right:0;border-top:1px solid var(--verre-bord);
-          position:sticky;bottom:0;z-index:6;
-          background:rgba(13,16,21,.92);
-          -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-    .rail .logo{display:none}    /* deplace dans l'en-tete par reordonnerEtroit ; ceci est le secours sans JS */
-    .rail .pousse{display:none}  /* le ressort qui poussait Reglages en bas n'a plus d'objet */
-    /* L'actif ne s'encadre pas : il se colore, et un trait dore le souligne PAR LE HAUT,
-       comme dans l'application. */
-    .rail button{position:relative;background:none}
-    .rail button[aria-current="true"]{background:none}
-    .rail button[aria-current="true"]::before{content:"";position:absolute;top:-7px;
-      left:24%;right:24%;height:2px;border-radius:2px;background:var(--accent)}
-
-    /* Les detections : filtres AU-DESSUS des resultats, plus a cote. */
-    .rech{flex-direction:column}
-    .rech-filtres{width:auto;flex:0 0 auto;max-height:38%}
-
-    /* LA RELECTURE empile cinq bandes : en-tete, image, transport, frise, pellicule.
-       A l'etroit, l'image — le sujet meme de l'ecran — se faisait ecraser a 18 px de
-       haut (mesure du 19.08.2026), les quatre autres bandes etant de hauteur fixe.
-       On lui rend son rapport 16:9 et on laisse l'espace DEFILER, plutot que de retirer
-       la frise ou la pellicule : elles font partie de ce qu'Alcora sait faire, et un
-       habillage ne doit pas couter du contenu. */
-    .espace-vue[data-vue="relecture"]{overflow-y:auto}
-    .rel-image{flex:0 0 auto;aspect-ratio:16/9}
-    /* Sans « 0 0 auto », la pellicule se laisse comprimer par le flex parent des que
-       l'espace defile : mesuree a 24 px, soit ses marges seules, vignettes ecrasees. */
-    .pellicule{flex:0 0 auto}
-
-    /* Cibles tactiles : 38 px suffisent a la souris, pas au doigt. Cinq boutons de
-       44 px tiennent largement dans la barre. */
-    .rail button{width:44px;height:44px}
-
-    /* ---------------------------------------------------------------------------
-       L'ALLURE D'UNE APPLICATION, pas d'une fenetre de bureau retrecie.
-
-       Premiere correction du 19.08 : la demonstration tenait enfin dans l'ecran. Elle
-       gardait pourtant l'allure d'un bureau reduit — vignettes centrees au milieu du vide,
-       bandeau de titre AU-DESSUS de l'image, onglets muets. Sur un telephone, ce n'est pas
-       ce qu'on attend d'un ecran de cameras.
-
-       Rien n'est ajoute ni retire ici : les memes elements, ranges comme le fait une
-       application. Les vignettes deviennent des cartes pleine largeur empilees, et le
-       bandeau — nom, definition, les quatre commandes — passe EN SURIMPRESSION au bas de
-       l'image, sur un degrade. C'est la ou l'oeil le cherche, et cela rend a l'image toute
-       la largeur.
-       --------------------------------------------------------------------------- */
-
-    /*
-     * La mosaique cesse d'etre une grille CENTREE pour devenir une pile qui defile.
-     * « display:block » suffit : les pistes que dimensionnerMosaique ecrit en ligne
-     * (gridTemplateColumns, gridAutoRows) ne s'appliquent plus, les tuiles reprennent la
-     * largeur entiere, et il n'y a pas une ligne de JavaScript a changer.
-     */
-    .mosaique{display:block;overflow:visible;padding:12px;
-              align-content:start;justify-content:stretch}
-    .mosaique .tuile{position:relative;width:auto;margin:0 0 10px}
-    .mosaique .tuile:last-child{margin-bottom:0}
-
-    /* L'image porte desormais sa propre hauteur : sans « flex:1 » pour la lui donner,
-       il faut un rapport, et 16:9 est celui des cameras. */
-    .mosaique .image{flex:none;aspect-ratio:16/9}
-
-    /*
-     * Le bandeau EN SURIMPRESSION. Le degrade n'est pas decoratif : pose sur une image de
-     * nuit deja sombre, un fond plein se verrait comme une bande ; un degrade laisse
-     * l'image respirer tout en garantissant que le texte se lit, quel que soit ce que la
-     * camera regarde a cet instant.
-     */
-    .mosaique .bandeau{position:absolute;left:0;right:0;bottom:0;z-index:2;
-      height:auto;padding:26px 10px 9px;gap:8px;
-      background:linear-gradient(180deg,rgba(8,10,14,0) 0%,rgba(8,10,14,.55) 45%,rgba(8,10,14,.88) 100%)}
-    .mosaique .nom-cam{font-size:14px;font-weight:600;color:var(--ink)}
-    .mosaique .cmd{width:30px;height:30px}
-    .mosaique .cmd svg{width:15px;height:15px}
-
-    /*
-     * LES ONGLETS PORTENT LEUR NOM. Cinq pictogrammes muets se devinent a la souris, qui
-     * a le survol pour les nommer ; un doigt n'a rien. Le nom vient de « attr(title) »,
-     * donc du meme texte que l'infobulle — il suit les quatre langues sans qu'on ait a
-     * l'ecrire deux fois, et il ne peut pas diverger.
-     */
-    .rail{align-items:stretch;padding:4px 2px 6px}
-    .rail button{width:auto;height:auto;flex:1;min-width:0;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:3px;padding:5px 2px 4px;border-radius:9px}
-    .rail svg{width:calc(var(--u)*22);height:calc(var(--u)*22)}
-    .rail button::after{content:attr(title);font-size:calc(var(--u)*11);line-height:1.15;
-      letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-      max-width:100%}
-    .rail button[aria-current="true"]::after{color:var(--accent)}
-
-    /*
-     * L'APERCU DU JOUR, au-dessus des cameras — la ou l'application le met. Les blocs
-     * eux-memes viennent du panneau, deplaces par « reordonnerEtroit » : ici on ne fait
-     * que les habiller pour leur nouvelle place.
-     */
-    /* L'EN-TETE D'APPLICATION : la marque, le titre en grand, l'etat en vert dessous,
-       et le geste de rafraichissement a droite — la premiere ligne de l'application. */
-    .entete-app{order:0;display:flex;align-items:center;gap:calc(var(--u)*12);padding:calc(var(--u)*16) calc(var(--u)*16) calc(var(--u)*10)}
-    .entete-app .logo{width:calc(var(--u)*44);height:calc(var(--u)*44);color:var(--accent);flex:0 0 auto;margin:0}
-    .entete-txt{flex:1;min-width:0}
-    .entete-titre{font-size:calc(var(--u)*22);font-weight:650;color:var(--ink);line-height:1.15}
-    .entete-app .ligne{justify-content:flex-start;gap:6px;padding:2px 0 0}
-    .entete-app .ligne .k{color:var(--ok);font-size:calc(var(--u)*13)}
-    .entete-app button{background:none;border:0;color:var(--ink);font-size:calc(var(--u)*15);
-      padding:6px 2px;cursor:pointer}
-
-    .apercu-jour{order:1;flex:0 0 auto;padding:calc(var(--u)*2) calc(var(--u)*16) calc(var(--u)*4);position:relative;z-index:2}
-    /* L'en-tete et l'apercu n'appartiennent qu'au DIRECT : dans l'application, les autres
-       onglets ne les portent pas. « :has » lit l'onglet actif depuis la scene voisine. */
-    .alcapp:not(:has(.espace-vue.actif[data-vue="direct"])) .entete-app,
-    .alcapp:not(:has(.espace-vue.actif[data-vue="direct"])) .apercu-jour{display:none}
-    /* « AUJOURD'HUI  38 » — l'etiquette en petites capitales, le compte en GRAND.
-       font-size:0 sur le titre avale le separateur textuel ; chaque enfant reprend
-       sa taille. */
-    .apercu-jour #titre-jour{display:flex;align-items:baseline;gap:calc(var(--u)*8);font-size:0;
-      margin:calc(var(--u)*4) 0 calc(var(--u)*6)}
-    .apercu-jour #titre-jour > span:first-child{font-size:calc(var(--u)*12);text-transform:uppercase;
-      letter-spacing:.09em;color:var(--soft);font-weight:650}
-    .apercu-jour #compte-jour{font-size:calc(var(--u)*24);font-weight:650;color:var(--ink)}
-    /* Le mot suit la langue par le meme mecanisme que tout le reste de la page. */
-    html[lang="fr"] .apercu-jour #compte-jour::after{content:" détections"}
-    html[lang="en"] .apercu-jour #compte-jour::after{content:" detections"}
-    html[lang="de"] .apercu-jour #compte-jour::after{content:" Erkennungen"}
-    html[lang="it"] .apercu-jour #compte-jour::after{content:" rilevamenti"}
-    .apercu-jour .histo{height:calc(var(--u)*52);margin-bottom:calc(var(--u)*14);gap:calc(var(--u)*3)}
-    .apercu-jour .histo i{border-radius:3px 3px 0 0}
-    /* Le titre « Detections recentes » ne s'affiche pas ici : l'application ne met
-       aucune etiquette au-dessus de la pellicule, les vignettes parlent d'elles-memes. */
-    .apercu-jour #titre-vives{display:none}
-    /* La pellicule : grandes vignettes, L'HEURE centree dessous — rien d'autre. */
-    .apercu-jour #liste-vives{display:flex;gap:calc(var(--u)*10);overflow-x:auto;padding-bottom:calc(var(--u)*6);
-      scrollbar-width:none}
-    .apercu-jour #liste-vives::-webkit-scrollbar{display:none}
-    .apercu-jour .vive{flex:0 0 auto;width:auto;flex-direction:column;align-items:center;
-      gap:calc(var(--u)*5);padding:0}
-    .apercu-jour .vive .mini{width:calc(var(--u)*118);height:calc(var(--u)*68);border-radius:calc(var(--u)*12);
-      border:1px solid rgba(255,255,255,.14)}
-    .apercu-jour .vive .quoi{display:none}
-    .apercu-jour .vive .quand{font-size:calc(var(--u)*13);font-family:Consolas,monospace;
-      color:var(--ink);letter-spacing:.06em}
-
-    /*
-     * LE BANDEAU D'UNE CARTE, allege a la maniere de l'application : le NOM en grand, et
-     * UN SEUL geste mis en avant — revoir. Les trois autres commandes et le badge de
-     * definition restent dans le DOM mais se rangent : sur cette carte de telephone, ils
-     * ecrasaient le nom, et l'application reelle ne les montre pas non plus.
-     */
-    .mosaique .bandeau{display:grid;grid-template-columns:1fr auto;align-items:end;
-      row-gap:calc(var(--u)*3);padding:calc(var(--u)*34) calc(var(--u)*14) calc(var(--u)*13)}
-    .mosaique .nom-cam{grid-column:1;grid-row:1;font-size:calc(var(--u)*21);font-weight:600;
-      text-shadow:0 1px 4px rgba(0,0,0,.7)}
-    .mosaique .sous-cam{display:block;grid-column:1;grid-row:2;font-size:calc(var(--u)*14);
-      color:var(--doux);text-shadow:0 1px 3px rgba(0,0,0,.7)}
-    .mosaique .badge-def,
-    .mosaique .cmd:not(:first-of-type){display:none}
-    .mosaique .cmd:first-of-type{grid-column:2;grid-row:1/3;align-self:end;
-      width:calc(var(--u)*50);height:calc(var(--u)*50);border-radius:50%;
-      border:1px solid var(--accent-d);color:var(--accent-d);background:rgba(10,12,16,.35)}
-    .mosaique .cmd:first-of-type svg{width:calc(var(--u)*20);height:calc(var(--u)*20)}
-
-    /* L'horodatage de l'application est du texte nu pose sur l'image, pas une
-       pastille encadree. L'ombre le rend lisible sur n'importe quelle scene. */
-    .mosaique .horodatage{background:none;border:0;padding:0;left:calc(var(--u)*12);top:calc(var(--u)*10);
-      -webkit-backdrop-filter:none;backdrop-filter:none;font-size:calc(var(--u)*11);color:#fff;
-      text-shadow:0 1px 3px rgba(0,0,0,.85)}
-
-    /* Les cartes respirent comme dans l'application. */
-    .mosaique .tuile{margin-bottom:calc(var(--u)*16);border-radius:calc(var(--u)*16)}
-    .mosaique{padding:calc(var(--u)*14) calc(var(--u)*16) calc(var(--u)*8)}
-
-    /* Le toast se pose au-dessus de la barre d'onglets, pas au milieu d'une carte :
-       il est positionne par rapport a la scene, qui a l'etroit est devenue la premiere
-       bande de la pile. */
-    .toast{left:10px;right:10px;bottom:8px;max-width:none}
-  }
+  /* ------------------------------------------------- l'application mobile --- */
+  /*
+   * Les ecrans du telephone. Ce sont de vraies captures de l'application Android, prises
+   * sur un appareil en mode VITRINE : cameras fictives, images de synthese, detections
+   * fabriquees. Aucune image d'un lieu reel n'entre ici.
+   *
+   * La bande defile a l'horizontale plutot que de se replier en grille : cinq ecrans de
+   * telephone cote a cote gardent leur echelle et se comparent d'un coup d'oeil, ce qu'une
+   * grille de vignettes reduites ne permet pas.
+   */
+  .ecrans{display:flex;gap:18px;overflow-x:auto;padding:4px 2px 14px;margin-top:26px;
+    scroll-snap-type:x proximity}
+  .ecrans figure{flex:0 0 auto;width:212px;margin:0;scroll-snap-align:start}
+  .ecrans img{display:block;width:100%;height:auto;border-radius:14px;
+    border:1px solid var(--verre-bord);box-shadow:0 12px 30px rgba(0,0,0,.42);
+    background:#0e1116}
+  .ecrans figcaption{margin-top:9px;font-size:12.5px;color:var(--soft);text-align:center}
+  .note-mobile{color:var(--soft);font-size:13px;margin-top:6px}
+  /* La barre de defilement de la bande, accordee au fond : celle du systeme est claire
+     et se voit plus que les ecrans qu'elle sert. */
+  .ecrans{scrollbar-width:thin;scrollbar-color:var(--verre-bord) transparent}
+  .ecrans::-webkit-scrollbar{height:8px}
+  .ecrans::-webkit-scrollbar-track{background:transparent}
+  .ecrans::-webkit-scrollbar-thumb{background:var(--verre-bord);border-radius:99px}
 
   /* ----------------------------------------------------- les sections ------ */
   .traits{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:30px}
@@ -978,13 +770,13 @@
         <span class="en"><b>Demonstration</b> — simulated data, no real camera.</span>
         <span class="de"><b>Demonstration</b> — simulierte Daten, keine echte Kamera.</span>
         <span class="it"><b>Dimostrazione</b> — dati simulati, nessuna telecamera reale.</span>
-        <button id="btn-reinit" onclick="demoReinit()"><span class="fr">Réinitialiser</span><span class="en">Reset</span><span class="de">Zurücksetzen</span><span class="it">Reimposta</span></button>
+        <button onclick="demoReinit()"><span class="fr">Réinitialiser</span><span class="en">Reset</span><span class="de">Zurücksetzen</span><span class="it">Reimposta</span></button>
       </div>
       <div class="demo-scroll">
         <div class="alcapp" id="alcapp" tabindex="0">
 
           <div class="rail">
-            <svg class="logo" id="logo-marque" viewBox="0 0 64 64"><path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/></svg>
+            <svg class="logo" viewBox="0 0 64 64"><path fill="currentColor" fill-rule="evenodd" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/></svg>
             <button data-esp="direct" data-titre="esp.direct" title="Direct" aria-current="true"><svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><path d="m17 9 5-3v12l-5-3"/></svg></button>
             <button data-esp="recherche" data-titre="esp.recherche" title="Détections"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
             <button data-esp="relecture" data-titre="esp.relecture" title="Relecture"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l2 4M14 5l2 4"/></svg></button>
@@ -994,13 +786,13 @@
           </div>
 
           <div class="panneau">
-            <h4 id="titre-etat" data-t="p.etat">État</h4>
-            <div class="ligne" id="ligne-etat"><span class="point"></span><span class="k" data-t="p.fluxPret">Flux vidéo prêt.</span></div>
+            <h4 data-t="p.etat">État</h4>
+            <div class="ligne"><span class="point"></span><span class="k" data-t="p.fluxPret">Flux vidéo prêt.</span></div>
             <h4 data-t="p.cameras">Caméras</h4>
             <div id="liste-cams"></div>
-            <h4 id="titre-vives" data-t="p.recentes">Détections récentes</h4>
+            <h4 data-t="p.recentes">Détections récentes</h4>
             <div id="liste-vives"></div>
-            <h4 id="titre-jour"><span data-t="p.aujourdhui">Aujourd'hui</span> · <span id="compte-jour">0</span></h4>
+            <h4><span data-t="p.aujourdhui">Aujourd'hui</span> · <span id="compte-jour">0</span></h4>
             <div class="histo" id="histo"></div>
             <h4 data-t="p.enregistrements">Enregistrements</h4>
             <div class="ligne"><span class="k" data-t="p.plusAncien">Le plus ancien</span><span class="v">16.02.26</span></div>
@@ -1014,15 +806,7 @@
             <p class="pied-panneau" data-t="p.pied">Aucune image ne quitte votre réseau.</p>
           </div>
 
-          <!-- L'ETROIT REORDONNE — voir « reordonnerEtroit ». Vide et sans effet en large :
-               a l'etroit, l'apercu du jour (compteur, histogramme, detections recentes) vient
-               se percher ICI, au-dessus des cameras, comme le fait l'application. -->
-          <div class="entete-app" id="entete-app" hidden>
-            <div class="entete-txt">
-              <div class="entete-titre"><span class="fr">Démonstration</span><span class="en">Demonstration</span><span class="de">Demonstration</span><span class="it">Dimostrazione</span></div>
-            </div>
           </div>
-          <div class="apercu-jour" id="apercu-jour" hidden></div>
           <div class="scene" id="scene">
             <!-- Le ciel de la démonstration : le même que celui de la page, en réduction.
                  Il donne au verre des îlots quelque chose à réfracter — sans lui, on ne
@@ -1090,7 +874,7 @@
             </div>
             <div class="espace-vue" data-vue="alertes"><div class="veilles-liste" id="veilles"></div></div>
             <div class="espace-vue" data-vue="reglages">
-              <div class="regl" id="zone-reglages">
+              <div class="regl">
                 <div class="bloc">
                   <h5 data-t="g.version">Version</h5>
                   <p>Alcora <b style="color:var(--ok)">2.25.0</b><span data-t="g.aJour"> — à jour. La mise à jour se
@@ -1230,6 +1014,62 @@
       <li>Nessuna deviazione per un server terzo</li>
       <li>Un'immagine dell'istante accompagna ogni notifica</li></ul></div>
   </div>
+
+
+  <!-- ================================================== ANDROID ============== -->
+  <h2 class="sec fr">Sur Android</h2>
+  <h2 class="sec en">On Android</h2>
+  <h2 class="sec de">Unter Android</h2>
+  <h2 class="sec it">Su Android</h2>
+  <p class="sec fr">Une application Android reprend les mêmes fonctions sur un téléphone :
+  direct, détections, relecture et alertes. Elle parle directement à la console, sur le
+  réseau local, sans compte tiers ni service distant. Les captures ci-dessous proviennent
+  de l'application, sur des caméras simulées.</p>
+  <p class="sec en">An Android application carries the same functions to a phone: live
+  view, detections, replay and alerts. It talks directly to the console, on the local
+  network, with no third-party account and no remote service. The screenshots below come
+  from the application, on simulated cameras.</p>
+  <p class="sec de">Eine Android-Anwendung bringt dieselben Funktionen auf das Telefon:
+  Live, Erkennungen, Wiedergabe und Alarme. Sie spricht direkt mit der Konsole, im lokalen
+  Netzwerk, ohne Drittkonto und ohne entfernten Dienst. Die Aufnahmen unten stammen aus der
+  Anwendung, mit simulierten Kameras.</p>
+  <p class="sec it">Un'applicazione Android porta le stesse funzioni sul telefono: diretta,
+  rilevamenti, riproduzione e avvisi. Parla direttamente con la console, sulla rete locale,
+  senza account di terzi né servizio remoto. Le immagini seguenti provengono
+  dall'applicazione, su telecamere simulate.</p>
+
+  <div class="ecrans">
+      <figure>
+        <img src="assets/mobile/direct.jpg" width="720" height="1476" loading="lazy"
+             alt="Alcora sur Android — Direct">
+        <figcaption><span class="fr">Direct</span><span class="en">Live</span><span class="de">Live</span><span class="it">Diretta</span></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/mobile/detections.jpg" width="720" height="1476" loading="lazy"
+             alt="Alcora sur Android — Détections">
+        <figcaption><span class="fr">Détections</span><span class="en">Detections</span><span class="de">Erkennungen</span><span class="it">Rilevamenti</span></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/mobile/relecture.jpg" width="720" height="1476" loading="lazy"
+             alt="Alcora sur Android — Relecture">
+        <figcaption><span class="fr">Relecture</span><span class="en">Replay</span><span class="de">Wiedergabe</span><span class="it">Riproduzione</span></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/mobile/alertes.jpg" width="720" height="1476" loading="lazy"
+             alt="Alcora sur Android — Alertes">
+        <figcaption><span class="fr">Alertes</span><span class="en">Alerts</span><span class="de">Alarme</span><span class="it">Avvisi</span></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/mobile/reglages.jpg" width="720" height="1476" loading="lazy"
+             alt="Alcora sur Android — Réglages">
+        <figcaption><span class="fr">Réglages</span><span class="en">Settings</span><span class="de">Einstellungen</span><span class="it">Impostazioni</span></figcaption>
+      </figure>
+  </div>
+
+  <p class="sec note-mobile fr">L'application Android n'est pas encore distribuée.</p>
+  <p class="sec note-mobile en">The Android application is not yet distributed.</p>
+  <p class="sec note-mobile de">Die Android-Anwendung wird noch nicht verteilt.</p>
+  <p class="sec note-mobile it">L'applicazione Android non è ancora distribuita.</p>
 
   <!-- ================================================== CONFIDENTIALITÉ ===== -->
   <section class="local">
@@ -1565,7 +1405,7 @@ fr:{ 'esp.direct':'Direct','esp.recherche':'Détections','esp.relecture':'Relect
 't.sonOn':'Couper le son','t.sonOff':'Activer le son','t.pasDeSon':'Ce flux ne porte pas de son',
 't.interpole':'interpolé','t.imageEnregistree':'Image enregistrée — démonstration',
 'o.derniere':'La dernière caméra visible ne se masque pas','o.reafficher':'Réafficher','o.masquer':'Masquer de la mosaïque',
-'v.instant':'à l’instant','t.aucune':'aucune détection aujourd’hui',
+'v.instant':'à l’instant',
 'veille1.nom':'Personnes, la nuit','veille1.det':'Personne · toutes caméras · 22h–06h · avec son',
 'veille2.nom':'Véhicules sur l’allée','veille2.det':'Véhicule · Allée · toute la journée',
 'veille3.nom':'Tout mouvement','veille3.det':'Mouvement · toutes caméras · en continu',
@@ -1591,7 +1431,7 @@ en:{ 'esp.direct':'Live','esp.recherche':'Detections','esp.relecture':'Replay','
 't.sonOn':'Mute','t.sonOff':'Enable sound','t.pasDeSon':'This stream carries no audio',
 't.interpole':'interpolated','t.imageEnregistree':'Image saved — demonstration',
 'o.derniere':'The last visible camera cannot be hidden','o.reafficher':'Show again','o.masquer':'Hide from the mosaic',
-'v.instant':'just now','t.aucune':'no detection today',
+'v.instant':'just now',
 'veille1.nom':'People, at night','veille1.det':'Person · all cameras · 22:00–06:00 · with sound',
 'veille2.nom':'Vehicles on the driveway','veille2.det':'Vehicle · Driveway · all day',
 'veille3.nom':'Any motion','veille3.det':'Motion · all cameras · continuous',
@@ -1617,7 +1457,7 @@ de:{ 'esp.direct':'Live','esp.recherche':'Erkennungen','esp.relecture':'Wiederga
 't.sonOn':'Ton aus','t.sonOff':'Ton einschalten','t.pasDeSon':'Dieser Stream führt keinen Ton',
 't.interpole':'interpoliert','t.imageEnregistree':'Bild gespeichert — Demonstration',
 'o.derniere':'Die letzte sichtbare Kamera lässt sich nicht ausblenden','o.reafficher':'Wieder anzeigen','o.masquer':'Aus dem Mosaik ausblenden',
-'v.instant':'soeben','t.aucune':'heute keine Erkennung',
+'v.instant':'soeben',
 'veille1.nom':'Personen, nachts','veille1.det':'Person · alle Kameras · 22–06 Uhr · mit Ton',
 'veille2.nom':'Fahrzeuge auf der Einfahrt','veille2.det':'Fahrzeug · Einfahrt · den ganzen Tag',
 'veille3.nom':'Jede Bewegung','veille3.det':'Bewegung · alle Kameras · durchgehend',
@@ -1643,7 +1483,7 @@ it:{ 'esp.direct':'Diretta','esp.recherche':'Rilevamenti','esp.relecture':'Ripro
 't.sonOn':'Silenzia','t.sonOff':'Attiva l’audio','t.pasDeSon':'Questo flusso non porta audio',
 't.interpole':'interpolato','t.imageEnregistree':'Immagine salvata — dimostrazione',
 'o.derniere':'L’ultima telecamera visibile non si può nascondere','o.reafficher':'Mostra di nuovo','o.masquer':'Nascondi dal mosaico',
-'v.instant':'proprio ora','t.aucune':'nessun rilevamento oggi',
+'v.instant':'proprio ora',
 'veille1.nom':'Persone, di notte','veille1.det':'Persona · tutte le telecamere · 22–06 · con suono',
 'veille2.nom':'Veicoli sul vialetto','veille2.det':'Veicolo · Vialetto · tutto il giorno',
 'veille3.nom':'Ogni movimento','veille3.det':'Movimento · tutte le telecamere · in continuo',
@@ -1733,73 +1573,7 @@ function dimensionnerMosaique(){
 }
 window.addEventListener('resize', dimensionnerMosaique);
 
-/*
- * L'ETROIT REORDONNE — la hierarchie de l'application, pas celle du bureau.
- *
- * Compare aux deux captures du 25.08.2026 (l'application reelle sur le telephone de
- * Thomas contre la demonstration) : l'application ouvre sur l'APERCU DU JOUR — le
- * compteur de detections, l'histogramme, la pellicule des recentes — puis les cameras
- * en grandes cartes. La demonstration, elle, rangeait tout cela dans le panneau lateral,
- * SOUS les cameras une fois empilee. Meme contenu, mauvais ordre.
- *
- * On DEPLACE donc trois blocs du panneau vers un perchoir au-dessus de la scene quand la
- * disposition est en colonne, et on les REND au panneau quand elle repasse en ligne.
- * Deplacer les noeuds — plutot que les dupliquer — garde vivants leurs identifiants,
- * que rendreVives() et l'histogramme reecrivent en continu.
- */
-(function reordonnerEtroit(){
-  const entete = $('#entete-app');
-  const perchoir = $('#apercu-jour');
-  if (!entete || !perchoir) return;
-  const texte = entete.querySelector('.entete-txt');
-  const etroit = window.matchMedia('(max-width:760px)');
-  /*
-   * Chaque bloc part vers SA destination : l'en-tete recoit la marque, l'etat et le
-   * bouton ; l'apercu du jour recoit le compteur, l'histogramme et les recentes.
-   * DEPLACES, pas dupliques — rendreVives() et l'histogramme reecrivent ces noeuds en
-   * continu, une copie serait morte a la premiere mise a jour. Un temoin (commentaire
-   * DOM) memorise la place d'origine, et le retour en large l'y REND.
-   */
-  const routes = () => [
-    [$('#logo-marque'), entete, 'avant-texte'],
-    /* Le panneau ENTIER demenage dans l'onglet Reglages : sur le Direct de
-       l'application il n'existe pas — cameras, enregistrements et versions y vivent
-       sous Reglages. Rien n'est masque : tout change d'onglet. */
-    [document.querySelector('.panneau'), $('#zone-reglages'), 'debut'],
-    [$('#ligne-etat'), texte, 'fin'],
-    [$('#btn-reinit'), entete, 'fin'],
-    [$('#titre-jour'), perchoir, 'fin'],
-    [$('#histo'), perchoir, 'fin'],
-    [$('#titre-vives'), perchoir, 'fin'],
-    [$('#liste-vives'), perchoir, 'fin'],
-  ];
-  const temoins = new Map();
-  function poser(){
-    if (etroit.matches) {
-      for (const [b, cible, mode] of routes()) {
-        if (!b || b.parentElement === cible) continue;
-        if (!temoins.has(b)) {
-          const t = document.createComment('place de ' + (b.id || b.className));
-          b.before(t); temoins.set(b, t);
-        }
-        if (mode === 'avant-texte') cible.insertBefore(b, texte);
-        else if (mode === 'debut') cible.prepend(b);
-        else cible.appendChild(b);
-      }
-      entete.hidden = false;
-      perchoir.hidden = false;
-    } else {
-      for (const [b] of routes()) {
-        const t = temoins.get(b);
-        if (b && t && t.parentNode && b.parentElement !== t.parentNode) t.after(b);
-      }
-      entete.hidden = true;
-      perchoir.hidden = true;
-    }
-  }
-  etroit.addEventListener('change', poser);
-  poser();
-})();
+
 /*
  * UN « resize » DE FENETRE NE SUFFIT PAS — surtout sur telephone.
  *
@@ -1833,7 +1607,7 @@ function tuileHtml(c){
   return `
   <div class="tuile" data-cam="${c.id}">
     <div class="bandeau">
-      <span class="nom-cam">${nomCam(c)}</span><span class="sous-cam" data-souscam="${c.id}">${tr('t.aucune')}</span><span class="badge-def">${c.def}</span>
+      <span class="nom-cam">${nomCam(c)}</span><span class="badge-def">${c.def}</span>
       <button class="cmd" title="${tr('t.revoir')}" onclick="demoRelecture('${c.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
       <button class="cmd" title="${tr('t.detections')}" onclick="demoDetections('${c.id}')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
       <button class="cmd" title="${tr('t.capturer')}" onclick="demoCapture('${c.id}')"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg></button>
@@ -1961,9 +1735,6 @@ function pousserVive(evt, quand){
   vives.unshift({...evt, quand, instant: quand===null});
   if (vives.length>3) vives.pop();
   rendreVives();
-  // Le sous-titre de la carte, comme dans l'application : « Personne · à l'instant ».
-  const sc = document.querySelector('.sous-cam[data-souscam="'+evt.cam.id+'"]');
-  if (sc) sc.textContent = tr('sujet.'+evt.type) + ' · ' + (quand ?? tr('v.instant'));
 }
 
 (function(){
