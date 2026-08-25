@@ -518,9 +518,10 @@
 
     /* La liste des cameras reste LISIBLE et defilante : la masquer aurait coute du
        contenu, ce qu'un habillage ne doit jamais faire. */
-    .panneau{order:3;width:auto;flex:0 0 auto;overflow:visible;
-             border-right:0;border-top:1px solid var(--verre-bord);border-radius:0;
-             box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+    /* Le panneau vit desormais DANS l'onglet Reglages (deplace par reordonnerEtroit) :
+       il y perd son habit de colonne de bureau pour celui d'un bloc de reglages. */
+    .panneau{width:auto;flex:none;overflow:visible;background:none;
+             border:0;border-radius:0;box-shadow:none;padding:4px 2px}
     /* L'etat est monte dans l'en-tete ; son etiquette seule n'annonce plus rien. */
     #titre-etat{display:none}
 
@@ -634,6 +635,10 @@
       padding:6px 2px;cursor:pointer}
 
     .apercu-jour{order:1;flex:0 0 auto;padding:2px 16px 4px;position:relative;z-index:2}
+    /* L'en-tete et l'apercu n'appartiennent qu'au DIRECT : dans l'application, les autres
+       onglets ne les portent pas. « :has » lit l'onglet actif depuis la scene voisine. */
+    .alcapp:not(:has(.espace-vue.actif[data-vue="direct"])) .entete-app,
+    .alcapp:not(:has(.espace-vue.actif[data-vue="direct"])) .apercu-jour{display:none}
     /* « AUJOURD'HUI  38 » — l'etiquette en petites capitales, le compte en GRAND.
        font-size:0 sur le titre avale le separateur textuel ; chaque enfant reprend
        sa taille. */
@@ -1041,7 +1046,7 @@
             </div>
             <div class="espace-vue" data-vue="alertes"><div class="veilles-liste" id="veilles"></div></div>
             <div class="espace-vue" data-vue="reglages">
-              <div class="regl">
+              <div class="regl" id="zone-reglages">
                 <div class="bloc">
                   <h5 data-t="g.version">Version</h5>
                   <p>Alcora <b style="color:var(--ok)">2.25.0</b><span data-t="g.aJour"> — à jour. La mise à jour se
@@ -1713,6 +1718,10 @@ window.addEventListener('resize', dimensionnerMosaique);
    */
   const routes = () => [
     [$('#logo-marque'), entete, 'avant-texte'],
+    /* Le panneau ENTIER demenage dans l'onglet Reglages : sur le Direct de
+       l'application il n'existe pas — cameras, enregistrements et versions y vivent
+       sous Reglages. Rien n'est masque : tout change d'onglet. */
+    [document.querySelector('.panneau'), $('#zone-reglages'), 'debut'],
     [$('#ligne-etat'), texte, 'fin'],
     [$('#btn-reinit'), entete, 'fin'],
     [$('#titre-jour'), perchoir, 'fin'],
@@ -1730,6 +1739,7 @@ window.addEventListener('resize', dimensionnerMosaique);
           b.before(t); temoins.set(b, t);
         }
         if (mode === 'avant-texte') cible.insertBefore(b, texte);
+        else if (mode === 'debut') cible.prepend(b);
         else cible.appendChild(b);
       }
       entete.hidden = false;
