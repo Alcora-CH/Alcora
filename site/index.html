@@ -223,6 +223,9 @@
   .demo-cadre{border:1px solid var(--verre-bord);border-radius:16px;padding:10px;
     background:rgba(20,23,27,.42);-webkit-backdrop-filter:var(--verre-flou);backdrop-filter:var(--verre-flou)}
   .demo-scroll{overflow-x:auto}
+  /* Le sous-titre de carte ne vit qu'a l'etroit : le bandeau du bureau est une barre
+     compacte, il n'a pas la place d'une seconde ligne. */
+  .sous-cam{display:none}
   .ruban{display:flex;justify-content:space-between;align-items:center;gap:10px;
          padding:6px 10px 12px;font-size:12px;color:var(--soft)}
   .ruban b{color:var(--accent-d);font-weight:600}
@@ -506,10 +509,24 @@
      * hauteur de son contenu, les ascenseurs internes disparaissent, et c'est la PAGE qui
      * defile — la barre d'onglets restant collee en bas, comme celle de l'application.
      */
-    /* « overflow:visible » et non hidden : l'arrondi du bureau confinerait le
-       « position:sticky » de la barre d'onglets a son propre cadre — elle ne collerait
-       jamais au bas de l'ecran. Meme raison pour demo-scroll. */
-    .alcapp{flex-direction:column;height:auto;overflow:visible}
+    /*
+     * BORD A BORD. L'application n'est pas un widget dans une page : elle EST l'ecran,
+     * posee sur le ciel. La boite de verre du bureau — bordure, fond, coins ronds,
+     * marges — est donc retiree, et le cadre s'etale sur toute la largeur de l'ecran
+     * (« calc(50% - 50vw) » annule les marges du conteneur, quel qu'il soit).
+     *
+     * « overflow:visible » et non hidden : l'arrondi du bureau confinerait le
+     * « position:sticky » de la barre d'onglets a son propre cadre.
+     */
+    /* 50vw compte la barre de defilement verticale : le bord-a-bord depasserait de
+       quelques pixels et ferait naitre une barre horizontale. On scelle l'axe. */
+    body{overflow-x:clip}
+    .demo-cadre{margin:0 calc(50% - 50vw);border:0;border-radius:0;background:none;
+      -webkit-backdrop-filter:none;backdrop-filter:none;padding:0}
+    .ruban{justify-content:center;text-align:center;font-size:11.5px;padding:0 18px 10px}
+    .alcapp{flex-direction:column;height:auto;overflow:visible;
+      background:none;border:0;border-radius:0;
+      -webkit-backdrop-filter:none;backdrop-filter:none}
     .demo-scroll{overflow:visible}
     .espace-vue{position:static;inset:auto}
     .espace-vue.actif{min-height:340px}
@@ -526,7 +543,7 @@
     #titre-etat{display:none}
 
     .rail{order:4;width:auto;flex:0 0 auto;flex-direction:row;
-          justify-content:space-around;gap:2px;padding:7px 4px 9px;
+          justify-content:space-around;gap:2px;padding:8px 4px 11px;
           border-right:0;border-top:1px solid var(--verre-bord);
           position:sticky;bottom:0;z-index:6;
           background:rgba(13,16,21,.92);
@@ -613,7 +630,8 @@
     .rail button{width:auto;height:auto;flex:1;min-width:0;
       display:flex;flex-direction:column;align-items:center;justify-content:center;
       gap:3px;padding:5px 2px 4px;border-radius:9px}
-    .rail button::after{content:attr(title);font-size:9.5px;line-height:1.1;
+    .rail svg{width:22px;height:22px}
+    .rail button::after{content:attr(title);font-size:11px;line-height:1.15;
       letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
       max-width:100%}
     .rail button[aria-current="true"]::after{color:var(--accent)}
@@ -626,12 +644,12 @@
     /* L'EN-TETE D'APPLICATION : la marque, le titre en grand, l'etat en vert dessous,
        et le geste de rafraichissement a droite — la premiere ligne de l'application. */
     .entete-app{order:0;display:flex;align-items:center;gap:12px;padding:16px 16px 10px}
-    .entete-app .logo{width:40px;height:40px;color:var(--accent);flex:0 0 auto;margin:0}
+    .entete-app .logo{width:44px;height:44px;color:var(--accent);flex:0 0 auto;margin:0}
     .entete-txt{flex:1;min-width:0}
-    .entete-titre{font-size:20px;font-weight:650;color:var(--ink);line-height:1.15}
+    .entete-titre{font-size:22px;font-weight:650;color:var(--ink);line-height:1.15}
     .entete-app .ligne{justify-content:flex-start;gap:6px;padding:2px 0 0}
-    .entete-app .ligne .k{color:var(--ok);font-size:12.5px}
-    .entete-app button{background:none;border:0;color:var(--ink);font-size:14px;
+    .entete-app .ligne .k{color:var(--ok);font-size:13px}
+    .entete-app button{background:none;border:0;color:var(--ink);font-size:15px;
       padding:6px 2px;cursor:pointer}
 
     .apercu-jour{order:1;flex:0 0 auto;padding:2px 16px 4px;position:relative;z-index:2}
@@ -644,15 +662,15 @@
        sa taille. */
     .apercu-jour #titre-jour{display:flex;align-items:baseline;gap:8px;font-size:0;
       margin:4px 0 6px}
-    .apercu-jour #titre-jour > span:first-child{font-size:11px;text-transform:uppercase;
+    .apercu-jour #titre-jour > span:first-child{font-size:12px;text-transform:uppercase;
       letter-spacing:.09em;color:var(--soft);font-weight:650}
-    .apercu-jour #compte-jour{font-size:22px;font-weight:650;color:var(--ink)}
+    .apercu-jour #compte-jour{font-size:24px;font-weight:650;color:var(--ink)}
     /* Le mot suit la langue par le meme mecanisme que tout le reste de la page. */
     html[lang="fr"] .apercu-jour #compte-jour::after{content:" détections"}
     html[lang="en"] .apercu-jour #compte-jour::after{content:" detections"}
     html[lang="de"] .apercu-jour #compte-jour::after{content:" Erkennungen"}
     html[lang="it"] .apercu-jour #compte-jour::after{content:" rilevamenti"}
-    .apercu-jour .histo{height:46px;margin-bottom:12px;gap:3px}
+    .apercu-jour .histo{height:52px;margin-bottom:14px;gap:3px}
     .apercu-jour .histo i{border-radius:3px 3px 0 0}
     /* Le titre « Detections recentes » ne s'affiche pas ici : l'application ne met
        aucune etiquette au-dessus de la pellicule, les vignettes parlent d'elles-memes. */
@@ -663,10 +681,10 @@
     .apercu-jour #liste-vives::-webkit-scrollbar{display:none}
     .apercu-jour .vive{flex:0 0 auto;width:auto;flex-direction:column;align-items:center;
       gap:5px;padding:0}
-    .apercu-jour .vive .mini{width:112px;height:64px;border-radius:11px;
+    .apercu-jour .vive .mini{width:118px;height:68px;border-radius:12px;
       border:1px solid rgba(255,255,255,.14)}
     .apercu-jour .vive .quoi{display:none}
-    .apercu-jour .vive .quand{font-size:12px;font-family:Consolas,monospace;
+    .apercu-jour .vive .quand{font-size:13px;font-family:Consolas,monospace;
       color:var(--ink);letter-spacing:.06em}
 
     /*
@@ -675,16 +693,28 @@
      * definition restent dans le DOM mais se rangent : sur cette carte de telephone, ils
      * ecrasaient le nom, et l'application reelle ne les montre pas non plus.
      */
-    .mosaique .nom-cam{font-size:18px;font-weight:600}
+    .mosaique .bandeau{display:grid;grid-template-columns:1fr auto;align-items:end;
+      row-gap:3px;padding:34px 14px 13px}
+    .mosaique .nom-cam{grid-column:1;grid-row:1;font-size:21px;font-weight:600;
+      text-shadow:0 1px 4px rgba(0,0,0,.7)}
+    .mosaique .sous-cam{display:block;grid-column:1;grid-row:2;font-size:14px;
+      color:var(--doux);text-shadow:0 1px 3px rgba(0,0,0,.7)}
     .mosaique .badge-def,
     .mosaique .cmd:not(:first-of-type){display:none}
-    .mosaique .cmd:first-of-type{width:44px;height:44px;border-radius:50%;
+    .mosaique .cmd:first-of-type{grid-column:2;grid-row:1/3;align-self:end;
+      width:50px;height:50px;border-radius:50%;
       border:1px solid var(--accent-d);color:var(--accent-d);background:rgba(10,12,16,.35)}
-    .mosaique .cmd:first-of-type svg{width:17px;height:17px}
-    .mosaique .bandeau{align-items:center;padding:30px 12px 10px}
+    .mosaique .cmd:first-of-type svg{width:20px;height:20px}
+
+    /* L'horodatage de l'application est du texte nu pose sur l'image, pas une
+       pastille encadree. L'ombre le rend lisible sur n'importe quelle scene. */
+    .mosaique .horodatage{background:none;border:0;padding:0;left:12px;top:10px;
+      -webkit-backdrop-filter:none;backdrop-filter:none;font-size:11px;color:#fff;
+      text-shadow:0 1px 3px rgba(0,0,0,.85)}
 
     /* Les cartes respirent comme dans l'application. */
-    .mosaique .tuile{margin-bottom:14px;border-radius:14px}
+    .mosaique .tuile{margin-bottom:16px;border-radius:16px}
+    .mosaique{padding:14px 16px 8px}
 
     /* Le toast se pose au-dessus de la barre d'onglets, pas au milieu d'une carte :
        il est positionne par rapport a la scene, qui a l'etroit est devenue la premiere
@@ -1521,7 +1551,7 @@ fr:{ 'esp.direct':'Direct','esp.recherche':'Détections','esp.relecture':'Relect
 't.sonOn':'Couper le son','t.sonOff':'Activer le son','t.pasDeSon':'Ce flux ne porte pas de son',
 't.interpole':'interpolé','t.imageEnregistree':'Image enregistrée — démonstration',
 'o.derniere':'La dernière caméra visible ne se masque pas','o.reafficher':'Réafficher','o.masquer':'Masquer de la mosaïque',
-'v.instant':'à l’instant',
+'v.instant':'à l’instant','t.aucune':'aucune détection aujourd’hui',
 'veille1.nom':'Personnes, la nuit','veille1.det':'Personne · toutes caméras · 22h–06h · avec son',
 'veille2.nom':'Véhicules sur l’allée','veille2.det':'Véhicule · Allée · toute la journée',
 'veille3.nom':'Tout mouvement','veille3.det':'Mouvement · toutes caméras · en continu',
@@ -1547,7 +1577,7 @@ en:{ 'esp.direct':'Live','esp.recherche':'Detections','esp.relecture':'Replay','
 't.sonOn':'Mute','t.sonOff':'Enable sound','t.pasDeSon':'This stream carries no audio',
 't.interpole':'interpolated','t.imageEnregistree':'Image saved — demonstration',
 'o.derniere':'The last visible camera cannot be hidden','o.reafficher':'Show again','o.masquer':'Hide from the mosaic',
-'v.instant':'just now',
+'v.instant':'just now','t.aucune':'no detection today',
 'veille1.nom':'People, at night','veille1.det':'Person · all cameras · 22:00–06:00 · with sound',
 'veille2.nom':'Vehicles on the driveway','veille2.det':'Vehicle · Driveway · all day',
 'veille3.nom':'Any motion','veille3.det':'Motion · all cameras · continuous',
@@ -1573,7 +1603,7 @@ de:{ 'esp.direct':'Live','esp.recherche':'Erkennungen','esp.relecture':'Wiederga
 't.sonOn':'Ton aus','t.sonOff':'Ton einschalten','t.pasDeSon':'Dieser Stream führt keinen Ton',
 't.interpole':'interpoliert','t.imageEnregistree':'Bild gespeichert — Demonstration',
 'o.derniere':'Die letzte sichtbare Kamera lässt sich nicht ausblenden','o.reafficher':'Wieder anzeigen','o.masquer':'Aus dem Mosaik ausblenden',
-'v.instant':'soeben',
+'v.instant':'soeben','t.aucune':'heute keine Erkennung',
 'veille1.nom':'Personen, nachts','veille1.det':'Person · alle Kameras · 22–06 Uhr · mit Ton',
 'veille2.nom':'Fahrzeuge auf der Einfahrt','veille2.det':'Fahrzeug · Einfahrt · den ganzen Tag',
 'veille3.nom':'Jede Bewegung','veille3.det':'Bewegung · alle Kameras · durchgehend',
@@ -1599,7 +1629,7 @@ it:{ 'esp.direct':'Diretta','esp.recherche':'Rilevamenti','esp.relecture':'Ripro
 't.sonOn':'Silenzia','t.sonOff':'Attiva l’audio','t.pasDeSon':'Questo flusso non porta audio',
 't.interpole':'interpolato','t.imageEnregistree':'Immagine salvata — dimostrazione',
 'o.derniere':'L’ultima telecamera visibile non si può nascondere','o.reafficher':'Mostra di nuovo','o.masquer':'Nascondi dal mosaico',
-'v.instant':'proprio ora',
+'v.instant':'proprio ora','t.aucune':'nessun rilevamento oggi',
 'veille1.nom':'Persone, di notte','veille1.det':'Persona · tutte le telecamere · 22–06 · con suono',
 'veille2.nom':'Veicoli sul vialetto','veille2.det':'Veicolo · Vialetto · tutto il giorno',
 'veille3.nom':'Ogni movimento','veille3.det':'Movimento · tutte le telecamere · in continuo',
@@ -1789,7 +1819,7 @@ function tuileHtml(c){
   return `
   <div class="tuile" data-cam="${c.id}">
     <div class="bandeau">
-      <span class="nom-cam">${nomCam(c)}</span><span class="badge-def">${c.def}</span>
+      <span class="nom-cam">${nomCam(c)}</span><span class="sous-cam" data-souscam="${c.id}">${tr('t.aucune')}</span><span class="badge-def">${c.def}</span>
       <button class="cmd" title="${tr('t.revoir')}" onclick="demoRelecture('${c.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
       <button class="cmd" title="${tr('t.detections')}" onclick="demoDetections('${c.id}')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
       <button class="cmd" title="${tr('t.capturer')}" onclick="demoCapture('${c.id}')"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg></button>
@@ -1917,6 +1947,9 @@ function pousserVive(evt, quand){
   vives.unshift({...evt, quand, instant: quand===null});
   if (vives.length>3) vives.pop();
   rendreVives();
+  // Le sous-titre de la carte, comme dans l'application : « Personne · à l'instant ».
+  const sc = document.querySelector('.sous-cam[data-souscam="'+evt.cam.id+'"]');
+  if (sc) sc.textContent = tr('sujet.'+evt.type) + ' · ' + (quand ?? tr('v.instant'));
 }
 
 (function(){
