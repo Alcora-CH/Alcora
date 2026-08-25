@@ -592,6 +592,50 @@
       letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
       max-width:100%}
     .rail button[aria-current="true"]::after{color:var(--accent)}
+
+    /*
+     * L'APERCU DU JOUR, au-dessus des cameras — la ou l'application le met. Les blocs
+     * eux-memes viennent du panneau, deplaces par « reordonnerEtroit » : ici on ne fait
+     * que les habiller pour leur nouvelle place.
+     */
+    .apercu-jour{flex:0 0 auto;padding:10px 12px 4px;position:relative;z-index:2}
+    .apercu-jour h4{font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--soft);margin:2px 0 5px;font-weight:650}
+    .apercu-jour #titre-jour{font-size:12px;text-transform:none;letter-spacing:0;
+      color:var(--ink)}
+    .apercu-jour #compte-jour{color:var(--accent-d)}
+    .apercu-jour .histo{height:34px;margin-bottom:8px}
+    /* La pellicule des recentes DEFILE a l'horizontale, comme dans l'application. */
+    .apercu-jour #liste-vives{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+    .apercu-jour .vive{flex:0 0 auto;width:auto;flex-direction:column;align-items:flex-start;
+      gap:4px;padding:0}
+    .apercu-jour .vive .mini{width:92px;height:54px;border-radius:8px;
+      border:1px solid rgba(255,255,255,.14)}
+    .apercu-jour .vive .quoi{font-size:10.5px}
+    .apercu-jour .vive .quoi small{display:none}
+    .apercu-jour .vive .quand{font-size:10px;color:var(--soft)}
+
+    /*
+     * LE BANDEAU D'UNE CARTE, allege a la maniere de l'application : le NOM en grand, et
+     * UN SEUL geste mis en avant — revoir. Les trois autres commandes et le badge de
+     * definition restent dans le DOM mais se rangent : sur cette carte de telephone, ils
+     * ecrasaient le nom, et l'application reelle ne les montre pas non plus.
+     */
+    .mosaique .nom-cam{font-size:17px;font-weight:600}
+    .mosaique .badge-def,
+    .mosaique .cmd:not(:first-of-type){display:none}
+    .mosaique .cmd:first-of-type{width:44px;height:44px;border-radius:50%;
+      border:1px solid var(--accent-d);color:var(--accent-d);background:rgba(10,12,16,.35)}
+    .mosaique .cmd:first-of-type svg{width:17px;height:17px}
+    .mosaique .bandeau{align-items:center;padding:30px 12px 10px}
+
+    /* Les cartes respirent comme dans l'application. */
+    .mosaique .tuile{margin-bottom:14px;border-radius:14px}
+
+    /* Le toast se pose au-dessus de la barre d'onglets, pas au milieu d'une carte :
+       il est positionne par rapport a la scene, qui a l'etroit est devenue la premiere
+       bande de la pile. */
+    .toast{left:10px;right:10px;bottom:8px;max-width:none}
   }
 
   /* ----------------------------------------------------- les sections ------ */
@@ -856,9 +900,9 @@
             <div class="ligne"><span class="point"></span><span class="k" data-t="p.fluxPret">Flux vidéo prêt.</span></div>
             <h4 data-t="p.cameras">Caméras</h4>
             <div id="liste-cams"></div>
-            <h4 data-t="p.recentes">Détections récentes</h4>
+            <h4 id="titre-vives" data-t="p.recentes">Détections récentes</h4>
             <div id="liste-vives"></div>
-            <h4><span data-t="p.aujourdhui">Aujourd'hui</span> · <span id="compte-jour">0</span></h4>
+            <h4 id="titre-jour"><span data-t="p.aujourdhui">Aujourd'hui</span> · <span id="compte-jour">0</span></h4>
             <div class="histo" id="histo"></div>
             <h4 data-t="p.enregistrements">Enregistrements</h4>
             <div class="ligne"><span class="k" data-t="p.plusAncien">Le plus ancien</span><span class="v">16.02.26</span></div>
@@ -872,6 +916,10 @@
             <p class="pied-panneau" data-t="p.pied">Aucune image ne quitte votre réseau.</p>
           </div>
 
+          <!-- L'ETROIT REORDONNE — voir « reordonnerEtroit ». Vide et sans effet en large :
+               a l'etroit, l'apercu du jour (compteur, histogramme, detections recentes) vient
+               se percher ICI, au-dessus des cameras, comme le fait l'application. -->
+          <div class="apercu-jour" id="apercu-jour" hidden></div>
           <div class="scene" id="scene">
             <!-- Le ciel de la démonstration : le même que celui de la page, en réduction.
                  Il donne au verre des îlots quelque chose à réfracter — sans lui, on ne
@@ -1581,6 +1629,51 @@ function dimensionnerMosaique(){
   m.style.gridAutoRows=`${Math.floor(meilleur.th)}px`;
 }
 window.addEventListener('resize', dimensionnerMosaique);
+
+/*
+ * L'ETROIT REORDONNE — la hierarchie de l'application, pas celle du bureau.
+ *
+ * Compare aux deux captures du 25.08.2026 (l'application reelle sur le telephone de
+ * Thomas contre la demonstration) : l'application ouvre sur l'APERCU DU JOUR — le
+ * compteur de detections, l'histogramme, la pellicule des recentes — puis les cameras
+ * en grandes cartes. La demonstration, elle, rangeait tout cela dans le panneau lateral,
+ * SOUS les cameras une fois empilee. Meme contenu, mauvais ordre.
+ *
+ * On DEPLACE donc trois blocs du panneau vers un perchoir au-dessus de la scene quand la
+ * disposition est en colonne, et on les REND au panneau quand elle repasse en ligne.
+ * Deplacer les noeuds — plutot que les dupliquer — garde vivants leurs identifiants,
+ * que rendreVives() et l'histogramme reecrivent en continu.
+ */
+(function reordonnerEtroit(){
+  const perchoir = $('#apercu-jour');
+  if (!perchoir) return;
+  const panneau = document.querySelector('.panneau');
+  const etroit = window.matchMedia('(max-width:760px)');
+  const blocs = () => [$('#titre-jour'), $('#histo'), $('#titre-vives'), $('#liste-vives')];
+  // Les temoins de place : des marqueurs inertes qui memorisent ou chaque bloc retourne.
+  const temoins = new Map();
+  function poser(){
+    if (etroit.matches) {
+      for (const b of blocs()) {
+        if (!b || b.parentElement === perchoir) continue;
+        if (!temoins.has(b)) {
+          const t = document.createComment('place de ' + (b.id || b.className));
+          b.before(t); temoins.set(b, t);
+        }
+        perchoir.appendChild(b);
+      }
+      perchoir.hidden = false;
+    } else {
+      for (const b of blocs()) {
+        const t = temoins.get(b);
+        if (b && t && b.parentElement === perchoir) t.after(b);
+      }
+      perchoir.hidden = true;
+    }
+  }
+  etroit.addEventListener('change', poser);
+  poser();
+})();
 /*
  * UN « resize » DE FENETRE NE SUFFIT PAS — surtout sur telephone.
  *
