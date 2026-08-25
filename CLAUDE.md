@@ -43,15 +43,15 @@ npm run build:linux    # exige WSL (Ubuntu) et v2/relay/mediamtx-linux-x64
 - **Les deux binaires du relais cohabitent** dans `v2/relay/` (hors dépôt) :
   `mediamtx.exe` et `mediamtx-linux-x64`, **même version** — la livraison Linux le
   renomme `mediamtx`, ce que `main.js` cherche hors Windows.
-- **Version épinglée du relais : `v1.20.0`** (montée le 11.08.2026 depuis la 1.19.2).
+- **Version épinglée du relais : `v1.20.1`** (1.19.2 → 1.20.0 le 11.08.2026, 1.20.0 → 1.20.1 le 26.08.2026 : deux paniques sur entrée malformée, un mot de passe masqué dans les réponses, un défaut d'authentification resserré).
   C'est la seule dépendance d'exécution d'Alcora : elle ne s'approvisionne pas toute
   seule, et rien dans le dépôt ne la vérifie. Le faire à la main, dans cet ordre :
 
   ```
-  gh release download v1.20.0 --repo bluenviron/mediamtx \
-     -p 'mediamtx_v1.20.0_windows_amd64.zip' -p 'mediamtx_v1.20.0_linux_amd64.tar.gz' -p checksums.sha256
+  gh release download v1.20.1 --repo bluenviron/mediamtx \
+     -p 'mediamtx_v1.20.1_windows_amd64.zip' -p 'mediamtx_v1.20.1_linux_amd64.tar.gz' -p checksums.sha256
   sha256sum -c checksums.sha256 --ignore-missing
-  gh attestation verify mediamtx_v1.20.0_windows_amd64.zip --repo bluenviron/mediamtx
+  gh attestation verify mediamtx_v1.20.1_windows_amd64.zip --repo bluenviron/mediamtx
   ```
 
   **Les sommes seules ne suffisent pas** : elles viennent du même serveur que les
@@ -113,6 +113,30 @@ npm run build:linux    # exige WSL (Ubuntu) et v2/relay/mediamtx-linux-x64
 - La démo du navigateur (`v2/web/src/lib/bridge.ts`) imite le processus principal, mêmes
   textes — c'est l'outil de vérification vivante ; la mire vidéo
   (`v2/web/public/demo-extrait.mp4`) donne de vrais pixels au zoom et à la capture.
+
+## Une dette assumée : les règles du compilateur React
+
+`oxlint` 1.80 (26.08.2026) a ajouté six familles de règles issues du compilateur React.
+Elles rendent **45 avertissements** sur `v2/web/src`, et `--deny-warnings` fait donc
+échouer `npm test`. Elles sont **éteintes** dans `v2/web/.oxlintrc.json` :
+
+| Règle | Occurrences | Ce qu'elle dit |
+|---|---|---|
+| `react/static-components` | 16 | un composant déclaré dans un autre est recréé à chaque rendu |
+| `react/refs` | 14 | une référence lue pendant le rendu peut ne pas se rafraîchir |
+| `react/set-state-in-effect` | 5 | un `setState` synchrone dans un effet relance un rendu |
+| `react/preserve-manual-memoization` | 4 | la mémoïsation manuelle n'a pas pu être conservée |
+| `react/purity` | 3 | une valeur est modifiée pendant le rendu |
+| `react/immutability` | 3 | une prop ou un argument de crochet est muté |
+
+**Ce ne sont pas des failles** — aucune n'a de rapport avec la sécurité. Mais plusieurs
+pointent de vrais défauts latents, en particulier `react/refs` dans `video/useZoomVideo.ts`
+et les seize `static-components`. Elles ont été mises de côté parce que les corriger touche
+le zoom, la capture et la relecture — du code réglé à la main sur de vrais pixels — et que
+cela demande de vérifier l'application à l'œil, ce qui n'était pas possible ce soir-là.
+
+**À reprendre règle par règle, en vérifiant sur la mire vidéo à chaque fois.** Rallumer les
+six d'un coup et corriger en série est le chemin le plus sûr vers une régression invisible.
 
 ## Conventions
 
