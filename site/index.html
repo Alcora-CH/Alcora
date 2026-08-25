@@ -534,6 +534,64 @@
     /* Cibles tactiles : 38 px suffisent a la souris, pas au doigt. Cinq boutons de
        44 px tiennent largement dans la barre. */
     .rail button{width:44px;height:44px}
+
+    /* ---------------------------------------------------------------------------
+       L'ALLURE D'UNE APPLICATION, pas d'une fenetre de bureau retrecie.
+
+       Premiere correction du 19.08 : la demonstration tenait enfin dans l'ecran. Elle
+       gardait pourtant l'allure d'un bureau reduit — vignettes centrees au milieu du vide,
+       bandeau de titre AU-DESSUS de l'image, onglets muets. Sur un telephone, ce n'est pas
+       ce qu'on attend d'un ecran de cameras.
+
+       Rien n'est ajoute ni retire ici : les memes elements, ranges comme le fait une
+       application. Les vignettes deviennent des cartes pleine largeur empilees, et le
+       bandeau — nom, definition, les quatre commandes — passe EN SURIMPRESSION au bas de
+       l'image, sur un degrade. C'est la ou l'oeil le cherche, et cela rend a l'image toute
+       la largeur.
+       --------------------------------------------------------------------------- */
+
+    /*
+     * La mosaique cesse d'etre une grille CENTREE pour devenir une pile qui defile.
+     * « display:block » suffit : les pistes que dimensionnerMosaique ecrit en ligne
+     * (gridTemplateColumns, gridAutoRows) ne s'appliquent plus, les tuiles reprennent la
+     * largeur entiere, et il n'y a pas une ligne de JavaScript a changer.
+     */
+    .mosaique{display:block;overflow-y:auto;overscroll-behavior:contain;
+              padding:10px;align-content:start;justify-content:stretch}
+    .mosaique .tuile{position:relative;width:auto;margin:0 0 10px}
+    .mosaique .tuile:last-child{margin-bottom:0}
+
+    /* L'image porte desormais sa propre hauteur : sans « flex:1 » pour la lui donner,
+       il faut un rapport, et 16:9 est celui des cameras. */
+    .mosaique .image{flex:none;aspect-ratio:16/9}
+
+    /*
+     * Le bandeau EN SURIMPRESSION. Le degrade n'est pas decoratif : pose sur une image de
+     * nuit deja sombre, un fond plein se verrait comme une bande ; un degrade laisse
+     * l'image respirer tout en garantissant que le texte se lit, quel que soit ce que la
+     * camera regarde a cet instant.
+     */
+    .mosaique .bandeau{position:absolute;left:0;right:0;bottom:0;z-index:2;
+      height:auto;padding:26px 10px 9px;gap:8px;
+      background:linear-gradient(180deg,rgba(8,10,14,0) 0%,rgba(8,10,14,.55) 45%,rgba(8,10,14,.88) 100%)}
+    .mosaique .nom-cam{font-size:14px;font-weight:600;color:var(--ink)}
+    .mosaique .cmd{width:30px;height:30px}
+    .mosaique .cmd svg{width:15px;height:15px}
+
+    /*
+     * LES ONGLETS PORTENT LEUR NOM. Cinq pictogrammes muets se devinent a la souris, qui
+     * a le survol pour les nommer ; un doigt n'a rien. Le nom vient de « attr(title) »,
+     * donc du meme texte que l'infobulle — il suit les quatre langues sans qu'on ait a
+     * l'ecrire deux fois, et il ne peut pas diverger.
+     */
+    .rail{align-items:stretch;padding:4px 2px 6px}
+    .rail button{width:auto;height:auto;flex:1;min-width:0;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:3px;padding:5px 2px 4px;border-radius:9px}
+    .rail button::after{content:attr(title);font-size:9.5px;line-height:1.1;
+      letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      max-width:100%}
+    .rail button[aria-current="true"]::after{color:var(--accent)}
   }
 
   /* ----------------------------------------------------- les sections ------ */
