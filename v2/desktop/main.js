@@ -47,6 +47,7 @@ const { objetsDe, textesDe, filtrer, recenser, correspond } = require('./recherc
 const { FluxChangements } = require('./protect/updates');
 const { RelaySupervisor } = require('./relay');
 const { ProtectClient } = require('./protect/client');
+const { essaiUtilisable } = require('./protect/essai');
 const { Session } = require('./protect/session');
 const {
   fromBootstrap, relayPaths, etatPourInterface, camerasPourInterface,
@@ -338,6 +339,16 @@ let veilleur = null;
  */
 let clientActif = null;
 
+/*
+ * Le dernier test de connexion REUSSI, avec sa session vivante.
+ *
+ * Il n'etait pas conserve : l'enregistrement qui suit se reauthentifiait deux fois de
+ * plus, en moins de cinq secondes. Sur une console qui bride cette cadence, cela suffit
+ * a faire echouer une configuration par ailleurs parfaite — mesure le 26.08.2026 sur une
+ * UDM Pro en Protect 7.2.105. Voir protect/essai.js pour les conditions de reprise.
+ */
+let essaiRecent = null;
+
 /** Obtention et service des extraits video. Cree au demarrage, une fois le store pret. */
 let extraits = null;
 
@@ -535,6 +546,19 @@ function pushRelayState(state) {
   envoyerPage('protect:relayState', state);
 }
 
+/*
+ * Conserve la session pour le prochain demarrage. Un disque plein ou un magasin de secrets
+ * indisponible ne doit pas faire echouer une connexion par ailleurs reussie : au pire la
+ * session ne survit pas a la fermeture.
+ */
+function garderSession(s) {
+  try {
+    store.writeSecret('session', JSON.stringify(s));
+  } catch (e) {
+    journal.alerte('session', `session not kept on this machine: ${e.message}`);
+  }
+}
+
 function makeClient(config, { onFirstUse } = {}) {
   const client = new ProtectClient({
     host: config.host,
@@ -543,13 +567,7 @@ function makeClient(config, { onFirstUse } = {}) {
     session: Session.fromJSON(JSON.parse(store.readSecret('session') ?? 'null')),
     // Un disque plein ou un magasin de secrets indisponible ne doit pas faire echouer une
     // connexion par ailleurs reussie : au pire la session ne survit pas a la fermeture.
-    onSessionChanged: (s) => {
-      try {
-        store.writeSecret('session', JSON.stringify(s));
-      } catch (e) {
-        journal.alerte('session', `session not kept on this machine: ${e.message}`);
-      }
-    },
+    onSessionChanged: garderSession,
   });
   return client;
 }
@@ -776,6 +794,18 @@ ipcMain.handle('protect:testConnection', async (_event, credentials, channel) =>
   step({ step: 'flux', state: 'reussi',
          message: i18n.t('etape.diffusables', { n: streamable, port: inventory.rtspPort }) });
 
+  /*
+   * Le client SURVIT au test, avec la session qu'il vient d'ouvrir et l'empreinte qu'il
+   * vient de relever. L'enregistrement les reprend au lieu d'en redemander.
+   */
+  essaiRecent = {
+    client,
+    host: credentials.host,
+    username: credentials.username,
+    pin: discoveredPin ?? null,
+    a: Date.now(),
+  };
+
   return {
     ok: true,
     cameras: inventory.cameras,
@@ -796,12 +826,34 @@ ipcMain.handle('protect:save', async (_event, credentials, keepSignedIn) => {
   // L'empreinte relevee au test est confirmee par l'enregistrement lui-meme. Si elle
   // n'aboutit pas, on ne demarre PAS sans epinglage : accepter n'importe quel certificat
   // en silence viderait de son sens la verification d'identite du controleur.
+  const essai = essaiUtilisable(essaiRecent, credentials);
+
   if (!config.pins?.length) {
-    const probe = new ProtectClient({ host: credentials.host, pins: [], onFirstUse: (p) => config.pins = [p] });
-    probe.setCredentials(credentials);
+    // L'empreinte relevee au test est reprise telle quelle : c'est la MEME connexion qui
+    // vient de la produire, quelques secondes plus tot.
+    if (essai?.pin) config.pins = [essai.pin];
+
+    /*
+     * Elle est ensuite CONFIRMEE par une seconde poignee de main — mais sans mot de passe.
+     *
+     * Comparer un certificat ne demande aucune authentification : l'epinglage joue pendant
+     * la negociation TLS, avant qu'une seule requete parte. L'ancienne sonde appelait
+     * login(), ce qui ajoutait une authentification que la console refusait — 403 mesure
+     * le 26.08.2026, cinq secondes apres une connexion acceptee. Le controle est conserve,
+     * il ne coute plus une session.
+     */
+    const sonde = new ProtectClient({
+      host: credentials.host,
+      pins: config.pins ?? [],
+      onFirstUse: (p) => { config.pins = [p]; },
+    });
     try {
-      await probe.login();
+      await sonde.request('GET', '/');
     } catch (e) {
+      // Une empreinte qui NE CORRESPOND PAS est une alerte, jamais un incident reseau :
+      // on ne demarre pas dessus. Les autres echecs — 401, 403, coupure — ne disent rien
+      // de l'identite : la poignee de main a eu lieu, c'est tout ce qu'on demandait.
+      if (e?.name === 'PinMismatchError') throw e;
       journal.erreur('pairing', journal.deErreur(e));
     }
     if (!config.pins?.length) {
@@ -828,7 +880,19 @@ ipcMain.handle('protect:save', async (_event, credentials, keepSignedIn) => {
 
   // « configure » n'est ecrit qu'apres un demarrage reussi : une configuration qui ne
   // fonctionne pas ne doit jamais verrouiller l'ecran de connexion.
-  await connecter(config);
+  try {
+    await connecter(config, essai?.client ?? null);
+  } catch (e) {
+    /*
+     * Le journal doit porter l'erreur que l'utilisateur VOIT.
+     *
+     * Le 26.08.2026, un 503 s'affichait a l'ecran sans laisser une seule ligne : le
+     * journal montrait la sonde d'appairage echouer, puis plus rien. Impossible de savoir
+     * quelle requete avait recu ce code. Le geste le plus visible etait le seul muet.
+     */
+    journal.erreur('save', journal.deErreur(e));
+    throw e;
+  }
   config.configured = true;
   store.writeConfig(config);
 });
@@ -1501,13 +1565,28 @@ function programmerReprise(cause, delaiImpose) {
 }
 
 /** Ouvre la session puis publie les flux. Suppose les identifiants disponibles. */
-async function connecter(config) {
-  const client = makeClient(config);
-  client.setCredentials({
-    username: config.username ?? identifiantsDeSession?.username,
-    password: identifiantsDeSession?.password ?? store.readSecret('password'),
-    totpSeed: identifiantsDeSession?.totpSeed ?? store.readSecret('totp') ?? undefined,
-  });
+async function connecter(config, clientExistant = null) {
+  /*
+   * Un client deja authentifie est repris tel quel.
+   *
+   * Sa session est vivante et ses identifiants sont poses : lui en refabriquer un neuf
+   * forcait une authentification de plus — la troisieme en quelques secondes. La garde
+   * « if (!client.session.usable) » existait deja ; elle ne servait a rien tant que le
+   * client naissait vierge a chaque appel.
+   */
+  const client = clientExistant ?? makeClient(config);
+
+  if (clientExistant) {
+    // Il n'avait pas de quoi faire survivre sa session au-dela du test : on l'y raccorde.
+    client.onSessionChanged = garderSession;
+    garderSession(client.session);
+  } else {
+    client.setCredentials({
+      username: config.username ?? identifiantsDeSession?.username,
+      password: identifiantsDeSession?.password ?? store.readSecret('password'),
+      totpSeed: identifiantsDeSession?.totpSeed ?? store.readSecret('totp') ?? undefined,
+    });
+  }
 
   if (!client.session.usable) await client.login();
   pushProgression('session');

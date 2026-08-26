@@ -6,6 +6,29 @@ const { Session } = require('./session');
 const { normalizeSecret, decodeSecret, computeTotp } = require('./totp');
 const E = require('./errors');
 
+/*
+ * QUAND une authentification a reussi — pour tout le processus, pas par client.
+ *
+ * Le bridage est une propriete de la CONSOLE, pas d'un objet client : elle compte les
+ * tentatives d'un compte, quel que soit le code qui les emet. Un compteur porte par
+ * l'instance ne verrait donc jamais rien, chaque client naissant vierge.
+ *
+ * Mesure du 26.08.2026 sur une UDM Pro en Protect 7.2.105 : session ouverte a 13:49:51,
+ * 403 cinq secondes plus tard, 429 quatorze secondes apres. Le compte avait tous les
+ * droits — c'est la CADENCE qui etait refusee.
+ */
+let derniereReussiteMs = null;
+
+/** Une authentification a-t-elle abouti dans les cinq dernieres minutes ? */
+function reussiteRecente(maintenantMs = Date.now()) {
+  return derniereReussiteMs !== null && maintenantMs - derniereReussiteMs < 300_000;
+}
+
+/** Reservee aux tests : rien en production ne doit remonter le temps. */
+function _fixerDerniereReussite(ms) {
+  derniereReussiteMs = ms;
+}
+
 /**
  * Client HTTP authentifie du controleur.
  *
@@ -128,6 +151,7 @@ class ProtectClient {
         throw new E.ApiError(res.status, 'connection accepted but no session cookie received');
       }
       this.generation++;
+      derniereReussiteMs = Date.now();
       this.onSessionChanged?.(this.session);
       return this.session;
     }
@@ -141,11 +165,21 @@ class ProtectClient {
         ? new E.TotpError(text, this.clockOffsetSeconds)
         : new E.TotpRequiredError(text);
     }
-    if (res.status === 403) throw new E.ForbiddenError('the connection');
-    if (res.status === 429) {
+    /*
+     * 403, 429 et 503 recouvrent DEUX causes opposees, et les confondre coute cher.
+     *
+     * Sans authentification recente, un 403 dit bien qu'il manque un droit. Mais APRES
+     * une connexion qui vient d'aboutir, le droit ne manque pas : c'est la console qui
+     * refuse une reconnexion trop rapprochee. Envoyer chercher un droit absent fait
+     * perdre un temps considerable — c'est ce qui est arrive le 26.08.2026, ou
+     * « Vérifier la connexion » reussissait avant que l'enregistrement soit refuse.
+     */
+    const bride = reussiteRecente() && [403, 429, 503].includes(res.status);
+    if (res.status === 429 || bride) {
       const after = Number(res.headers['retry-after']);
       throw new E.RateLimitedError(Number.isFinite(after) ? after : 30);
     }
+    if (res.status === 403) throw new E.ForbiddenError('the connection');
     if (res.status === 401 || res.status === 400) {
       // Un mot de passe faux et un second facteur refuse arrivent tous deux ici.
       // Les confondre enverrait corriger le mauvais champ.
@@ -281,4 +315,4 @@ class ProtectClient {
   }
 }
 
-module.exports = { ProtectClient };
+module.exports = { ProtectClient, reussiteRecente, _fixerDerniereReussite };

@@ -22,6 +22,18 @@ const suites = [
     dossier: path.join(racine, 'v2', 'desktop'),
   },
   {
+    /*
+     * Ajoutee le 26.08.2026, apres une configuration impossible chez un tiers : le test
+     * de connexion reussissait, l'enregistrement rendait 503, et le message accusait des
+     * droits qui ne manquaient pas. Deux causes opposees sous un meme code, et une
+     * session ouverte trois fois en cinq secondes.
+     */
+    nom: 'Refus de connexion : droits ou cadence, et reprise de session',
+    commande: 'node',
+    args: ['test-connexion.js'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
     nom: "Bornes de l'archive (frise temporelle)",
     commande: 'node',
     args: ['test-archive.js'],
