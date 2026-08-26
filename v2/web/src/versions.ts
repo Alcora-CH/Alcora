@@ -51,6 +51,10 @@ export const VERSIONS: Version[] = [
       + 'les droits nécessaires, ce qui envoyait chercher au mauvais endroit.',
       'Un échec pendant « Enregistrer et démarrer » est désormais consigné dans le journal de '
       + 'diagnostic. Il n’y laissait aucune trace.',
+      'Le moteur d’affichage de l’application a été remplacé par une version beaucoup plus '
+      + 'récente, ce qui referme trente-trois failles connues. C’est aussi ce qui rend cette '
+      + 'mise à jour inhabituellement longue à télécharger : presque tous les fichiers ont '
+      + 'changé. Les suivantes redeviendront légères.',
     ],
     en: [
       'Setting Alcora up against a recent controller no longer ends in an error. The check '
@@ -61,6 +65,9 @@ export const VERSIONS: Version[] = [
       + 'necessary rights, which sent you looking in the wrong place.',
       'A failure during “Save and start” is now recorded in the diagnostic log. It used to '
       + 'leave no trace at all.',
+      'The application’s rendering engine has been replaced with a far more recent one, closing '
+      + 'thirty-three known vulnerabilities. It is also what makes this update unusually long to '
+      + 'download: nearly every file changed. Later ones will be light again.',
     ],
   },
   {
