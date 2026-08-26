@@ -83,6 +83,21 @@ npm run build:linux    # exige WSL (Ubuntu) et v2/relay/mediamtx-linux-x64
 3. `npm test` (racine) → `npm run build` → `npm run publier`.
 4. Vérifier le manifeste publié : `releases.win.json` de la release doit porter la version.
 
+**Et regarder ce que portait la DERNIÈRE version publiée.** Un verrou de dépendances
+corrigé n'est pas une installation corrigée : entre le 11.08 et le 26.08.2026, le dépôt
+était en Electron 43 et les alertes GitHub fermées, pendant que **tous les postes
+installés tournaient encore sur la 33.3.1 et ses 33 avis** — aucune version n'avait été
+publiée entre les deux. Avant d'annoncer qu'une faille est refermée, comparer :
+
+```
+git log --format='%H' -20 -- v2/desktop/package.json   # puis, pour le commit de la release :
+git show <commit>:v2/desktop/package.json
+```
+
+Signe visible quand l'écart a duré : le différentiel Velopack passe de quelques dizaines
+de Ko à **plus de 100 Mo** — presque tous les fichiers sont remplacés. Si cela arrive, le
+dire dans les notes : le téléchargement inhabituel doit être expliqué.
+
 ## Règles dures (chacune a une histoire)
 
 - **Chaîne de mise à jour** (`v2/desktop/maj.js`) : l'empreinte se calcule sur les octets
