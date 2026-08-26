@@ -39,6 +39,31 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.29.1',
+    date: '26.08.2026',
+    fr: [
+      'Configurer Alcora sur un contrôleur récent ne se termine plus par une erreur. La '
+      + 'vérification ouvrait une session puis la jetait, et l’enregistrement se reconnectait '
+      + 'deux fois de plus en quelques secondes — un rythme que certains contrôleurs refusent. '
+      + 'L’application ne se connecte plus qu’une fois.',
+      'Quand un contrôleur refuse une reconnexion trop rapprochée, il le dit maintenant, et '
+      + 'indique combien de temps attendre. Il annonçait jusqu’ici que le compte n’avait pas '
+      + 'les droits nécessaires, ce qui envoyait chercher au mauvais endroit.',
+      'Un échec pendant « Enregistrer et démarrer » est désormais consigné dans le journal de '
+      + 'diagnostic. Il n’y laissait aucune trace.',
+    ],
+    en: [
+      'Setting Alcora up against a recent controller no longer ends in an error. The check '
+      + 'opened a session then threw it away, and saving signed in twice more within seconds — '
+      + 'a pace some controllers refuse. The application now signs in only once.',
+      'When a controller refuses a sign-in that comes too soon after the previous one, it now '
+      + 'says so, and how long to wait. Until now it announced that the account lacked the '
+      + 'necessary rights, which sent you looking in the wrong place.',
+      'A failure during “Save and start” is now recorded in the diagnostic log. It used to '
+      + 'leave no trace at all.',
+    ],
+  },
+  {
     version: '2.29.0',
     date: '08.08.2026',
     fr: [
