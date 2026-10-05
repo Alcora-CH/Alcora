@@ -39,6 +39,32 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.29.2',
+    date: '05.10.2026',
+    fr: [
+      'Les images ne peuvent plus rester figées sans que rien ne le signale. Quand Windows '
+      + 'manque de mémoire, un composant réseau interne de l’application peut tomber ; la page '
+      + 'se bloquait alors définitivement en tentant de reprendre ses flux, jusqu’au prochain '
+      + 'redémarrage. Alcora relance désormais sa page d’elle-même : les images reviennent en '
+      + 'quelques secondes.',
+      'Une page qui cesse de répondre, quelle qu’en soit la cause, est détectée en moins d’une '
+      + 'minute et relancée — même si personne ne touche l’application, ce qui est le cas d’un '
+      + 'mur d’images.',
+      'Le journal de diagnostic nomme désormais le composant qui a planté, avec son code '
+      + 'd’erreur.',
+    ],
+    en: [
+      'Images can no longer stay frozen without anything saying so. When Windows runs low on '
+      + 'memory, an internal network component of the application can fail; the page then '
+      + 'locked up for good while trying to resume its streams, until the next restart. Alcora '
+      + 'now restarts its page by itself: the images come back within seconds.',
+      'A page that stops responding, whatever the cause, is detected within a minute and '
+      + 'restarted — even when nobody touches the application, as is the case for a wall of '
+      + 'cameras.',
+      'The diagnostic log now names the component that crashed, with its error code.',
+    ],
+  },
+  {
     version: '2.29.1',
     date: '26.08.2026',
     fr: [
