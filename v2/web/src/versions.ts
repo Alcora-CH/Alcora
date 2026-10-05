@@ -39,6 +39,18 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.29.3',
+    date: '05.10.2026',
+    fr: [
+      'Une page tout juste relancée par la surveillance ne peut plus être relancée une seconde '
+      + 'fois à tort : le silence de la page qu’elle remplace ne lui est plus imputé.',
+    ],
+    en: [
+      'A page the watchdog has just restarted can no longer be restarted a second time by '
+      + 'mistake: the silence of the page it replaced is no longer held against it.',
+    ],
+  },
+  {
     version: '2.29.2',
     date: '05.10.2026',
     fr: [
