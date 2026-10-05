@@ -486,11 +486,25 @@ function relancerPage(raison) {
 function surveillerLaPage(pages) {
   let rates = 0;
   let sondeEnCours = false;
+  /*
+   * LA GENERATION : chaque sonde note la page qu'elle interroge.
+   *
+   * Vu le 05.10.2026 en eprouvant ce battement : une page gelee est abattue a 40,610 s,
+   * Chromium n'en signale la mort qu'a 40,657 s — et entre les deux, le tour suivant avait
+   * deja lance une sonde dans la page MOURANTE. Elle n'a jamais eu de reponse, et son
+   * silence a ete compte quinze secondes plus tard contre la page NEUVE, en parfaite sante.
+   * Une page fraichement rechargee demarrait donc avec une faute qui n'etait pas la sienne.
+   * Le verdict d'une sonde est desormais jete si la page a change entre son depart et son
+   * retour.
+   */
+  let generation = 0;
+  const nouvellePage = () => { generation += 1; rates = 0; };
   const battement = setInterval(async () => {
     if (sondeEnCours || enFermeture) return;
     if (pages.isDestroyed() || pages.isCrashed() || pages.isLoading()) return;
     if (pages.isDevToolsOpened()) { rates = 0; return; }
     sondeEnCours = true;
+    const interrogee = generation;
     let minuterie;
     const repondu = await Promise.race([
       pages.executeJavaScript('0').then(() => true, () => true),
@@ -499,6 +513,7 @@ function surveillerLaPage(pages) {
     clearTimeout(minuterie);
     sondeEnCours = false;
     if (pages.isDestroyed() || pages.isCrashed()) return;
+    if (interrogee !== generation) return;          // la page a change : verdict caduc
     const d = surveillance.apresSonde(rates, repondu);
     rates = d.rates;
     if (!repondu) journal.alerte('ui', `page did not answer within ${surveillance.DELAI_REPONSE_MS / 1000} s`);
@@ -508,7 +523,8 @@ function surveillerLaPage(pages) {
   // Une page neuve, ou un reveil de veille, repartent d'un compte vierge : ni l'une ni
   // l'autre ne doit heriter des silences d'avant.
   const remettreAZero = () => { rates = 0; };
-  pages.on('did-finish-load', remettreAZero);
+  pages.on('did-finish-load', nouvellePage);
+  pages.on('render-process-gone', nouvellePage);
   powerMonitor.on('resume', remettreAZero);
   pages.once('destroyed', () => {
     clearInterval(battement);
