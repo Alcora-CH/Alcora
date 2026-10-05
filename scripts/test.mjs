@@ -34,6 +34,17 @@ const suites = [
     dossier: path.join(racine, 'v2', 'desktop'),
   },
   {
+    /*
+     * Ajoutee le 05.10.2026, apres trente-cinq minutes de mur d'images fige sans un mot :
+     * le service reseau de Chromium etait mort, et la page s'etait bloquee dans pc.close()
+     * en tentant de reprendre. Quand abattre la page, quand la recharger, quand s'arreter.
+     */
+    nom: 'Garder la page en vie (service reseau, rechargement, battement)',
+    commande: 'node',
+    args: ['test-surveillance.js'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
     nom: "Bornes de l'archive (frise temporelle)",
     commande: 'node',
     args: ['test-archive.js'],

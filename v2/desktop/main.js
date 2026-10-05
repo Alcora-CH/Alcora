@@ -48,6 +48,7 @@ const { FluxChangements } = require('./protect/updates');
 const { RelaySupervisor } = require('./relay');
 const { ProtectClient } = require('./protect/client');
 const { essaiUtilisable } = require('./protect/essai');
+const surveillance = require('./surveillance');
 const { Session } = require('./protect/session');
 const {
   fromBootstrap, relayPaths, etatPourInterface, camerasPourInterface,
@@ -130,8 +131,22 @@ process.on('uncaughtException', (e) => {
   } catch { /* trop tot pour une fenetre : le journal suffira */ }
   app.exit(1);
 });
-app.on('child-process-gone', (_e, d) =>
-  journal.erreur('process', `${d.type} gone: ${d.reason}`));
+/*
+ * Un processus enfant de Chromium disparait.
+ *
+ * Le journal disait seulement « Utility gone: crashed » : il a fallu lire la ligne de
+ * commande du remplacant pour apprendre, le 05.10.2026, que c'etait le SERVICE RESEAU —
+ * et que sa mort avait fige la page trente-cinq minutes (voir surveillance.js). Il nomme
+ * desormais le service, et donne le code de sortie en hexadecimal : c'est sous cette
+ * forme que Windows documente les siens (0xC0000017 : memoire insuffisante).
+ */
+app.on('child-process-gone', (_e, d) => {
+  const code = Number.isFinite(d.exitCode) ? ` (exit 0x${(d.exitCode >>> 0).toString(16).toUpperCase()})` : '';
+  journal.erreur('process', `${surveillance.nomDuProcessus(d)} gone: ${d.reason}${code}`);
+  if (surveillance.faireTomberLaPage(d)) {
+    abattrePage('network service died — every video connection of the page died with it');
+  }
+});
 
 // Le CHEMIN autant que le numero : plusieurs copies peuvent coexister sur un poste et
 // partager ce dossier de donnees. Sans cette ligne, un journal melangeant deux copies est
@@ -412,6 +427,95 @@ function pushProgression(etape) {
 
 /* ------------------------------------------------------------------ fenetre */
 
+/* ------------------------------------------------------- garder la page en vie */
+
+/** Vrai des que l'application quitte : ne plus rien recharger ni abattre. */
+let enFermeture = false;
+let historiqueRechargements = [];
+let minuterieRechargement = null;
+
+/**
+ * Abat la page — sans lui laisser executer une ligne de plus.
+ *
+ * C'est tout l'interet de « forcefullyCrashRenderer » sur « reload » : recharger demonte
+ * React, donc execute les nettoyages des tuiles, donc appelle pc.close() — exactement
+ * l'appel qui s'est fige le 05.10.2026. Abattre court-circuite tout cela. La page morte
+ * declenche ensuite « render-process-gone », qui la recharge.
+ */
+function abattrePage(raison) {
+  const pages = window && !window.isDestroyed() ? window.webContents : null;
+  if (enFermeture || !pages || pages.isDestroyed() || pages.isCrashed()) return;
+  journal.alerte('ui', `restarting the page: ${raison}`);
+  pages.forcefullyCrashRenderer();
+}
+
+/** Recharge la page, dans la limite du budget ; au-dela, retente quand une place se libere. */
+function relancerPage(raison) {
+  clearTimeout(minuterieRechargement);
+  const pages = window && !window.isDestroyed() ? window.webContents : null;
+  if (enFermeture || !pages || pages.isDestroyed()) return;
+  const r = surveillance.rechargement(historiqueRechargements, Date.now());
+  historiqueRechargements = r.historique;
+  if (r.permis) {
+    journal.info('ui', `reloading the page (${raison})`);
+    pages.reload();
+    return;
+  }
+  journal.erreur('ui', `page restarted too often — next attempt in ${Math.round(r.attenteMs / 1000)} s`);
+  minuterieRechargement = setTimeout(() => relancerPage(raison), r.attenteMs);
+}
+
+/**
+ * LE BATTEMENT : la page repond-elle encore ?
+ *
+ * Electron n'emet « unresponsive » que si la page ignore une SAISIE — une touche, un
+ * clic. Un mur d'images que personne ne touche peut donc rester bloque indefiniment sans
+ * que rien ne s'en apercoive : c'est ce qui est arrive le 05.10.2026, trente-cinq minutes
+ * durant. On demande donc a la page, a intervalle regulier, d'evaluer « 0 ». Ce calcul
+ * passe par son fil principal : s'il est bloque, la reponse ne vient jamais.
+ *
+ * Une erreur d'evaluation compte comme une reponse — la page a repondu, mal, mais elle
+ * vit. Seul le SILENCE est une panne.
+ *
+ * CONSEQUENCE A CONNAITRE : alert(), confirm(), prompt() et print() bloquent le fil
+ * principal de la page jusqu'a ce qu'on y reponde. Trente secondes d'hesitation devant
+ * l'un d'eux suffiraient a faire abattre la page. L'interface n'en utilise aucun
+ * (verifie le 05.10.2026) et ne doit pas commencer : une boite modale se fait en React.
+ * Les outils de developpement, eux, sont epargnes — un point d'arret est un arret voulu.
+ */
+function surveillerLaPage(pages) {
+  let rates = 0;
+  let sondeEnCours = false;
+  const battement = setInterval(async () => {
+    if (sondeEnCours || enFermeture) return;
+    if (pages.isDestroyed() || pages.isCrashed() || pages.isLoading()) return;
+    if (pages.isDevToolsOpened()) { rates = 0; return; }
+    sondeEnCours = true;
+    let minuterie;
+    const repondu = await Promise.race([
+      pages.executeJavaScript('0').then(() => true, () => true),
+      new Promise((ok) => { minuterie = setTimeout(() => ok(false), surveillance.DELAI_REPONSE_MS); }),
+    ]);
+    clearTimeout(minuterie);
+    sondeEnCours = false;
+    if (pages.isDestroyed() || pages.isCrashed()) return;
+    const d = surveillance.apresSonde(rates, repondu);
+    rates = d.rates;
+    if (!repondu) journal.alerte('ui', `page did not answer within ${surveillance.DELAI_REPONSE_MS / 1000} s`);
+    if (d.abattre) abattrePage('the page stopped answering');
+  }, surveillance.PERIODE_BATTEMENT_MS);
+
+  // Une page neuve, ou un reveil de veille, repartent d'un compte vierge : ni l'une ni
+  // l'autre ne doit heriter des silences d'avant.
+  const remettreAZero = () => { rates = 0; };
+  pages.on('did-finish-load', remettreAZero);
+  powerMonitor.on('resume', remettreAZero);
+  pages.once('destroyed', () => {
+    clearInterval(battement);
+    powerMonitor.off('resume', remettreAZero);
+  });
+}
+
 function createWindow() {
   /*
    * La fenetre se remet ou elle etait : taille, position, ecran, etat.
@@ -487,9 +591,15 @@ function createWindow() {
   pages.on('did-fail-load', (_e, code, description, url, principal) => {
     if (!principal) return;                       // une image manquante n'est pas une panne
     journal.erreur('ui', `load failed (${code} ${description}): ${url}`);
+    // -3 est une navigation REMPLACEE par une autre, pas un echec. Les autres se retentent,
+    // dans le meme budget : un rechargement qui suit un abattage peut tomber au mauvais moment.
+    if (code !== -3) relancerPage(`load failed ${code}`);
   });
-  pages.on('render-process-gone', (_e, d) =>
-    journal.erreur('ui', `renderer gone: ${d.reason}`));
+  pages.on('render-process-gone', (_e, d) => {
+    journal.erreur('ui', `renderer gone: ${d.reason}`);
+    // Elle etait seulement NOTEE : une page morte laissait une fenetre vide, pour toujours.
+    if (surveillance.fautIlRecharger(d, enFermeture)) relancerPage(`renderer ${d.reason}`);
+  });
   pages.on('preload-error', (_e, fichier, e) =>
     journal.erreur('preload', `${fichier} — ${journal.deErreur(e)}`));
 
@@ -501,6 +611,8 @@ function createWindow() {
     pages.send('protect:majState', dernierEtatMaj);
     pages.send('protect:progression', dernierEtatProgression);
   });
+
+  surveillerLaPage(pages);
 
   // Aucun lien externe ne s'ouvre dans l'application elle-meme.
   pages.setWindowOpenHandler(({ url }) => {
@@ -1853,4 +1965,4 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-app.on('before-quit', () => { flux?.arreter(); relay?.stop(); });
+app.on('before-quit', () => { enFermeture = true; flux?.arreter(); relay?.stop(); });
