@@ -94,9 +94,12 @@ git log --format='%H' -20 -- v2/desktop/package.json   # puis, pour le commit de
 git show <commit>:v2/desktop/package.json
 ```
 
-Signe visible quand l'écart a duré : le différentiel Velopack passe de quelques dizaines
-de Ko à **plus de 100 Mo** — presque tous les fichiers sont remplacés. Si cela arrive, le
-dire dans les notes : le téléchargement inhabituel doit être expliqué.
+Signe visible quand l'écart a duré : le différentiel Velopack produit par la construction
+passe de quelques dizaines de Ko à **plus de 100 Mo** — presque tous les fichiers sont
+remplacés. C'est un signal **pour nous**, pas un poids pour l'utilisateur : la chaîne de
+mise à jour télécharge **toujours le paquet complet** (choix assumé en tête de `maj.js`),
+soit ~185 Mo à chaque version, quel que soit le différentiel. Ne jamais promettre une mise
+à jour « légère » dans les notes — la 2.29.1 l'a fait à tort, corrigé le 05.10.2026.
 
 ## Règles dures (chacune a une histoire)
 
