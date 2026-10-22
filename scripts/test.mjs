@@ -129,6 +129,17 @@ const suites = [
   },
   {
     /*
+     * Ajoutee le 22.10.2026 : l'empreinte du manifeste venait du meme depot que le paquet,
+     * et qui tenait ce depot tenait tous les postes. La declaration signee, et la cle
+     * epinglee confrontee au VRAI certificat (qui doit etre present : signature/).
+     */
+    nom: 'Authenticité des mises à jour (déclaration signée)',
+    commande: 'node',
+    args: ['test-authenticite.js'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * Le contrat entre le processus principal et la page, que RIEN ne verifiait : le
      * contrat est ecrit en TypeScript, le processus principal en JavaScript. Six champs
      * ajoutes le 30.07.2026 ont ainsi ete calcules, declares, affiches — et jetes au

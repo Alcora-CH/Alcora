@@ -13,6 +13,7 @@ import {
   cpSync, existsSync, mkdirSync, readdirSync, rmSync, readFileSync, statSync, writeFileSync,
 } from 'node:fs';
 import { construireNotices } from './notices.mjs';
+import { ecrireDeclaration } from './declaration.mjs';
 import { embarquerGuide } from './guide.mjs';
 import {
   defautsPolitique, eprouverExecutable, intrusDansArchive, poserFusibles,
@@ -422,5 +423,22 @@ exigerFichier(installeur, 'l\'installeur');
 // et celui sur lequel Windows se prononce en premier.
 if (sig) signer(sig, [installeur], 'installeur');
 
+/*
+ * La declaration signee du paquet — voir v2/desktop/authenticite.js. Le paquet est
+ * definitif a ce stade : vpk l'a ecrit, rien ne le touchera plus. Sans certificat, pas de
+ * declaration, et « npm run publier » refusera de partir : les postes la refuseraient.
+ */
+if (sig) {
+  etape('Déclaration signée du paquet');
+  const { sortie, cle } = await ecrireDeclaration({
+    requireDesktop,
+    empreinteCertificat: sig.empreinte,
+    paquet: PACK_ID,
+    version,
+    fichier: path.join(releases, `${PACK_ID}-${version}-full.nupkg`),
+  });
+  console.log(`  ${path.relative(racine, sortie)} — vérifiée par l'application (${cle})`);
+}
+
 console.log(`\nInstalleur prêt : ${path.relative(racine, installeur)}  (${taille(installeur)} Mo)`);
-if (!sig) console.log('ATTENTION : non signé — Windows affichera un avertissement.');
+if (!sig) console.log('ATTENTION : non signé — Windows affichera un avertissement, et aucun poste n\'acceptera ce paquet en mise à jour.');

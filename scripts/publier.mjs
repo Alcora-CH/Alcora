@@ -13,9 +13,11 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { empreinteFichier } from './declaration.mjs';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const releases = path.join(racine, 'v2', 'releases');
@@ -43,6 +45,9 @@ const obligatoires = [
   `${PACK_ID}-${version}-full.nupkg`,
   `${PACK_ID}-win-Setup.exe`,
   'releases.win.json',
+  // La declaration signee (v2/desktop/authenticite.js) : depuis la 2.30.0, un poste refuse
+  // toute version qui n'en porte pas. La publier sans elle couperait tous les postes.
+  `${PACK_ID}-${version}-signature.json`,
 ];
 /*
  * L'archive Linux est OPTIONNELLE, et c'est voulu.
@@ -108,6 +113,39 @@ if (vierge) {
     // Si le README existe deja, le depot n'est pas vierge : on poursuit simplement.
     console.log('Initialisation ignorée (le dépôt semble déjà initialisé).');
   }
+}
+
+/*
+ * Derniere relecture avant d'exposer quoi que ce soit : la declaration doit couvrir le
+ * paquet REELLEMENT present et l'entree du manifeste qui part avec lui — exactement ce que
+ * verifiera chaque poste, avec son code. Un paquet reconstruit apres la signature, par
+ * exemple, serait refuse partout : mieux vaut que ce soit ici.
+ */
+{
+  const requireDesktop = createRequire(path.join(racine, 'v2', 'desktop', 'package.json'));
+  const { verifierDeclaration } = requireDesktop('./authenticite.js');
+  const nupkg = path.join(releases, `${PACK_ID}-${version}-full.nupkg`);
+  const declaration = JSON.parse(
+    readFileSync(path.join(releases, `${PACK_ID}-${version}-signature.json`), 'utf8'));
+  const entree = JSON.parse(readFileSync(path.join(releases, 'releases.win.json'), 'utf8')).Assets
+    .find((a) => a.PackageId === PACK_ID && a.Version === version && a.Type === 'Full');
+
+  const contreReel = verifierDeclaration(declaration, {
+    paquet: PACK_ID, version, fichier: path.basename(nupkg),
+    taille: statSync(nupkg).size, sha256: await empreinteFichier(nupkg),
+  });
+  const contreManifeste = entree
+    ? verifierDeclaration(declaration, {
+      paquet: PACK_ID, version, fichier: entree.FileName, taille: entree.Size, sha256: entree.SHA256,
+    })
+    : { ok: false, raison: 'version absente de releases.win.json' };
+  if (!contreReel.ok || !contreManifeste.ok) {
+    console.error('\nLa déclaration signée ne couvre pas ce qui partirait — rien n\'est publié :');
+    if (!contreReel.ok) console.error(`  paquet réel : ${contreReel.raison}`);
+    if (!contreManifeste.ok) console.error(`  manifeste   : ${contreManifeste.raison}`);
+    process.exit(1);
+  }
+  console.log(`Déclaration signée vérifiée (${contreReel.cle}).`);
 }
 
 console.log(`Publication de la ${version} sur ${DEPOT} (${fichiers.length} fichiers)…`);

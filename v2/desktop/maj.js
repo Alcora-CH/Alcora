@@ -6,6 +6,7 @@ const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 const { Readable, Transform } = require('node:stream');
 const { pipeline } = require('node:stream/promises');
+const { CLES, nomDeclaration, verifierDeclaration } = require('./authenticite');
 
 /**
  * Mises a jour automatiques.
@@ -20,8 +21,9 @@ const { pipeline } = require('node:stream/promises');
  * enchainer, pas de base a retrouver. Le differentiel viendra quand cette chaine aura
  * prouve sa fiabilite sur plusieurs versions reelles.
  *
- * Deroulement : verification silencieuse -> telechargement en arriere-plan -> controle de
- * l'empreinte -> l'interface INVITE a redemarrer, sans jamais l'imposer.
+ * Deroulement : verification silencieuse -> declaration SIGNEE verifiee (authenticite.js)
+ * -> telechargement en arriere-plan -> controle de l'empreinte -> l'interface INVITE a
+ * redemarrer, sans jamais l'imposer.
  */
 
 /*
@@ -57,14 +59,17 @@ class GestionnaireMaj {
    * @param {(url: string) => Promise<Response>} options.fetcher
    * @param {object} options.journal
    * @param {(etat: object) => void} [options.onEtat]
+   * @param {{ nom: string, pem: string }[]} [options.cles]  cles de confiance — les tests
+   *        seulement ; l'application garde celles d'authenticite.js
    */
-  constructor({ version, dossier, executable, fetcher, journal, onEtat }) {
+  constructor({ version, dossier, executable, fetcher, journal, onEtat, cles = CLES }) {
     this.version = version;
     this.dossier = dossier;
     this.executable = executable;
     this.fetch = fetcher;
     this.journal = journal;
     this.onEtat = onEtat || (() => {});
+    this.cles = cles;
     this.enCours = false;
     this.prete = null;          // { version, fichier } une fois un paquet verifie
 
@@ -126,7 +131,26 @@ class GestionnaireMaj {
       return null;
     }
 
-    const cible = complets.reduce(
+    /*
+     * Une entree hors de la forme attendue n'est jamais suivie.
+     *
+     * Le nom de fichier du manifeste devient un CHEMIN sur le disque (path.join) : avant
+     * l'audit du 22.10.2026, « ..\ » y menait hors du dossier des paquets, et un manifeste
+     * piege — empreinte assortie — y faisait ecrire un fichier de son choix. (Le meme nom
+     * forme l'adresse du telechargement, ce qui borne en pratique les destinations
+     * atteignables ; on ne compte pas sur cette borne.) La declaration signee ferme deja
+     * cette porte ; ce filtre la ferme une seconde fois, sans dependre d'elle.
+     */
+    const formees = complets.filter((a) => /^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(a.Version)
+      && a.FileName === `${PACK_ID}-${a.Version}-full.nupkg`
+      && Number.isSafeInteger(a.Size) && a.Size > 0
+      && /^[0-9A-Fa-f]{64}$/.test(a.SHA256));
+    if (formees.length < complets.length) {
+      this.journal.alerte('update',
+        `${complets.length - formees.length} malformed manifest entr(ies) ignored`);
+    }
+
+    const cible = formees.reduce(
       (m, a) => (!m || GestionnaireMaj.plusRecente(a.Version, m.Version) ? a : m), null);
 
     return cible && GestionnaireMaj.plusRecente(cible.Version, this.version) ? cible : null;
@@ -148,7 +172,40 @@ class GestionnaireMaj {
     return travail;
   }
 
+  /**
+   * La declaration signee de la cible, verifiee AVANT tout telechargement.
+   *
+   * Ensuite, l'empreinte des octets recus est comparee a celle du manifeste — que la
+   * declaration vient de garantir. Chaque octet applique remonte ainsi a notre cle.
+   *
+   * Une declaration absente est un REFUS, pas une panne : depuis la 2.30.0, toute version
+   * publiee en porte une. Un reseau coupe, lui, reste une panne ordinaire — on reessaiera.
+   */
+  async authentifier(cible) {
+    const nom = nomDeclaration(PACK_ID, cible.Version);
+    const reponse = await this.fetch(`${BASE}/download/v${cible.Version}/${nom}`);
+    let declaration = null;
+    let lecture = `HTTP ${reponse.status}`;
+    if (reponse.ok) {
+      try { declaration = await reponse.json(); } catch { lecture = 'not JSON'; }
+    }
+    const verdict = declaration
+      ? verifierDeclaration(declaration, {
+        paquet: PACK_ID, version: cible.Version, fichier: cible.FileName,
+        taille: cible.Size, sha256: cible.SHA256,
+      }, { cles: this.cles })
+      : { ok: false, raison: `no signed declaration (${nom}: ${lecture})` };
+
+    if (!verdict.ok) {
+      this.journal.erreur('update', `version ${cible.Version} REFUSED, not authentic: ${verdict.raison}`);
+      throw new Error(`version ${cible.Version} not authentic`);
+    }
+    this.journal.info('update', `version ${cible.Version} signed by ${verdict.cle}`);
+  }
+
   async telechargerEtVerifier(cible) {
+    // Rien n'est telecharge, ni repris du disque, pour une version qui n'est pas la notre.
+    await this.authentifier(cible);
     fs.mkdirSync(this.dossier, { recursive: true });
     this.balayerPartiels();
     const destination = path.join(this.dossier, cible.FileName);

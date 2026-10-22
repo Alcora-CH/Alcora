@@ -18,7 +18,7 @@ Non affilié à Ubiquiti.
 ## Commandes — toujours depuis la RACINE du dépôt
 
 ```
-npm test          # tsc -b --force + oxlint (bloquant, main process compris) + 15 suites hors ligne
+npm test          # tsc -b --force + oxlint (bloquant, main process compris) + 16 suites hors ligne
 npm run build     # vite build + vpk pack + signature (certificat requis)
 npm run publier   # publie sur alcora-ch/Alcora-releases
 npm run web       # démo navigateur (mode simulation, sans caméra ni contrôleur)
@@ -117,6 +117,15 @@ soit ~185 Mo à chaque version, quel que soit le différentiel. Ne jamais promet
 - **Chaîne de mise à jour** (`v2/desktop/maj.js`) : l'empreinte se calcule sur les octets
   REÇUS pendant l'écriture ; « illisible » n'est jamais « altéré » ; ne rien retirer sans
   lire les commentaires du fichier et `test-maj.js`. Cette chaîne a cassé trois jours.
+- **Déclaration signée** (`v2/desktop/authenticite.js`, depuis la 2.30.0) : chaque version
+  publie `Alcora-X.Y.Z-signature.json`, signée par la clé du certificat de signature, et
+  tout poste refuse une version qui n'en porte pas. `npm run build` l'écrit, `npm run
+  publier` la relit contre le paquet et le manifeste. Trois interdits : publier sans elle
+  (tous les postes s'arrêteraient de se mettre à jour) ; changer la forme de
+  `messageSigne` sans changer `FORMAT` (les postes installés ne reconstruiraient plus le
+  texte signé) ; changer de certificat sans publier D'ABORD une version qui connaît
+  l'ancienne et la nouvelle clé (`CLES`). La sauvegarde `signature/Alcora-signature.pfx`
+  n'est lisible que depuis ce compte Windows : la perte du compte ferait perdre la clé.
 - **Durcissement de ce qui est livré** (`scripts/durcissement.mjs`, appelé par les deux
   constructions) : la page doit porter la politique de contenu resserrée, l'archive
   `app.asar` n'emporte que ce qu'admet sa liste blanche, et l'exécutable reçoit ses

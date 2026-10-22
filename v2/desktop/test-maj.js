@@ -33,6 +33,7 @@ const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { GestionnaireMaj } = require('./maj');
+const { FORMAT, messageSigne } = require('./authenticite');
 
 let echecs = 0;
 
@@ -84,19 +85,6 @@ function reponseDe(octets) {
   };
 }
 
-function gestionnaire({ contenu, journal, version = '1.0.0' }) {
-  const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'alcora-maj-'));
-  const g = new GestionnaireMaj({
-    version,
-    dossier,
-    executable: path.join(dossier, 'current', 'Alcora.exe'),
-    fetcher: async () => reponseDe(contenu),
-    journal,
-    onEtat: () => {},
-  });
-  return { g, dossier };
-}
-
 const PAQUET = Buffer.from('paquet Alcora factice — '.repeat(4096), 'utf8');
 const cibleDe = (octets, version = '2.0.0') => ({
   Version: version,
@@ -106,6 +94,43 @@ const cibleDe = (octets, version = '2.0.0') => ({
   Type: 'Full',
   PackageId: 'Alcora',
 });
+
+/*
+ * Les declarations signees (authenticite.js). Une cle FICTIVE, engendree a chaque passe,
+ * les signe et sert de seule cle de confiance : la vraie n'est jamais en jeu ici.
+ */
+const CLE = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+const CLES_TEST = [{ nom: 'cle de test', pem: CLE.publicKey.export({ type: 'spki', format: 'pem' }) }];
+function declarationDe(cible, cle = CLE.privateKey) {
+  const champs = {
+    paquet: cible.PackageId, version: cible.Version, fichier: cible.FileName,
+    taille: cible.Size, sha256: cible.SHA256,
+  };
+  const signature = crypto.sign('sha256', messageSigne(champs),
+    { key: cle, padding: crypto.constants.RSA_PKCS1_PADDING }).toString('base64');
+  return { format: FORMAT, ...champs, signature };
+}
+const reponseJson = (objet) => ({ ok: true, status: 200, json: async () => objet });
+const versionDe = (url) => /\/download\/v([^/]+)\//.exec(url)?.[1];
+// Par defaut : la vraie declaration du BON paquet, pour la version demandee.
+const declarationParDefaut = (url) => reponseJson(declarationDe(cibleDe(PAQUET, versionDe(url))));
+
+function gestionnaire({ contenu, journal, version = '1.0.0', declaration = declarationParDefaut, appels = [] }) {
+  const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'alcora-maj-'));
+  const g = new GestionnaireMaj({
+    version,
+    dossier,
+    executable: path.join(dossier, 'current', 'Alcora.exe'),
+    fetcher: async (url) => {
+      appels.push(url);
+      return url.endsWith('-signature.json') ? declaration(url) : reponseDe(contenu);
+    },
+    journal,
+    onEtat: () => {},
+    cles: CLES_TEST,
+  });
+  return { g, dossier };
+}
 
 (async () => {
 
@@ -413,6 +438,101 @@ const cibleDe = (octets, version = '2.0.0') => ({
     const [a, b] = await Promise.all([g.obtenir(cible), g.obtenir(cible)]);
     check('un seul telechargement', 1, appels);
     checkBool('les deux appelants ont le meme resultat', a === b);
+  }
+
+  console.log('\n=== Rien n’est telecharge sans declaration signee ===');
+  {
+    const AUTRE = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+    for (const [nom, declaration, motif] of [
+      ['absente (404)',
+        () => ({ ok: false, status: 404, json: async () => ({}) }), 'no signed declaration'],
+      ['illisible (pas du JSON)',
+        () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError('x'); } }), 'not JSON'],
+      ['signee par une autre cle',
+        (url) => reponseJson(declarationDe(cibleDe(PAQUET, versionDe(url)), AUTRE.privateKey)), 'trusted key'],
+      ['vraie, mais d’une autre version (rejouee)',
+        () => reponseJson(declarationDe(cibleDe(PAQUET, '1.9.0'))), 'does not match'],
+    ]) {
+      const journal = journalDeTest();
+      const appels = [];
+      const { g, dossier } = gestionnaire({ contenu: PAQUET, journal, declaration, appels });
+      let erreur = null;
+      await g.telechargerEtVerifier(cibleDe(PAQUET)).catch((e) => { erreur = e.message; });
+      check(`declaration ${nom} : refusee`, 'version 2.0.0 not authentic', erreur);
+      checkBool('  le journal dit REFUSED, et pourquoi', journal.contient('REFUSED') && journal.contient(motif));
+      checkBool('  le paquet n’a meme pas ete demande', !appels.some((u) => u.endsWith('.nupkg')));
+      checkBool('  rien n’est ecrit sur le disque', fs.readdirSync(dossier).length === 0);
+    }
+  }
+
+  console.log('\n=== Un depot compromis : paquet ET manifeste remplaces ===');
+  {
+    /*
+     * Le scenario que l'audit du 22.10.2026 a nomme : l'attaquant sert son paquet et un
+     * manifeste assorti — l'empreinte concorde. Il ne peut pas signer de declaration : la
+     * seule authentique decrit le VRAI paquet.
+     */
+    const piege = Buffer.from('paquet piege — '.repeat(5000), 'utf8');
+    const journal = journalDeTest();
+    const appels = [];
+    const { g } = gestionnaire({ contenu: piege, journal, appels });
+    let erreur = null;
+    await g.telechargerEtVerifier(cibleDe(piege)).catch((e) => { erreur = e.message; });
+    check('refuse', 'version 2.0.0 not authentic', erreur);
+    checkBool('la declaration ne decrit pas ce paquet', journal.contient('does not match the manifest'));
+    checkBool('le paquet piege n’a pas ete telecharge', !appels.some((u) => u.endsWith('.nupkg')));
+  }
+
+  console.log('\n=== Un paquet deja present ne dispense pas de la declaration ===');
+  {
+    const journal = journalDeTest();
+    const { g, dossier } = gestionnaire({
+      contenu: PAQUET, journal, declaration: () => ({ ok: false, status: 404, json: async () => ({}) }),
+    });
+    const cible = cibleDe(PAQUET);
+    fs.writeFileSync(path.join(dossier, cible.FileName), PAQUET);
+    await g.telechargerEtVerifier(cible).catch(() => {});
+    check('rien n’est declare pret', null, g.prete);
+    checkBool('le paquet du disque n’est pas repris', !journal.contient('already downloaded'));
+  }
+
+  console.log('\n=== Un reseau coupe n’est pas un refus ===');
+  {
+    const journal = journalDeTest();
+    const { g } = gestionnaire({
+      contenu: PAQUET, journal, declaration: () => { throw new TypeError('fetch failed'); },
+    });
+    let erreur = null;
+    await g.telechargerEtVerifier(cibleDe(PAQUET)).catch((e) => { erreur = e.message; });
+    check('l’erreur du reseau remonte telle quelle', 'fetch failed', erreur);
+    checkBool('rien n’accuse la version', !journal.contient('REFUSED'));
+  }
+
+  console.log('\n=== Le manifeste : une entree hors forme n’est jamais suivie ===');
+  {
+    /*
+     * Le nom de fichier du manifeste devient un chemin sur le disque. Avant l'audit du
+     * 22.10.2026, « ..\..\ » y menait hors du dossier des paquets.
+     */
+    const journal = journalDeTest();
+    const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'alcora-maj-'));
+    const manifeste = {
+      Assets: [
+        cibleDe(PAQUET, '2.0.0'),
+        { ...cibleDe(PAQUET, '9.0.0'), FileName: '..\\..\\Startup\\Alcora-9.0.0-full.nupkg' },
+        { ...cibleDe(PAQUET, '9.1.0'), FileName: 'Alcora-9.1.0-full.exe' },
+        cibleDe(PAQUET, '9.2.0/../../x'),
+        { ...cibleDe(PAQUET, '9.3.0'), Size: '12' },
+        { ...cibleDe(PAQUET, '9.4.0'), SHA256: 'pas une empreinte' },
+      ],
+    };
+    const g = new GestionnaireMaj({
+      version: '1.0.0', dossier, executable: path.join(dossier, 'Alcora.exe'), journal,
+      onEtat: () => {}, fetcher: async () => reponseJson(manifeste), cles: CLES_TEST,
+    });
+    const cible = await g.chercher();
+    check('seule l’entree bien formee est retenue', '2.0.0', cible?.Version);
+    checkBool('les cinq autres sont signalees', journal.contient('5 malformed'));
   }
 
   console.log('\n=== Comparaison des versions ===');
