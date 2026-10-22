@@ -39,6 +39,40 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.30.0',
+    date: '23.10.2026',
+    fr: [
+      'Le relais vidéo ne répond plus qu’à Alcora. Il exige un mot de passe, tiré au hasard à '
+      + 'chaque démarrage, refuse toute page web, et ses services inutiles — interface de '
+      + 'contrôle comprise — sont éteints. Il passe en version 1.21.2, qui corrige un avis de '
+      + 'sécurité critique.',
+      'Les mises à jour sont authentifiées. Chaque version publiée porte une déclaration signée '
+      + 'par la clé d’Alcora, vérifiée avant le moindre téléchargement : une version qui n’en '
+      + 'porte pas, ou que cette clé n’a pas signée, est refusée, et le journal dit pourquoi.',
+      'L’application est durcie. Sa page tourne dans le bac à sable de Chromium et ne reçoit '
+      + 'aucune autorisation — caméra, micro, presse-papiers ; les liens ne s’ouvrent plus que '
+      + 'vers le web sécurisé ; un extrait ne s’enregistre que depuis son propre dossier ; '
+      + 'l’exécutable refuse de servir d’interpréteur et de démarrer sur un code modifié.',
+      'Moteur Electron 44.9.3 au lieu de 43.4.1, avec les correctifs de sécurité de Chromium. '
+      + 'Les identifiants enregistrés restent lisibles : rien n’est à ressaisir.',
+    ],
+    en: [
+      'The video relay now answers Alcora alone. It requires a password, drawn at random on '
+      + 'every start, refuses any web page, and its unused services — the control interface '
+      + 'included — are switched off. It moves to version 1.21.2, which fixes a critical '
+      + 'security advisory.',
+      'Updates are authenticated. Every published version carries a declaration signed with '
+      + 'Alcora’s key, checked before anything is downloaded: a version without one, or not '
+      + 'signed by that key, is refused, and the log says why.',
+      'The application is hardened. Its page runs in Chromium’s sandbox and is granted no '
+      + 'permission — camera, microphone, clipboard; links only open to the secure web; a clip '
+      + 'can only be saved from its own folder; the executable refuses to act as an interpreter '
+      + 'or to start on modified code.',
+      'Electron engine 44.9.3 instead of 43.4.1, with Chromium’s security fixes. Saved '
+      + 'credentials remain readable: nothing to type again.',
+    ],
+  },
+  {
     version: '2.29.3',
     date: '05.10.2026',
     fr: [
