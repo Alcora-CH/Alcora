@@ -18,6 +18,11 @@ Décisions de Thomas (23.10.2026) :
   vidéo passe d'abord.
 - **Cible de performance : un PC modeste** (celui de son père), mesuré avant/après.
 - **Electron 45 d'abord, dans une version à part**, avant tout changement visuel.
+- **Direction retenue : A « Observatoire »** (23.10.2026, sur `docs/maquette-ux.html`) : ciel
+  fixe autour des images seulement, police Atkinson Hyperlegible, rail nommé, panneau
+  Surveillance démonté (barre d'état + feuille Système + menu Caméras + colonne Activité
+  propre au Direct), commandes vidéo hors de l'image partout, or d'Alcor réservé à ce qui
+  est observé.
 
 ## Règles qui ne bougent pas
 
