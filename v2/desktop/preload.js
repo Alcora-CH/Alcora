@@ -49,7 +49,7 @@ contextBridge.exposeInMainWorld('protect', {
     return () => ipcRenderer.removeListener('protect:ouvrirDetection', l);
   },
 
-  relayBase: () => ipcRenderer.invoke('protect:relayBase'),
+  relais: () => ipcRenderer.invoke('protect:relais'),
 
   onRelayState: (handler) => {
     const listener = (_event, state) => handler(state);

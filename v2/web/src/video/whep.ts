@@ -20,7 +20,12 @@ export interface WhepSession {
  */
 const DELAI_NEGOCIATION_MS = 10_000;
 
-export async function connectWhep(url: string, video: HTMLVideoElement): Promise<WhepSession> {
+export async function connectWhep(
+  url: string,
+  video: HTMLVideoElement,
+  /** En-tete exige par le relais : sans lui, 401 (voir relais-config.js). */
+  autorisation: string,
+): Promise<WhepSession> {
   const pc = new RTCPeerConnection({ iceServers: [] });
   /** Adresse de la session cote relais, pour la clore proprement (en-tete Location). */
   let ressource: string | null = null;
@@ -85,7 +90,7 @@ export async function connectWhep(url: string, video: HTMLVideoElement): Promise
   try {
     response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/sdp' },
+      headers: { 'Content-Type': 'application/sdp', Authorization: autorisation },
       body: pc.localDescription!.sdp,
       signal: abandon.signal,
     });
@@ -122,7 +127,9 @@ export async function connectWhep(url: string, video: HTMLVideoElement): Promise
       // « keepalive » : la fermeture survient souvent au demontage de la page, ou une
       // requete ordinaire serait annulee avant d'etre partie.
       if (ressource) {
-        void fetch(ressource, { method: 'DELETE', keepalive: true }).catch(() => {});
+        void fetch(ressource, {
+          method: 'DELETE', keepalive: true, headers: { Authorization: autorisation },
+        }).catch(() => {});
       }
       pc.getReceivers().forEach((r) => r.track?.stop());
       pc.close();

@@ -165,6 +165,11 @@ export interface ExtraitProgres {
   pourcent: number;
 }
 
+export interface RelaisAcces {
+  base: string;
+  autorisation: string;
+}
+
 export interface ProtectBridge {
   isConfigured(): Promise<boolean>;
   /** Lance le diagnostic. Chaque etape est remontee au fil de l'eau. */
@@ -202,7 +207,11 @@ export interface ProtectBridge {
   /** L'utilisateur a clique une bulle : ouvrir cette sequence. */
   onOuvrirDetection(handler: (d: DetectionVive) => void): () => void;
   onRelayState(handler: (s: RelayState) => void): () => void;
-  relayBase(): Promise<string>;
+  /**
+   * L'acces au relais video : son adresse ET l'en-tete d'autorisation a presenter. Le
+   * relais n'accepte plus de lecture anonyme (22.10.2026) : sans l'en-tete, 401.
+   */
+  relais(): Promise<RelaisAcces | null>;
   /** Bascule la FENETRE en plein ecran. Renvoie l'etat obtenu. */
   pleinEcran(actif: boolean): Promise<boolean>;
   /** Retente la connexion au controleur sans redemarrer l'application. */

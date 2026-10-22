@@ -20,7 +20,7 @@ import { meilleureGrille } from './video/grille';
 import { bridge, pontDisponible } from './lib/bridge';
 import { definirLangue, t, useLangue } from './i18n';
 import { nomSujet } from './i18n/sujets';
-import type {
+import type { RelaisAcces,
   Detection, DetectionVive, DiscoveredCamera, MajState, Nouveautes, Progression, RelayState,
 } from './types/protect';
 
@@ -135,7 +135,7 @@ export default function App() {
   const t = useLangue();
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [cameras, setCameras] = useState<DiscoveredCamera[]>([]);
-  const [relayBase, setRelayBase] = useState<string | null>(null);
+  const [relais, setRelais] = useState<RelaisAcces | null>(null);
   const [relay, setRelay] = useState<RelayState>({ running: false, message: 'Démarrage…' });
   const [espace, setEspace] = useState('direct');
   const [panneauOuvert, setPanneauOuvert] = useState(
@@ -469,11 +469,11 @@ export default function App() {
 
     let alive = true;
     const charger = async () => {
-      const [cams, base] = await Promise.all([bridge.getCameras(), bridge.relayBase()]);
+      const [cams, acces] = await Promise.all([bridge.getCameras(), bridge.relais()]);
       if (!alive) return;
-      console.log(`[inventaire] ${cams.length} caméra(s), relais ${base ?? 'indisponible'}`);
+      console.log(`[inventaire] ${cams.length} caméra(s), relais ${acces?.base ?? 'indisponible'}`);
       setCameras(cams);
-      setRelayBase(base);
+      setRelais(acces);
     };
 
     // Un rejet ici laissait l'ecran fige sans un mot : on le rend visible et reessayable.
@@ -494,7 +494,7 @@ export default function App() {
 
   if (!pontDisponible) return <PontManquant />;
 
-  const pret = relayBase !== null && cameras.length > 0;
+  const pret = relais !== null && cameras.length > 0;
 
   /*
    * L'introduction : la constellation, par-dessus tout le reste.
@@ -920,7 +920,7 @@ export default function App() {
         ) : espace === 'detections' ? (
           <RechercheScreen cameras={cameras} cameraInitiale={cameraCible} />
         ) : espace === 'relecture' ? (
-          <RelectureScreen cameras={cameras} relayBase={relayBase} cameraInitiale={cameraCible} />
+          <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible} />
         ) : espace === 'alertes' ? (
           <VeillesScreen cameras={cameras} />
         ) : espace !== 'direct' ? (
@@ -986,7 +986,7 @@ export default function App() {
                          transition: 'opacity .15s',
                        }}
                        title={isolee ? t('app.revenirMosaique') : t('app.glisserIsoler')}>
-                    <CameraTile camera={c} relayBase={relayBase!} cadre={espacement > 0}
+                    <CameraTile camera={c} relais={relais!} cadre={espacement > 0}
                                 hauteurEtiquette={H_ETIQUETTE} actions={actionsTuile}
                                 activite={activite[c.id]
                                   ? { libelle: libelleSujets(activite[c.id].sujets, activite[c.id].type) }

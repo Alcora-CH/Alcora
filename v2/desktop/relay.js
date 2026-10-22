@@ -1,5 +1,7 @@
 'use strict';
 
+const { configurationRelais, nouvelIdentifiant, autorisation } = require('./relais-config');
+
 const { spawn } = require('node:child_process');
 const net = require('node:net');
 const dgram = require('node:dgram');
@@ -26,11 +28,22 @@ class RelaySupervisor {
    * @param {string} options.binary   chemin de l'executable du relais
    * @param {string} options.dataDir  dossier ou ecrire configuration et journal
    * @param {(state: object) => void} [options.onState]
+   * @param {string[]} options.origines  origines admises a lire la video — celle de
+   *   l'interface d'Alcora, jamais « * »
+   * @param {boolean} [options.api]  allume l'API de controle — reserve au test manuel
    */
-  constructor({ binary, dataDir, onState }) {
+  constructor({ binary, dataDir, onState, origines, api = false }) {
     this.binary = binary;
     this.dataDir = dataDir;
     this.onState = onState || (() => {});
+    this.origines = origines;
+    this.api = api;
+    /*
+     * L'identifiant est tire UNE fois par superviseur, comme les ports : la page le recoit
+     * au demarrage et doit pouvoir s'en servir a chaque reconnexion. Le changer a chaque
+     * relance du relais couperait toutes les tuiles pour rien.
+     */
+    this.identifiant = nouvelIdentifiant();
 
     this.child = null;
     this.ports = null;
@@ -87,7 +100,27 @@ class RelaySupervisor {
   static async freePort(preferred, { udp = false, adresse = '127.0.0.1', attempts = 20 } = {}) {
     for (let p = preferred; p < preferred + attempts; p++) {
       const ok = await new Promise((resolve) => {
-        if (udp) {
+        if (udp && (adresse === '0.0.0.0' || adresse === '::')) {
+          /*
+           * « Toutes les interfaces », c'est ce que le relais entend par « :port » : une
+           * prise IPv6 en DOUBLE PILE sur « :: », qui couvre aussi l'IPv4. Sonder « 0.0.0.0 »
+           * ne prouvait rien — Windows l'accorde meme quand « [::]:port » est deja pris, et
+           * le relais, lui, se heurtait ensuite au port occupe et redemarrait en boucle,
+           * « Reconnexion du flux vidéo… » a l'ecran pour toujours. Constate le 22.10.2026,
+           * avec une seconde copie d'Alcora ouverte.
+           *
+           * Sans pile IPv6, on retombe sur l'IPv4 seule : c'est alors aussi ce que fera le
+           * relais.
+           */
+          const s = dgram.createSocket({ type: 'udp6', ipv6Only: false });
+          s.once('error', (e) => {
+            if (!['EAFNOSUPPORT', 'EADDRNOTAVAIL', 'EINVAL'].includes(e.code)) return resolve(false);
+            const s4 = dgram.createSocket('udp4');
+            s4.once('error', () => resolve(false));
+            s4.bind(p, '0.0.0.0', () => s4.close(() => resolve(true)));
+          });
+          s.bind(p, '::', () => s.close(() => resolve(true)));
+        } else if (udp) {
           const s = dgram.createSocket('udp4');
           s.once('error', () => resolve(false));
           s.bind(p, adresse, () => s.close(() => resolve(true)));
@@ -174,58 +207,19 @@ class RelaySupervisor {
     return true;
   }
 
+  /**
+   * La configuration vient de relais-config.js, pur et eprouve par test-relais-config.js :
+   * un seul serveur (WebRTC), un seul utilisateur tire au hasard, une seule origine.
+   * Voir l'en-tete de ce module pour l'audit du 22.10.2026 qui l'a impose.
+   */
   writeConfig() {
-    const paths = this.cameras
-      .map((c) => [
-        `  ${c.path}:`,
-        `    source: ${c.url}`,
-        '    sourceOnDemand: yes',
-        '    sourceOnDemandCloseAfter: 15s',
-        '    rtspTransport: tcp',
-      ].join('\n'))
-      .join('\n');
-
-    const config = [
-      '# Genere par Alcora. Les modifications manuelles seront ecrasees.',
-      'logLevel: warn',
-      'api: yes',
-      `apiAddress: 127.0.0.1:${this.ports.api}`,
-      // Aucun serveur RTSP : l'application ne consomme que le temps reel. L'activer
-      // republiait les flux des cameras sur toutes les interfaces, sans authentification.
-      'rtsp: no',
-      'rtmp: no',
-      'hls: no',
-      'srt: no',
-      'webrtc: yes',
-      `webrtcAddress: 127.0.0.1:${this.ports.webrtc}`,
-
-      // Le relais doit annoncer ses adresses d'interface, PAS seulement 127.0.0.1.
-      //
-      // Contre-intuitif mais mesure : le navigateur n'emet aucun candidat de boucle
-      // locale. Restreindre le relais a 127.0.0.1 ne laisse donc aucune paire joignable —
-      // la negociation aboutit, l'etat passe « checking » puis « failed », et rien ne
-      // circule sans le moindre message d'erreur.
-      //
-      // Le pare-feu n'est pas un obstacle ici : Windows ne filtre pas le trafic d'une
-      // machine vers ses propres adresses. Aucune exception n'est donc necessaire.
-      `webrtcLocalUDPAddress: :${this.ports.ice}`,
-
-      // Chemin TCP sur la boucle locale, en plus de l'UDP.
-      //
-      // Le navigateur n'emet aucun candidat UDP de boucle locale : il ne propose que ses
-      // interfaces reseau, y compris des adaptateurs virtuels et une adresse auto-attribuee
-      // en 169.254. La negociation choisit parfois une paire ou les tests de connectivite
-      // passent mais ou la poignee de main securisee echoue — l'etat monte a « connected »
-      // puis retombe une quinzaine de secondes plus tard.
-      //
-      // En TCP, le navigateur COMPOSE vers l'adresse annoncee : 127.0.0.1 lui est
-      // directement joignable, sans dependre de l'interface choisie.
-      `webrtcLocalTCPAddress: 127.0.0.1:${this.ports.iceTcp}`,
-      'paths:',
-      paths || '  {}',
-      '',
-    ].join('\n');
-
+    const config = configurationRelais({
+      ports: this.ports,
+      cameras: this.cameras,
+      identifiant: this.identifiant,
+      origines: this.origines,
+      api: this.api,
+    });
     fs.mkdirSync(this.dataDir, { recursive: true });
     fs.writeFileSync(this.configPath, config, 'utf8');
   }
@@ -302,6 +296,16 @@ class RelaySupervisor {
   }
 
   /** URL de base a donner a l'interface pour consommer les flux. */
+  /**
+   * Ce que la page doit connaitre pour ouvrir la video : l'adresse ET l'en-tete
+   * d'autorisation. L'un sans l'autre ne mene plus nulle part (401).
+   */
+  get acces() {
+    return this.ports
+      ? { base: this.webrtcBase, autorisation: autorisation(this.identifiant) }
+      : null;
+  }
+
   get webrtcBase() {
     return this.ports ? `http://127.0.0.1:${this.ports.webrtc}` : null;
   }

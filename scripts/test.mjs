@@ -45,6 +45,30 @@ const suites = [
     dossier: path.join(racine, 'v2', 'desktop'),
   },
   {
+    /*
+     * Ajoutee le 22.10.2026, apres un audit qui a trouve le relais ouvert a toutes les
+     * pages web (API de controle reecrivable, video sans mot de passe) et un serveur MoQ
+     * allume par defaut sur toutes les interfaces, que notre configuration ignorait.
+     * Elle confronte notre configuration a celle, PAR DEFAUT, du binaire epingle.
+     */
+    nom: 'Configuration du relais (rien d ouvert que l on n ait decide)',
+    commande: 'node',
+    args: ['test-relais-config.js'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
+     * Le relais EN VRAI : le binaire epingle (v2/relay, hors depot) lance avec notre
+     * configuration, puis attaque comme une page etrangere ou un programme local. Seul ce
+     * test prouve ce que MediaMTX FAIT de la configuration — MoQ ecoutait alors que la
+     * configuration n'en disait rien. Il echoue franchement si le binaire manque.
+     */
+    nom: 'Relais vivant (ports, origines, mot de passe)',
+    commande: 'node',
+    args: ['test-relais-vif.js'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
     nom: "Bornes de l'archive (frise temporelle)",
     commande: 'node',
     args: ['test-archive.js'],

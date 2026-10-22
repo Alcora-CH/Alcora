@@ -40,8 +40,11 @@ function check(label, ok, detail = '') {
   console.log(`${ok ? '  OK  ' : ' ECHEC'}  ${label}${detail ? '  — ' + detail : ''}`);
 }
 
+// L'API n'est allumee QUE pour ce test manuel, en boucle locale et derriere le mot de
+// passe du relais (voir relais-config.js) : chaque appel doit donc le presenter.
+let entete = null;
 async function api(port, route) {
-  const res = await fetch(`http://127.0.0.1:${port}${route}`);
+  const res = await fetch(`http://127.0.0.1:${port}${route}`, { headers: { Authorization: entete } });
   if (!res.ok) throw new Error(String(res.status));
   return res.json();
 }
@@ -51,7 +54,10 @@ async function api(port, route) {
     binary: path.resolve(__dirname, '..', 'relay', 'mediamtx.exe'),
     dataDir: path.join(os.tmpdir(), 'ProtectViewerRelayTest'),
     onState: (s) => console.log(`         etat : ${s.message}`),
+    origines: ['app://viewer'],
+    api: true,
   });
+  entete = require('./relais-config').autorisation(sup.identifiant);
 
   console.log('=== Demarrage ===');
   await sup.start(CAMERAS);

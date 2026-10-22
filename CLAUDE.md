@@ -43,16 +43,27 @@ npm run build:linux    # exige WSL (Ubuntu) et v2/relay/mediamtx-linux-x64
 - **Les deux binaires du relais cohabitent** dans `v2/relay/` (hors dépôt) :
   `mediamtx.exe` et `mediamtx-linux-x64`, **même version** — la livraison Linux le
   renomme `mediamtx`, ce que `main.js` cherche hors Windows.
-- **Version épinglée du relais : `v1.20.1`** (1.19.2 → 1.20.0 le 11.08.2026, 1.20.0 → 1.20.1 le 26.08.2026 : deux paniques sur entrée malformée, un mot de passe masqué dans les réponses, un défaut d'authentification resserré).
+- **Version épinglée du relais : `v1.21.2`** (1.19.2 → 1.20.0 le 11.08.2026, 1.20.0 → 1.20.1 le 26.08.2026, 1.20.1 → 1.21.2 le 22.10.2026 : avis CRITIQUE GHSA-w334, une API de contrôle réécrivable depuis un formulaire web).
   C'est la seule dépendance d'exécution d'Alcora : elle ne s'approvisionne pas toute
-  seule, et rien dans le dépôt ne la vérifie. Le faire à la main, dans cet ordre :
+  seule. Le faire à la main, dans cet ordre :
 
   ```
-  gh release download v1.20.1 --repo bluenviron/mediamtx \
-     -p 'mediamtx_v1.20.1_windows_amd64.zip' -p 'mediamtx_v1.20.1_linux_amd64.tar.gz' -p checksums.sha256
+  gh release download v1.21.2 --repo bluenviron/mediamtx \
+     -p 'mediamtx_v1.21.2_windows_amd64.zip' -p 'mediamtx_v1.21.2_linux_amd64.tar.gz' -p checksums.sha256
   sha256sum -c checksums.sha256 --ignore-missing
-  gh attestation verify mediamtx_v1.20.1_windows_amd64.zip --repo bluenviron/mediamtx
+  gh attestation verify mediamtx_v1.21.2_windows_amd64.zip --repo bluenviron/mediamtx --format json
   ```
+
+  `gh attestation verify` n'affiche RIEN hors terminal : seul le code de sortie parle, et
+  `--format json` montre ce qui a été vérifié (workflow, tag, empreinte). Lire l'empreinte
+  attestée et la comparer à celle du fichier — un code 0 seul ne dit pas sur quoi il porte.
+
+  **Monter de version, c'est aussi** : changer `VERSION_RELAIS` dans
+  `v2/desktop/relais-config.js`, et remplacer `v2/desktop/relais-defaut-vX.Y.Z.yml` par la
+  configuration PAR DÉFAUT de la nouvelle archive. `test-relais-config.js` la lit et rougit
+  si un serveur allumé par défaut n'est pas tranché chez nous — c'est ainsi que MoQ, apparu
+  allumé, avait échappé à la configuration jusqu'en 2.29.3. `test-relais-vif.js` lance
+  ensuite le vrai binaire et vérifie ports, origines et mot de passe.
 
   **Les sommes seules ne suffisent pas** : elles viennent du même serveur que les
   archives. L'attestation SLSA, elle, est signée indépendamment — c'est elle qui dit

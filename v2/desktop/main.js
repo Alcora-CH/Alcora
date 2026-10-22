@@ -792,6 +792,9 @@ async function discoverAndPublish(client, config) {
       binary: RELAY_BINARY,
       dataDir: path.join(app.getPath('userData'), 'relay'),
       onState: pushRelayState,
+      // Seule l'interface d'Alcora peut lire la video — plus le serveur de developpement
+      // quand il y en a un. Jamais « * » : voir relais-config.js.
+      origines: [ORIGINE_UI, ...(DEV_URL ? [new URL(DEV_URL).origin] : [])],
     });
     await relay.start(paths);
   }
@@ -1240,7 +1243,11 @@ ipcMain.handle('protect:systeme', async () => {
   // contrat TypeScript. Enumerer les champs ICI a coute six champs perdus en silence.
   return etatPourInterface(systeme, cameras, app.getVersion());
 });
-ipcMain.handle('protect:relayBase', async () => { await demarrage; return relay?.webrtcBase ?? null; });
+/*
+ * L'acces au relais : l'adresse ET l'en-tete d'autorisation. Le relais n'accepte plus de
+ * lecture anonyme depuis le 22.10.2026 — n'importe quelle page web pouvait l'interroger.
+ */
+ipcMain.handle('protect:relais', async () => { await demarrage; return relay?.acces ?? null; });
 ipcMain.handle('protect:journalPath', () => journal.chemin());
 
 /*

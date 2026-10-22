@@ -9,7 +9,7 @@ import { imageDeLaVideo, useSonVideo } from '../video/outils';
 import { useZoomVideo } from '../video/useZoomVideo';
 import { localeDates, nombre, t, useLangue } from '../i18n';
 import type { Cle } from '../i18n/fr';
-import type { Archive, Detection, DiscoveredCamera } from '../types/protect';
+import type { Archive, Detection, DiscoveredCamera, RelaisAcces } from '../types/protect';
 
 /**
  * Relecture : parcourir une journee entiere, et pas seulement les detections.
@@ -113,9 +113,9 @@ function etiquetteGraduation(ms: number, pas: number): string {
 
 type Morceau = { url: string; debut: number; fin: number };
 
-export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
+export function RelectureScreen({ cameras, relais, cameraInitiale }: {
   cameras: DiscoveredCamera[];
-  relayBase: string | null;
+  relais: RelaisAcces | null;
   /** Camera visee par un bouton du direct : on arrive sur elle. */
   cameraInitiale?: string | null;
 }) {
@@ -443,9 +443,9 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
                 un clic laissait croire que l'écran ne fonctionnait pas. */}
             {/* Le relais peut ne pas être prêt : sans lui, pas de direct à montrer, et
                 l'invitation à cliquer suffit. */}
-            {!courant && !erreur && relayBase && (
+            {!courant && !erreur && relais && (
               <div className="absolute inset-0">
-                <CameraTile camera={camera} relayBase={relayBase} cadre={false} hauteurEtiquette={0} />
+                <CameraTile camera={camera} relais={relais} cadre={false} hauteurEtiquette={0} />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-3">
                   <span className="rounded-md px-3 py-1.5 text-[12.5px]"
                         style={{ background: 'rgba(10,12,15,.62)', color: 'var(--muted)' }}>
@@ -550,7 +550,7 @@ export function RelectureScreen({ cameras, relayBase, cameraInitiale }: {
               </span>
             )}
 
-            {!courant && !erreur && !relayBase && (
+            {!courant && !erreur && !relais && (
               <div className="absolute inset-0 grid place-items-center p-8 text-center">
                 <p className="max-w-sm text-[13px] text-soft">
                   {t('relecture.inviteSansRelais')}

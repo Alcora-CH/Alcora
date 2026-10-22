@@ -254,7 +254,8 @@ const mock: ProtectBridge = {
     handler({ running: true, message: t('relais.pret') });
     return () => {};
   },
-  async relayBase() { return 'http://127.0.0.1:8889'; },
+  // La demo n'a pas de vrai relais : l'en-tete est fictif, comme la camera.
+  async relais() { return { base: 'http://127.0.0.1:8889', autorisation: 'Basic ZGVtbzpkZW1v' }; },
   async pleinEcran(actif: boolean) { return actif; },
   async retry() { /* simule */ },
   async reconfigure() { /* simule */ },

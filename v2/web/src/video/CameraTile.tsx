@@ -13,11 +13,12 @@ import { nombre, t, useLangue } from '../i18n';
  */
 const STABILISATION_MS = 400;
 import { useZoomVideo } from './useZoomVideo';
-import type { DiscoveredCamera } from '../types/protect';
+import type { DiscoveredCamera, RelaisAcces } from '../types/protect';
 
 export interface CameraTileProps {
   camera: DiscoveredCamera;
-  relayBase: string;
+  /** Adresse du relais et en-tete d'autorisation : l'un sans l'autre rend 401. */
+  relais: RelaisAcces;
   /** Marge de resolution exigee au-dela de la taille d'affichage. */
   headroom?: number;
   /** Faux quand l'espacement est nul : les images se touchent, sans bord ni arrondi. */
@@ -155,7 +156,7 @@ async function imagesDecodees(pc: RTCPeerConnection): Promise<number | null> {
 }
 
 export function CameraTile({
-  camera, relayBase, headroom = 2, cadre = true, hauteurEtiquette = 26, actions, activite,
+  camera, relais, headroom = 2, cadre = true, hauteurEtiquette = 26, actions, activite,
   zoomClavier = false,
 }: CameraTileProps) {
   useLangue();
@@ -249,9 +250,9 @@ export function CameraTile({
     let mienne: WhepSession | null = null;
 
     setStatus('connexion');
-    console.log(`[tuile ${camera.name}] appel ${relayBase}/${path}/whep`);
+    console.log(`[tuile ${camera.name}] appel ${relais.base}/${path}/whep`);
 
-    connectWhep(`${relayBase}/${path}/whep`, video)
+    connectWhep(`${relais.base}/${path}/whep`, video, relais.autorisation)
       .then((s) => {
         if (cancelled) { s.close(); return; }
         mienne = s;
@@ -271,7 +272,7 @@ export function CameraTile({
       mienne?.close();
       if (sessionRef.current === mienne) sessionRef.current = null;
     };
-  }, [path, relayBase, camera.name, generation]);
+  }, [path, relais.base, relais.autorisation, camera.name, generation]);
 
   /*
    * Reprise apres un echec de connexion.
