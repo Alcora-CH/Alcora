@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette UX A / B</title>
+<!--
+  Maquette du chantier UX (docs/plan-ux.md), 23.10.2026.
+  Deux directions, A « Observatoire » et B « Régie », à CONTENU IDENTIQUE : chaque élément
+  de docs/inventaire-ecrans.md y figure, déplacé mais jamais retiré (voir l'onglet
+  « Où va chaque élément »). Données et images fictives (site/assets).
+  Les polices viennent de Google Fonts pour la maquette ; l'application les embarquerait
+  (licence SIL OFL), sans aucun appel réseau.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===================================================================== banc de la maquette */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #08090b; color: #e8e8e6; font: 13px/1.4 system-ui, "Segoe UI", sans-serif; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.banc { position: fixed; inset: 0 0 auto 0; height: 44px; display: flex; align-items: center; gap: 14px; padding: 0 14px;
+        background: #f1efe9; color: #23252a; font: 500 13px/1 "Barlow", system-ui, sans-serif; z-index: 100; }
+.banc b { font-weight: 600; margin-right: 6px; }
+.banc .seg { display: flex; background: #dedbd2; border-radius: 8px; padding: 3px; gap: 2px; }
+.banc .seg button { padding: 6px 11px; border-radius: 6px; color: #4a4c52; }
+.banc .seg button[aria-pressed="true"] { background: #fff; color: #15171a; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.banc .note { margin-left: auto; color: #6c6e74; }
+#scene { position: absolute; inset: 44px 0 0 0; }
+#scene > section { position: absolute; inset: 0; display: none; }
+#scene[data-dir="A"]:not([data-vue="carte"]) > .appA { display: grid; }
+#scene[data-dir="B"]:not([data-vue="carte"]) > .appB { display: grid; }
+#scene[data-vue="carte"] > .carte { display: block; }
+/* Vues internes : Direct (et ses panneaux ouverts) ou Relecture. */
+#scene:not([data-vue="relecture"]) .vue-relecture { display: none !important; }
+#scene[data-vue="relecture"] .vue-direct { display: none !important; }
+#scene:not([data-vue="ouvert"]) .si-ouvert { display: none !important; }
+
+/* ===================================================================== A — OBSERVATOIRE */
+.appA {
+  --nuit: #0e131b; --instrument: #151b25; --graphite: #1e2633; --graphite2: #283242;
+  --ligne: rgba(206,214,229,.09); --ligne2: rgba(206,214,229,.17);
+  --lumiere: #ece8df; --texte2: #a9b0bc; --texte3: #737d8b;
+  --alcor: #dca95c; --alcor-doux: rgba(220,169,92,.14); --alcor-ligne: rgba(220,169,92,.42);
+  --vert: #74c494; --rouge: #e3735f; --orange: #e0a23c;
+  --personne: #dca95c; --vehicule: #86afcf; --animal: #74c494; --son: #b997d6; --mouvement: #6b7480;
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  grid-template-columns: 84px minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) 34px;
+  background: var(--nuit); color: var(--lumiere);
+  font: 400 13px/1.45 "Atkinson Hyperlegible Next", system-ui, sans-serif;
+}
+.appA .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.appA .num { font-variant-numeric: tabular-nums; }
+
+/* Rail : icône ET nom. Un outil sérieux ne fait pas deviner ses espaces. */
+.A-rail { grid-row: 1; grid-column: 1; display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+          padding: 14px 8px; background: var(--instrument); border-right: 1px solid var(--ligne); }
+.A-rail .marque { display: grid; place-items: center; height: 44px; margin-bottom: 10px; color: var(--alcor); }
+.A-rail .marque svg { width: 30px; height: 30px; }
+.A-rail .esp { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 2px 8px; border-radius: 10px;
+               color: var(--texte2); font-size: 12px; position: relative; }
+.A-rail .esp svg { width: 20px; height: 20px; }
+.A-rail .esp:hover { background: var(--graphite); color: var(--lumiere); }
+.A-rail .esp[aria-current="true"] { background: var(--graphite); color: var(--lumiere); }
+.A-rail .esp[aria-current="true"]::before { content: ""; position: absolute; left: -8px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--alcor); }
+.A-rail .esp[aria-current="true"] svg { color: var(--alcor); }
+.A-rail .bas { margin-top: auto; }
+
+.A-main { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
+.A-tete { height: 64px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 20px 0 24px; border-bottom: 1px solid var(--ligne); background: var(--instrument); }
+.A-tete h1 { font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -.005em; }
+.A-tete .sous { color: var(--texte2); font-size: 13px; }
+.A-tete .actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+/* Un seul jeu de boutons pour toute l'application : trois variantes, deux hauteurs. */
+.A-btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 8px;
+         background: var(--graphite); border: 1px solid var(--ligne2); color: var(--lumiere); font-size: 13px; white-space: nowrap; }
+.A-btn:hover { background: var(--graphite2); }
+.A-btn.petit { height: 28px; padding: 0 9px; font-size: 12.5px; border-radius: 7px; gap: 6px; }
+.A-btn.fantome { background: transparent; border-color: transparent; color: var(--texte2); }
+.A-btn.fantome:hover { background: var(--graphite); color: var(--lumiere); }
+.A-btn.primaire { background: var(--alcor); border-color: var(--alcor); color: #1d1608; font-weight: 600; }
+.A-btn.actif { background: var(--alcor-doux); border-color: var(--alcor-ligne); color: var(--alcor); }
+.A-btn.vert { color: var(--vert); border-color: rgba(116,196,148,.35); background: rgba(116,196,148,.08); }
+.A-btn.icone { width: 32px; padding: 0; justify-content: center; }
+.A-btn.petit.icone { width: 28px; }
+.A-btn[disabled] { opacity: .35; cursor: default; }
+.A-btn .compte { color: var(--texte3); font-size: 12px; }
+.A-kbd { font-family: var(--mono); font-size: 11.5px; color: var(--texte3); border: 1px solid var(--ligne2); border-radius: 5px; padding: 0 5px; line-height: 18px; }
+
+/* Le mur : le ciel ne vit plus que là où il n'y a pas d'image, et il est fixe. */
+.A-mur { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.A-ciel { position: absolute; inset: 0; background-color: var(--nuit); background-repeat: no-repeat; background-size: cover; }
+.A-grille { position: absolute; inset: 0 0 30px 0; display: grid; justify-content: center; align-content: center; padding: 20px; gap: 16px; }
+/* Des barres de défilement à la teinte de l'instrument, pas celles du système. */
+.appA *, .appB * { scrollbar-width: thin; }
+.appA * { scrollbar-color: var(--graphite2) transparent; }
+.appB * { scrollbar-color: var(--chassis3) transparent; }
+.A-aide { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; color: var(--texte3); font-size: 12px; }
+
+.A-tuile { container-type: inline-size; background: var(--instrument); border: 1px solid var(--ligne2); border-radius: 12px; overflow: hidden;
+           box-shadow: 0 18px 40px -18px rgba(0,0,0,.7); display: flex; flex-direction: column; }
+.A-tuile.active { border-color: var(--alcor-ligne); box-shadow: 0 0 0 1px var(--alcor-ligne), 0 0 28px -6px rgba(220,169,92,.45), 0 18px 40px -18px rgba(0,0,0,.7); }
+.A-bandeau { height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; }
+.A-bandeau .nom { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.A-bandeau .canal { color: var(--texte2); font-size: 12.5px; white-space: nowrap; }
+.A-bandeau .direct { display: inline-flex; align-items: center; gap: 6px; color: var(--vert); font-size: 12.5px; }
+.A-bandeau .direct::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.A-bandeau .cmds { margin-left: auto; display: flex; gap: 4px; }
+.A-bandeau .cmds .A-btn { background: transparent; border-color: transparent; color: var(--texte2); }
+.A-bandeau .cmds .A-btn:hover { background: var(--graphite); color: var(--lumiere); }
+.A-bandeau .cmds .A-btn.actif { background: var(--alcor-doux); color: var(--alcor); }
+@container (max-width: 640px) { .A-bandeau .cmds .lib { display: none; } .A-bandeau .cmds .A-btn { width: 28px; padding: 0; justify-content: center; } }
+@container (max-width: 380px) { .A-bandeau .canal { display: none; } }
+.A-image { position: relative; flex: 1; background: #000 center/cover no-repeat; }
+.A-image .pastille { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px;
+                     border-radius: 13px; background: rgba(12,15,20,.78); color: #f2efe8; font-size: 12.5px; }
+.A-image .pastille::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--alcor); box-shadow: 0 0 0 0 rgba(220,169,92,.6); animation: pouls 1.8s infinite; }
+@keyframes pouls { 70% { box-shadow: 0 0 0 7px rgba(220,169,92,0); } 100% { box-shadow: 0 0 0 0 rgba(220,169,92,0); } }
+.A-image .zoom { position: absolute; left: 10px; bottom: 10px; height: 24px; padding: 0 9px; border-radius: 6px; background: rgba(12,15,20,.78);
+                 color: #f2efe8; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.A-image .zoom .interpole { color: var(--rouge); }
+.A-image .toast { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); padding: 8px 14px; border-radius: 9px; background: rgba(12,15,20,.92);
+                  border: 1px solid var(--ligne2); color: #f2efe8; font-size: 13px; white-space: nowrap; }
+
+/* Colonne Activité : propre au Direct. Elle remplace la moitié « vivante » du panneau. */
+.A-activite { grid-row: 1; grid-column: 3; width: 312px; display: flex; flex-direction: column; background: var(--instrument); border-left: 1px solid var(--ligne); min-height: 0; }
+#scene[data-vue="relecture"] .A-activite { display: none; }
+.A-activite .tete { height: 64px; flex: none; display: flex; align-items: center; padding: 0 12px 0 20px; border-bottom: 1px solid var(--ligne); }
+.A-activite h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.A-activite .tete .A-btn { margin-left: auto; }
+.A-bloc { padding: 18px 20px; border-bottom: 1px solid var(--ligne); }
+.A-bloc h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--lumiere); display: flex; align-items: baseline; gap: 8px; }
+.A-bloc h3 .val { margin-left: auto; font-size: 13px; font-weight: 400; color: var(--texte2); }
+.A-histo { display: flex; align-items: flex-end; gap: 2px; height: 56px; }
+.A-histo i { flex: 1; border-radius: 2px 2px 0 0; background: var(--alcor); }
+.A-histo i.vide { background: var(--graphite2); }
+.A-histo i.nonlu { background: repeating-linear-gradient(135deg, var(--graphite) 0 3px, var(--graphite2) 3px 6px); height: 100% !important; }
+.A-axe { display: flex; justify-content: space-between; margin-top: 6px; color: var(--texte3); font-size: 11.5px; }
+.A-recentes { list-style: none; margin: 0; padding: 6px 10px; overflow: auto; }
+.A-recentes li { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 9px; cursor: pointer; }
+.A-recentes li:hover { background: var(--graphite); }
+.A-recentes .vig { width: 72px; height: 40px; flex: none; border-radius: 6px; background: #000 center/cover; }
+.A-recentes .quoi { font-size: 13px; }
+.A-recentes .ou { font-size: 12px; color: var(--texte2); }
+.A-recentes .quand { margin-left: auto; color: var(--texte3); font-size: 12px; white-space: nowrap; }
+.A-lien { display: block; margin: 4px 20px 16px; color: var(--alcor); font-size: 13px; }
+
+/* Barre d'état : ce qu'on doit savoir sans rien ouvrir. Un clic, et le détail vient. */
+.A-etat { grid-row: 2; grid-column: 1 / -1; display: flex; align-items: center; gap: 0; padding: 0 8px 0 14px; background: var(--instrument);
+          border-top: 1px solid var(--ligne); font-size: 12.5px; color: var(--texte2); }
+.A-etat > span { display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; height: 18px; border-right: 1px solid var(--ligne2); white-space: nowrap; }
+.A-etat > span:first-child { padding-left: 0; }
+.A-etat .ok::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--vert); }
+.A-etat b { font-weight: 500; color: var(--lumiere); }
+.A-etat .barre { width: 44px; height: 5px; border-radius: 3px; background: var(--graphite2); overflow: hidden; }
+.A-etat .barre i { display: block; height: 100%; width: 98%; background: var(--alcor); }
+.A-etat .prive { margin-left: auto; border-right: 0; color: var(--texte3); }
+.A-etat .heure { border-left: 1px solid var(--ligne2); border-right: 0; color: var(--lumiere); }
+.A-etat .A-btn { margin-left: 4px; }
+
+/* Feuille Système : le détail de la barre d'état, en trois groupes, rien de perdu. */
+/* Fixée à la fenêtre : elle s'ouvre AU-DESSUS de son bouton, en bas à droite. */
+.A-systeme { position: fixed; right: 10px; bottom: 42px; width: min(940px, calc(100% - 20px)); z-index: 20; display: grid; grid-template-columns: repeat(3, 1fr);
+             background: var(--instrument); border: 1px solid var(--ligne2); border-radius: 14px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.85); }
+.A-systeme .groupe { padding: 18px 20px 20px; border-right: 1px solid var(--ligne); }
+.A-systeme .groupe:last-child { border-right: 0; }
+.A-systeme h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; }
+.A-ligne { display: flex; align-items: baseline; gap: 10px; padding: 4px 0; font-size: 13px; }
+.A-ligne .k { color: var(--texte2); }
+.A-ligne .v { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+.A-ligne .v.ok { color: var(--vert); } .A-ligne .v.alerte { color: var(--orange); }
+.A-note { margin: 6px 0 0; font-size: 12px; color: var(--texte3); line-height: 1.45; }
+.A-defs { display: flex; gap: 6px; margin-top: 10px; }
+.A-defs span { font-size: 12px; padding: 2px 8px; border-radius: 6px; background: var(--graphite); color: var(--texte3); }
+.A-defs span.on { background: var(--alcor-doux); color: var(--alcor); }
+.A-disque { height: 6px; border-radius: 3px; background: var(--graphite2); margin: 10px 0 6px; overflow: hidden; }
+.A-disque i { display: block; height: 100%; width: 98%; background: linear-gradient(90deg, var(--alcor), #efc581); }
+.A-etatrelais { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 9px; background: var(--graphite); margin-bottom: 12px; font-size: 13px; }
+.A-etatrelais::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--vert); margin-top: 6px; flex: none; }
+.A-prive { display: flex; gap: 8px; align-items: center; margin-top: 14px; color: var(--vert); font-size: 12.5px; }
+
+/* Menu Caméras : la liste et le masquage, ancrés au mur qu'ils gouvernent. */
+.A-cams { position: absolute; top: 56px; right: 20px; width: 360px; z-index: 20; background: var(--instrument); border: 1px solid var(--ligne2);
+          border-radius: 14px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.85); padding: 8px; }
+.A-cams .cam { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 9px; }
+.A-cams .cam:hover { background: var(--graphite); }
+.A-cams .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--vert); flex: none; }
+.A-cams .pt.non { background: var(--texte3); }
+.A-cams .nom { font-size: 13.5px; }
+.A-cams .def { font-size: 12px; color: var(--texte2); }
+.A-cams .def.rtsp { color: var(--orange); }
+.A-cams .cam .A-btn { margin-left: auto; }
+.A-cams .remede { margin: 6px 10px 6px; padding: 10px 12px; border-radius: 9px; background: rgba(224,162,60,.09); color: #e9c27f; font-size: 12.5px; line-height: 1.5; }
+.A-cams .remede a { color: var(--alcor); display: inline-block; margin-top: 6px; }
+.A-maj { position: absolute; left: 50%; top: 76px; transform: translateX(-50%); z-index: 15; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px;
+         border-radius: 12px; background: var(--instrument); border: 1px solid var(--ligne2); box-shadow: 0 20px 50px -20px rgba(0,0,0,.8); font-size: 13px; white-space: nowrap; }
+
+/* ---- Relecture A ---- */
+.A-rel { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 20px 16px; }
+.A-chips { display: flex; gap: 6px; }
+.A-chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 4px; border-radius: 9px; border: 1px solid var(--ligne2); background: var(--graphite); font-size: 13px; }
+.A-chip .mini { width: 44px; height: 26px; border-radius: 5px; background: #000 center/cover; }
+.A-chip[aria-pressed="true"] { border-color: var(--alcor-ligne); background: var(--alcor-doux); color: var(--alcor); }
+.A-jour { display: flex; align-items: center; gap: 4px; }
+.A-jour .date { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--ligne2); background: var(--graphite); }
+.A-jour .date .quand { color: var(--texte3); }
+.A-lecteur { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--instrument); border: 1px solid var(--ligne2); border-radius: 12px; overflow: hidden; }
+.A-lecteur .A-bandeau .temps { font-family: var(--mono); font-size: 14px; color: var(--lumiere); font-variant-numeric: tabular-nums; }
+.A-lecteur .A-image { background-size: contain; background-color: #000; }
+.A-console { flex: none; background: var(--instrument); border: 1px solid var(--ligne2); border-radius: 12px; padding: 12px 16px 10px; }
+.A-transport { display: flex; align-items: center; gap: 6px; }
+.A-transport .lire { width: 40px; height: 40px; border-radius: 10px; background: var(--alcor); color: #1d1608; display: grid; place-items: center; }
+.A-transport .lire svg { width: 18px; height: 18px; fill: currentColor; }
+.A-transport .t { font-family: var(--mono); font-size: 15px; margin: 0 14px 0 10px; font-variant-numeric: tabular-nums; }
+.A-seg { display: inline-flex; padding: 3px; border-radius: 9px; background: var(--graphite); border: 1px solid var(--ligne2); }
+.A-seg button { height: 26px; padding: 0 10px; border-radius: 6px; color: var(--texte2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.A-seg button[aria-pressed="true"] { background: var(--alcor-doux); color: var(--alcor); }
+.A-frise-tete { display: flex; align-items: center; gap: 10px; margin: 12px 0 6px; font-size: 12.5px; color: var(--texte2); }
+.A-frise-tete .aide { margin-left: auto; color: var(--texte3); }
+.frise { position: relative; height: 52px; border-radius: 8px; overflow: hidden; cursor: crosshair; }
+.appA .frise { background: var(--graphite); }
+.frise .enreg { position: absolute; top: 0; bottom: 0; }
+.frise .futur { position: absolute; top: 0; bottom: 0; right: 0; }
+.frise .grad { position: absolute; top: 0; bottom: 0; width: 1px; }
+.frise .lab { position: absolute; bottom: 3px; transform: translateX(-50%); font-size: 11px; pointer-events: none; }
+.frise .rep { position: absolute; width: 3px; border-radius: 2px; pointer-events: none; }
+.frise .tete { position: absolute; top: -2px; bottom: -2px; width: 2px; pointer-events: none; }
+.frise .survol { position: absolute; top: 0; bottom: 0; width: 1px; pointer-events: none; display: none; }
+.lecture-survol { height: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12.5px; }
+.A-pellicule .filtres { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.A-pellicule .filtres button { height: 28px; padding: 0 12px; border-radius: 14px; color: var(--texte2); font-size: 12.5px; }
+.A-pellicule .filtres button[aria-pressed="true"] { background: var(--alcor-doux); color: var(--alcor); }
+.A-pellicule .filtres .compte { margin-left: auto; color: var(--texte2); font-size: 12.5px; }
+.A-cartes { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+.A-carte { width: 132px; flex: none; border-radius: 9px; overflow: hidden; background: var(--instrument); border: 1px solid var(--ligne2); cursor: pointer; }
+.A-carte.en-cours { border-color: var(--alcor); }
+.A-carte .vig { aspect-ratio: 16/9; background: #000 center/cover; }
+.A-carte .pied { display: flex; justify-content: space-between; padding: 6px 8px; font-size: 12px; }
+.A-carte .pied .h { color: var(--texte2); font-variant-numeric: tabular-nums; }
+
+/* ===================================================================== B — RÉGIE */
+.appB {
+  --noir: #000; --chassis: #141517; --chassis2: #1b1c1f; --chassis3: #24262a; --ligne: #2a2c30; --ligne2: #383b40;
+  --texte: #efefed; --texte2: #a0a3a8; --texte3: #6c6f75;
+  --alcor: #e3aa4f; --alcor-doux: rgba(227,170,79,.13); --vert: #4cc38a; --rouge: #e5484d; --orange: #e29a3a;
+  --personne: #e3aa4f; --vehicule: #7fb0d6; --animal: #4cc38a; --son: #b999e0; --mouvement: #6e7278;
+  grid-template-rows: 46px minmax(0, 1fr) auto;
+  background: var(--noir); color: var(--texte);
+  font: 400 14px/1.4 "Barlow", system-ui, sans-serif; font-variant-numeric: tabular-nums;
+}
+.appB .cond { font-family: "Barlow Semi Condensed", "Barlow", sans-serif; }
+.B-haut { display: flex; align-items: stretch; background: var(--chassis); border-bottom: 1px solid var(--ligne); padding: 0 10px 0 14px; gap: 6px; }
+.B-haut .marque { display: flex; align-items: center; gap: 9px; margin-right: 18px; font: 600 16px "Barlow Semi Condensed", sans-serif; letter-spacing: .01em; }
+.B-haut .marque svg { width: 22px; height: 22px; color: var(--alcor); }
+.B-onglet { display: flex; align-items: center; padding: 0 12px; color: var(--texte2); font: 500 15px "Barlow Semi Condensed", sans-serif; position: relative; }
+.B-onglet:hover { color: var(--texte); }
+.B-onglet[aria-current="true"] { color: var(--texte); }
+.B-onglet[aria-current="true"]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; height: 2px; background: var(--alcor); }
+.B-statut { margin-left: auto; display: flex; align-items: center; gap: 16px; font: 500 14px "Barlow Semi Condensed", sans-serif; color: var(--texte2); }
+.B-statut .ok { display: inline-flex; align-items: center; gap: 7px; color: var(--texte); }
+.B-statut .ok::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--vert); }
+.B-statut .heure { color: var(--texte); font-size: 15px; }
+.B-btn { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 6px; border: 1px solid var(--ligne2); background: var(--chassis2);
+         color: var(--texte); font: 500 14px "Barlow Semi Condensed", sans-serif; white-space: nowrap; }
+.B-btn:hover { background: var(--chassis3); }
+.B-btn.fantome { border-color: transparent; background: transparent; color: var(--texte2); }
+.B-btn.fantome:hover { background: var(--chassis2); color: var(--texte); }
+.B-btn.icone { width: 30px; padding: 0; justify-content: center; }
+.B-btn.actif { border-color: var(--alcor); color: var(--alcor); background: var(--alcor-doux); }
+.B-btn[disabled] { opacity: .35; cursor: default; }
+.B-btn.primaire { background: var(--alcor); border-color: var(--alcor); color: #191307; }
+
+.B-mur { position: relative; min-height: 0; overflow: hidden; background: var(--noir); }
+.B-grille { position: absolute; inset: 0; display: grid; justify-content: center; align-content: center; gap: 2px; padding: 2px; }
+.B-tuile { container-type: inline-size; display: flex; flex-direction: column; background: var(--chassis); outline: 1px solid transparent; }
+.B-tuile.active { outline: 2px solid var(--alcor); outline-offset: -2px; }
+.B-bandeau { height: 32px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 4px 0 10px; font-family: "Barlow Semi Condensed", sans-serif; }
+.B-bandeau .nom { font-size: 15px; font-weight: 600; }
+.B-bandeau .canal { font-size: 13px; color: var(--texte3); }
+.B-bandeau .direct { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--vert); font-weight: 500; }
+.B-bandeau .direct::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.B-bandeau .act { display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; height: 20px; border-radius: 3px; background: var(--alcor); color: #191307; font-size: 12.5px; font-weight: 600; }
+.B-bandeau .cmds { margin-left: auto; display: flex; gap: 2px; }
+.B-bandeau .cmds .B-btn { height: 26px; width: 28px; border-color: transparent; background: transparent; color: var(--texte2); }
+.B-bandeau .cmds .B-btn:hover { background: var(--chassis3); color: var(--texte); }
+.B-bandeau .cmds .B-btn.actif { color: var(--alcor); background: var(--alcor-doux); }
+@container (max-width: 360px) { .B-bandeau .canal { display: none; } }
+.B-image { position: relative; flex: 1; background: #000 center/cover no-repeat; }
+.B-image .zoom { position: absolute; left: 8px; bottom: 8px; padding: 2px 7px; border-radius: 3px; background: rgba(0,0,0,.72); font: 500 13px "Barlow Semi Condensed", sans-serif; }
+.B-image .zoom .interpole { color: var(--rouge); }
+.B-image .toast { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); padding: 6px 12px; border-radius: 4px; background: rgba(0,0,0,.85);
+                  border: 1px solid var(--ligne2); font: 500 14px "Barlow Semi Condensed", sans-serif; white-space: nowrap; }
+
+/* Bande d'activité : l'axe du temps, le même qu'en relecture. */
+.B-bande { display: grid; grid-template-columns: 300px minmax(0, 1fr) auto; background: var(--chassis); border-top: 1px solid var(--ligne); height: 124px; }
+.B-bande .jour { padding: 12px 16px; border-right: 1px solid var(--ligne); }
+.B-bande .jour .t { display: flex; align-items: baseline; gap: 8px; font: 500 14px "Barlow Semi Condensed", sans-serif; color: var(--texte2); }
+.B-bande .jour .t b { font-size: 22px; font-weight: 600; color: var(--texte); }
+.B-histo { display: flex; align-items: flex-end; gap: 2px; height: 46px; margin-top: 8px; }
+.B-histo i { flex: 1; background: var(--alcor); opacity: .85; }
+.B-histo i.vide { background: var(--chassis3); opacity: 1; }
+.B-histo i.nonlu { background: repeating-linear-gradient(135deg, var(--chassis2) 0 3px, var(--chassis3) 3px 6px); height: 100% !important; opacity: 1; }
+.B-axe { display: flex; justify-content: space-between; margin-top: 4px; font: 500 12px "Barlow Semi Condensed", sans-serif; color: var(--texte3); }
+.B-film { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; min-width: 0; }
+.B-film .titre { font: 500 14px "Barlow Semi Condensed", sans-serif; color: var(--texte2); display: flex; gap: 12px; }
+.B-film .titre a { color: var(--alcor); margin-left: auto; text-decoration: none; }
+.B-film .rang { display: flex; gap: 8px; overflow-x: auto; }
+.B-evt { width: 178px; flex: none; display: grid; grid-template-columns: 74px 1fr; column-gap: 8px; padding: 6px; border-radius: 4px; background: var(--chassis2); border: 1px solid var(--ligne); cursor: pointer; }
+.B-evt:hover { border-color: var(--ligne2); }
+.B-evt .vig { height: 42px; background: #000 center/cover; border-radius: 2px; }
+.B-evt .quoi { font: 600 14px "Barlow Semi Condensed", sans-serif; }
+.B-evt .ou { font: 500 12.5px "Barlow Semi Condensed", sans-serif; color: var(--texte2); }
+.B-evt .quand { font: 500 12.5px "Barlow Semi Condensed", sans-serif; color: var(--texte3); }
+.B-bande .outils { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 0 14px; border-left: 1px solid var(--ligne); }
+
+.B-pop { position: absolute; z-index: 20; background: var(--chassis); border: 1px solid var(--ligne2); border-radius: 8px; box-shadow: 0 24px 60px -18px rgba(0,0,0,.9); }
+.B-systeme { top: 52px; right: 10px; width: min(900px, calc(100% - 20px)); display: grid; grid-template-columns: repeat(3, 1fr); }
+.B-systeme .groupe { padding: 14px 18px 16px; border-right: 1px solid var(--ligne); }
+.B-systeme .groupe:last-child { border-right: 0; }
+.B-systeme h3 { margin: 0 0 10px; font: 600 15px "Barlow Semi Condensed", sans-serif; }
+.B-ligne { display: flex; gap: 10px; padding: 3px 0; font-size: 14px; }
+.B-ligne .k { color: var(--texte2); }
+.B-ligne .v { margin-left: auto; }
+.B-ligne .v.ok { color: var(--vert); } .B-ligne .v.alerte { color: var(--orange); }
+.B-note { font-size: 13px; color: var(--texte3); margin: 6px 0 0; line-height: 1.45; }
+.B-defs { display: flex; gap: 6px; margin-top: 8px; }
+.B-defs span { font: 500 13px "Barlow Semi Condensed", sans-serif; padding: 1px 7px; border-radius: 3px; background: var(--chassis3); color: var(--texte3); }
+.B-defs span.on { background: var(--alcor-doux); color: var(--alcor); }
+.B-disque { height: 5px; background: var(--chassis3); margin: 10px 0 6px; }
+.B-disque i { display: block; height: 100%; width: 98%; background: var(--alcor); }
+.B-etatrelais { padding: 8px 10px; border-left: 3px solid var(--vert); background: var(--chassis2); margin-bottom: 10px; font-size: 14px; }
+.B-prive { margin-top: 12px; color: var(--vert); font-size: 13.5px; display: flex; gap: 8px; align-items: center; }
+.B-cams { bottom: 132px; right: 10px; width: 340px; padding: 6px; }
+.B-cams .cam { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 4px; }
+.B-cams .cam:hover { background: var(--chassis2); }
+.B-cams .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--vert); }
+.B-cams .pt.non { background: var(--texte3); }
+.B-cams .nom { font: 600 15px "Barlow Semi Condensed", sans-serif; }
+.B-cams .def { font: 500 13px "Barlow Semi Condensed", sans-serif; color: var(--texte2); }
+.B-cams .def.rtsp { color: var(--orange); }
+.B-cams .cam .B-btn { margin-left: auto; }
+.B-cams .remede { margin: 6px 8px; padding: 8px 10px; border-left: 3px solid var(--orange); background: var(--chassis2); font-size: 13.5px; color: #e8c08a; line-height: 1.45; }
+.B-cams .remede a { color: var(--alcor); display: inline-block; margin-top: 4px; }
+.B-maj { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 15; display: flex; align-items: center; gap: 12px; padding: 6px 6px 6px 14px;
+         background: var(--chassis); border: 1px solid var(--ligne2); border-radius: 6px; font-size: 14px; white-space: nowrap; box-shadow: 0 20px 50px -20px rgba(0,0,0,.9); }
+
+/* ---- Relecture B ---- */
+.B-rel { display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-height: 0; background: var(--noir); }
+.B-vue { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.B-vue .barre { height: 44px; flex: none; display: flex; align-items: stretch; gap: 4px; padding: 0 10px 0 6px; background: var(--chassis); border-bottom: 1px solid var(--ligne); }
+.B-vue .barre .B-onglet { font-size: 15px; }
+.B-vue .jour { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.B-vue .jour .date { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border: 1px solid var(--ligne2); border-radius: 6px; background: var(--chassis2); font: 500 14px "Barlow Semi Condensed", sans-serif; }
+.B-vue .jour .date .quand { color: var(--texte3); }
+.B-vue .info { height: 32px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 4px 0 12px; background: var(--chassis2); font: 500 14px "Barlow Semi Condensed", sans-serif; }
+.B-vue .info .temps { font-size: 16px; font-weight: 600; letter-spacing: .02em; }
+.B-vue .info .def { color: var(--texte2); }
+.B-vue .info .cmds { margin-left: auto; display: flex; gap: 2px; }
+.B-vue .info .cmds .B-btn { height: 26px; border-color: transparent; background: transparent; color: var(--texte2); font-size: 13.5px; }
+.B-vue .info .cmds .B-btn.actif { color: var(--alcor); background: var(--alcor-doux); }
+.B-vue .B-image { background-size: contain; }
+.B-liste { display: flex; flex-direction: column; background: var(--chassis); border-left: 1px solid var(--ligne); min-height: 0; }
+.B-liste .tete { padding: 12px 14px 10px; border-bottom: 1px solid var(--ligne); }
+.B-liste .tete .t { display: flex; align-items: baseline; gap: 8px; font: 600 16px "Barlow Semi Condensed", sans-serif; }
+.B-liste .tete .t span { margin-left: auto; font-weight: 500; font-size: 14px; color: var(--texte2); }
+.B-liste .filtres { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.B-liste .filtres button { height: 26px; padding: 0 9px; border-radius: 3px; border: 1px solid var(--ligne2); color: var(--texte2); font: 500 13.5px "Barlow Semi Condensed", sans-serif; }
+.B-liste .filtres button[aria-pressed="true"] { border-color: var(--alcor); color: var(--alcor); background: var(--alcor-doux); }
+.B-liste ul { list-style: none; margin: 0; padding: 4px 0; overflow-y: auto; flex: 1; }
+.B-liste li { display: grid; grid-template-columns: 84px 1fr auto; gap: 10px; align-items: center; padding: 6px 14px; cursor: pointer; border-left: 2px solid transparent; }
+.B-liste li:hover { background: var(--chassis2); }
+.B-liste li.en-cours { background: var(--alcor-doux); border-left-color: var(--alcor); }
+.B-liste .vig { height: 47px; background: #000 center/cover; border-radius: 2px; }
+.B-liste .quoi { font: 600 14.5px "Barlow Semi Condensed", sans-serif; }
+.B-liste .ou { font: 500 13px "Barlow Semi Condensed", sans-serif; color: var(--texte2); }
+.B-liste .h { font: 500 14px "Barlow Semi Condensed", sans-serif; color: var(--texte2); }
+.B-console { display: grid; grid-template-columns: 236px minmax(0, 1fr) 200px; background: var(--chassis); border-top: 1px solid var(--ligne); }
+.B-transport { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 12px 14px; border-right: 1px solid var(--ligne); }
+.B-transport .temps { font: 600 22px "Barlow Semi Condensed", sans-serif; letter-spacing: .02em; }
+.B-transport .boutons { display: flex; gap: 4px; }
+.B-transport .lire { width: 38px; height: 30px; border-radius: 6px; background: var(--alcor); color: #191307; display: grid; place-items: center; }
+.B-transport .lire svg { fill: currentColor; }
+.B-pistes { padding: 8px 14px 6px; min-width: 0; }
+.B-pistes .entete { display: flex; justify-content: space-between; font: 500 13px "Barlow Semi Condensed", sans-serif; color: var(--texte3); margin-bottom: 4px; }
+.B-pistes .corps { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 0 10px; }
+.B-pistes .noms { display: flex; flex-direction: column; font: 500 13px "Barlow Semi Condensed", sans-serif; color: var(--texte2); padding-top: 20px; }
+.B-pistes .noms span { height: 16px; line-height: 16px; display: flex; align-items: center; gap: 6px; }
+.B-pistes .noms span::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--c); }
+.appB .frise { height: 100px; border-radius: 0; background: var(--chassis2); }
+.B-vitesses { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 0 14px; border-left: 1px solid var(--ligne); }
+.B-vitesses .t { font: 500 13px "Barlow Semi Condensed", sans-serif; color: var(--texte3); }
+.B-vitesses .rang { display: flex; gap: 4px; }
+.B-vitesses .rang button { flex: 1; height: 28px; border-radius: 4px; border: 1px solid var(--ligne2); color: var(--texte2); font: 500 14px "Barlow Semi Condensed", sans-serif; }
+.B-vitesses .rang button[aria-pressed="true"] { border-color: var(--alcor); color: var(--alcor); background: var(--alcor-doux); }
+
+/* ===================================================================== carte des déplacements */
+.carte { overflow: auto; background: #f1efe9; color: #23252a; font: 400 14px/1.5 "Barlow", system-ui, sans-serif; padding: 28px 32px 60px; }
+.carte h2 { font: 600 22px "Barlow Semi Condensed", sans-serif; margin: 0 0 4px; }
+.carte p.intro { max-width: 760px; color: #4a4c52; margin: 0 0 20px; }
+.carte table { border-collapse: collapse; width: 100%; max-width: 1400px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.carte th, .carte td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid #e6e3da; }
+.carte thead th { background: #23252a; color: #f1efe9; font: 600 14px "Barlow Semi Condensed", sans-serif; position: sticky; top: 0; }
+.carte tr.groupe td { background: #e9e6dd; font: 600 14px "Barlow Semi Condensed", sans-serif; }
+.carte td:first-child { font-weight: 500; width: 24%; }
+.carte .nouveau { display: inline-block; font: 600 12px "Barlow Semi Condensed", sans-serif; color: #8a5a0a; background: #f5e3c3; border-radius: 3px; padding: 0 5px; margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="marque" viewBox="0 0 64 64"><path fill="currentColor" fill-rule="evenodd" stroke="none" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/></symbol>
+  <symbol id="i-direct" viewBox="0 0 24 24"><path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+  <symbol id="i-detections" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/></symbol>
+  <symbol id="i-relecture" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="i-alertes" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"/></symbol>
+  <symbol id="i-reglages" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+  <symbol id="i-son" viewBox="0 0 24 24"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.4 18.4a9 9 0 0 0 0-12.8"/></symbol>
+  <symbol id="i-muet" viewBox="0 0 24 24"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="m22 9-6 6M16 9l6 6"/></symbol>
+  <symbol id="i-plein" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol>
+  <symbol id="i-cameras" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-oeil" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-oeil-barre" viewBox="0 0 24 24"><path d="M10.73 5.08a10.74 10.74 0 0 1 11.2 6.57 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49M14.08 14.16a3 3 0 0 1-4.24-4.24M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14M2 2l20 20"/></symbol>
+  <symbol id="i-g" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-d" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-haut" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+  <symbol id="i-bas" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-radio" viewBox="0 0 24 24"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5M19.1 4.9C23 8.8 23 15.1 19.1 19"/></symbol>
+  <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M8 11h6"/></symbol>
+  <symbol id="i-prec" viewBox="0 0 24 24"><path d="M19 20 9 12l10-8zM5 19V5"/></symbol>
+  <symbol id="i-suiv" viewBox="0 0 24 24"><path d="m5 4 10 8-10 8zM19 5v14"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></symbol>
+  <symbol id="i-panneau" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></symbol>
+  <symbol id="i-bouclier" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+</svg>
+
+<div class="banc">
+  <b>Alcora — maquette UX</b>
+  <div class="seg" id="choixDir">
+    <button data-dir="A" aria-pressed="true">A — Observatoire</button>
+    <button data-dir="B" aria-pressed="false">B — Régie</button>
+  </div>
+  <div class="seg" id="choixVue">
+    <button data-vue="direct" aria-pressed="true">Direct</button>
+    <button data-vue="ouvert" aria-pressed="false">Direct, menus ouverts</button>
+    <button data-vue="relecture" aria-pressed="false">Relecture</button>
+    <button data-vue="carte" aria-pressed="false">Où va chaque élément</button>
+  </div>
+  <span class="note">Données et images fictives. Redimensionne la fenêtre : la mosaïque suit.</span>
+</div>
+
+<main id="scene" data-dir="A" data-vue="direct">
+
+<!-- ========================================================================== A -->
+<section class="appA">
+  <nav class="A-rail" aria-label="Espaces">
+    <div class="marque" title="Alcora"><svg><use href="#marque"/></svg></div>
+    <button class="esp" data-esp="direct" aria-current="true"><svg class="i"><use href="#i-direct"/></svg>Direct</button>
+    <button class="esp"><svg class="i"><use href="#i-detections"/></svg>Détections</button>
+    <button class="esp" data-esp="relecture"><svg class="i"><use href="#i-relecture"/></svg>Relecture</button>
+    <button class="esp"><svg class="i"><use href="#i-alertes"/></svg>Alertes</button>
+    <button class="esp bas"><svg class="i"><use href="#i-reglages"/></svg>Réglages</button>
+  </nav>
+
+  <div class="A-main">
+    <!-- ---------------- Direct ---------------- -->
+    <header class="A-tete vue-direct">
+      <h1>Direct</h1>
+      <span class="sous">2 caméras sur 3 affichées</span>
+      <div class="actions">
+        <button class="A-btn"><svg class="i"><use href="#i-cameras"/></svg>Caméras <span class="compte">2/3</span><svg class="i"><use href="#i-bas"/></svg></button>
+        <button class="A-btn"><svg class="i"><use href="#i-plein"/></svg>Plein écran <span class="A-kbd">F11</span></button>
+      </div>
+    </header>
+    <div class="A-mur vue-direct">
+      <div class="A-ciel" id="cielA"></div>
+      <div class="A-grille" id="grilleA">
+        <article class="A-tuile active">
+          <div class="A-bandeau">
+            <span class="nom">Allée</span><span class="canal">Haute 2160p</span><span class="direct">Direct</span>
+            <div class="cmds">
+              <button class="A-btn petit" title="Revoir cette caméra"><svg class="i"><use href="#i-relecture"/></svg><span class="lib">Revoir</span></button>
+              <button class="A-btn petit" title="Ses détections"><svg class="i"><use href="#i-detections"/></svg><span class="lib">Détections</span></button>
+              <button class="A-btn petit" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg><span class="lib">Image</span></button>
+              <button class="A-btn petit actif" title="Couper le son"><svg class="i"><use href="#i-son"/></svg><span class="lib">Son</span></button>
+            </div>
+          </div>
+          <div class="A-image" style="background-image:url('../site/assets/allee.jpg')">
+            <span class="pastille">Personne</span>
+            <span class="toast si-ouvert">Image enregistrée : Allée 2026-10-23 23-55-03.jpg</span>
+          </div>
+        </article>
+        <article class="A-tuile">
+          <div class="A-bandeau">
+            <span class="nom">Bureaux</span><span class="canal">Haute 1512p</span><span class="direct">Direct</span>
+            <div class="cmds">
+              <button class="A-btn petit" title="Revoir cette caméra"><svg class="i"><use href="#i-relecture"/></svg><span class="lib">Revoir</span></button>
+              <button class="A-btn petit" title="Ses détections"><svg class="i"><use href="#i-detections"/></svg><span class="lib">Détections</span></button>
+              <button class="A-btn petit" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg><span class="lib">Image</span></button>
+              <button class="A-btn petit" disabled title="Ce flux ne porte pas de son"><svg class="i"><use href="#i-muet"/></svg><span class="lib">Son</span></button>
+            </div>
+          </div>
+          <div class="A-image" style="background-image:url('../site/assets/bureaux.jpg')">
+            <span class="zoom">1,8× <span class="interpole si-ouvert">interpolé</span></span>
+          </div>
+        </article>
+      </div>
+      <div class="A-aide">Glisser une image la déplace. Un double-clic, ou les touches 1 à 9, l'isolent.</div>
+    </div>
+
+    <!-- Menus ouverts (Direct) -->
+    <div class="A-cams si-ouvert vue-direct" role="dialog" aria-label="Caméras">
+      <div class="cam"><span class="pt"></span><div><div class="nom">Allée</div><div class="def num">3840 × 2160</div></div>
+        <button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></div>
+      <div class="cam"><span class="pt"></span><div><div class="nom">Bureaux</div><div class="def num">2688 × 1512</div></div>
+        <button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></div>
+      <div class="cam" style="opacity:.6"><span class="pt non"></span><div><div class="nom">Portail</div><div class="def rtsp">RTSP désactivé</div></div>
+        <button class="A-btn petit" disabled title="Aucun flux à afficher"><svg class="i"><use href="#i-oeil-barre"/></svg>Masquée</button></div>
+      <p class="remede">Cette caméra ne diffuse pas : active le RTSP dans Protect, sur la caméra, section Avancé. Alcora la reprendra toute seule.<br><a href="#">Voir le guide, étape par étape</a></p>
+    </div>
+    <div class="A-maj si-ouvert vue-direct">Version 2.31.0 prête. <button class="A-btn petit primaire">Redémarrer maintenant</button><button class="A-btn petit fantome">Plus tard</button></div>
+    <section class="A-systeme si-ouvert" aria-label="Système">
+      <div class="groupe">
+        <h3>Contrôleur</h3>
+        <div class="A-etatrelais">Flux vidéo prêt.</div>
+        <div class="A-ligne"><span class="k">Nom</span><span class="v ok">UDM-PRO</span></div>
+        <div class="A-ligne"><span class="k">Heure</span><span class="v horloge">23:55:03</span></div>
+        <div class="A-ligne"><span class="k">Protect</span><span class="v">désarmé</span></div>
+        <div class="A-defs"><span>HD ×0</span><span class="on">2K ×1</span><span class="on">4K ×1</span></div>
+        <div class="A-prive"><svg class="i"><use href="#i-bouclier"/></svg>Aucune image ne quitte votre réseau.</div>
+      </div>
+      <div class="groupe">
+        <h3>Enregistrements</h3>
+        <div class="A-ligne"><span class="k">Le plus ancien</span><span class="v">14.05.26</span></div>
+        <div class="A-ligne"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
+        <div class="A-ligne"><span class="k">Pleine définition</span><span class="v alerte">29 j</span></div>
+        <div class="A-ligne"><span class="k">Rétention annoncée</span><span class="v alerte">393 j</span></div>
+        <div class="A-ligne"><span class="k">État du disque</span><span class="v">non homologué</span></div>
+        <p class="A-note" style="margin-top:0">Absent de la liste d'Ubiquiti, il fonctionne normalement.</p>
+        <div class="A-ligne"><span class="k">Écrit par jour</span><span class="v">129 Go</span></div>
+        <div class="A-disque"><i></i></div>
+        <div class="A-ligne"><span class="k">Disque</span><span class="v">5,85 To / 5,94 To</span></div>
+        <p class="A-note">Rotation automatique. Un disque plein est normal.</p>
+      </div>
+      <div class="groupe">
+        <h3>Versions</h3>
+        <div class="A-ligne"><span class="k">Alcora</span><span class="v ok">2.31.0</span></div>
+        <div class="A-ligne"><span class="k">Protect</span><span class="v">6.1.79</span></div>
+        <div class="A-ligne"><span class="k">UniFi OS</span><span class="v">4.3.6</span></div>
+        <div class="A-ligne"><span class="k">Disponible</span><span class="v alerte">6.2.17</span></div>
+        <div class="A-ligne"><span class="k">Allumé depuis</span><span class="v">24 j</span></div>
+      </div>
+    </section>
+
+    <!-- ---------------- Relecture ---------------- -->
+    <header class="A-tete vue-relecture">
+      <h1>Relecture</h1>
+      <div class="A-chips">
+        <button class="A-chip" aria-pressed="true"><span class="mini" style="background-image:url('../site/assets/allee.jpg')"></span>Allée</button>
+        <button class="A-chip" aria-pressed="false"><span class="mini" style="background-image:url('../site/assets/bureaux.jpg')"></span>Bureaux</button>
+      </div>
+      <div class="actions">
+        <button class="A-btn vert"><svg class="i"><use href="#i-radio"/></svg>Revenir au direct</button>
+        <div class="A-jour">
+          <button class="A-btn icone fantome" title="Jour précédent"><svg class="i"><use href="#i-g"/></svg></button>
+          <button class="A-btn date" title="Jour à relire"><svg class="i"><use href="#i-cal"/></svg>jeudi 23 octobre <span class="quand">Aujourd'hui</span></button>
+          <button class="A-btn icone fantome" disabled title="Jour suivant"><svg class="i"><use href="#i-d"/></svg></button>
+        </div>
+      </div>
+    </header>
+    <div class="A-rel vue-relecture">
+      <div class="A-lecteur">
+        <div class="A-bandeau">
+          <span class="temps">23.10.2026  23:55:03</span><span class="canal num">3840 × 2160</span>
+          <div class="cmds">
+            <button class="A-btn petit actif" title="Revenir à l'image entière (2×)"><svg class="i"><use href="#i-zoom"/></svg><span class="lib">Image entière</span></button>
+            <button class="A-btn petit" title="Activer le son"><svg class="i"><use href="#i-muet"/></svg><span class="lib">Son</span></button>
+            <button class="A-btn petit" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg><span class="lib">Image</span></button>
+          </div>
+        </div>
+        <div class="A-image" style="background-image:url('../site/assets/allee.jpg')"><span class="zoom">2,00×</span></div>
+      </div>
+      <div class="A-console">
+        <div class="A-transport">
+          <button class="lire" title="Pause"><svg class="i"><use href="#i-pause"/></svg></button>
+          <span class="t" id="tA">23:55:03</span>
+          <button class="A-btn petit fantome num">−10 s</button>
+          <button class="A-btn petit fantome num">+10 s</button>
+          <button class="A-btn petit icone fantome" title="Image précédente"><svg class="i"><use href="#i-prec"/></svg></button>
+          <button class="A-btn petit icone fantome" title="Image suivante"><svg class="i"><use href="#i-suiv"/></svg></button>
+          <div class="A-seg" style="margin-left:auto" aria-label="Vitesse">
+            <button>0,25×</button><button>0,5×</button><button aria-pressed="true">1×</button><button>2×</button>
+          </div>
+        </div>
+        <div class="A-frise-tete"><span>Journée entière</span><span class="aide">Molette pour zoomer, clic pour voir</span></div>
+        <div class="frise" id="friseA"></div>
+        <div class="lecture-survol" id="survolA"></div>
+      </div>
+      <div class="A-pellicule">
+        <div class="filtres" id="filtresA">
+          <button aria-pressed="true">Tout</button><button>Personnes</button><button>Véhicules</button><button>Animaux</button><button>Sons</button>
+          <span class="compte" id="compteA"></span>
+        </div>
+        <div class="A-cartes" id="cartesA"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="A-activite" aria-label="Activité">
+    <div class="tete"><h2>Activité</h2><button class="A-btn icone fantome" title="Masquer l'activité"><svg class="i"><use href="#i-panneau"/></svg></button></div>
+    <div class="A-bloc">
+      <h3>Aujourd'hui <span class="val num">87 détections</span></h3>
+      <div class="A-histo" id="histoA"></div>
+      <div class="A-axe num"><span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span></div>
+    </div>
+    <div class="A-bloc" style="padding-bottom:6px;border-bottom:0"><h3 style="margin:0">Récentes</h3></div>
+    <ul class="A-recentes" id="recentesA"></ul>
+    <a class="A-lien" href="#">Toutes les détections</a>
+  </aside>
+
+  <footer class="A-etat">
+    <span class="ok">Flux vidéo prêt</span>
+    <span>Contrôleur <b>UDM-PRO</b></span>
+    <span>Protect <b>désarmé</b></span>
+    <span>Archive <b>5 mois 12 j</b></span>
+    <span>Disque <span class="barre"><i></i></span><b>98 %</b></span>
+    <span class="prive"><svg class="i"><use href="#i-bouclier"/></svg>Aucune image ne quitte votre réseau</span>
+    <span class="heure mono horloge">23:55:03</span>
+    <button class="A-btn petit fantome">Système<svg class="i"><use href="#i-haut"/></svg></button>
+  </footer>
+</section>
+
+<!-- ========================================================================== B -->
+<section class="appB">
+  <header class="B-haut">
+    <div class="marque"><svg><use href="#marque"/></svg>Alcora</div>
+    <button class="B-onglet" data-esp="direct" aria-current="true">Direct</button>
+    <button class="B-onglet">Détections</button>
+    <button class="B-onglet" data-esp="relecture">Relecture</button>
+    <button class="B-onglet">Alertes</button>
+    <div class="B-statut">
+      <span class="ok">Flux prêt</span>
+      <span>UDM-PRO</span>
+      <span>Protect désarmé</span>
+      <span>Disque 98 %</span>
+      <span class="heure horloge">23:55:03</span>
+      <button class="B-btn fantome">Système<svg class="i"><use href="#i-bas"/></svg></button>
+      <button class="B-btn fantome"><svg class="i"><use href="#i-reglages"/></svg>Réglages</button>
+    </div>
+  </header>
+
+  <!-- ---------------- Direct ---------------- -->
+  <div class="B-mur vue-direct">
+    <div class="B-grille" id="grilleB">
+      <article class="B-tuile active">
+        <div class="B-bandeau">
+          <span class="nom">Allée</span><span class="canal">Haute 2160p</span><span class="direct">Direct</span><span class="act">Personne</span>
+          <div class="cmds">
+            <button class="B-btn icone" title="Revoir cette caméra"><svg class="i"><use href="#i-relecture"/></svg></button>
+            <button class="B-btn icone" title="Ses détections"><svg class="i"><use href="#i-detections"/></svg></button>
+            <button class="B-btn icone" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg></button>
+            <button class="B-btn icone actif" title="Couper le son"><svg class="i"><use href="#i-son"/></svg></button>
+          </div>
+        </div>
+        <div class="B-image" style="background-image:url('../site/assets/allee.jpg')">
+          <span class="toast si-ouvert">Image enregistrée : Allée 2026-10-23 23-55-03.jpg</span>
+        </div>
+      </article>
+      <article class="B-tuile">
+        <div class="B-bandeau">
+          <span class="nom">Bureaux</span><span class="canal">Haute 1512p</span><span class="direct">Direct</span>
+          <div class="cmds">
+            <button class="B-btn icone" title="Revoir cette caméra"><svg class="i"><use href="#i-relecture"/></svg></button>
+            <button class="B-btn icone" title="Ses détections"><svg class="i"><use href="#i-detections"/></svg></button>
+            <button class="B-btn icone" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg></button>
+            <button class="B-btn icone" disabled title="Ce flux ne porte pas de son"><svg class="i"><use href="#i-muet"/></svg></button>
+          </div>
+        </div>
+        <div class="B-image" style="background-image:url('../site/assets/bureaux.jpg')">
+          <span class="zoom">1,8× <span class="interpole si-ouvert">interpolé</span></span>
+        </div>
+      </article>
+    </div>
+    <div class="B-maj si-ouvert">Version 2.31.0 prête. <button class="B-btn primaire">Redémarrer maintenant</button><button class="B-btn fantome">Plus tard</button></div>
+    <div class="B-pop B-systeme si-ouvert" aria-label="Système">
+      <div class="groupe">
+        <h3>Contrôleur</h3>
+        <div class="B-etatrelais">Flux vidéo prêt.</div>
+        <div class="B-ligne"><span class="k">Nom</span><span class="v ok">UDM-PRO</span></div>
+        <div class="B-ligne"><span class="k">Heure</span><span class="v horloge">23:55:03</span></div>
+        <div class="B-ligne"><span class="k">Protect</span><span class="v">désarmé</span></div>
+        <div class="B-defs"><span>HD ×0</span><span class="on">2K ×1</span><span class="on">4K ×1</span></div>
+        <div class="B-prive"><svg class="i"><use href="#i-bouclier"/></svg>Aucune image ne quitte votre réseau.</div>
+      </div>
+      <div class="groupe">
+        <h3>Enregistrements</h3>
+        <div class="B-ligne"><span class="k">Le plus ancien</span><span class="v">14.05.26</span></div>
+        <div class="B-ligne"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
+        <div class="B-ligne"><span class="k">Pleine définition</span><span class="v alerte">29 j</span></div>
+        <div class="B-ligne"><span class="k">Rétention annoncée</span><span class="v alerte">393 j</span></div>
+        <div class="B-ligne"><span class="k">État du disque</span><span class="v">non homologué</span></div>
+        <p class="B-note" style="margin-top:0">Absent de la liste d'Ubiquiti, il fonctionne normalement.</p>
+        <div class="B-ligne"><span class="k">Écrit par jour</span><span class="v">129 Go</span></div>
+        <div class="B-disque"><i></i></div>
+        <div class="B-ligne"><span class="k">Disque</span><span class="v">5,85 To / 5,94 To</span></div>
+        <p class="B-note">Rotation automatique. Un disque plein est normal.</p>
+      </div>
+      <div class="groupe">
+        <h3>Versions</h3>
+        <div class="B-ligne"><span class="k">Alcora</span><span class="v ok">2.31.0</span></div>
+        <div class="B-ligne"><span class="k">Protect</span><span class="v">6.1.79</span></div>
+        <div class="B-ligne"><span class="k">UniFi OS</span><span class="v">4.3.6</span></div>
+        <div class="B-ligne"><span class="k">Disponible</span><span class="v alerte">6.2.17</span></div>
+        <div class="B-ligne"><span class="k">Allumé depuis</span><span class="v">24 j</span></div>
+      </div>
+    </div>
+    <div class="B-pop B-cams si-ouvert" aria-label="Caméras">
+      <div class="cam"><span class="pt"></span><div><div class="nom">Allée</div><div class="def">3840 × 2160</div></div><button class="B-btn"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></div>
+      <div class="cam"><span class="pt"></span><div><div class="nom">Bureaux</div><div class="def">2688 × 1512</div></div><button class="B-btn"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></div>
+      <div class="cam" style="opacity:.6"><span class="pt non"></span><div><div class="nom">Portail</div><div class="def rtsp">RTSP désactivé</div></div><button class="B-btn" disabled><svg class="i"><use href="#i-oeil-barre"/></svg>Masquée</button></div>
+      <p class="remede">Cette caméra ne diffuse pas : active le RTSP dans Protect, sur la caméra, section Avancé. Alcora la reprendra toute seule.<br><a href="#">Voir le guide, étape par étape</a></p>
+    </div>
+  </div>
+  <footer class="B-bande vue-direct">
+    <div class="jour">
+      <div class="t">Aujourd'hui <b>87</b> détections</div>
+      <div class="B-histo" id="histoB"></div>
+      <div class="B-axe"><span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span></div>
+    </div>
+    <div class="B-film"><div class="titre">Récentes <a href="#">Toutes les détections</a></div><div class="rang" id="filmB"></div></div>
+    <div class="outils">
+      <button class="B-btn"><svg class="i"><use href="#i-cameras"/></svg>Caméras 2/3</button>
+      <button class="B-btn"><svg class="i"><use href="#i-plein"/></svg>Plein écran</button>
+    </div>
+  </footer>
+
+  <!-- ---------------- Relecture ---------------- -->
+  <div class="B-rel vue-relecture">
+    <div class="B-vue">
+      <div class="barre">
+        <button class="B-onglet" aria-current="true">Allée</button>
+        <button class="B-onglet">Bureaux</button>
+        <div class="jour">
+          <button class="B-btn" style="color:var(--vert)"><svg class="i"><use href="#i-radio"/></svg>Revenir au direct</button>
+          <button class="B-btn icone fantome" title="Jour précédent"><svg class="i"><use href="#i-g"/></svg></button>
+          <span class="date"><svg class="i"><use href="#i-cal"/></svg>jeudi 23 octobre <span class="quand">Aujourd'hui</span></span>
+          <button class="B-btn icone fantome" disabled title="Jour suivant"><svg class="i"><use href="#i-d"/></svg></button>
+        </div>
+      </div>
+      <div class="info">
+        <span class="temps">23.10.2026  23:55:03</span><span class="def">3840 × 2160</span>
+        <div class="cmds">
+          <button class="B-btn actif" title="Revenir à l'image entière (2×)"><svg class="i"><use href="#i-zoom"/></svg>2×</button>
+          <button class="B-btn icone" title="Activer le son"><svg class="i"><use href="#i-muet"/></svg></button>
+          <button class="B-btn icone" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg></button>
+        </div>
+      </div>
+      <div class="B-image" style="background-image:url('../site/assets/allee.jpg')"><span class="zoom">2,00×</span></div>
+    </div>
+    <aside class="B-liste">
+      <div class="tete">
+        <div class="t">Détections du jour <span id="compteB"></span></div>
+        <div class="filtres" id="filtresB"><button aria-pressed="true">Tout</button><button>Personnes</button><button>Véhicules</button><button>Animaux</button><button>Sons</button></div>
+      </div>
+      <ul id="listeB"></ul>
+    </aside>
+  </div>
+  <footer class="B-console vue-relecture">
+    <div class="B-transport">
+      <div class="temps" id="tB">23:55:03</div>
+      <div class="boutons">
+        <button class="lire" title="Pause"><svg class="i"><use href="#i-pause"/></svg></button>
+        <button class="B-btn fantome">−10 s</button><button class="B-btn fantome">+10 s</button>
+        <button class="B-btn icone fantome" title="Image précédente"><svg class="i"><use href="#i-prec"/></svg></button>
+        <button class="B-btn icone fantome" title="Image suivante"><svg class="i"><use href="#i-suiv"/></svg></button>
+      </div>
+    </div>
+    <div class="B-pistes">
+      <div class="entete"><span>Journée entière</span><span class="lecture-survol" id="survolB" style="height:auto"></span><span>Molette pour zoomer</span></div>
+      <div class="corps">
+        <div class="noms">
+          <span style="--c:var(--personne)">Personnes</span><span style="--c:var(--vehicule)">Véhicules</span><span style="--c:var(--animal)">Animaux</span><span style="--c:var(--son)">Sons</span><span style="--c:var(--mouvement)">Mouvement</span>
+        </div>
+        <div class="frise" id="friseB"></div>
+      </div>
+    </div>
+    <div class="B-vitesses">
+      <span class="t">Vitesse</span>
+      <div class="rang"><button>¼</button><button>½</button><button aria-pressed="true">1×</button><button>2×</button></div>
+    </div>
+  </footer>
+</section>
+
+<!-- ========================================================================== carte -->
+<section class="carte">
+  <h2>Où va chaque élément</h2>
+  <p class="intro">Tout ce que l'inventaire (docs/inventaire-ecrans.md) recense pour le Direct, le panneau Surveillance et la Relecture, ligne par ligne. Rien n'est retiré : chaque élément change de place, ou garde la sienne. Les ajouts sont marqués.</p>
+  <table>
+    <thead><tr><th>Élément</th><th>Aujourd'hui</th><th>A — Observatoire</th><th>B — Régie</th></tr></thead>
+    <tbody>
+      <tr class="groupe"><td colspan="4">Navigation</td></tr>
+      <tr><td>Espaces Direct, Détections, Relecture, Alertes</td><td>Rail d'icônes, nom en infobulle</td><td>Rail icône + nom, repère or</td><td>Onglets nommés en barre haute</td></tr>
+      <tr><td>Réglages</td><td>Pied du rail</td><td>Pied du rail, nommé</td><td>Bouton nommé, barre haute</td></tr>
+      <tr><td>Marque Alcor</td><td>Tête du rail, animée</td><td>Tête du rail</td><td>Barre haute, avec le nom</td></tr>
+      <tr class="groupe"><td colspan="4">Panneau « Surveillance » — démonté par sujet</td></tr>
+      <tr><td>État du relais, remède, « Réessayer »</td><td>Panneau, et centre du mur si panne</td><td>Barre d'état (pastille + message) ; détail dans Système ; panne : centre du mur, inchangé</td><td>Barre haute (pastille + message) ; détail dans Système ; panne : centre du mur, inchangé</td></tr>
+      <tr><td>Liste des caméras, définition, masquer / réafficher, « dernière caméra », RTSP désactivé + remède + guide</td><td>Panneau</td><td>Menu « Caméras 2/3 » de l'en-tête du Direct</td><td>Bouton « Caméras 2/3 » de la bande d'activité</td></tr>
+      <tr><td>Contrôleur, heure, armement Protect</td><td>Panneau</td><td>Barre d'état (nom, armement, heure) ; Système</td><td>Barre haute (nom, armement, heure) ; Système</td></tr>
+      <tr><td>Pastilles HD / 2K / 4K</td><td>Panneau</td><td>Système, groupe Contrôleur</td><td>Système, groupe Contrôleur</td></tr>
+      <tr><td>Détections récentes (vignette, sujet, caméra, il y a ; clic = séquence)</td><td>Panneau, 5 lignes</td><td>Colonne Activité, 5 lignes plus grandes + lien « Toutes les détections » <span class="nouveau">ajout</span></td><td>Bande d'activité, en pellicule horizontale</td></tr>
+      <tr><td>Aujourd'hui : compte, histogramme 24 h, heures non lues, axe</td><td>Panneau</td><td>Colonne Activité</td><td>Bande d'activité, à gauche</td></tr>
+      <tr><td>Enregistrements : plus ancien, profondeur, pleine définition, rétentions annoncées, état et note du disque, écrit par jour, barre, disque, note de rotation, suspension en rouge</td><td>Panneau</td><td>Feuille Système (groupe Enregistrements) ; profondeur et disque aussi dans la barre d'état</td><td>Panneau Système (groupe Enregistrements) ; disque aussi en barre haute</td></tr>
+      <tr><td>Versions : Alcora, Protect, UniFi OS, disponible, allumé depuis</td><td>Panneau</td><td>Feuille Système (groupe Versions)</td><td>Panneau Système (groupe Versions)</td></tr>
+      <tr><td>« Aucune image ne quitte votre réseau. »</td><td>Pied du panneau</td><td>Barre d'état, en permanence ; Système</td><td>Système</td></tr>
+      <tr><td>Épingler / réduire le panneau</td><td>Bouton sur l'image, en haut à gauche</td><td>« Masquer l'activité », tête de la colonne</td><td>Repli de la bande d'activité</td></tr>
+      <tr><td>Panneau affiché sur tous les écrans</td><td>Oui</td><td>Non : barre d'état sur tous, Activité sur le Direct</td><td>Non : barre haute sur tous, bande sur le Direct</td></tr>
+      <tr class="groupe"><td colspan="4">Mur</td></tr>
+      <tr><td>Plein écran (F11), commandes du plein écran, rappel « Échap »</td><td>Bouton sur l'image ; commandes en haut à droite</td><td>Bouton nommé de l'en-tête, F11 affiché ; plein écran inchangé</td><td>Bouton de la bande d'activité ; plein écran inchangé</td></tr>
+      <tr><td>Glisser = réorganiser, double-clic = isoler, touches 0-9</td><td>Infobulle de la tuile</td><td>Ligne d'aide sous le mur</td><td>Infobulle, comme aujourd'hui</td></tr>
+      <tr><td>Bandeau de tuile : nom, qualité, état</td><td>Hors image, petit, police à chasse fixe</td><td>Hors image, plus grand, « Direct » en vert</td><td>Hors image, condensé</td></tr>
+      <tr><td>4 commandes de tuile</td><td>Icônes du bandeau</td><td>Icône + nom (« Revoir », « Détections », « Image », « Son »), icônes seules sur tuile étroite</td><td>Icônes du bandeau, infobulle</td></tr>
+      <tr><td>Activité en cours : halo + pastille</td><td>Halo animé sur le cadre + pastille sur l'image</td><td>Cadre or lumineux + pastille sur l'image</td><td>Contour or + étiquette dans le bandeau</td></tr>
+      <tr><td>Zoom : facteur, « interpolé »</td><td>Sur l'image, bas gauche</td><td>Inchangé</td><td>Inchangé</td></tr>
+      <tr><td>Confirmation de capture</td><td>Centre bas de l'image</td><td>Inchangé</td><td>Inchangé</td></tr>
+      <tr><td>Version prête : redémarrer / plus tard</td><td>Bas du mur, centré</td><td>Bas du mur, centré</td><td>Haut du mur, centré</td></tr>
+      <tr><td>Espacement entre les vues</td><td>Réglages</td><td>Réglages (inchangé)</td><td>Réglages ; défaut : 2 px</td></tr>
+      <tr><td>Fond animé (Planétarium)</td><td>Derrière tout, animé</td><td>Autour des images seulement, fixe par défaut ; animé au choix</td><td>Absent par défaut ; au choix dans Réglages</td></tr>
+      <tr class="groupe"><td colspan="4">Relecture</td></tr>
+      <tr><td>Nom de la caméra, changer de caméra en gardant l'instant</td><td>Texte en tête + colonne de cartes à droite</td><td>Puces avec miniature dans l'en-tête</td><td>Onglets au-dessus de l'image</td></tr>
+      <tr><td>« Revenir au direct »</td><td>Tête, vert</td><td>En-tête, vert</td><td>Barre de l'image, vert</td></tr>
+      <tr><td>Jour précédent / date (bornée) / nom du jour / jour suivant</td><td>Tête, à droite</td><td>En-tête, à droite</td><td>Barre de l'image, à droite</td></tr>
+      <tr><td>Horodatage et définition lue (+ « définition réduite »)</td><td>Pastilles sur l'image</td><td>Bandeau du lecteur, hors image</td><td>Bande d'information, hors image</td></tr>
+      <tr><td>Zoom, son, capture</td><td><b>Sur</b> l'image (incohérent avec le direct)</td><td>Bandeau du lecteur, comme en direct</td><td>Bande d'information, comme en direct</td></tr>
+      <tr><td>Direct affiché avant tout clic + invite ; extraction ; erreur + revenir</td><td>Dans l'image</td><td>Inchangé</td><td>Inchangé</td></tr>
+      <tr><td>Transport : lecture, −10 s, +10 s, image par image, vitesses</td><td>Îlot sous l'image</td><td>Console sous l'image, heure courante affichée <span class="nouveau">ajout</span></td><td>Console en bas, heure courante en grand <span class="nouveau">ajout</span></td></tr>
+      <tr><td>Frise : journée / plage zoomée + « tout voir », molette, zones, graduations, repères par genre, tête, survol (heure, genre, score)</td><td>Barre unique, repères superposés</td><td>Barre unique, inchangée</td><td>Une piste par genre (Personnes, Véhicules, Animaux, Sons, Mouvement)</td></tr>
+      <tr><td>Pellicule : filtres, compte, cartes (vignette, heure, genre), carte en cours</td><td>Bande horizontale sous la frise</td><td>Bande horizontale, cartes plus grandes</td><td>Liste verticale à droite, score affiché</td></tr>
+      <tr><td>« Rien de détecté ce jour-là. »</td><td>Pellicule</td><td>Pellicule</td><td>Liste</td></tr>
+      <tr class="groupe"><td colspan="4">Partout</td></tr>
+      <tr><td>Tailles de texte</td><td>15 (9 à 20 px)</td><td>4 : 12 · 13 · 15 · 19 px</td><td>4 : 13 · 14 · 16 · 22 px</td></tr>
+      <tr><td>Police à chasse fixe</td><td>59 usages</td><td>Horodatages seulement</td><td>Aucune : chiffres tabulaires</td></tr>
+      <tr><td>Boutons</td><td>63 styles locaux, 9 hauteurs</td><td>1 composant, 3 variantes, 2 hauteurs (28 et 32 px)</td><td>1 composant, 3 variantes, 2 hauteurs (26 et 30 px)</td></tr>
+    </tbody>
+  </table>
+</section>
+</main>
+
+<script>
+/* ---------------------------------------------------------------- bascules du banc */
+const scene = document.getElementById('scene');
+function choisir(groupe, attr) {
+  groupe.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    for (const x of groupe.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+    scene.dataset[attr] = b.dataset[attr];
+    marquerEspace(); requestAnimationFrame(caler);
+  });
+}
+choisir(document.getElementById('choixDir'), 'dir');
+choisir(document.getElementById('choixVue'), 'vue');
+function marquerEspace() {
+  const rel = scene.dataset.vue === 'relecture';
+  for (const b of document.querySelectorAll('[data-esp]')) {
+    b.setAttribute('aria-current', String(rel ? b.dataset.esp === 'relecture' : b.dataset.esp === 'direct'));
+  }
+}
+
+/* ---------------------------------------------------------------- horloge */
+function horloge() {
+  const h = new Date().toLocaleTimeString('fr-CH');
+  for (const n of document.querySelectorAll('.horloge')) n.textContent = h;
+}
+horloge(); setInterval(horloge, 1000);
+
+/* ---------------------------------------------------------------- mosaïque : même règle que l'application */
+function mosaique(grille, n, bandeau, ecart, marge) {
+  const L = grille.clientWidth - 2 * marge, H = grille.clientHeight - 2 * marge;
+  let mieux = null;
+  for (let col = 1; col <= n; col++) {
+    const rangs = Math.ceil(n / col);
+    let w = (L - (col - 1) * ecart) / col;
+    let h = w * 9 / 16 + bandeau;
+    if (h * rangs + (rangs - 1) * ecart > H) { h = (H - (rangs - 1) * ecart) / rangs; w = (h - bandeau) * 16 / 9; }
+    if (!mieux || w > mieux.w) mieux = { col, w: Math.floor(w), h: Math.floor(h) };
+  }
+  grille.style.gridTemplateColumns = `repeat(${mieux.col}, ${mieux.w}px)`;
+  grille.style.gridAutoRows = `${mieux.h}px`;
+}
+function caler() {
+  const a = document.getElementById('grilleA'), b = document.getElementById('grilleB');
+  if (a.clientWidth) mosaique(a, 2, 44, 16, 20);
+  if (b.clientWidth) mosaique(b, 2, 32, 2, 2);
+}
+window.addEventListener('resize', caler);
+
+/* ---------------------------------------------------------------- ciel FIXE de A, tiré une fois */
+function ciel() {
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  let etoiles = '';
+  for (let i = 0; i < 260; i++) {
+    const x = r() * 1600, y = r() * 1000, t = r();
+    etoiles += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(t < .93 ? .5 + t * .6 : 1.3 + t * .5).toFixed(2)}" fill="#e8e4da" opacity="${(.18 + r() * .55).toFixed(2)}"/>`;
+  }
+  // La Grande Ourse, Mizar et Alcor : discrète, en bas à droite.
+  const ourse = [[1180,760],[1250,742],[1312,770],[1372,792],[1388,868],[1478,880],[1492,800]];
+  let traits = ourse.slice(0, -1).map((p, i) => `<line x1="${p[0]}" y1="${p[1]}" x2="${ourse[i+1][0]}" y2="${ourse[i+1][1]}"/>`).join('');
+  traits += `<line x1="1372" y1="792" x2="1492" y2="800"/>`;
+  const pts = ourse.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="2.2" fill="#e8e4da" opacity=".7"/>`).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+    <defs><radialGradient id="n" cx=".18" cy=".2" r=".5"><stop offset="0" stop-color="#2a3550" stop-opacity=".55"/><stop offset="1" stop-color="#0e131b" stop-opacity="0"/></radialGradient>
+    <radialGradient id="m" cx=".85" cy=".85" r=".45"><stop offset="0" stop-color="#3a2f22" stop-opacity=".35"/><stop offset="1" stop-color="#0e131b" stop-opacity="0"/></radialGradient></defs>
+    <rect width="1600" height="1000" fill="url(#n)"/><rect width="1600" height="1000" fill="url(#m)"/>${etoiles}
+    <g stroke="#e8e4da" stroke-opacity=".16" stroke-width="1">${traits}</g>${pts}
+    <circle cx="1252" cy="728" r="1.4" fill="#dca95c"/></svg>`;
+  document.getElementById('cielA').style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+ciel();
+
+/* ---------------------------------------------------------------- données fictives */
+let graine = 42; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+const NOMS = { person: 'Personne', vehicle: 'Véhicule', animal: 'Animal', son: 'Son', motion: 'Mouvement' };
+const IMG = ['../site/assets/allee.jpg', '../site/assets/bureaux.jpg'];
+const CAM = ['Allée', 'Bureaux'];
+const minuit = new Date(); minuit.setHours(0, 0, 0, 0);
+const MAINTENANT = minuit.getTime() + (23 * 3600 + 58 * 60) * 1000;
+const INSTANT = minuit.getTime() + (23 * 3600 + 55 * 60 + 3) * 1000;
+const detections = [];
+for (let i = 0; i < 143; i++) {
+  // Plus d'activité le jour que la nuit.
+  let h; do { h = alea() * 24; } while (alea() > (h > 6.5 && h < 21 ? 1 : .25));
+  const g = alea(); const genre = g < .3 ? 'person' : g < .5 ? 'vehicle' : g < .58 ? 'animal' : g < .68 ? 'son' : 'motion';
+  detections.push({ t: minuit.getTime() + h * 3600e3, genre, cam: alea() < .62 ? 0 : 1, score: genre === 'son' || genre === 'motion' ? null : 58 + Math.round(alea() * 38),
+                    pos: `${Math.round(alea() * 100)}% ${Math.round(alea() * 100)}%`, zoom: 180 + Math.round(alea() * 140) });
+}
+detections.push({ t: INSTANT, genre: 'person', cam: 0, score: 82, pos: '40% 60%', zoom: 240 });
+detections.sort((a, b) => a.t - b.t);
+const hm = (t) => new Date(t).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
+const hms = (t) => new Date(t).toLocaleTimeString('fr-CH');
+const vig = (d) => `background-image:url('${IMG[d.cam]}');background-size:${d.zoom}%;background-position:${d.pos}`;
+
+/* Histogrammes du jour : la première heure n'a pas été lue (cas « partiel »). */
+function histo(el, classeVide) {
+  const parH = new Array(24).fill(0);
+  for (const d of detections) parH[new Date(d.t).getHours()]++;
+  const max = Math.max(...parH);
+  el.innerHTML = parH.map((n, h) => h < 1 ? `<i class="nonlu" title="00h — non lu"></i>`
+    : `<i class="${n ? '' : classeVide}" style="height:${Math.max(4, n / max * 100)}%" title="${String(h).padStart(2, '0')}h — ${n}"></i>`).join('');
+}
+histo(document.getElementById('histoA'), 'vide');
+histo(document.getElementById('histoB'), 'vide');
+
+/* Récentes : les cinq dernières. */
+const recentes = [
+  { genre: 'Personne', cam: 0, il: '12 s', d: detections[detections.length - 1] },
+  { genre: 'Véhicule, Plaque', cam: 0, il: '54 s', d: detections[detections.length - 2] },
+  { genre: 'Aboiement', cam: 0, il: '1 min', d: detections[detections.length - 3] },
+  { genre: 'Personne', cam: 1, il: '3 min', d: detections[detections.length - 4] },
+  { genre: 'Mouvement', cam: 1, il: '6 min', d: detections[detections.length - 5] },
+];
+document.getElementById('recentesA').innerHTML = recentes.map((r) =>
+  `<li><span class="vig" style="${vig({ ...r.d, cam: r.cam })}"></span><div><div class="quoi">${r.genre}</div><div class="ou">${CAM[r.cam]}</div></div><span class="quand">il y a ${r.il}</span></li>`).join('');
+document.getElementById('filmB').insertAdjacentHTML('beforeend', recentes.map((r) =>
+  `<div class="B-evt"><span class="vig" style="${vig({ ...r.d, cam: r.cam })}"></span><div><div class="quoi">${r.genre}</div><div class="ou">${CAM[r.cam]}</div><div class="quand">il y a ${r.il}</div></div></div>`).join(''));
+
+/* Pellicule A et liste B. */
+const recents = [...detections].reverse();
+document.getElementById('compteA').textContent = `${detections.length} détections`;
+document.getElementById('compteB').textContent = `${detections.length}`;
+document.getElementById('cartesA').innerHTML = recents.slice(0, 30).map((d) =>
+  `<div class="A-carte ${d.t === INSTANT ? 'en-cours' : ''}"><div class="vig" style="${vig(d)}"></div><div class="pied"><span class="h">${hm(d.t)}</span><span style="color:var(--${d.genre === 'person' ? 'personne' : d.genre === 'vehicle' ? 'vehicule' : d.genre})">${NOMS[d.genre]}</span></div></div>`).join('');
+document.getElementById('listeB').innerHTML = recents.slice(0, 40).map((d) =>
+  `<li class="${d.t === INSTANT ? 'en-cours' : ''}"><span class="vig" style="${vig(d)}"></span><div><div class="quoi" style="color:var(--${d.genre === 'person' ? 'personne' : d.genre === 'vehicle' ? 'vehicule' : d.genre})">${NOMS[d.genre]}${d.score ? ` <span style="color:var(--texte3);font-weight:500">${d.score} %</span>` : ''}</div><div class="ou">${CAM[d.cam]}</div></div><span class="h">${hms(d.t)}</span></li>`).join('');
+for (const id of ['filtresA', 'filtresB']) {
+  const f = document.getElementById(id);
+  f.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; for (const x of f.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b)); });
+}
+
+/* ---------------------------------------------------------------- frises */
+const COUL = { person: 'var(--personne)', vehicle: 'var(--vehicule)', animal: 'var(--animal)', son: 'var(--son)', motion: 'var(--mouvement)' };
+const PISTE = { person: 0, vehicle: 1, animal: 2, son: 3, motion: 4 };
+function frise(el, sortie, pistes) {
+  const J = 86400e3, frac = (t) => (t - minuit.getTime()) / J;
+  let h = '';
+  // En pistes (B) : une règle de 14 px en tête, la bande « enregistré » dessous, puis
+  // une piste de 16 px par genre à partir de 20 px. En barre unique (A) : tout superposé.
+  h += pistes
+    ? `<div class="enreg" style="left:0;right:${(1 - frac(MAINTENANT)) * 100}%;top:15px;height:4px;bottom:auto;background:var(--alcor);opacity:.55"></div>`
+    : `<div class="enreg" style="left:0;right:${(1 - frac(MAINTENANT)) * 100}%;background:repeating-linear-gradient(90deg,rgba(220,169,92,.14) 0 2px,rgba(220,169,92,.08) 2px 4px)"></div>`;
+  h += `<div class="futur" style="left:${frac(MAINTENANT) * 100}%;${pistes ? 'top:14px;' : ''}background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.05) 5px 10px)"></div>`;
+  for (let k = 0; k <= 24; k += 3) {
+    h += `<div class="grad" style="left:${k / 24 * 100}%;${pistes ? 'top:14px;' : ''}background:rgba(255,255,255,${pistes ? .07 : .12})"></div>`;
+    if (k > 0 && k < 24) h += `<span class="lab" style="left:${k / 24 * 100}%;color:var(--texte3);${pistes ? 'top:0;bottom:auto;line-height:14px' : ''}">${String(k).padStart(2, '0')} h</span>`;
+  }
+  for (const d of detections) {
+    const x = frac(d.t) * 100;
+    if (pistes) h += `<div class="rep" style="left:${x}%;top:${20 + PISTE[d.genre] * 16 + 3}px;height:10px;background:${COUL[d.genre]}"></div>`;
+    else h += `<div class="rep" style="left:${x}%;top:${d.genre === 'motion' ? 18 : 8}px;height:${d.genre === 'motion' ? 10 : 20}px;background:${COUL[d.genre]}"></div>`;
+  }
+  h += `<div class="tete" style="left:${frac(INSTANT) * 100}%;background:var(--alcor);box-shadow:0 0 10px rgba(220,169,92,.8)"></div>`;
+  h += `<div class="survol" style="background:rgba(255,255,255,.4)"></div>`;
+  el.innerHTML = h;
+  const trait = el.querySelector('.survol');
+  el.addEventListener('mousemove', (e) => {
+    const r = el.getBoundingClientRect(), f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const t = minuit.getTime() + f * J, tol = J / r.width * 7;
+    let proche = null, ecart = Infinity;
+    for (const d of detections) { const ec = Math.abs(d.t - t); if (ec < tol && ec < ecart) { ecart = ec; proche = d; } }
+    trait.style.display = 'block'; trait.style.left = `${f * 100}%`;
+    sortie.innerHTML = `<span style="color:var(--texte2)">${hms(proche ? proche.t : t)}</span>` + (proche
+      ? ` <span style="color:${COUL[proche.genre]}">${NOMS[proche.genre]}${proche.score ? ` ${proche.score} %` : ''}</span> <span style="color:var(--texte3)">— cliquer pour voir</span>` : '');
+  });
+  el.addEventListener('mouseleave', () => { trait.style.display = 'none'; sortie.innerHTML = ''; });
+}
+frise(document.getElementById('friseA'), document.getElementById('survolA'), false);
+frise(document.getElementById('friseB'), document.getElementById('survolB'), true);
+
+marquerEspace();
+requestAnimationFrame(caler);
+</script>
+</body>
+</html>
