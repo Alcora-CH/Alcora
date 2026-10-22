@@ -151,6 +151,7 @@ const FR = {
   'extraits.aucunEnregistrement': 'Aucun enregistrement sur cette période.',
   'extraits.refuse': 'Le contrôleur a refusé l’extrait ({status}).',
   'extraits.pasRepondu': 'Le contrôleur n’a pas répondu à temps.',
+  'extraits.indisponible': 'L’extrait n’est plus disponible.',
 };
 
 const EN = {
@@ -279,6 +280,7 @@ const EN = {
   'extraits.aucunEnregistrement': 'No recording over this period.',
   'extraits.refuse': 'The controller refused the clip ({status}).',
   'extraits.pasRepondu': 'The controller did not answer in time.',
+  'extraits.indisponible': 'The clip is no longer available.',
 };
 
 const DE = {
@@ -407,6 +409,7 @@ const DE = {
   'extraits.aucunEnregistrement': 'Keine Aufzeichnung in diesem Zeitraum.',
   'extraits.refuse': 'Der Controller hat den Clip verweigert ({status}).',
   'extraits.pasRepondu': 'Der Controller hat nicht rechtzeitig geantwortet.',
+  'extraits.indisponible': 'Der Clip ist nicht mehr verfügbar.',
 };
 
 const IT = {
@@ -535,6 +538,7 @@ const IT = {
   'extraits.aucunEnregistrement': 'Nessuna registrazione in questo periodo.',
   'extraits.refuse': 'Il controller ha rifiutato la clip ({status}).',
   'extraits.pasRepondu': 'Il controller non ha risposto in tempo.',
+  'extraits.indisponible': 'La clip non è più disponibile.',
 };
 
 /**

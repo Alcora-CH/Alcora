@@ -69,6 +69,17 @@ const suites = [
     dossier: path.join(racine, 'v2', 'desktop'),
   },
   {
+    /*
+     * Ajoutee le 22.10.2026 avec la politique de contenu resserree : la page livree
+     * admettait les scripts en ligne et localhost, heritage du serveur de developpement.
+     * Construit la page pour de vrai et relit la politique qu'elle porte.
+     */
+    nom: 'Politique de contenu de la page livrée',
+    commande: 'node',
+    args: ['scripts/test-durcissement.mjs'],
+    dossier: racine,
+  },
+  {
     nom: "Bornes de l'archive (frise temporelle)",
     commande: 'node',
     args: ['test-archive.js'],

@@ -14,6 +14,9 @@ import {
 } from 'node:fs';
 import { construireNotices } from './notices.mjs';
 import { embarquerGuide } from './guide.mjs';
+import {
+  defautsPolitique, eprouverExecutable, intrusDansArchive, poserFusibles,
+} from './durcissement.mjs';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
@@ -215,6 +218,15 @@ const requireWeb = createRequire(path.join(web, 'package.json'));
 const vite = await import(pathToFileURL(requireWeb.resolve('vite')).href);
 await vite.build({ root: web, logLevel: 'warn' });
 exigerFichier(path.join(web, 'dist', 'index.html'), 'la page de l\'interface');
+{
+  // Relire la politique de la page LIVREE : voir scripts/durcissement.mjs.
+  const defauts = defautsPolitique(readFileSync(path.join(web, 'dist', 'index.html'), 'utf8'));
+  if (defauts.length) {
+    console.error(`\nLa page construite garde une politique de contenu laxiste :\n  ${defauts.join('\n  ')}`);
+    process.exit(1);
+  }
+  console.log('  politique de contenu resserrée');
+}
 
 // L'interface est embarquee dans l'application : aucun serveur n'est necessaire a l'usage.
 const ui = path.join(desktop, 'ui');
@@ -261,7 +273,9 @@ const chemins = await packager({
   // l'archive dans laquelle le code est enferme. On livre le SEUL binaire, depuis un
   // dossier prepare — voir la note sur « scene » plus haut.
   extraResource: [scene],
-  ignore: [/^\/test-/, /^\/node_modules/, /^\/dev.*\.log$/, /^\/ui\/\.vite/],
+  // Les journaux, ou qu'ils soient ; la configuration par defaut du relais, que seuls les
+  // tests lisent. Le garde-fou en liste blanche, plus bas, attrape ce qu'on oublierait ici.
+  ignore: [/^\/test-/, /^\/node_modules/, /\.log$/, /^\/relais-defaut-.*\.yml$/, /^\/ui\/\.vite/],
   quiet: false,
 });
 
@@ -277,10 +291,34 @@ if (livres.length !== 1 || livres[0] !== 'mediamtx.exe') {
   process.exit(1);
 }
 
+// Garde-fou : l'archive n'emporte que le code et l'interface — voir scripts/durcissement.mjs.
+{
+  const intrus = intrusDansArchive(requireDesktop, path.join(empaquetee, 'resources', 'app.asar'));
+  if (intrus.length) {
+    console.error(`\nL'archive de l'application emporte des fichiers inattendus :\n  ${intrus.join(', ')}`);
+    console.error('  Les retirer de v2/desktop, ou les ajouter aux exclusions de l\'empaquetage.');
+    process.exit(1);
+  }
+}
+
 const taille = (p) => (statSync(p).size / 1024 / 1024).toFixed(1);
 console.log(`  exécutable : ${taille(path.join(empaquetee, EXE))} Mo`);
 
-/* ---- 2 bis. notices de licence ---- */
+/* ---- 2 bis. fusibles — avant la signature, qui en couvre les octets ---- */
+etape('Fusibles d\'Electron');
+for (const l of await poserFusibles(requireDesktop, path.join(empaquetee, EXE), { integrite: true })) {
+  console.log(`  ${l}`);
+}
+{
+  const sondes = await eprouverExecutable(path.join(empaquetee, EXE));
+  for (const s of sondes) console.log(`  ${s.ok ? 'ok   ' : 'ÉCHEC'} ${s.sonde} (${s.detail})`);
+  if (sondes.some((s) => !s.ok)) {
+    console.error('\nL\'exécutable fusiblé ne se comporte pas comme prévu : rien n\'a été signé.');
+    process.exit(1);
+  }
+}
+
+/* ---- 2 ter. notices de licence ---- */
 etape('Licences des composants de tiers');
 const { texte: notices, manquants } = construireNotices(web);
 if (manquants.length) {
@@ -292,7 +330,7 @@ if (manquants.length) {
 writeFileSync(path.join(empaquetee, 'NOTICES-TIERS.txt'), notices, 'utf8');
 console.log(`  ${(notices.length / 1024).toFixed(0)} Ko écrits dans NOTICES-TIERS.txt`);
 
-/* ---- 2 ter. signature ---- */
+/* ---- 2 quater. signature ---- */
 const sig = signature();
 if (!sig) {
   console.log('\n=== Signature ===');

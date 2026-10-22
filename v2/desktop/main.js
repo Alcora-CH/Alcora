@@ -556,7 +556,16 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,                   // le preload a besoin de require
+      /*
+       * La page tourne dans le BAC A SABLE de Chromium.
+       *
+       * Elle en etait sortie parce que « le preload a besoin de require ». C'etait vrai
+       * d'un preload qui chargeait des modules Node ; le notre n'importe plus que
+       * « electron » (contextBridge, ipcRenderer), que le bac a sable fournit. Hors bac a
+       * sable, une faille du moteur de rendu donnait la main sur le processus entier ;
+       * dedans, elle reste enfermee. Audit du 22.10.2026.
+       */
+      sandbox: true,
     },
   });
 
@@ -630,9 +639,38 @@ function createWindow() {
 
   surveillerLaPage(pages);
 
-  // Aucun lien externe ne s'ouvre dans l'application elle-meme.
+  /*
+   * Aucune permission n'est accordee a la page.
+   *
+   * Electron les accorde TOUTES par defaut — camera, micro, notifications, presse-papiers,
+   * peripheriques USB et HID — tant qu'aucun gestionnaire n'est pose. L'interface n'en
+   * demande aucune : le plein ecran passe par le processus principal, les notifications
+   * aussi, les captures s'ecrivent sur disque. Un refus est note une fois par type, pour
+   * qu'une fonction qui en aurait un jour besoin ne casse pas en silence.
+   */
+  const refusees = new Set();
+  const refuser = (permission) => {
+    if (!refusees.has(permission)) {
+      refusees.add(permission);
+      journal.info('ui', `permission denied: ${permission}`);
+    }
+    return false;
+  };
+  pages.session.setPermissionRequestHandler((_wc, permission, rappel) => rappel(refuser(permission)));
+  pages.session.setPermissionCheckHandler((_wc, permission) => refuser(permission));
+
+  /*
+   * Les liens externes s'ouvrent dans le navigateur — en https SEULEMENT.
+   *
+   * Tout schema etait transmis a Windows : « file: », « ms-msdt: », « search-ms: »,
+   * « smb: »... autant de portes qu'Electron recommande de fermer. L'interface n'ouvre
+   * aujourd'hui aucun lien ; si elle le fait un jour, ce sera vers le web.
+   */
   pages.setWindowOpenHandler(({ url }) => {
-    void shell.openExternal(url);
+    let schema = null;
+    try { schema = new URL(url).protocol; } catch { /* adresse illisible */ }
+    if (schema === 'https:') void shell.openExternal(url);
+    else journal.alerte('ui', `external link refused (${schema ?? 'unreadable'})`);
     return { action: 'deny' };
   });
 
@@ -679,20 +717,23 @@ function pushRelayState(state) {
  * indisponible ne doit pas faire echouer une connexion par ailleurs reussie : au pire la
  * session ne survit pas a la fermeture.
  */
+let ecritureSession = Promise.resolve();
 function garderSession(s) {
-  try {
-    store.writeSecret('session', JSON.stringify(s));
-  } catch (e) {
-    journal.alerte('session', `session not kept on this machine: ${e.message}`);
-  }
+  // Le texte est fige MAINTENANT, et les ecritures s'enchainent : chiffrer est desormais
+  // asynchrone, et deux renouvellements rapproches pourraient sinon se doubler — la session
+  // perimee ecrasant la fraiche.
+  const texte = JSON.stringify(s);
+  ecritureSession = ecritureSession
+    .then(() => store.ecrireSecret('session', texte))
+    .catch((e) => journal.alerte('session', `session not kept on this machine: ${e.message}`));
 }
 
-function makeClient(config, { onFirstUse } = {}) {
+async function makeClient(config, { onFirstUse } = {}) {
   const client = new ProtectClient({
     host: config.host,
     pins: config.pins ?? [],
     onFirstUse,
-    session: Session.fromJSON(JSON.parse(store.readSecret('session') ?? 'null')),
+    session: Session.fromJSON(JSON.parse((await store.lireSecret('session')) ?? 'null')),
     // Un disque plein ou un magasin de secrets indisponible ne doit pas faire echouer une
     // connexion par ailleurs reussie : au pire la session ne survit pas a la fermeture.
     onSessionChanged: garderSession,
@@ -1003,8 +1044,8 @@ ipcMain.handle('protect:save', async (_event, credentials, keepSignedIn) => {
                             totpSeed: credentials.totpSeed };
 
   if (keepSignedIn) {
-    store.writeSecret('password', credentials.password);
-    if (credentials.totpSeed) store.writeSecret('totp', credentials.totpSeed);
+    await store.ecrireSecret('password', credentials.password);
+    if (credentials.totpSeed) await store.ecrireSecret('totp', credentials.totpSeed);
   } else {
     store.clearSecrets();
   }
@@ -1425,8 +1466,11 @@ ipcMain.handle('protect:sequence', async (_event, { camera, instant, duree, depu
 /** Enregistre un extrait deja obtenu la ou l'utilisateur le decide. */
 ipcMain.handle('protect:enregistrerExtrait', async (_event, { jeton, nom }) => {
   if (!extraits || !window) return { enregistre: false };
-  const source = extraits.chemin(String(jeton));
-  if (!fs.existsSync(source)) throw new Error('L’extrait n’est plus disponible.');
+  // Un jeton invalide n'est pas un extrait disparu, mais la page n'a rien d'autre a en
+  // savoir : meme message, et rien n'est lu hors du dossier des extraits.
+  if (!Extraits.jetonValide(jeton)) throw new Error(i18n.t('extraits.indisponible'));
+  const source = extraits.chemin(jeton);
+  if (!fs.existsSync(source)) throw new Error(i18n.t('extraits.indisponible'));
 
   // Un nom venu de l'interface ne doit jamais pouvoir designer un autre dossier.
   const propre = String(nom ?? 'extrait').replace(/[^A-Za-z0-9 _.-]/g, '_').slice(0, 80);
@@ -1709,7 +1753,7 @@ async function connecter(config, clientExistant = null) {
    * « if (!client.session.usable) » existait deja ; elle ne servait a rien tant que le
    * client naissait vierge a chaque appel.
    */
-  const client = clientExistant ?? makeClient(config);
+  const client = clientExistant ?? await makeClient(config);
 
   if (clientExistant) {
     // Il n'avait pas de quoi faire survivre sa session au-dela du test : on l'y raccorde.
@@ -1718,8 +1762,8 @@ async function connecter(config, clientExistant = null) {
   } else {
     client.setCredentials({
       username: config.username ?? identifiantsDeSession?.username,
-      password: identifiantsDeSession?.password ?? store.readSecret('password'),
-      totpSeed: identifiantsDeSession?.totpSeed ?? store.readSecret('totp') ?? undefined,
+      password: identifiantsDeSession?.password ?? await store.lireSecret('password'),
+      totpSeed: identifiantsDeSession?.totpSeed ?? (await store.lireSecret('totp')) ?? undefined,
     });
   }
 
@@ -1799,7 +1843,7 @@ async function startFromStoredCredentials() {
 
   // Aucun secret utilisable. Le cas se produit apres un « ne pas rester connecte », ou
   // quand le profil Windows a change : le chiffrement est lie au compte qui a saisi.
-  const password = identifiantsDeSession?.password ?? store.readSecret('password');
+  const password = identifiantsDeSession?.password ?? await store.lireSecret('password');
   if (!password) {
     journal.alerte('startup', 'credentials not stored on this machine');
     pushRelayState({

@@ -25,6 +25,7 @@ import {
 } from 'node:fs';
 import { construireNotices } from './notices.mjs';
 import { embarquerGuide } from './guide.mjs';
+import { defautsPolitique, intrusDansArchive, poserFusibles } from './durcissement.mjs';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
@@ -101,6 +102,15 @@ const requireWeb = createRequire(path.join(web, 'package.json'));
 const vite = await import(pathToFileURL(requireWeb.resolve('vite')).href);
 await vite.build({ root: web, logLevel: 'warn' });
 exigerFichier(path.join(web, 'dist', 'index.html'), 'la page de l\'interface');
+{
+  // Relire la politique de la page LIVREE : voir scripts/durcissement.mjs.
+  const defauts = defautsPolitique(readFileSync(path.join(web, 'dist', 'index.html'), 'utf8'));
+  if (defauts.length) {
+    console.error(`\nLa page construite garde une politique de contenu laxiste :\n  ${defauts.join('\n  ')}`);
+    process.exit(1);
+  }
+  console.log('  politique de contenu resserrée');
+}
 
 const ui = path.join(desktop, 'ui');
 rmSync(ui, { recursive: true, force: true });
@@ -137,7 +147,8 @@ const chemins = await packager({
   overwrite: true,
   appVersion: version,
   extraResource: [scene],
-  ignore: [/^\/test-/, /^\/node_modules/, /^\/dev.*\.log$/, /^\/ui\/\.vite/],
+  // Memes exclusions que sous Windows (voir scripts/build.mjs).
+  ignore: [/^\/test-/, /^\/node_modules/, /\.log$/, /^\/relais-defaut-.*\.yml$/, /^\/ui\/\.vite/],
   quiet: false,
 });
 
@@ -151,6 +162,27 @@ const livres = readdirSync(path.join(empaquetee, 'resources', 'relay'));
 if (livres.length !== 1 || livres[0] !== 'mediamtx') {
   console.error(`\nLe dossier du relais livré contient autre chose que le binaire :\n  ${livres.join(', ')}`);
   process.exit(1);
+}
+
+// Garde-fou : l'archive n'emporte que le code et l'interface — voir scripts/durcissement.mjs.
+{
+  const intrus = intrusDansArchive(requireDesktop, path.join(empaquetee, 'resources', 'app.asar'));
+  if (intrus.length) {
+    console.error(`\nL'archive de l'application emporte des fichiers inattendus :\n  ${intrus.join(', ')}`);
+    console.error('  Les retirer de v2/desktop, ou les ajouter aux exclusions de l\'empaquetage.');
+    process.exit(1);
+  }
+}
+
+/*
+ * Memes fusibles que sous Windows (voir scripts/durcissement.mjs), sauf la verification de
+ * l'empreinte de l'asar, qu'Electron ne sait pas faire sous Linux. Relus, mais NON eprouves
+ * par une execution : les sondes demandent de lancer l'executable Linux, ce que cette
+ * construction ne fait pas.
+ */
+etape('Fusibles d\'Electron');
+for (const l of await poserFusibles(requireDesktop, path.join(empaquetee, PACK_ID), { integrite: false })) {
+  console.log(`  ${l}`);
 }
 
 /* ---- 3 bis. de quoi apparaitre dans un menu ---- */

@@ -18,7 +18,7 @@ Non affilié à Ubiquiti.
 ## Commandes — toujours depuis la RACINE du dépôt
 
 ```
-npm test          # tsc -b --force + oxlint (bloquant, main process compris) + 13 suites hors ligne
+npm test          # tsc -b --force + oxlint (bloquant, main process compris) + 15 suites hors ligne
 npm run build     # vite build + vpk pack + signature (certificat requis)
 npm run publier   # publie sur alcora-ch/Alcora-releases
 npm run web       # démo navigateur (mode simulation, sans caméra ni contrôleur)
@@ -117,6 +117,13 @@ soit ~185 Mo à chaque version, quel que soit le différentiel. Ne jamais promet
 - **Chaîne de mise à jour** (`v2/desktop/maj.js`) : l'empreinte se calcule sur les octets
   REÇUS pendant l'écriture ; « illisible » n'est jamais « altéré » ; ne rien retirer sans
   lire les commentaires du fichier et `test-maj.js`. Cette chaîne a cassé trois jours.
+- **Durcissement de ce qui est livré** (`scripts/durcissement.mjs`, appelé par les deux
+  constructions) : la page doit porter la politique de contenu resserrée, l'archive
+  `app.asar` n'emporte que ce qu'admet sa liste blanche, et l'exécutable reçoit ses
+  fusibles (`RunAsNode` éteint, intégrité de l'asar vérifiée…) **avant** la signature,
+  puis est lancé avec `--veloapp-install` pour prouver qu'il démarre encore. Une version
+  d'Electron qui ajoute un fusible fait échouer la construction (`strictlyRequireAllFuses`) :
+  le trancher, ne jamais retirer l'option. Audit du 22.10.2026.
 - **i18n** : aucun texte visible en dur — tout passe par les dictionnaires (voir
   `docs/i18n.md`). Le journal de diagnostic est en ANGLAIS, toujours. L'historique des
   versions n'existe qu'en fr + en.

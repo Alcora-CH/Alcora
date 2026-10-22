@@ -208,18 +208,36 @@ class Store {
 
   secretPath(name) { return path.join(this.secretsDir, `${name}.bin`); }
 
-  writeSecret(name, value) {
-    if (!safeStorage.isEncryptionAvailable()) {
+  /*
+   * LES SECRETS PASSENT PAR L'API ASYNCHRONE de safeStorage.
+   *
+   * La synchrone est depreciee en Electron 45 et RETIREE en 46, faute du moteur de Chromium
+   * qui la portait. Les noms ont change exprès (ecrireSecret, lireSecret) : un appelant
+   * oublie leverait « n'est pas une fonction », au lieu de recevoir en silence une
+   * promesse — toujours « vraie », donc lue comme un mot de passe present.
+   *
+   * Eprouve le 22.10.2026 dans Electron 44.9.3 : un secret chiffre par l'ancienne methode
+   * (prefixe « v10 ») est relu tel quel par la nouvelle, sans rechiffrement demande, et le
+   * nouveau format est le meme. Les identifiants deja enregistres survivent donc a la mise a
+   * jour sans conversion.
+   */
+  async ecrireSecret(name, value) {
+    if (!(await safeStorage.isAsyncEncryptionAvailable())) {
       throw new Error(require('./i18n').t('main.chiffrementIndisponible'));
     }
-    fs.writeFileSync(this.secretPath(name), safeStorage.encryptString(String(value)));
+    fs.writeFileSync(this.secretPath(name), await safeStorage.encryptStringAsync(String(value)));
   }
 
-  readSecret(name) {
+  async lireSecret(name) {
+    let octets;
+    try { octets = fs.readFileSync(this.secretPath(name)); } catch { return null; }
     try {
-      return safeStorage.decryptString(fs.readFileSync(this.secretPath(name)));
+      const { result, shouldReEncrypt } = await safeStorage.decryptStringAsync(octets);
+      // La cle a tourne : on rechiffre, sans faire echouer la lecture si cela rate.
+      if (shouldReEncrypt) await this.ecrireSecret(name, result).catch(() => {});
+      return result;
     } catch {
-      // Secret absent, ou chiffre sous un autre compte Windows : on repart d'une saisie.
+      // Chiffre sous un autre compte Windows, ou illisible : on repart d'une saisie.
       return null;
     }
   }

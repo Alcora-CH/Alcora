@@ -72,11 +72,12 @@ function porteDesCaracteresDeControle(texte) {
 const faux = {
   disponible: true,
   cle: 7,
-  isEncryptionAvailable() { return faux.disponible; },
-  encryptString(texte) {
+  /** Simule une cle qui a tourne : decryptStringAsync demande alors un rechiffrement. */
+  rotation: false,
+  chiffrer(texte) {
     return Buffer.from([...Buffer.from(String(texte), 'utf8')].map((o) => o ^ faux.cle));
   },
-  decryptString(octets) {
+  dechiffrer(octets) {
     if (!Buffer.isBuffer(octets) || !octets.length) throw new Error('vide');
     const clair = Buffer.from([...octets].map((o) => o ^ faux.cle)).toString('utf8');
     // Un dechiffrement avec la mauvaise cle ne rend pas du texte lisible : on le refuse,
@@ -84,6 +85,16 @@ const faux = {
     if (porteDesCaracteresDeControle(clair)) throw new Error('cle etrangere');
     return clair;
   },
+  async isAsyncEncryptionAvailable() { return faux.disponible; },
+  async encryptStringAsync(texte) { return faux.chiffrer(texte); },
+  async decryptStringAsync(octets) { return { result: faux.dechiffrer(octets), shouldReEncrypt: faux.rotation }; },
+  /*
+   * La face SYNCHRONE leve : depreciee en Electron 45, RETIREE en 46. Si quelqu'un la
+   * reintroduit dans store.js, ces verifications rougiront comme Electron 46 le ferait.
+   */
+  isEncryptionAvailable() { throw new Error('API synchrone de safeStorage : retiree en Electron 46'); },
+  encryptString() { throw new Error('API synchrone de safeStorage : retiree en Electron 46'); },
+  decryptString() { throw new Error('API synchrone de safeStorage : retiree en Electron 46'); },
 };
 
 const vraiCharger = Module._load;
@@ -94,6 +105,7 @@ Module._load = function charger(demande, parent, principal) {
 
 const { Store, comparerVersions, reprendreDossier } = require('./store');
 
+(async () => {
 const dossierNeuf = () => fs.mkdtempSync(path.join(os.tmpdir(), 'alcora-store-'));
 
 console.log('\n=== Comparaison des versions ===');
@@ -162,23 +174,23 @@ console.log('\n=== L’écriture de la configuration est tout ou rien ===');
 console.log('\n=== Les secrets ===');
 {
   const s = new Store(dossierNeuf());
-  s.writeSecret('password', 'motdepasse-fictif');
-  check('aller-retour', 'motdepasse-fictif', s.readSecret('password'));
+  await s.ecrireSecret('password', 'motdepasse-fictif');
+  check('aller-retour', 'motdepasse-fictif', await s.lireSecret('password'));
 
   checkBool('rien n’est écrit en clair',
     !fs.readFileSync(s.secretPath('password')).includes('motdepasse-fictif'));
 
-  check('un secret absent rend null, sans lever', null, s.readSecret('session'));
+  check('un secret absent rend null, sans lever', null, await s.lireSecret('session'));
 
   // Chiffre par une AUTRE installation : illisible, mais l'application ne tombe pas.
   faux.cle = 42;
-  check('secret d’un autre compte : null, pas une exception', null, s.readSecret('password'));
+  check('secret d’un autre compte : null, pas une exception', null, await s.lireSecret('password'));
   faux.cle = 7;
-  check('et redevient lisible avec la bonne clé', 'motdepasse-fictif', s.readSecret('password'));
+  check('et redevient lisible avec la bonne clé', 'motdepasse-fictif', await s.lireSecret('password'));
 
-  s.writeSecret('totp', 'ABCDEF');
+  await s.ecrireSecret('totp', 'ABCDEF');
   s.clearSecrets();
-  check('tout est effacé', [null, null], [s.readSecret('password'), s.readSecret('totp')]);
+  check('tout est effacé', [null, null], [await s.lireSecret('password'), await s.lireSecret('totp')]);
 }
 
 console.log('\n=== Sans chiffrement, on refuse d’écrire — on n’écrit pas en clair ===');
@@ -186,7 +198,7 @@ console.log('\n=== Sans chiffrement, on refuse d’écrire — on n’écrit pas
   const s = new Store(dossierNeuf());
   faux.disponible = false;
   let leve = null;
-  try { s.writeSecret('password', 'motdepasse-fictif'); } catch (e) { leve = e.message; }
+  try { await s.ecrireSecret('password', 'motdepasse-fictif'); } catch (e) { leve = e.message; }
   faux.disponible = true;
 
   checkBool('l’écriture est refusée', leve !== null);
@@ -259,8 +271,8 @@ console.log('\n=== La connexion mise de côté avant une remise à zéro ===');
 {
   const s = new Store(dossierNeuf());
   s.writeConfig({ ...s.configVierge(), host: '10.0.0.1', username: 'compte', configured: true });
-  s.writeSecret('password', 'motdepasse-fictif');
-  s.writeSecret('totp', 'ABCDEF');
+  await s.ecrireSecret('password', 'motdepasse-fictif');
+  await s.ecrireSecret('totp', 'ABCDEF');
 
   check('archivée', true, s.archiverConfiguration());
   check('elle est proposable', true, s.sauvegarde().existe);
@@ -269,11 +281,11 @@ console.log('\n=== La connexion mise de côté avant une remise à zéro ===');
   // La remise a zero.
   s.clearSecrets();
   s.writeConfig(s.configVierge());
-  check('tout est bien effacé', null, s.readSecret('password'));
+  check('tout est bien effacé', null, await s.lireSecret('password'));
 
   check('reposée', true, s.restaurerSauvegarde());
-  check('le mot de passe est revenu', 'motdepasse-fictif', s.readSecret('password'));
-  check('la clé à deux facteurs aussi', 'ABCDEF', s.readSecret('totp'));
+  check('le mot de passe est revenu', 'motdepasse-fictif', await s.lireSecret('password'));
+  check('la clé à deux facteurs aussi', 'ABCDEF', await s.lireSecret('totp'));
   check('et l’adresse', '10.0.0.1', s.readConfig().host);
 }
 
@@ -286,7 +298,7 @@ console.log('\n=== Une SECONDE remise à zéro ne détruit pas la sauvegarde ===
    */
   const s = new Store(dossierNeuf());
   s.writeConfig({ ...s.configVierge(), host: '10.0.0.1', configured: true });
-  s.writeSecret('password', 'motdepasse-fictif');
+  await s.ecrireSecret('password', 'motdepasse-fictif');
   s.archiverConfiguration();
 
   s.clearSecrets();
@@ -295,7 +307,7 @@ console.log('\n=== Une SECONDE remise à zéro ne détruit pas la sauvegarde ===
   check('la seconde archive est REFUSÉE', false, s.archiverConfiguration());
   check('la bonne sauvegarde est toujours là', '10.0.0.1', s.sauvegarde().host);
   s.restaurerSauvegarde();
-  check('et reste reposable', 'motdepasse-fictif', s.readSecret('password'));
+  check('et reste reposable', 'motdepasse-fictif', await s.lireSecret('password'));
 }
 
 console.log('\n=== Les nouveautés d’une mise à jour ===');
@@ -347,5 +359,22 @@ console.log('\n=== Rien à reposer : on le dit, on ne prétend pas ===');
   check('la restauration échoue franchement', false, s.restaurerSauvegarde());
 }
 
+console.log('\n=== Une cle qui a tourne : le secret est rechiffre ===');
+{
+  const s = new Store(dossierNeuf());
+  await s.ecrireSecret('password', 'motdepasse-fictif');
+  const ecrits = [];
+  const vraiEcrire = s.ecrireSecret.bind(s);
+  s.ecrireSecret = async (nom, valeur) => { ecrits.push(nom); return vraiEcrire(nom, valeur); };
+  faux.rotation = false;
+  check('cle stable : lu sans rien reecrire', 'motdepasse-fictif', await s.lireSecret('password'));
+  check('aucune reecriture', 0, ecrits.length);
+  faux.rotation = true;
+  check('cle tournee : toujours lu', 'motdepasse-fictif', await s.lireSecret('password'));
+  check('et rechiffre une fois', ['password'], ecrits);
+  faux.rotation = false;
+}
+
 console.log(echecs === 0 ? '\nTOUS LES TESTS PASSENT\n' : `\n${echecs} ÉCHEC(S)\n`);
 process.exit(echecs === 0 ? 0 : 1);
+})().catch((e) => { console.error(e); process.exit(1); });

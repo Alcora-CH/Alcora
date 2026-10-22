@@ -137,6 +137,21 @@ async function main() {
     check('jeton vide', 400, extraits.servir('', null).status);
   }
 
+  console.log('\n=== Le chemin lui-meme refuse les jetons invalides ===');
+  {
+    // Le point de passage UNIQUE : « enregistrer l'extrait » appelait chemin() sans filtre,
+    // et « ..\..\ » pouvait viser n'importe quel .mp4 du disque (audit du 22.10.2026).
+    const leve = (j) => { try { extraits.chemin(j); return false; } catch { return true; } };
+    checkBool('remontee de dossier refusee', leve('..\\..\\Users\\x'));
+    checkBool('remontee en barres obliques refusee', leve('../../x'));
+    checkBool('chemin absolu refuse', leve('C:\\Windows\\x'));
+    checkBool('jeton vide refuse', leve(''));
+    checkBool('valeur non textuelle refusee', leve({ toString: () => 'cam-1' }));
+    checkBool('un vrai jeton passe', !leve(Extraits.jeton('abc', 1000, 2000)));
+    checkBool('et reste dans le dossier des extraits',
+      path.dirname(extraits.chemin(Extraits.jeton('abc', 1000, 2000))) === path.resolve(extraits.dossier));
+  }
+
   console.log('\n=== Nom de fichier deduit de la demande ===');
   {
     // La meme detection doit retomber sur le meme fichier, sinon chaque ouverture

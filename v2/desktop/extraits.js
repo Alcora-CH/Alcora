@@ -116,7 +116,19 @@ class Extraits {
     return `${propre}-${Math.round(debut)}-${Math.round(fin)}`;
   }
 
-  chemin(jeton) { return path.join(this.dossier, `${jeton}.mp4`); }
+  /**
+   * Le fichier d'un extrait. Le jeton est filtre ICI, au seul point de passage.
+   *
+   * Il ne l'etait que dans servir() : « enregistrer l'extrait » appelait chemin() avec le
+   * jeton venu de la page, sans filtre, et « ..\..\ » pouvait viser n'importe quel
+   * .mp4 du disque pour le recopier ailleurs. Audit du 22.10.2026.
+   */
+  static jetonValide(jeton) { return typeof jeton === 'string' && /^[A-Za-z0-9-]{1,128}$/.test(jeton); }
+
+  chemin(jeton) {
+    if (!Extraits.jetonValide(jeton)) throw new TypeError('invalid clip token');
+    return path.join(this.dossier, `${jeton}.mp4`);
+  }
 
   /**
    * Morceau de frise contenant un instant, aligne sur une grille absolue.
@@ -315,7 +327,7 @@ class Extraits {
    * fichier deja obtenu, que la chose se joue.
    */
   servir(jeton, entetePlage) {
-    if (!/^[A-Za-z0-9-]{1,128}$/.test(jeton)) return new Response('', { status: 400 });
+    if (!Extraits.jetonValide(jeton)) return new Response('', { status: 400 });
     const cible = this.chemin(jeton);
     let taille;
     try { taille = fs.statSync(cible).size; } catch { return new Response('', { status: 404 }); }
