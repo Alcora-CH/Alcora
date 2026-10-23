@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Bell, BellOff, Check, Loader2 } from 'lucide-react';
+import { AlertCircle, Bell, BellOff, Check, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { t, useLangue } from '../i18n';
+import { Carte, EnTete } from '../ui/Cadre';
+import { Interrupteur } from '../ui/Interrupteur';
+import { Puce } from '../ui/Puce';
+import { Segment } from '../ui/Segment';
+import { cx } from '../ui/cx';
 import type { Cle } from '../i18n/fr';
 import type { ConfigVeilles, DiscoveredCamera, PlageHoraire, Veille } from '../types/protect';
 
@@ -116,7 +121,7 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
   if (etat === 'lecture') {
     return (
       <div className="grid h-full place-items-center">
-        <Loader2 className="h-5 w-5 animate-spin" style={{ color: 'var(--soft)' }} />
+        <Loader2 className="h-5 w-5 animate-spin text-soft" aria-hidden />
       </div>
     );
   }
@@ -124,109 +129,119 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
   if (!config) {
     return (
       <div className="grid h-full place-items-center p-8">
-        <p className="flex max-w-md gap-2 text-center text-[13.5px]" style={{ color: 'var(--warn)' }}>
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{t('veilles.lectureEchouee')} {message}</span>
-        </p>
+        <Carte className="max-w-md p-5 text-center">
+          <AlertCircle className="mx-auto mb-2 h-5 w-5 text-warn" aria-hidden />
+          <p>{t('veilles.lectureEchouee')}</p>
+          {message && <p className="mt-1 text-meta text-soft">{message}</p>}
+        </Carte>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto h-full w-full max-w-[880px] overflow-y-auto px-5 py-5">
+    <div className="flex h-full flex-col">
+      <EnTete
+        titre={t('espace.alertes')}
+        precision={t('veilles.precision')}
+        actions={(
+          <>
+            {etat === 'enregistre' && (
+              <span className="flex items-center gap-1.5 text-meta text-ok">
+                <Check className="h-4 w-4" aria-hidden /> {t('veilles.enregistre')}
+              </span>
+            )}
+            {etat === 'erreur' && <span className="max-w-xs truncate text-meta text-warn">{message}</span>}
+            {/* L'interrupteur d'Alcora, en tête : c'est le geste du soir et du matin. */}
+            <div className="flex items-center gap-3 rounded-[10px] border border-line2 bg-card2 py-1.5 pl-2.5 pr-3.5">
+              <Interrupteur ton="vert" allume={config.armee}
+                            etiquette={config.armee ? t('veilles.desactiver') : t('veilles.activer')}
+                            onChange={(v) => { void enregistrer({ ...config, armee: v }); }} />
+              <div className="leading-tight">
+                <div className="font-medium">{config.armee ? t('veilles.active') : t('veilles.desactivee')}</div>
+                {profilActifNom && <div className="text-meta text-soft">{t('veilles.profil', { nom: profilActifNom })}</div>}
+              </div>
+            </div>
+          </>
+        )}
+      />
 
-      {/* ---- l'interrupteur d'Alcora : l'îlot de tête ---- */}
-      <div className="ilot flex items-center gap-3 px-4 py-3">
-        <button
-          onClick={() => { void enregistrer({ ...config, armee: !config.armee }); }}
-          aria-pressed={config.armee}
-          aria-label={config.armee ? t('veilles.desactiver') : t('veilles.activer')}
-          className="relative h-[22px] w-10 shrink-0 rounded-full transition-colors"
-          style={{ background: config.armee ? 'var(--ok)' : 'var(--card2)' }}>
-          <span className="absolute top-[3px] h-4 w-4 rounded-full transition-all"
-                style={{ left: config.armee ? 21 : 3,
-                         background: config.armee ? '#151a12' : '#5a5f68' }} />
-        </button>
-        <div className="min-w-0">
-          <p className="text-[13.5px]">{config.armee ? t('veilles.active') : t('veilles.desactivee')}</p>
-          {profilActifNom && (
-            <p className="font-mono text-[11px] text-soft">{t('veilles.profil', { nom: profilActifNom })}</p>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-[1100px] px-6 pb-10 pt-[22px]">
+          {/* Deux interrupteurs sur le même mur : le dire plutôt que de laisser deviner. */}
+          <p className="mb-[18px] max-w-[760px] leading-relaxed text-muted">{t('veilles.independant')}</p>
+
+          {/* ---- les veilles : une liste, alignée en colonnes ---- */}
+          <Carte className="@container m-cascade overflow-hidden">
+            {config.veilles.map((v) => {
+              const cout = coutParJour(coutVeille(v, volumes));
+              const estOuverte = ouverte === v.id;
+              return (
+                <div key={v.id} className="[&+&]:border-t [&+&]:border-line">
+                  {/* Une veille éteinte s'estompe, comme avant. */}
+                  <div className={cx('grid grid-cols-[36px_minmax(0,1fr)_auto_auto_28px] items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/[.02]',
+                    !v.actif && 'opacity-55')}>
+                    <button type="button" onClick={() => majVeille(v.id, { actif: !v.actif })}
+                            aria-pressed={v.actif} title={v.actif ? t('veilles.desactiverCourt') : t('veilles.activerCourt')}
+                            aria-label={`${v.nom} — ${v.actif ? t('veilles.desactiverCourt') : t('veilles.activerCourt')}`}
+                            className={cx('m-pression grid h-9 w-9 place-items-center rounded-[9px]',
+                              v.actif ? 'bg-accent-soft text-accent' : 'bg-card2 text-soft')}>
+                      {v.actif ? <Bell className="h-4 w-4" aria-hidden /> : <BellOff className="h-4 w-4" aria-hidden />}
+                    </button>
+
+                    <button type="button" onClick={() => setOuverte(estOuverte ? null : v.id)}
+                            aria-expanded={estOuverte} className="min-w-0 text-left">
+                      <span className="block truncate text-titre font-semibold">{v.nom}</span>
+                      <span className="mt-0.5 block truncate text-meta text-muted">
+                        {v.sujets.map(libelleSujet).join(', ')}
+                        {' — '}
+                        {v.cameras.length === 0
+                          ? t('veilles.toutesCameras')
+                          : v.cameras.map((id) => cameras.find((c) => c.id === id)?.name ?? '?').join(', ')}
+                      </span>
+                    </button>
+
+                    <span className="whitespace-nowrap text-meta text-muted @max-[620px]:hidden">
+                      {t(QUAND.find((q) => q.id === v.quand)?.cle ?? 'veilles.quand.toujours')}
+                    </span>
+                    {/* Le volume attendu, avant d'activer. Protect ne le dit nulle part. */}
+                    <span className="whitespace-nowrap text-meta tabular-nums" style={{ color: cout.ton }}>
+                      {cout.texte}
+                    </span>
+                    <button type="button" onClick={() => setOuverte(estOuverte ? null : v.id)}
+                            aria-hidden tabIndex={-1} className="grid place-items-center text-soft">
+                      {estOuverte ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
+                  </div>
+
+                  {estOuverte && (
+                    <Reglage veille={v} cameras={cameras} config={config} volumes={volumes}
+                             onChange={(champs) => majVeille(v.id, champs)} />
+                  )}
+                </div>
+              );
+            })}
+          </Carte>
+
+          {volumes === null && (
+            <p className="mt-4 text-meta text-soft">{t('veilles.volumesIndisponibles')}</p>
           )}
         </div>
-        {etat === 'enregistre' && (
-          <span className="ml-auto flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--ok)' }}>
-            <Check className="h-3.5 w-3.5" /> {t('veilles.enregistre')}
-          </span>
-        )}
-        {etat === 'erreur' && (
-          <span className="ml-auto text-[12px]" style={{ color: 'var(--warn)' }}>{message}</span>
-        )}
       </div>
-
-      {/* Deux interrupteurs sur le même mur : le dire plutôt que de laisser deviner. */}
-      <p className="mt-2 px-1 text-[11.5px] leading-relaxed text-soft">
-        {t('veilles.independant')}
-      </p>
-
-      {/* ---- les veilles ---- */}
-      <div className="m-cascade mt-5 flex flex-col gap-3.5">
-        {config.veilles.map((v) => {
-          const cout = coutParJour(coutVeille(v, volumes));
-          const estOuverte = ouverte === v.id;
-          return (
-            /* Chaque veille est un îlot ; une veille éteinte s'estompe, comme avant. */
-            <div key={v.id} className="ilot"
-                 style={{ opacity: v.actif ? 1 : 0.55 }}>
-
-              <div className="flex items-center gap-3 px-4 py-3">
-                <button onClick={() => majVeille(v.id, { actif: !v.actif })}
-                        aria-pressed={v.actif} aria-label={v.actif ? t('veilles.desactiverCourt') : t('veilles.activerCourt')}
-                        className="grid h-7 w-7 shrink-0 place-items-center rounded-md"
-                        style={{ background: v.actif ? 'var(--accent-soft)' : 'var(--card2)',
-                                 color: v.actif ? 'var(--accent)' : 'var(--soft)' }}>
-                  {v.actif ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
-                </button>
-
-                <button onClick={() => setOuverte(estOuverte ? null : v.id)}
-                        className="min-w-0 flex-1 text-left">
-                  <p className="truncate text-[13.5px]">{v.nom}</p>
-                  <p className="truncate font-mono text-[11px] text-soft">
-                    {v.sujets.map(libelleSujet).join(' · ')}
-                    {' — '}
-                    {v.cameras.length === 0
-                      ? t('veilles.toutesCameras')
-                      : v.cameras.map((id) => cameras.find((c) => c.id === id)?.name ?? '?').join(', ')}
-                  </p>
-                </button>
-
-                <span className="shrink-0 text-[11.5px] text-muted">
-                  {t(QUAND.find((q) => q.id === v.quand)?.cle ?? 'veilles.quand.toujours')}
-                </span>
-                {/* Le volume attendu, avant d'activer. Protect ne le dit nulle part. */}
-                <span className="shrink-0 font-mono text-[11px]" style={{ color: cout.ton }}>
-                  {cout.texte}
-                </span>
-              </div>
-
-              {estOuverte && (
-                <Reglage veille={v} cameras={cameras} config={config} volumes={volumes}
-                         onChange={(champs) => majVeille(v.id, champs)} />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {volumes === null && (
-        <p className="mt-4 px-1 text-[11.5px] text-soft">
-          {t('veilles.volumesIndisponibles')}
-        </p>
-      )}
     </div>
   );
 }
 
-/** Le détail d'une veille : ce qui la déclenche, où, quand, et ce qu'elle fait. */
+/** Un titre de rubrique du détail. */
+function Rubrique({ titre, suite, children }: { titre: string; suite?: boolean; children: React.ReactNode }) {
+  return (
+    <>
+      <h3 className={cx('mb-2.5 text-corps font-semibold', suite && 'mt-[22px]')}>{titre}</h3>
+      {children}
+    </>
+  );
+}
+
+/** Le détail d'une veille : ce qui la déclenche, où, quand, et ce qu'elle fait — sur deux colonnes. */
 function Reglage({ veille, cameras, config, volumes, onChange }: {
   veille: Veille;
   cameras: DiscoveredCamera[];
@@ -237,106 +252,90 @@ function Reglage({ veille, cameras, config, volumes, onChange }: {
   const bascule = (liste: string[], id: string) =>
     liste.includes(id) ? liste.filter((x) => x !== id) : [...liste, id];
 
-  const Puce = ({ on, onClick, children, ton }: {
-    on: boolean; onClick: () => void; children: React.ReactNode; ton?: string;
-  }) => (
-    <button onClick={onClick} aria-pressed={on}
-            className="rounded-full border px-3 py-1 text-[12.5px] transition-colors"
-            style={on
-              ? { background: 'var(--accent-soft)', color: ton ?? 'var(--accent)', borderColor: 'transparent' }
-              : { color: 'var(--soft)', borderColor: 'var(--line)' }}>
-      {children}
-    </button>
-  );
-
-  const Titre = ({ children }: { children: React.ReactNode }) => (
-    <p className="mb-2 mt-4 text-[10.5px] font-semibold uppercase tracking-wider text-soft">{children}</p>
-  );
-
   return (
-    <div className="border-t border-line px-4 pb-4">
-      <Titre>{t('veilles.declenche')}</Titre>
-      <div className="flex flex-wrap gap-1.5">
-        {SUJETS.map((s) => {
-          const n = volumes?.[s.id];
-          const c = coutParJour(n);
-          return (
-            <Puce key={s.id} on={veille.sujets.includes(s.id)}
-                  onClick={() => onChange({ sujets: bascule(veille.sujets, s.id) })}>
-              {t(s.cle)}
-              {/* Le coût est collé au sujet : c'est là qu'on choisit, pas ailleurs. */}
-              {n !== undefined && n > 3 && (
-                <span className="ml-1.5 font-mono text-[10px]" style={{ color: c.ton }}>
-                  {Math.round(n)}/{t('unite.j')}
-                </span>
-              )}
-            </Puce>
-          );
-        })}
-      </div>
-
-      <Titre>{t('veilles.surCameras')}</Titre>
-      <div className="flex flex-wrap gap-1.5">
-        <Puce on={veille.cameras.length === 0} onClick={() => onChange({ cameras: [] })}>
-          {t('commun.toutes')}
-        </Puce>
-        {cameras.map((c) => (
-          <Puce key={c.id} on={veille.cameras.includes(c.id)}
-                onClick={() => onChange({ cameras: bascule(veille.cameras, c.id) })}>
-            {c.name}
-          </Puce>
-        ))}
-      </div>
-
-      <Titre>{t('veilles.quandTitre')}</Titre>
-      <div className="flex flex-wrap gap-1.5">
-        {QUAND.map((q) => (
-          <Puce key={q.id} on={veille.quand === q.id} onClick={() => onChange({ quand: q.id })}>
-            {t(q.cle)}
-          </Puce>
-        ))}
-      </div>
-      <p className="mt-1.5 text-[11.5px] text-soft">
-        {t(QUAND.find((q) => q.id === veille.quand)?.aideCle ?? 'veilles.quand.toujoursAide')}
-      </p>
-
-      {veille.quand === 'armee' && config.profils.length > 0 && (
-        <>
-          <Titre>{t('veilles.selonHoraire')}</Titre>
+    <div className="grid grid-cols-2 gap-x-9 gap-y-[26px] pb-[22px] pl-[68px] pr-4 pt-1.5 @max-[760px]:grid-cols-1 @max-[760px]:pl-4">
+      <div>
+        <Rubrique titre={t('veilles.declenche')}>
           <div className="flex flex-wrap gap-1.5">
-            <Puce on={veille.profils.length === 0} onClick={() => onChange({ profils: [] })}>
-              {t('veilles.enPermanence')}
+            {SUJETS.map((s) => {
+              const n = volumes?.[s.id];
+              const c = coutParJour(n);
+              return (
+                /* Les urgences (verre, fumée, sirène, monoxyde) portent un bord rougeâtre :
+                   distinguées dans le code depuis toujours, elles ne l'étaient pas à l'écran. */
+                <Puce key={s.id} allumee={veille.sujets.includes(s.id)} urgence={s.urgence}
+                      onClick={() => onChange({ sujets: bascule(veille.sujets, s.id) })}
+                      /* Le coût est collé au sujet : c'est là qu'on choisit, pas ailleurs. */
+                      compte={n !== undefined && n > 3 ? `${Math.round(n)}/${t('unite.j')}` : undefined}
+                      tonCompte={c.ton}>
+                  {t(s.cle)}
+                </Puce>
+              );
+            })}
+          </div>
+        </Rubrique>
+
+        <Rubrique titre={t('veilles.surCameras')} suite>
+          <div className="flex flex-wrap gap-1.5">
+            <Puce allumee={veille.cameras.length === 0} onClick={() => onChange({ cameras: [] })}>
+              {t('commun.toutes')}
             </Puce>
-            {config.profils.map((p) => (
-              <Puce key={p.id} on={veille.profils.includes(p.id)}
-                    onClick={() => onChange({ profils: bascule(veille.profils, p.id) })}>
-                {p.nom}
+            {cameras.map((c) => (
+              <Puce key={c.id} allumee={veille.cameras.includes(c.id)}
+                    onClick={() => onChange({ cameras: bascule(veille.cameras, c.id) })}>
+                {c.name}
               </Puce>
             ))}
           </div>
-          {config.profils
-            .filter((p) => veille.profils.length === 0 || veille.profils.includes(p.id))
-            .map((p) => <Semaine key={p.id} plages={p.plages} />)}
-        </>
-      )}
+        </Rubrique>
 
-      {veille.quand === 'horaire' && <Semaine plages={veille.plages ?? []} />}
-
-      <Titre>{t('veilles.ceQueCaFait')}</Titre>
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Puce on={veille.son !== false} onClick={() => onChange({ son: veille.son === false })}>
-          {t('veilles.son')}
-        </Puce>
-        <span className="ml-2 text-[12px] text-soft">{t('veilles.retenue')}</span>
-        {RETENUES.map((r) => (
-          <Puce key={r.ms} on={veille.retenueMs === r.ms} onClick={() => onChange({ retenueMs: r.ms })}>
-            {r.libelle}
-          </Puce>
-        ))}
+        <Rubrique titre={t('veilles.ceQueCaFait')} suite>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Puce allumee={veille.son !== false} onClick={() => onChange({ son: veille.son === false })}>
+              {t('veilles.son')}
+            </Puce>
+            <span className="mx-1 text-meta text-muted">{t('veilles.retenue')}</span>
+            {RETENUES.map((r) => (
+              <Puce key={r.ms} allumee={veille.retenueMs === r.ms} onClick={() => onChange({ retenueMs: r.ms })}>
+                {r.libelle}
+              </Puce>
+            ))}
+          </div>
+          <p className="mt-1.5 text-meta leading-normal text-soft">{t('veilles.retenueDetail')}</p>
+        </Rubrique>
       </div>
-      <p className="mt-1.5 text-[11.5px] leading-relaxed text-soft">
-        {t('veilles.retenueDetail')}
-      </p>
+
+      <div>
+        <Rubrique titre={t('veilles.quandTitre')}>
+          <Segment etiquette={t('veilles.quandTitre')} valeur={veille.quand}
+                   options={QUAND.map((q) => ({ valeur: q.id, libelle: t(q.cle) }))}
+                   onChange={(q) => onChange({ quand: q })} />
+          <p className="mt-1.5 text-meta text-soft">
+            {t(QUAND.find((q) => q.id === veille.quand)?.aideCle ?? 'veilles.quand.toujoursAide')}
+          </p>
+        </Rubrique>
+
+        {veille.quand === 'armee' && config.profils.length > 0 && (
+          <Rubrique titre={t('veilles.selonHoraire')} suite>
+            <div className="flex flex-wrap gap-1.5">
+              <Puce allumee={veille.profils.length === 0} onClick={() => onChange({ profils: [] })}>
+                {t('veilles.enPermanence')}
+              </Puce>
+              {config.profils.map((p) => (
+                <Puce key={p.id} allumee={veille.profils.includes(p.id)}
+                      onClick={() => onChange({ profils: bascule(veille.profils, p.id) })}>
+                  {p.nom}
+                </Puce>
+              ))}
+            </div>
+            {config.profils
+              .filter((p) => veille.profils.length === 0 || veille.profils.includes(p.id))
+              .map((p) => <Semaine key={p.id} plages={p.plages} />)}
+          </Rubrique>
+        )}
+
+        {veille.quand === 'horaire' && <Semaine plages={veille.plages ?? []} />}
+      </div>
     </div>
   );
 }
@@ -350,38 +349,34 @@ function Semaine({ plages }: { plages: PlageHoraire[] }) {
   };
 
   return (
-    <div className="mt-3">
-      <div className="flex flex-col gap-[3px]">
-        {jours().map((nom, jour) => (
-          <div key={jour} className="flex items-center gap-2">
-            <span className="w-7 text-[10px] text-soft">{nom}</span>
-            <div className="relative h-3.5 flex-1 overflow-hidden rounded-sm"
-                 style={{ background: 'var(--card2)' }}>
-              {plages.flatMap((p, i) => {
-                const d = minutes(p.debut); const f = minutes(p.fin);
-                if (d === null || f === null) return [];
-                const jours = p.jours ?? [];
-                const bandes: { g: number; l: number }[] = [];
-                // Plage ordinaire.
-                if (f > d && jours.includes(jour)) bandes.push({ g: d / 1440, l: (f - d) / 1440 });
-                // Plage qui franchit minuit : deux morceaux, dont un appartenant à la veille.
-                if (f < d) {
-                  if (jours.includes(jour)) bandes.push({ g: d / 1440, l: (1440 - d) / 1440 });
-                  if (jours.includes((jour + 6) % 7)) bandes.push({ g: 0, l: f / 1440 });
-                }
-                if (f === d && jours.includes(jour)) bandes.push({ g: 0, l: 1 });
-                return bandes.map((b, k) => (
-                  <span key={`${i}-${k}`} className="absolute inset-y-0 rounded-sm"
-                        style={{ left: `${b.g * 100}%`, width: `${b.l * 100}%`,
-                                 background: 'var(--accent)', opacity: 0.7 }} />
-                ));
-              })}
-            </div>
+    <div className="mt-3 grid grid-cols-[36px_1fr] items-center gap-x-2.5 gap-y-1 text-meta text-soft">
+      {jours().map((nom, jour) => (
+        <div key={jour} className="contents">
+          <span>{nom}</span>
+          <div className="relative h-3 overflow-hidden rounded-[3px] bg-card2">
+            {plages.flatMap((p, i) => {
+              const d = minutes(p.debut); const f = minutes(p.fin);
+              if (d === null || f === null) return [];
+              const jours = p.jours ?? [];
+              const bandes: { g: number; l: number }[] = [];
+              // Plage ordinaire.
+              if (f > d && jours.includes(jour)) bandes.push({ g: d / 1440, l: (f - d) / 1440 });
+              // Plage qui franchit minuit : deux morceaux, dont un appartenant à la veille.
+              if (f < d) {
+                if (jours.includes(jour)) bandes.push({ g: d / 1440, l: (1440 - d) / 1440 });
+                if (jours.includes((jour + 6) % 7)) bandes.push({ g: 0, l: f / 1440 });
+              }
+              if (f === d && jours.includes(jour)) bandes.push({ g: 0, l: 1 });
+              return bandes.map((b, k) => (
+                <span key={`${i}-${k}`} className="absolute inset-y-0 rounded-[3px] bg-accent opacity-75"
+                      style={{ left: `${b.g * 100}%`, width: `${b.l * 100}%` }} />
+              ));
+            })}
           </div>
-        ))}
-      </div>
-      <div className="mt-1 flex justify-between pl-9 font-mono text-[9.5px] text-soft">
-        <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>24h</span>
+        </div>
+      ))}
+      <div className="col-start-2 flex justify-between tabular-nums">
+        {[0, 6, 12, 18, 24].map((h) => <span key={h}>{h} h</span>)}
       </div>
     </div>
   );

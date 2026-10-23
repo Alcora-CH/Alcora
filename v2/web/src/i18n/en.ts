@@ -336,11 +336,11 @@ export const en: Record<Cle, string> = {
 
   'veilles.jours': 'Sun Mon Tue Wed Thu Fri Sat',
   'veilles.quand.toujours': 'Always',
-  'veilles.quand.toujoursAide': 'even disarmed, at any hour',
+  'veilles.quand.toujoursAide': 'Even disarmed, at any hour',
   'veilles.quand.armee': 'When the watch is active',
-  'veilles.quand.armeeAide': 'follows the switch and its schedule',
+  'veilles.quand.armeeAide': 'Follows the switch and its schedule',
   'veilles.quand.horaire': 'On my own schedule',
-  'veilles.quand.horaireAide': 'independent of the switch',
+  'veilles.quand.horaireAide': 'Independent of the switch',
   'veilles.presqueJamais': 'almost never',
   'veilles.parJour': '~{n} per day',
   'veilles.lectureEchouee': 'The watches could not be read.',
@@ -349,7 +349,7 @@ export const en: Record<Cle, string> = {
   'veilles.active': 'Watch active',
   'veilles.desactivee': 'Watch disabled',
   'veilles.profil': 'profile {nom}',
-  'veilles.enregistre': 'saved',
+  'veilles.enregistre': 'Saved',
   'veilles.independant':
     'This switch is Alcora’s, independent of Protect’s arming. The two can differ: ' +
     'Alcora will notify on this PC even if Protect stays silent.',
@@ -525,4 +525,7 @@ export const en: Record<Cle, string> = {
   'recherche.nCameras': '{n} cameras',
   'recherche.retirerSeuil': 'Remove the minimum confidence',
   'recherche.revoirCourt': 'Replay',
+
+  // Alertes (direction Observatoire, 23.10.2026)
+  'veilles.precision': 'What deserves a warning from Alcora on this PC, and when',
 };

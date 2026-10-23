@@ -338,11 +338,11 @@ export const it: Record<Cle, string> = {
 
   'veilles.jours': 'Dom Lun Mar Mer Gio Ven Sab',
   'veilles.quand.toujours': 'Sempre',
-  'veilles.quand.toujoursAide': 'anche disattivato, a qualsiasi ora',
+  'veilles.quand.toujoursAide': 'Anche disattivato, a qualsiasi ora',
   'veilles.quand.armee': 'Quando la guardia è attiva',
-  'veilles.quand.armeeAide': 'segue l’interruttore e i suoi orari',
+  'veilles.quand.armeeAide': 'Segue l’interruttore e i suoi orari',
   'veilles.quand.horaire': 'Su un mio orario',
-  'veilles.quand.horaireAide': 'indipendente dall’interruttore',
+  'veilles.quand.horaireAide': 'Indipendente dall’interruttore',
   'veilles.presqueJamais': 'quasi mai',
   'veilles.parJour': '~{n} al giorno',
   'veilles.lectureEchouee': 'Le guardie non hanno potuto essere lette.',
@@ -351,7 +351,7 @@ export const it: Record<Cle, string> = {
   'veilles.active': 'Guardia attiva',
   'veilles.desactivee': 'Guardia disattivata',
   'veilles.profil': 'profilo {nom}',
-  'veilles.enregistre': 'salvato',
+  'veilles.enregistre': 'Salvato',
   'veilles.independant':
     'Questo interruttore è di Alcora, indipendente dall’attivazione di Protect. I due ' +
     'possono differire: Alcora avviserà su questo PC anche se Protect resta in silenzio.',
@@ -527,4 +527,7 @@ export const it: Record<Cle, string> = {
   'recherche.nCameras': '{n} telecamere',
   'recherche.retirerSeuil': 'Rimuovi la confidenza minima',
   'recherche.revoirCourt': 'Rivedi',
+
+  // Alertes (direction Observatoire, 23.10.2026)
+  'veilles.precision': 'Ciò che merita un avviso di Alcora su questo PC, e quando',
 };

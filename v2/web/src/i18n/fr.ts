@@ -361,11 +361,11 @@ export const fr = {
   // ---- les veilles
   'veilles.jours': 'Dim Lun Mar Mer Jeu Ven Sam',
   'veilles.quand.toujours': 'Toujours',
-  'veilles.quand.toujoursAide': 'même désarmé, à toute heure',
+  'veilles.quand.toujoursAide': 'Même désarmé, à toute heure',
   'veilles.quand.armee': 'Quand la veille est active',
-  'veilles.quand.armeeAide': 'suit l’interrupteur et ses horaires',
+  'veilles.quand.armeeAide': 'Suit l’interrupteur et ses horaires',
   'veilles.quand.horaire': 'Sur un horaire à moi',
-  'veilles.quand.horaireAide': 'indépendant de l’interrupteur',
+  'veilles.quand.horaireAide': 'Indépendant de l’interrupteur',
   'veilles.presqueJamais': 'presque jamais',
   'veilles.parJour': '~{n} par jour',
   'veilles.lectureEchouee': 'Les veilles n’ont pas pu être lues.',
@@ -374,7 +374,7 @@ export const fr = {
   'veilles.active': 'Veille active',
   'veilles.desactivee': 'Veille désactivée',
   'veilles.profil': 'profil {nom}',
-  'veilles.enregistre': 'enregistré',
+  'veilles.enregistre': 'Enregistré',
   'veilles.independant':
     'Cet interrupteur est celui d’Alcora, indépendant de l’armement de Protect. Les deux ' +
     'peuvent différer : Alcora préviendra sur ce PC même si Protect reste silencieux.',
@@ -555,6 +555,9 @@ export const fr = {
   'recherche.nCameras': '{n} caméras',
   'recherche.retirerSeuil': 'Retirer la confiance minimale',
   'recherche.revoirCourt': 'Revoir',
+
+  // Alertes (direction Observatoire, 23.10.2026)
+  'veilles.precision': 'Ce qui mérite qu’Alcora te prévienne sur ce PC, et quand',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

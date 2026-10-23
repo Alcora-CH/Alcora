@@ -268,3 +268,19 @@ Troisième groupe, même branche, vérifié dans la démo.
 
 Non vérifié dans la démo : l'état « Rien ne correspond » (le simulateur ignore la confiance
 minimale et rend toujours des objets).
+
+## 8. Où est passé chaque élément — Alertes (23.10.2026)
+
+Quatrième groupe, même branche, vérifié dans la démo.
+
+- [x] Interrupteur d'Alcora, « Veille active / désactivée », profil actif, « Enregistré »,
+      erreur d'enregistrement : à droite de l'en-tête.
+- [x] Note « indépendant de l'armement de Protect » : introduction de la page.
+- [x] Veille : activer / désactiver (cloche), nom, sujets et caméras, quand, volume attendu
+      coloré, estompée si éteinte : une ligne d'une liste unique, alignée en colonnes (le
+      « quand » cède la place sur une liste étroite).
+- [x] Détail : ce qui déclenche (volume par sujet au-delà de 3 par jour), caméras, ce que ça
+      fait (son, retenue + explication) à gauche ; quand (sélecteur) + aide, horaires et
+      semaine dessinée à droite. Une seule colonne sur une liste étroite.
+- [x] Sujets d'urgence (verre, fumée, sirène, monoxyde) : **bord rougeâtre** (ajout).
+- [x] Volumes indisponibles, lecture échouée, chargement : inchangés.

@@ -338,11 +338,11 @@ export const de: Record<Cle, string> = {
 
   'veilles.jours': 'So Mo Di Mi Do Fr Sa',
   'veilles.quand.toujours': 'Immer',
-  'veilles.quand.toujoursAide': 'auch unscharf, zu jeder Stunde',
+  'veilles.quand.toujoursAide': 'Auch unscharf, zu jeder Stunde',
   'veilles.quand.armee': 'Wenn die Wache aktiv ist',
-  'veilles.quand.armeeAide': 'folgt dem Schalter und seinen Zeiten',
+  'veilles.quand.armeeAide': 'Folgt dem Schalter und seinen Zeiten',
   'veilles.quand.horaire': 'Nach meinem eigenen Zeitplan',
-  'veilles.quand.horaireAide': 'unabhängig vom Schalter',
+  'veilles.quand.horaireAide': 'Unabhängig vom Schalter',
   'veilles.presqueJamais': 'fast nie',
   'veilles.parJour': '~{n} pro Tag',
   'veilles.lectureEchouee': 'Die Wachen konnten nicht gelesen werden.',
@@ -351,7 +351,7 @@ export const de: Record<Cle, string> = {
   'veilles.active': 'Wache aktiv',
   'veilles.desactivee': 'Wache ausgeschaltet',
   'veilles.profil': 'Profil {nom}',
-  'veilles.enregistre': 'gespeichert',
+  'veilles.enregistre': 'Gespeichert',
   'veilles.independant':
     'Dieser Schalter gehört Alcora und ist von der Scharfschaltung von Protect ' +
     'unabhängig. Beide können sich unterscheiden: Alcora meldet auf diesem PC, auch ' +
@@ -528,4 +528,7 @@ export const de: Record<Cle, string> = {
   'recherche.nCameras': '{n} Kameras',
   'recherche.retirerSeuil': 'Mindestkonfidenz entfernen',
   'recherche.revoirCourt': 'Wiedergabe',
+
+  // Alertes (direction Observatoire, 23.10.2026)
+  'veilles.precision': 'Was eine Warnung von Alcora auf diesem PC verdient, und wann',
 };
