@@ -281,7 +281,10 @@ const verdict = (d, attendu = CHAMPS, cles = CLES_TEST) => verifierDeclaration(d
     check('diagnostic : presse-papiers vide', /vide/.test(ecart('  \n')));
     check('diagnostic : autre texte, sans le montrer',
       /Rien de la clé/.test(ecart('mot-de-passe-fictif')) && !ecart('mot-de-passe-fictif').includes('fictif'));
-    check('diagnostic : ligne abimee', /tronquée ou abîmée/.test(ecart(note.replace(/:/g, ' : '))));
+    check('diagnostic : ligne abimee', /tronquée ou abîmée/.test(ecart(note.replace('scrypt', 'scr ypt'))));
+    // Le cas du 24.10.2026 : le titre de la note reprenait le nom, la cle masquee n'etait pas copiee.
+    check('diagnostic : un titre qui reprend le nom n est pas une ligne abimee',
+      /pas dans ce qui a été copié/.test(ecart('alcora-secours-1 - Clé de secours d’Alcora — texte fictif')));
     check('diagnostic : ligne coupee', /incomplète/.test(ecart(note.slice(0, -5))));
     check('diagnostic : une autre cle de secours', /pas celle de ce lancement/.test(ecart(autre.join(':'))));
 

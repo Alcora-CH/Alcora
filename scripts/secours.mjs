@@ -91,9 +91,11 @@ export function ecartDeNote(copie, attendue) {
   if (trouvee === attendue) return null;
   const n = [...texte].length;
   if (!trouvee) {
-    return texte.includes('alcora-secours')
+    // « alcora-secours-1: », deux-points compris : un titre qui reprend le nom n'est pas la cle.
+    return /alcora-secours-\d+:/.test(texte)
       ? `La ligne y est, mais tronquée ou abîmée (${n} caractères copiés ; la ligne seule en compte ${attendue.length}).`
-      : `Rien de la clé dans ce qui a été copié (${n} caractères, sans « alcora-secours- ») : est-ce bien la note « Alcora — clé de secours » ?`;
+      : `La clé n'est pas dans ce qui a été copié (${n} caractères, sans « alcora-secours-1: ») : c'est la longue ligne`
+        + ' masquée qu\'il faut copier, pas le titre ni la description.';
   }
   return attendue.startsWith(trouvee)
     ? `Ligne incomplète : ${trouvee.length} caractères sur ${attendue.length}.`

@@ -57,17 +57,19 @@ if (!crypto.verify(null, essai, publicKey, Buffer.from(signerAvecLeSecours(relue
 }
 
 copier(note);
-console.log('\nÉtape 1 — RANGER. La clé chiffrée est dans le presse-papiers : une longue ligne qui commence par');
-console.log('« alcora-secours-1: » (hors de l\'historique de Windows). Dans Proton Pass, crée une nouvelle note');
-console.log('sécurisée « Alcora — clé de secours », colle-la (Ctrl + V) dans le contenu, enregistre.');
+console.log('\nÉtape 1 — RANGER. La clé est dans le presse-papiers : une longue ligne qui commence par');
+console.log('« alcora-secours-1: » (hors de l\'historique de Windows). Elle est déjà chiffrée par ta phrase de passe :');
+console.log('c\'est elle, et elle seule, qu\'il faut ranger. Dans Proton Pass, crée une note « Alcora — clé de secours »');
+console.log('et colle-la (Ctrl + V) dans son contenu — ou dans un champ masqué —, puis enregistre.');
 await attendreEntree('Une fois la note enregistrée, appuie sur Entrée… ');
 viderPressePapiers();
 
 let rangee = false;
 for (let tour = 0; tour < 5 && !rangee; tour++) {
-  console.log('\nÉtape 2 — RELIRE. Ouvre la note « Alcora — clé de secours » dans Proton Pass, copie tout son');
-  console.log('contenu (Ctrl + A puis Ctrl + C), et reviens ici appuyer sur Entrée sans attendre (Proton Pass');
-  console.log('peut vider le presse-papiers après quelques secondes).');
+  console.log('\nÉtape 2 — RELIRE. Dans Proton Pass, copie la longue ligne rangée à l\'étape 1 (bouton « copier »');
+  console.log('du champ masqué, ou Ctrl + A puis Ctrl + C dans le contenu) — pas le titre. Ce script l\'a fabriquée :');
+  console.log('la lui rendre ne dévoile rien. Puis reviens appuyer sur Entrée sans attendre (Proton Pass peut vider');
+  console.log('le presse-papiers après quelques secondes).');
   await attendreEntree('Entrée… ');
   const copiee = lirePressePapiers();
   viderPressePapiers();
