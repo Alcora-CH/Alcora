@@ -640,4 +640,13 @@ export const de: Record<Cle, string> = {
   'historique.confirmer': 'Die {n} Alarme aus dem Verlauf löschen? Die Wachen selbst ändern sich nicht.',
   'historique.annuler': 'Abbrechen',
   'historique.effacer': 'Löschen',
+
+  // Relecture de plusieurs cameras (maquette docs/maquette-relecture-multi.html, 23.10.2026)
+  'relecture.ajouter': '{nom} daneben hinzufügen',
+  'relecture.retirer': '{nom} aus der Wiedergabe entfernen',
+  'relecture.ecouterCamera': 'Diese Kamera hören (die anderen verstummen)',
+  'relecture.rendreActive': '{nom} aktiv machen',
+  'relecture.rattrape': 'Abschnitt wird geholt… diese Kamera holt auf',
+  'export.nCameras': '{n} Kameras',
+  'export.unParCamera': 'Eine Datei pro angezeigter Kamera, nacheinander.',
 };

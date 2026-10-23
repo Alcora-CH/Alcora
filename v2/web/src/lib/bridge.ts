@@ -385,12 +385,13 @@ const mock: ProtectBridge = {
     return { url: `/demo-extrait.mp4#${debut}`, debut, fin: debut + duree, octets: 219_596 };
   },
   async enregistrerExtrait() { return { enregistre: false }; },
-  async exporterPlage({ camera, debut, fin, estimation }) {
+  async exporterPlage({ camera, autres = [], debut, fin, estimation }) {
     if (minuterieExport !== null) return { lance: false, raison: 'occupe' as const };
     const f = Math.min(fin, Date.now());
     if (!(f - debut >= 1000)) return { lance: false, raison: 'plage' as const };
-    const parties = Math.ceil((f - debut) / 3_600_000);
-    const commun = { camera: NOMS_DEMO[camera] ?? camera, debut, fin: f, parties, estimation };
+    const parties = Math.ceil((f - debut) / 3_600_000) * (1 + autres.length);
+    const nom = [camera, ...autres].map((id) => NOMS_DEMO[id] ?? id).join(', ');
+    const commun = { camera: nom, debut, fin: f, parties, estimation };
     // Le poids de la demo : celui de la mire, ou l'estimation de la page quand elle en a une.
     const total = estimation > 0 ? estimation / parties : 4_000_000;
     let partie = 1;

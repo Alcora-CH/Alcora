@@ -1536,11 +1536,14 @@ ipcMain.handle('protect:enregistrerExtrait', async (_event, { jeton, nom }) => {
  * boite de Windows, le nom, le decoupage en heures, les octets — se decide ICI. Aucun chemin
  * ne vient de la page, et seul un fichier que cet export a ecrit peut etre montre.
  */
-ipcMain.handle('protect:exporterPlage', async (_event, { camera, debut, fin, estimation } = {}) => {
+ipcMain.handle('protect:exporterPlage', async (_event, { camera, autres, debut, fin, estimation } = {}) => {
   if (!exportPlage || !window) return { lance: false, raison: 'session' };
   if (exportPlage.occupe) return { lance: false, raison: 'occupe' };
   if (choixExport) return { lance: false };
   const cam = cameras.find((c) => c.id === camera);
+  // La relecture a plusieurs : les autres cameras affichees, au plus trois, toutes connues.
+  const suivantes = (Array.isArray(autres) ? autres : []).slice(0, 3)
+    .map((id) => cameras.find((c) => c.id === id)).filter((c) => c && c.id !== camera);
   const d = Number(debut);
   // Rien n'est encore enregistre apres l'instant present : la fin y est ramenee.
   const f = Math.min(Number(fin), Date.now());
@@ -1553,9 +1556,15 @@ ipcMain.handle('protect:exporterPlage', async (_event, { camera, debut, fin, est
     filters: [{ name: i18n.t('main.videoMp4'), extensions: ['mp4'] }],
   }).finally(() => { choixExport = false; });
   if (canceled || !filePath) return { lance: false };
+  // La boite nomme le fichier de la premiere camera ; les suivantes se rangent a cote, sous
+  // leur nom par defaut.
+  const cibles = [{ cameraId: cam.id, camera: cam.name, fichier: filePath }, ...suivantes.map((c) => ({
+    cameraId: c.id, camera: c.name,
+    fichier: path.join(path.dirname(filePath), `${nomParDefaut(c.name, d, f, i18n.t)}${path.extname(filePath) || '.mp4'}`),
+  }))];
   try {
     const r = await exportPlage.lancer({
-      cameraId: cam.id, camera: cam.name, debut: d, fin: f, fichier: filePath,
+      debut: d, fin: f, cibles,
       estimation: Number(estimation) > 0 ? Number(estimation) : 0,
     });
     return { lance: true, fichiers: r.fichiers };

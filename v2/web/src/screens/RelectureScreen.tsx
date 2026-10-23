@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, CalendarDays, Camera, ChevronLeft, ChevronRight, Pause, Play,
-  Radio, SkipBack, SkipForward, Volume2, VolumeX, ZoomOut,
+  AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, CalendarDays, Camera, ChevronLeft, ChevronRight, Pause, Play, Plus,
+  Radio, SkipBack, SkipForward, Volume2, VolumeX, X, ZoomOut,
 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { CameraTile } from '../video/CameraTile';
@@ -13,6 +13,7 @@ import { Bouton } from '../ui/Bouton';
 import { Carte, EnTete, Touche } from '../ui/Cadre';
 import { acquitterExport, poserPlage, useEtatExport, usePlage, type Plage } from '../lib/exportPlage';
 import { LignePlage } from './LignePlage';
+import { TuileSuiveuse } from './TuileSuiveuse';
 import { Puce } from '../ui/Puce';
 import { Segment } from '../ui/Segment';
 import { cx } from '../ui/cx';
@@ -126,7 +127,15 @@ function etiquetteGraduation(ms: number, pas: number): string {
 
 type Morceau = { url: string; debut: number; fin: number };
 
-export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitial }: {
+/** La grille de la relecture à plusieurs : côte à côte, une grande et deux petites, en carré. */
+const GRILLE: Record<number, React.CSSProperties> = {
+  2: { gridTemplateColumns: '1fr 1fr' },
+  3: { gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr' },
+  4: { gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr' },
+};
+const MAX_CAMERAS = 4;
+
+export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitial, onTuiles }: {
   cameras: DiscoveredCamera[];
   relais: RelaisAcces | null;
   /** Camera visee par un bouton du direct : on arrive sur elle. */
@@ -136,6 +145,8 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
    * Un objet et non un nombre : viser deux fois le meme instant doit se rejouer.
    */
   instantInitial?: { t: number } | null;
+  /** Le nombre d'images à l'écran, pour la mesure de charge. */
+  onTuiles?: (n: number) => void;
 }) {
   useLangue();
   /* Une caméra visée mais inconnue (retirée du contrôleur) : on part de la première, sans
@@ -173,6 +184,31 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
    * melanger les deux rendrait l'estimation fausse dans un sens ou dans l'autre.
    */
   const debits = useRef(new Map<string, { octets: number; ms: number }>());
+
+  /*
+   * La relecture à plusieurs (variante 2 de docs/maquette-relecture-multi.html) : la caméra
+   * active MÈNE — tout ce qui précède la décrit —, les autres SUIVENT son heure
+   * (TuileSuiveuse). Au plus quatre en tout : leurs morceaux passent par une seule file.
+   */
+  const [autres, setAutres] = useState<string[]>([]);
+  const suivantes = autres.map((id) => cameras.find((c) => c.id === id))
+    .filter((c): c is DiscoveredCamera => c !== undefined && c.id !== cameraId);
+  const multi = suivantes.length > 0;
+  const montrees = [cameraId, ...suivantes.map((c) => c.id)].join(',');
+  /** Un saut de la console, que les suiveuses reprennent : un objet neuf à chaque saut. */
+  const [saut, setSaut] = useState<{ t: number } | null>(null);
+  /** Remise à zéro (autre jour, autre caméra, retour au direct) : les suiveuses repartent de rien. */
+  const [epoque, setEpoque] = useState(0);
+  /** Une seule caméra parle à la fois. À une caméra, c'est son propre bouton qui décide. */
+  const [sonSur, setSonSur] = useState<string | null>(null);
+
+  /** Le débit d'un morceau lu, par caméra et par qualité, pour estimer le poids d'un export. */
+  const noterDebit = useCallback((cam: string, s: { debut: number; fin: number; octets: number }, frontiere: number | null | undefined) => {
+    if (!(s.octets > 0 && s.fin > s.debut)) return;
+    const cle = `${cam}:${frontiere != null && s.debut < frontiere ? 'ld' : 'hd'}`;
+    const d = debits.current.get(cle) ?? { octets: 0, ms: 0 };
+    debits.current.set(cle, { octets: d.octets + s.octets, ms: d.ms + (s.fin - s.debut) });
+  }, []);
 
   /*
    * DEUX lecteurs qui se relaient.
@@ -306,12 +342,14 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     bridge.evenements({ avant: jour + JOUR_MS, jours: 1, limite: 400 })
       .then((liste) => {
         if (!vivant) return;
+        // Toutes les caméras affichées : la frise et la pellicule sont communes.
+        const ids = montrees.split(',');
         setDetections(liste.filter((d) =>
-          d.camera === cameraId && d.debut !== null && d.debut >= jour && d.debut < jour + JOUR_MS));
+          ids.includes(d.camera ?? '') && d.debut !== null && d.debut >= jour && d.debut < jour + JOUR_MS));
       })
       .catch(() => { /* le journal n'est pas la frise : son echec ne doit pas la vider */ });
     return () => { vivant = false; };
-  }, [jour, cameraId]);
+  }, [jour, montrees]);
 
   const affichees = useMemo(
     () => detections.filter((d) => filtre === 'tout' || genre(d) === filtre),
@@ -340,12 +378,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
       ? await bridge.sequence({ camera: camera.id, instant: cible, duree: PAS_MS })
       : await bridge.sequence({ camera: camera.id, depuis: cible, duree: PAS_SUITE_MS });
     if (g !== generation.current) return null;      // une remise a zero est passee entre-temps
-    if (s.octets > 0 && s.fin > s.debut) {
-      const qualite = archive?.frontiere != null && s.debut < archive.frontiere ? 'ld' : 'hd';
-      const cle = `${camera.id}:${qualite}`;
-      const d = debits.current.get(cle) ?? { octets: 0, ms: 0 };
-      debits.current.set(cle, { octets: d.octets + s.octets, ms: d.ms + (s.fin - s.debut) });
-    }
+    noterDebit(camera.id, s, archive?.frontiere);
     if (valide && !valide()) return null;
     cibles.current[i] = viser;
     setMorceaux((m) => {
@@ -354,7 +387,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
       return n;
     });
     return s;
-  }, [camera, archive]);
+  }, [camera, archive, noterDebit]);
 
   /* ---- viser un instant : c'est le geste principal ---- */
   const allerA = useCallback(async (cible: number, { lecture = true } = {}) => {
@@ -364,6 +397,8 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     setErreur(null);
     setChargement(true);
     setInstant(cible);
+    // Les suiveuses vont chercher le même instant.
+    setSaut({ t: cible });
     try {
       const i = actif;
       const dejaLa = morceauxRef.current[i];
@@ -411,6 +446,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   /* ---- changer de jour ou de camera repart de zero ---- */
   useEffect(() => {
     generation.current += 1;
+    setEpoque((e) => e + 1);
     setMorceaux([null, null]);
     setActif(0);
     cibles.current = [null, null];
@@ -471,6 +507,48 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     void allerA(instant + secondes * 1000, { lecture: enLecture });
   }, [instant, enLecture, allerA]);
 
+  /* ---- plusieurs caméras ---- */
+
+  /* Le nombre d'images à l'écran, pour la mesure de charge. */
+  useEffect(() => { onTuiles?.(1 + suivantes.length); }, [onTuiles, suivantes.length]);
+
+  /*
+   * À plusieurs, une seule caméra parle : la tuile active se tait quand le son est ailleurs.
+   * Revenue seule, elle reparle — c'est ainsi qu'elle jouait avant. Appliqué à chaque rendu :
+   * les deux lecteurs changent de source à chaque relais.
+   */
+  const etaitMulti = useRef(false);
+  useEffect(() => {
+    if (multi) {
+      for (const l of lecteurs) if (l.current) l.current.muted = sonSur !== cameraId;
+    } else if (etaitMulti.current) {
+      for (const l of lecteurs) if (l.current) l.current.muted = false;
+    }
+    etaitMulti.current = multi;
+  });
+
+  /** Un clic sur une puce change la caméra ACTIVE, comme avant ; une suiveuse cliquée échange sa place avec elle. */
+  const choisirCamera = (id: string) => {
+    if (id === cameraId) return;
+    if (autres.includes(id)) setAutres((a) => a.map((x) => (x === id ? cameraId : x)));
+    changerCamera(id);
+  };
+  /** Le « + » d'une puce : la caméra s'ajoute à côté, à l'instant lu. */
+  const ajouterCamera = (id: string) => {
+    if (id === cameraId || autres.includes(id) || 1 + suivantes.length >= MAX_CAMERAS) return;
+    if (!multi) setSonSur(cameraId);
+    setAutres((a) => [...a, id]);
+  };
+  /** La croix : retirée de la relecture ; la caméra active retirée cède sa place à la suivante. */
+  const retirerCamera = (id: string) => {
+    if (sonSur === id) setSonSur(null);
+    if (id !== cameraId) { setAutres((a) => a.filter((x) => x !== id)); return; }
+    const [suivante, ...reste] = suivantes.map((c) => c.id);
+    if (!suivante) return;
+    setAutres(reste);
+    changerCamera(suivante);
+  };
+
   /* ---- la plage a exporter ---- */
 
   /**
@@ -499,31 +577,39 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     setRefus(null);
   };
 
-  /** Le poids attendu : le debit observe de cette camera, a chaque qualite. 0 = inconnu. */
+  /**
+   * Le poids attendu : le débit observé de CHAQUE caméra affichée, à chaque qualité. Une
+   * seule caméra sans débit connu, et l'on ne devine pas : 0 = inconnu.
+   */
+  const [morceauxSuivis, setMorceauxSuivis] = useState(0);
   const estimation = useMemo(() => {
     if (plage.debut === null || plage.fin === null || !camera) return 0;
-    const f = archive?.frontiere ?? null;
-    const parts: [number, number, string][] = f !== null && plage.debut < f
-      ? [[plage.debut, Math.min(f, plage.fin), 'ld'], [Math.max(f, plage.debut), plage.fin, 'hd']]
-      : [[plage.debut, plage.fin, 'hd']];
     let total = 0;
-    for (const [a, b, q] of parts) {
-      if (b <= a) continue;
-      const d = debits.current.get(`${camera.id}:${q}`);
-      if (!d || d.ms <= 0) return 0;
-      total += (d.octets / d.ms) * (b - a);
+    for (const c of [camera, ...suivantes]) {
+      const f = c.archive?.frontiere ?? null;
+      const parts: [number, number, string][] = f !== null && plage.debut < f
+        ? [[plage.debut, Math.min(f, plage.fin), 'ld'], [Math.max(f, plage.debut), plage.fin, 'hd']]
+        : [[plage.debut, plage.fin, 'hd']];
+      for (const [a, b, q] of parts) {
+        if (b <= a) continue;
+        const d = debits.current.get(`${c.id}:${q}`);
+        if (!d || d.ms <= 0) return 0;
+        total += (d.octets / d.ms) * (b - a);
+      }
     }
     return total;
-    // Les morceaux sont la : chaque nouveau morceau lu affine le debit.
+    // Les morceaux sont là : chaque nouveau morceau lu affine le débit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plage, camera, archive, morceaux]);
+  }, [plage, camera, montrees, morceaux, morceauxSuivis]);
 
   const exporter = async () => {
     if (plage.debut === null || plage.fin === null || !camera) return;
     acquitterExport();
     setRefus(null);
     try {
-      const r = await bridge.exporterPlage({ camera: camera.id, debut: plage.debut, fin: plage.fin, estimation });
+      // À plusieurs : un fichier par caméra affichée, l'un après l'autre (décision du 23.10.2026).
+      const r = await bridge.exporterPlage({ camera: camera.id, autres: suivantes.map((c) => c.id),
+        debut: plage.debut, fin: plage.fin, estimation });
       if (!r.lance && r.raison) setRefus({ raison: r.raison, fichier: r.fichier });
     } catch {
       setRefus({ raison: 'interrompu' });
@@ -532,6 +618,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
 
   const revenirAuDirect = useCallback(() => {
     generation.current += 1;
+    setEpoque((e) => e + 1);
     setMorceaux([null, null]);
     setActif(0);
     setInstant(null);
@@ -624,19 +711,40 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
         {/* Sur une fenêtre étroite, les miniatures cèdent la place aux noms. */}
         <div ref={puces} role="group" aria-label={t('systeme.cameras')}
              className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:thin]">
-          {cameras.map((c) => (
-            <button key={c.id} type="button" onClick={() => changerCamera(c.id)}
-                    aria-pressed={c.id === cameraId}
-                    className={cx('m-pression inline-flex h-9 shrink-0 items-center gap-2 rounded-[9px] border pl-1 pr-3 transition-colors max-[1180px]:pl-3',
-                      c.id === cameraId ? 'border-accent-ligne bg-accent-soft text-accent'
-                        : 'border-line2 bg-card2 text-ink hover:bg-card3')}>
-              <span className="h-[26px] w-11 shrink-0 overflow-hidden rounded-[5px] bg-black max-[1180px]:hidden">
-                <img src={`/instantane/${c.id}?t=${montage}`} alt="" loading="lazy" className="h-full w-full object-cover"
-                     onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+          {cameras.map((c) => {
+            const montree = c.id === cameraId || autres.includes(c.id);
+            return (
+              <span key={c.id} className="inline-flex shrink-0 items-center gap-1">
+                <button type="button" onClick={() => choisirCamera(c.id)}
+                        aria-pressed={montree}
+                        className={cx('m-pression inline-flex h-9 shrink-0 items-center gap-2 rounded-[9px] border pl-1 pr-3 transition-colors max-[1180px]:pl-3',
+                          c.id === cameraId ? 'border-accent-ligne bg-accent-soft text-accent'
+                            : montree ? 'border-accent-ligne bg-card2 text-ink hover:bg-card3'
+                              : 'border-line2 bg-card2 text-ink hover:bg-card3')}>
+                  <span className="h-[26px] w-11 shrink-0 overflow-hidden rounded-[5px] bg-black max-[1180px]:hidden">
+                    <img src={`/instantane/${c.id}?t=${montage}`} alt="" loading="lazy" className="h-full w-full object-cover"
+                         onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+                  </span>
+                  {c.name}
+                </button>
+                {/* Le « + » se voit : doré, pas fondu dans le décor (retour du 23.10.2026). */}
+                {!montree && 1 + suivantes.length < MAX_CAMERAS && (
+                  <button type="button" onClick={() => ajouterCamera(c.id)}
+                          title={t('relecture.ajouter', { nom: c.name })} aria-label={t('relecture.ajouter', { nom: c.name })}
+                          className="m-pression grid h-6 w-6 shrink-0 place-items-center rounded-[7px] border border-accent-ligne bg-accent-soft text-accent transition-colors hover:bg-accent hover:text-sur-accent">
+                    <Plus className="h-3.5 w-3.5" strokeWidth={2.4} aria-hidden />
+                  </button>
+                )}
+                {montree && multi && (
+                  <button type="button" onClick={() => retirerCamera(c.id)}
+                          title={t('relecture.retirer', { nom: c.name })} aria-label={t('relecture.retirer', { nom: c.name })}
+                          className="m-pression grid h-6 w-6 shrink-0 place-items-center rounded-md text-soft transition-colors hover:bg-card3 hover:text-ink">
+                    <X className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                )}
               </span>
-              {c.name}
-            </button>
-          ))}
+            );
+          })}
         </div>
       </EnTete>
 
@@ -645,9 +753,16 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
       <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pb-4 pt-[18px]">
 
         {/* ---- le lecteur : un bandeau hors de l'image, comme au direct ---- */}
-        <Carte className="@container flex min-h-[260px] flex-1 flex-col overflow-hidden">
+        {/* Une caméra : la carte occupe tout. Plusieurs : une grille, la tuile active en or. */}
+        <div className={cx('min-h-[260px] flex-1', multi ? 'grid gap-2.5' : 'flex flex-col')}
+             style={multi ? GRILLE[1 + suivantes.length] : undefined}>
+        <Carte className={cx('@container flex min-h-0 flex-1 flex-col overflow-hidden',
+          multi && 'border-accent shadow-[0_0_0_1px_var(--accent)]', suivantes.length === 2 && 'row-span-2')}>
           <div className="flex h-11 shrink-0 items-center gap-2.5 pl-3.5 pr-2">
-            {instant !== null ? (
+            {multi ? (
+              /* À plusieurs, l'heure se lit dans la console : la tuile dit sa caméra. */
+              <span className="min-w-0 truncate text-titre font-semibold">{camera.name}</span>
+            ) : instant !== null ? (
               <span className="whitespace-nowrap font-mono text-titre tabular-nums">
                 {new Date(instant).toLocaleDateString(localeDates())}&nbsp;&nbsp;{hms(instant)}
               </span>
@@ -671,11 +786,18 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                                  court={t('video.imageEntiere')} icone={ZoomOut} actif
                                  onClick={vue.reinitialiser} />
                 )}
-                <BoutonBandeau
-                  titre={son.aDuSon === false ? t('video.pasDeSon')
-                    : son.sonActif ? t('video.couperSon') : t('video.activerSon')}
-                  court={t('tuile.sonCourt')} icone={son.sonActif ? Volume2 : VolumeX}
-                  desactive={son.aDuSon === false} actif={son.sonActif} onClick={son.basculer} />
+                {multi ? (
+                  <BoutonBandeau
+                    titre={sonSur === cameraId ? t('video.couperSon') : t('relecture.ecouterCamera')}
+                    court={t('tuile.sonCourt')} icone={sonSur === cameraId ? Volume2 : VolumeX}
+                    actif={sonSur === cameraId} onClick={() => setSonSur((s) => (s === cameraId ? null : cameraId))} />
+                ) : (
+                  <BoutonBandeau
+                    titre={son.aDuSon === false ? t('video.pasDeSon')
+                      : son.sonActif ? t('video.couperSon') : t('video.activerSon')}
+                    court={t('tuile.sonCourt')} icone={son.sonActif ? Volume2 : VolumeX}
+                    desactive={son.aDuSon === false} actif={son.sonActif} onClick={son.basculer} />
+                )}
                 <BoutonBandeau titre={t('video.capturer')} court={t('tuile.imageCourt')} icone={Camera}
                                onClick={() => { void capturerImage(); }} />
               </div>
@@ -732,9 +854,11 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                      * flux 4K se voit au moment de la bascule. Un aller-retour lecture/pause
                      * force la première image à être décodée et peinte, à l'avance. */
                     const v = e.currentTarget;
+                    // Rendu tel qu'il était : à plusieurs, la tuile active peut se taire.
+                    const avant = v.muted;
                     v.muted = true;
-                    void v.play().then(() => { v.pause(); v.currentTime = 0; v.muted = false; })
-                      .catch(() => { v.muted = false; });
+                    void v.play().then(() => { v.pause(); v.currentTime = 0; v.muted = avant; })
+                      .catch(() => { v.muted = avant; });
                   }
                 }}
                 onPlay={() => { if (actif === i) setEnLecture(true); }}
@@ -798,6 +922,15 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
             )}
           </div>
         </Carte>
+        {suivantes.map((c) => (
+          <TuileSuiveuse key={`${c.id}-${epoque}`} camera={c} frontiere={c.archive?.frontiere ?? null}
+                         saut={saut} instant={instant} enLecture={enLecture} vitesse={vitesse}
+                         sonActif={sonSur === c.id}
+                         onSon={() => setSonSur((s) => (s === c.id ? null : c.id))}
+                         onChoisir={() => choisirCamera(c.id)}
+                         onMorceau={(s) => { noterDebit(c.id, s, c.archive?.frontiere); setMorceauxSuivis((n) => n + 1); }} />
+        ))}
+        </div>
 
         {/* ---- la console : le transport, l'heure lue, la frise ---- */}
         <Carte className="shrink-0 px-4 pb-2.5 pt-3">
@@ -856,7 +989,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
           />
 
           <LignePlage
-            plage={plage} etat={etatExport} estimation={estimation}
+            plage={plage} etat={etatExport} estimation={estimation} cameras={1 + suivantes.length}
             definition={definition} aDuSon={son.aDuSon ?? null} frontiere={archive?.frontiere ?? null} refus={refus}
             onEffacer={effacerPlage} onExporter={() => { void exporter(); }}
             onAnnuler={() => { void bridge.exportAnnuler(); }} onMontrer={() => { void bridge.exportMontrer(); }}
@@ -900,6 +1033,12 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                     <span className="tabular-nums text-muted">{d.debut ? heureMin(new Date(d.debut)) : '—'}</span>
                     <span className="truncate" style={{ color: TEINTE[g] }}>{etiquette(g)}</span>
                   </div>
+                  {/* À plusieurs, chaque vignette dit sa caméra. */}
+                  {multi && (
+                    <span className="block truncate px-2 pb-1.5 text-micro text-soft">
+                      {cameras.find((c) => c.id === d.camera)?.name ?? ''}
+                    </span>
+                  )}
                 </button>
               );
             })}

@@ -200,19 +200,31 @@ class ExportPlage {
    * @param {number} [p.estimation] octets attendus, d'apres le debit observe ; 0 = inconnu
    * @returns {Promise<{fichiers: string[]}>} des que l'export est parti
    */
-  async lancer({ cameraId, camera, debut, fin, fichier, estimation = 0 }) {
+  async lancer({ cameraId, camera, debut, fin, fichier, estimation = 0, cibles }) {
     if (this.travail) throw new ErreurExport('occupe', 'an export is already running');
     const tranches = decouper(debut, fin);
-    if (!tranches.length || !fichier) throw new ErreurExport('plage', 'empty or inverted range');
+    // Plusieurs cameras (relecture a plusieurs, 2.35.0) : la meme plage pour chacune, un
+    // fichier par camera et par heure, toujours l'un apres l'autre.
+    const liste = cibles ?? [{ cameraId, camera, fichier }];
+    if (!tranches.length || !liste.length || liste.some((c) => !c.fichier)) {
+      throw new ErreurExport('plage', 'empty or inverted range');
+    }
 
-    const fichiers = tranches.map((_, i) => nomTranche(fichier, i + 1, tranches.length, this.gabarit));
-    // Une tranche seule porte le nom choisi, que la boite de Windows a deja fait confirmer.
-    // Decoupee, AUCUNE ne le porte : « nom (1 sur 3) » non plus n'a ete confirme par personne.
-    const deja = (tranches.length > 1 ? fichiers : []).find((f) => fs.existsSync(f));
+    const taches = liste.flatMap((c) => tranches.map((t, i) => ({
+      cameraId: c.cameraId, ...t, fichier: nomTranche(c.fichier, i + 1, tranches.length, this.gabarit),
+    })));
+    const fichiers = taches.map((t) => t.fichier);
+    // Seul le fichier de la PREMIERE camera, s'il tient en une tranche, porte le nom que la
+    // boite de Windows a fait confirmer. Tous les autres — « nom (1 sur 3) », les cameras
+    // suivantes — n'ont ete confirmes par personne : on refuse plutot que d'ecraser.
+    const confirme = tranches.length === 1 ? liste[0].fichier : null;
+    const deja = fichiers.find((f) => f !== confirme && fs.existsSync(f));
     if (deja) throw new ErreurExport('existe', deja, { fichier: path.basename(deja) });
+    if (new Set(fichiers).size !== fichiers.length) throw new ErreurExport('existe', 'two parts share a name', { fichier: null });
+    const nomCameras = liste.map((c) => c.camera).join(', ');
 
     if (estimation > 0) {
-      const libre = await this.place(path.dirname(fichier));
+      const libre = await this.place(path.dirname(liste[0].fichier));
       const besoin = estimation * MARGE_PLACE + MARGE_PLACE_FIXE;
       if (libre !== null && libre < besoin) {
         throw new ErreurExport('place', `${libre} bytes free for ~${Math.round(estimation)}`, { libre, besoin: estimation });
@@ -222,13 +234,13 @@ class ExportPlage {
     this.controle = new AbortController();
     this.ecrits = [];
     this.journal.info('export', `range ${new Date(debut).toISOString()} → ${new Date(fin).toISOString()}`
-      + ` on ${camera}: ${tranches.length} part(s) → ${path.dirname(fichier)}`);
-    const commun = { camera, debut, fin, parties: tranches.length, estimation };
+      + ` on ${nomCameras}: ${taches.length} part(s) → ${path.dirname(liste[0].fichier)}`);
+    const commun = { camera: nomCameras, debut, fin, parties: taches.length, estimation };
     this.pousser({ etat: 'encours', ...commun, partie: 1, recu: 0, total: 0, recuAvant: 0 });
 
     // Filet : une exception imprevue dans l'export ne doit ni rester sans etat a l'ecran, ni
     // devenir un rejet non traite dans le processus principal, qui l'abattrait.
-    this.travail = this.executer(tranches, fichiers, commun, cameraId, this.controle.signal)
+    this.travail = this.executer(taches, commun, this.controle.signal)
       .catch((e) => {
         this.journal.erreur('export', `failed (unexpected): ${e?.stack ?? e}`);
         this.pousser({ etat: 'erreur', ...commun, raison: 'interrompu', faits: this.ecrits.length });
@@ -257,16 +269,16 @@ class ExportPlage {
     }
   }
 
-  async executer(tranches, fichiers, commun, cameraId, signal) {
+  async executer(taches, commun, signal) {
     let recuAvant = 0;
     let vides = 0;
     const debutTravail = this.horloge();
-    for (let i = 0; i < tranches.length; i++) {
-      const cible = fichiers[i];
+    for (let i = 0; i < taches.length; i++) {
+      const { cameraId, debut, fin, fichier: cible } = taches[i];
       const provisoire = `${cible}.part`;
       this.provisoire = provisoire;
       try {
-        const { total, flux } = await this.ouvrir({ cameraId, ...tranches[i], signal });
+        const { total, flux } = await this.ouvrir({ cameraId, debut, fin, signal });
         let recu = 0;
         let dernier = 0;
         flux.on('data', (m) => {
@@ -283,23 +295,23 @@ class ExportPlage {
         this.provisoire = null;
         this.ecrits.push(cible);
         recuAvant += recu;
-        this.journal.info('export', `part ${i + 1}/${tranches.length}: ${(recu / 1048576).toFixed(1)} MB`);
+        this.journal.info('export', `part ${i + 1}/${taches.length}: ${(recu / 1048576).toFixed(1)} MB`);
       } catch (brute) {
         await fs.promises.rm(provisoire, { force: true }).catch(() => {});
         this.provisoire = null;
         const e = nommer(brute, signal);
         // Une heure sans enregistrement au milieu d'une nuit (camera hors ligne) ne
         // condamne pas les autres : on la saute, et on le dit a la fin.
-        if (e.raison === 'vide' && tranches.length > 1) {
+        if (e.raison === 'vide' && taches.length > 1) {
           vides += 1;
-          this.journal.info('export', `part ${i + 1}/${tranches.length}: no recording, skipped`);
+          this.journal.info('export', `part ${i + 1}/${taches.length}: no recording, skipped`);
           continue;
         }
         if (e.raison === 'annule') {
           this.journal.info('export', `cancelled after ${this.ecrits.length} complete part(s)`);
           this.pousser({ etat: 'annule', ...commun, faits: this.ecrits.length });
         } else {
-          this.journal.erreur('export', `failed (${e.raison}) on part ${i + 1}/${tranches.length}: ${e.message}`);
+          this.journal.erreur('export', `failed (${e.raison}) on part ${i + 1}/${taches.length}: ${e.message}`);
           this.pousser({ etat: 'erreur', ...commun, raison: e.raison, statut: e.statut, partie: i + 1,
             faits: this.ecrits.length });
         }
@@ -308,7 +320,7 @@ class ExportPlage {
     }
     if (this.ecrits.length === 0) {
       this.journal.erreur('export', 'failed (vide): no recording over the whole range');
-      this.pousser({ etat: 'erreur', ...commun, raison: 'vide', partie: tranches.length, faits: 0 });
+      this.pousser({ etat: 'erreur', ...commun, raison: 'vide', partie: taches.length, faits: 0 });
       return;
     }
     this.journal.info('export', `done: ${this.ecrits.length} file(s), ${(recuAvant / 1048576).toFixed(1)} MB`);

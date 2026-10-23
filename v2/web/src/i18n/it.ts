@@ -639,4 +639,13 @@ export const it: Record<Cle, string> = {
   'historique.confirmer': 'Cancellare i {n} avvisi dalla cronologia? Le guardie, invece, non cambiano.',
   'historique.annuler': 'Annulla',
   'historique.effacer': 'Cancella',
+
+  // Relecture de plusieurs cameras (maquette docs/maquette-relecture-multi.html, 23.10.2026)
+  'relecture.ajouter': 'Aggiungi {nom} accanto',
+  'relecture.retirer': 'Togli {nom} dalla riproduzione',
+  'relecture.ecouterCamera': 'Ascolta questa telecamera (le altre tacciono)',
+  'relecture.rendreActive': 'Rendi attiva {nom}',
+  'relecture.rattrape': 'Estrazione del segmento… questa telecamera recupera',
+  'export.nCameras': '{n} telecamere',
+  'export.unParCamera': 'Un file per telecamera mostrata, uno dopo l’altro.',
 };

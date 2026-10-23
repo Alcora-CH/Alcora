@@ -76,7 +76,7 @@ const Fin = ({ children }: { children: React.ReactNode }) => (
 );
 
 export function LignePlage({
-  plage, etat, estimation, definition, aDuSon, frontiere, refus,
+  plage, etat, estimation, definition, aDuSon, frontiere, refus, cameras = 1,
   onEffacer, onExporter, onAnnuler, onMontrer, onReessayer,
 }: {
   plage: Plage;
@@ -87,6 +87,8 @@ export function LignePlage({
   aDuSon: boolean | null;
   /** Avant cet instant, seule la basse définition subsiste. */
   frontiere: number | null;
+  /** Les caméras affichées : à plusieurs, un fichier par caméra. */
+  cameras?: number;
   /** Le dernier refus avant le premier octet (boîte de Windows passée). */
   refus: { raison: RaisonExport; fichier?: string | null } | null;
   onEffacer: () => void;
@@ -186,12 +188,15 @@ export function LignePlage({
 
   /* ---- la plage choisie, et ce qu'elle donnera ---- */
   const duree = plage.fin - plage.debut;
-  const parties = Math.ceil(duree / HEURE_MS);
+  const heures = Math.ceil(duree / HEURE_MS);
+  const parties = heures * cameras;
   const basse = frontiere !== null && plage.debut < frontiere;
+  // À plusieurs, la définition et le son sont ceux de chaque caméra : on dit leur nombre.
   const faits = [
+    ...(cameras > 1 ? [t('export.nCameras', { n: cameras })] : []),
     estimation > 0 ? t('export.environ', { taille: poids(estimation) }) : t('export.tailleInconnue'),
-    ...(definition && !basse ? [definition] : []),
-    ...(aDuSon === null ? [] : [aDuSon ? t('export.sonCompris') : t('export.sansSon')]),
+    ...(cameras === 1 && definition && !basse ? [definition] : []),
+    ...(cameras === 1 && aDuSon !== null ? [aDuSon ? t('export.sonCompris') : t('export.sansSon')] : []),
   ];
   return (
     <Cadre ton={refus ? 'erreur' : parties > 1 || basse ? 'avert' : 'neutre'} annonce={Boolean(refus)}>
@@ -210,7 +215,8 @@ export function LignePlage({
       {refus && (
         <Note ton="text-[#f0a898]">{t(RAISON[refus.raison], { fichier: refus.fichier ?? '', statut: '' })}</Note>
       )}
-      {parties > 1 && <Note ton="text-warn">{t('export.parties', { n: parties })}</Note>}
+      {cameras > 1 && <Note>{t('export.unParCamera')}</Note>}
+      {heures > 1 && <Note ton="text-warn">{t('export.parties', { n: parties })}</Note>}
       {basse && (
         <Note ton="text-warn">
           {t('export.frontiere', { date: new Date(frontiere!).toLocaleDateString(localeDates()) })}

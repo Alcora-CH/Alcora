@@ -637,4 +637,13 @@ export const en: Record<Cle, string> = {
   'historique.confirmer': 'Clear the {n} alerts from the history? The watches themselves do not change.',
   'historique.annuler': 'Cancel',
   'historique.effacer': 'Clear',
+
+  // Relecture de plusieurs cameras (maquette docs/maquette-relecture-multi.html, 23.10.2026)
+  'relecture.ajouter': 'Add {nom} alongside',
+  'relecture.retirer': 'Remove {nom} from the replay',
+  'relecture.ecouterCamera': 'Listen to this camera (the others go quiet)',
+  'relecture.rendreActive': 'Make {nom} active',
+  'relecture.rattrape': 'Extracting the chunk… this camera catches up',
+  'export.nCameras': '{n} cameras',
+  'export.unParCamera': 'One file per camera shown, one after the other.',
 };

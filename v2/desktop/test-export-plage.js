@@ -53,9 +53,10 @@ function corps(morceaux, { panne = null, attente = 0, avant = null } = {}) {
 
 /** Un controleur fabrique : il note chaque demande et combien sont en vol a la fois. */
 function controleur(reponse) {
-  const c = { demandes: [], enVol: 0, maxEnVol: 0 };
+  const c = { demandes: [], cameras: [], enVol: 0, maxEnVol: 0 };
   c.ouvrir = async (p) => {
     c.demandes.push({ debut: p.debut, fin: p.fin });
+    c.cameras.push(p.cameraId);
     c.enVol += 1;
     c.maxEnVol = Math.max(c.maxEnVol, c.enVol);
     try {
@@ -208,6 +209,51 @@ const vide404 = () => new ErreurExport('vide', 'HTTP 404');
     await x.travail;
     check('etat « annule », rien n est garde', [['annule', 0], []], [[dernier().etat, dernier().faits], restes()]);
     check('plus rien a annuler ensuite', false, x.annuler());
+  }
+
+  console.log('\n=== Plusieurs cameras : un fichier chacune, l une apres l autre ===');
+  {
+    vider();
+    const c = controleur((i, p) => (p.cameraId === 'cam2' && p.debut === T0 + H ? vide404()
+      : { total: 2, flux: corps([p.cameraId === 'cam1' ? 'a1' : 'b2'], { attente: 10 }) }));
+    const { x, dernier } = exporteur(c);
+    const cibles = [
+      { cameraId: 'cam1', camera: 'Allée', fichier: fichier('allee.mp4') },
+      { cameraId: 'cam2', camera: 'Bureaux', fichier: fichier('bureaux.mp4') },
+    ];
+    await x.lancer({ debut: T0, fin: T0 + 60_000, cibles });
+    await x.travail;
+    check('deux demandes, une par camera, jamais ensemble', [['cam1', 'cam2'], 1], [c.cameras, c.maxEnVol]);
+    check('deux fichiers, aux noms choisis, chacun avec SA video', [['allee.mp4', 'bureaux.mp4'], 'a1', 'b2'],
+      [restes(), fs.readFileSync(fichier('allee.mp4'), 'utf8'), fs.readFileSync(fichier('bureaux.mp4'), 'utf8')]);
+    check('termine : deux parties, les deux cameras nommees', ['termine', 2, 'Allée, Bureaux'],
+      [dernier().etat, dernier().parties, dernier().camera]);
+
+    vider();
+    const d = controleur((i, p) => ({ total: 2, flux: corps([p.cameraId]) }));
+    const { x: y } = exporteur(d);
+    await y.lancer({ debut: T0, fin: T0 + 2 * H, cibles });
+    await y.travail;
+    check('deux heures, deux cameras : quatre fichiers', ['allee (1 sur 2).mp4', 'allee (2 sur 2).mp4', 'bureaux (1 sur 2).mp4', 'bureaux (2 sur 2).mp4'], restes());
+    check('dans l ordre : toute la premiere camera, puis la seconde', [[T0, T0 + H, T0, T0 + H], ['cam1', 'cam1', 'cam2', 'cam2']],
+      [d.demandes.map((q) => q.debut), d.cameras]);
+
+    vider();
+    const e = controleur((i, p) => (p.cameraId === 'cam2' ? vide404() : { total: 2, flux: corps(['a1']) }));
+    const { x: z, dernier: d3 } = exporteur(e);
+    await z.lancer({ debut: T0, fin: T0 + 60_000, cibles });
+    await z.travail;
+    check('une camera hors ligne a cette heure : sautee, l autre ecrite', [['allee.mp4'], 'termine', 1], [restes(), d3().etat, d3().vides]);
+
+    vider();
+    fs.writeFileSync(fichier('allee.mp4'), 'confirme');
+    fs.writeFileSync(fichier('bureaux.mp4'), 'ancien');
+    const refus = await x.lancer({ debut: T0, fin: T0 + 60_000, cibles }).catch((er) => [er.raison, er.fichier]);
+    check('la seconde camera n a ete confirmee par personne : refus, rien d ecrase', [['existe', 'bureaux.mp4'], 'ancien'],
+      [refus, fs.readFileSync(fichier('bureaux.mp4'), 'utf8')]);
+    const doublon = await x.lancer({ debut: T0, fin: T0 + 60_000,
+      cibles: [cibles[0], { ...cibles[1], fichier: fichier('allee.mp4') }] }).catch((er) => er.raison);
+    check('deux cameras sur le meme nom : refus', 'existe', doublon);
   }
 
   console.log('\n=== L application se ferme en plein export ===');

@@ -495,6 +495,8 @@ export default function App() {
    * que tous les crochets doivent passer avant les sorties anticipees (l'ecran noir de la
    * 2.10.0 venait d'un crochet place apres l'une d'elles).
    */
+  /** Les images de la relecture, une ou plusieurs caméras : rapportées par l'écran lui-même. */
+  const [tuilesRelecture, setTuilesRelecture] = useState(1);
   const tuilesAffichees = !configured || relais === null ? 0
     : isolee ? (cameras.some((c) => c.id === isolee && !masquees.includes(c.id)) ? 1 : 0)
     : cameras.filter((c) => !masquees.includes(c.id)).length;
@@ -502,11 +504,12 @@ export default function App() {
     if (!pontDisponible || configured === null) return;
     void bridge.contexteMesure({
       espace: configured ? espace : 'connexion',
-      tuiles: configured && espace === 'direct' ? tuilesAffichees : null,
+      tuiles: configured && espace === 'direct' ? tuilesAffichees
+        : configured && espace === 'relecture' ? tuilesRelecture : null,
       // Le ciel ne vit plus qu'autour des images (et a la connexion) : ailleurs, il n'y en a pas.
       ciel: configured && espace !== 'direct' ? 'aucun' : fondAnime ? 'anime' : 'fixe',
     }).catch(() => {});
-  }, [configured, espace, tuilesAffichees, fondAnime]);
+  }, [configured, espace, tuilesAffichees, tuilesRelecture, fondAnime]);
 
   if (!pontDisponible) return <PontManquant />;
 
@@ -824,7 +827,7 @@ export default function App() {
           <RechercheScreen cameras={cameras} cameraInitiale={cameraCible} onRevoir={revoirA} />
         ) : espace === 'relecture' ? (
           <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible}
-                           instantInitial={instantCible} />
+                           instantInitial={instantCible} onTuiles={setTuilesRelecture} />
         ) : espace === 'alertes' ? (
           <VeillesScreen cameras={cameras} onOuvrir={ouvrirDetection} onRevoir={revoirA} />
         ) : espace === 'systeme' ? (

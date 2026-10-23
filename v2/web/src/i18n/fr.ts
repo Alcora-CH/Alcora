@@ -667,6 +667,15 @@ export const fr = {
   'historique.confirmer': 'Effacer les {n} alertes de l’historique ? Les veilles, elles, ne changent pas.',
   'historique.annuler': 'Annuler',
   'historique.effacer': 'Effacer',
+
+  // Relecture de plusieurs cameras (maquette docs/maquette-relecture-multi.html, 23.10.2026)
+  'relecture.ajouter': 'Ajouter {nom} à côté',
+  'relecture.retirer': 'Retirer {nom} de la relecture',
+  'relecture.ecouterCamera': 'Écouter cette caméra (les autres se taisent)',
+  'relecture.rendreActive': 'Rendre {nom} active',
+  'relecture.rattrape': 'Extraction du morceau… cette caméra rattrape',
+  'export.nCameras': '{n} caméras',
+  'export.unParCamera': 'Un fichier par caméra affichée, l’un après l’autre.',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

@@ -317,7 +317,8 @@ export interface ProtectBridge {
    * `lance` est faux si l'on renonce, ou si l'export est refuse avant le premier octet
    * (`raison`) ; la suite arrive par `onExportEtat`.
    */
-  exporterPlage(p: { camera: string; debut: number; fin: number; estimation: number }):
+  /** `autres` : les caméras affichées à côté de l'active — un fichier chacune, à la suite. */
+  exporterPlage(p: { camera: string; autres?: string[]; debut: number; fin: number; estimation: number }):
     Promise<{ lance: boolean; raison?: RaisonExport; fichier?: string | null; fichiers?: string[] }>;
   exportAnnuler(): Promise<boolean>;
   /** L'etat courant, pour une page qui revient pendant un export. */
