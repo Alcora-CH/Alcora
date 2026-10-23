@@ -39,6 +39,29 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.34.0',
+    date: '23.10.2026',
+    fr: [
+      'L’historique des alertes : chaque bulle envoyée par une veille est gardée 90 jours sur ce '
+      + 'PC, et seulement là — l’onglet « Historique » de l’écran Alertes la montre avec sa vignette, '
+      + 'son heure, la caméra et la veille qui a prévenu, et mène à la relecture à cet instant ou à '
+      + 'la séquence.',
+      'Il dit aussi ce qui s’est passé autour : une bulle partie sans image, faute d’instantané à '
+      + 'temps, et les alertes que la retenue a fait taire ensuite.',
+      'Une pastille sur « Alertes », dans la barre de gauche, compte les alertes arrivées depuis la '
+      + 'dernière visite de l’historique : une bulle manquée se voit quand même en revenant.',
+    ],
+    en: [
+      'The alert history: every bubble a watch sends is kept 90 days on this PC, and only there — '
+      + 'the “History” tab of the Alerts screen shows it with its thumbnail, its time, the camera and '
+      + 'the watch that warned, and leads to the replay at that moment or to the sequence.',
+      'It also tells what happened around it: a bubble that left without an image, for want of a '
+      + 'snapshot in time, and the alerts the hold-back silenced afterwards.',
+      'A badge on “Alerts”, in the left bar, counts the alerts that came in since the last visit '
+      + 'to the history: a missed bubble still shows when you come back.',
+    ],
+  },
+  {
     version: '2.33.0',
     date: '23.10.2026',
     fr: [
