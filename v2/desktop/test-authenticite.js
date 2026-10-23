@@ -17,7 +17,11 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { CLES, FORMAT, messageSigne, nomDeclaration, verifierDeclaration } = require('./authenticite');
+const { CLES, FORMAT, SIGNATURES_MAX, messageSigne, nomDeclaration, verifierDeclaration } = require('./authenticite');
+
+const SCRIPTS = path.resolve(__dirname, '..', '..', 'scripts');
+const COPIE_ANTERIEURE = path.join(SCRIPTS, 'authenticite-postes-2.30-2.36.cjs');
+const anterieure = require(COPIE_ANTERIEURE);
 
 let echecs = 0;
 function check(label, condition, detail = '') {
@@ -39,6 +43,7 @@ const CHAMPS = {
   sha256: 'C0FFEE'.padEnd(64, '0'),
 };
 function signer(champs, cle = NOTRE.privateKey) {
+  if (cle.asymmetricKeyType === 'ed25519') return crypto.sign(null, messageSigne(champs), cle).toString('base64');
   return crypto.sign('sha256', messageSigne(champs), { key: cle, padding: crypto.constants.RSA_PKCS1_PADDING })
     .toString('base64');
 }
@@ -122,6 +127,156 @@ const verdict = (d, attendu = CHAMPS, cles = CLES_TEST) => verifierDeclaration(d
     check('aucune cle : refusee', !verdict(declaration(), CHAMPS, []).ok);
     check('la cle de test n est PAS une cle de l application',
       !verifierDeclaration(declaration(), CHAMPS).ok);
+  }
+
+  // Les cles de la transition de la 2.37.0, fictives elles aussi.
+  const PUCE = paire();
+  const SECOURS = crypto.generateKeyPairSync('ed25519');
+  const TROIS = [
+    { nom: 'certificat', pem: pem(NOTRE.publicKey) },
+    { nom: 'puce', pem: pem(PUCE.publicKey) },
+    { nom: 'secours', pem: pem(SECOURS.publicKey) },
+  ];
+  const SEULE_PUCE = [TROIS[1]];
+  const seules = (...signatures) => ({ format: FORMAT, ...CHAMPS, signatures });
+  const transition = () => ({ ...declaration(), signatures: [{ cle: 'puce', signature: signer(CHAMPS, PUCE.privateKey) }] });
+
+  console.log('\n=== Plusieurs signatures (2.37.0) ===');
+  {
+    check('la declaration de transition passe avec les trois cles', verdict(transition(), CHAMPS, TROIS).ok);
+    const v = verdict(transition(), CHAMPS, SEULE_PUCE);
+    check('… et avec la seule cle de la puce', v.ok && v.cle === 'puce', v.raison);
+    check('sans « signature » historique (phase 2) : acceptee',
+      verdict(seules({ cle: 'puce', signature: signer(CHAMPS, PUCE.privateKey) }), CHAMPS, SEULE_PUCE).ok);
+    const secours = seules({ cle: 'secours', signature: signer(CHAMPS, SECOURS.privateKey) });
+    const vs = verdict(secours, CHAMPS, TROIS);
+    check('la cle de secours Ed25519 suffit (poste de construction perdu)', vs.ok && vs.cle === 'secours', vs.raison);
+    check('… et ne couvre plus rien des qu un octet change',
+      !verdict({ ...secours, taille: 1 }, { ...CHAMPS, taille: 1 }, TROIS).ok);
+    const parmi = {
+      ...declaration(CHAMPS, AUTRE.privateKey),
+      signatures: [
+        { cle: 'inconnue', signature: signer(CHAMPS, AUTRE.privateKey) },
+        { cle: 'puce', signature: signer(CHAMPS, PUCE.privateKey) },
+      ],
+    };
+    check('une signature de confiance parmi d autres inconnues suffit', verdict(parmi, CHAMPS, SEULE_PUCE).ok);
+    const aucune = { ...declaration(CHAMPS, AUTRE.privateKey), signatures: [{ signature: signer(CHAMPS, AUTRE.privateKey) }] };
+    const va = verdict(aucune, CHAMPS, TROIS);
+    check('aucune de confiance : refusee', !va.ok && /trusted key/.test(va.raison), va.raison);
+    check('une signature Ed25519 ne passe pas pour une RSA',
+      !verdict(seules({ signature: signer(CHAMPS, SECOURS.privateKey) }), CHAMPS, [TROIS[0]]).ok);
+    check('… ni une RSA pour une Ed25519', !verdict(declaration(), CHAMPS, [TROIS[2]]).ok);
+    check('« cle » n est qu une etiquette : rien ne s y fie',
+      verdict(seules({ cle: 'certificat', signature: signer(CHAMPS, PUCE.privateKey) }), CHAMPS, SEULE_PUCE).ok);
+  }
+
+  console.log('\n=== Des « signatures » mal formees ===');
+  {
+    const bonne = signer(CHAMPS);
+    for (const [nom, signatures] of [
+      ['un objet', { signature: bonne }], ['un texte', bonne], ['null', null],
+      ['un element null', [null]], ['un element texte', [bonne]],
+      ['un element sans signature', [{ cle: 'puce' }]],
+      ['une signature vide', [{ signature: '' }]], ['une signature hors base64', [{ signature: '%%%%' }]],
+      [`plus de ${SIGNATURES_MAX}`, Array.from({ length: SIGNATURES_MAX + 1 }, () => ({ signature: bonne }))],
+    ]) {
+      // Meme a cote d'une « signature » historique valide : une declaration a moitie
+      // fausse ne sort pas de notre construction.
+      const v = verdict({ ...declaration(), signatures });
+      check(`${nom} : refusee`, !v.ok && /malformed/.test(v.raison), v.raison);
+    }
+    const vide = verdict(seules());
+    check('un tableau vide, sans « signature » : refusee', !vide.ok && /malformed/.test(vide.raison), vide.raison);
+    check(`${SIGNATURES_MAX} signatures : admises`,
+      verdict({ ...declaration(), signatures: Array.from({ length: SIGNATURES_MAX }, () => ({ signature: bonne })) }).ok);
+    check('« signature » abimee a cote de « signatures » valides : refusee',
+      !verdict({ ...declaration(), signature: '%%%%', signatures: [{ signature: bonne }] }).ok);
+  }
+
+  console.log('\n=== Les postes 2.30.0 a 2.36.0, avec LEUR code ===');
+  {
+    /*
+     * Ces postes ne lisent que « signature », avec leurs cles : tant qu'il en reste un,
+     * chaque declaration doit leur convenir, ou ils ne se mettront plus jamais a jour.
+     * scripts/publier.mjs les consulte donc a chaque version, par une copie de leur code.
+     */
+    const source = fs.readFileSync(COPIE_ANTERIEURE, 'utf8').replace(/\r\n/g, '\n');
+    check('la copie est intacte (authenticite.js du commit a17b515, livre de la 2.30.0 a la 2.36.0)',
+      crypto.createHash('sha256').update(source).digest('hex')
+        === 'b81b6b72aaee71c315e75bfed847c8a08ec01cc30cad1ca38cb32b47f0f46fbc');
+    const chezEux = (d, cles = CLES_TEST) => anterieure.verifierDeclaration(d, CHAMPS, { cles });
+    check('la declaration de transition leur convient', chezEux(transition()).ok);
+    check('sans « signature » historique, ils la refusent',
+      !chezEux(seules({ cle: 'puce', signature: signer(CHAMPS, PUCE.privateKey) }), TROIS).ok);
+    check('une « signature » qui n est pas de leur cle, ils la refusent', !chezEux(declaration(CHAMPS, PUCE.privateKey)).ok);
+    check('leurs cles sont celles du certificat, et elles seules',
+      anterieure.CLES.length === 1 && anterieure.CLES[0].pem === CLES.find((c) => c.role === 'certificat')?.pem);
+  }
+
+  console.log('\n=== Ce que la publication exige (ses trois lecteurs) ===');
+  {
+    const { verdictsDePublication } = await import(pathToFileURL(path.join(SCRIPTS, 'declaration.mjs')).href);
+    const avecRoles = [{ ...TROIS[0], role: 'certificat' }, { ...TROIS[1], role: 'puce' }, { ...TROIS[2], role: 'secours' }];
+    const actuelle = (cles) => ({
+      CLES: cles,
+      verifierDeclaration: (d, attendu, options) => verifierDeclaration(d, attendu, { cles: options?.cles ?? cles }),
+    });
+    const chezEux = { verifierDeclaration: (d, attendu) => anterieure.verifierDeclaration(d, attendu, { cles: CLES_TEST }) };
+    const refus = (d, { reel = CHAMPS, manifeste = CHAMPS, cles = avecRoles } = {}) =>
+      verdictsDePublication(d, { reel, manifeste }, actuelle(cles), chezEux).filter(([, v]) => !v.ok).map(([l]) => l);
+
+    const tous = verdictsDePublication(transition(), { reel: CHAMPS, manifeste: CHAMPS }, actuelle(avecRoles), chezEux);
+    check('la declaration de transition : six verdicts, tous favorables',
+      tous.length === 6 && tous.every(([, v]) => v.ok), JSON.stringify(tous));
+    const sansPuce = refus(declaration());
+    check('sans la signature de la puce : refusee par « la puce seule »',
+      sansPuce.length === 2 && sansPuce.every((l) => l.startsWith('la puce seule')), sansPuce.join(' | '));
+    const sansHistorique = refus(seules({ cle: 'puce', signature: signer(CHAMPS, PUCE.privateKey) }));
+    check('sans la signature historique : refusee par les postes 2.30.0 a 2.36.0',
+      sansHistorique.length === 2 && sansHistorique.every((l) => l.startsWith('postes 2.30.0')), sansHistorique.join(' | '));
+    const pasDePuce = refus(transition(), { cles: avecRoles.filter((c) => c.role !== 'puce') });
+    check('aucune cle « puce » epinglee : refusee', pasDePuce.some((l) => l.startsWith('la puce seule')), pasDePuce.join(' | '));
+    const reconstruit = refus(transition(), { reel: { ...CHAMPS, taille: CHAMPS.taille + 1 } });
+    check('un paquet reconstruit apres la signature : refuse par les trois lecteurs',
+      reconstruit.length === 3 && reconstruit.every((l) => l.endsWith('paquet réel')), reconstruit.join(' | '));
+    const horsManifeste = refus(transition(), { manifeste: null });
+    check('une version absente du manifeste : refusee par les trois lecteurs',
+      horsManifeste.length === 3 && horsManifeste.every((l) => l.endsWith('manifeste')), horsManifeste.join(' | '));
+  }
+
+  console.log('\n=== La note de la cle de secours (scripts/secours.mjs) ===');
+  {
+    const s = await import(pathToFileURL(path.join(SCRIPTS, 'secours.mjs')).href);
+    const phrase = 'cheval agrafe lune parapluie';  // fictive
+    const note = s.chiffrerCleDeSecours(SECOURS.privateKey, phrase);
+    check('une ligne ASCII, six parties', /^[\x21-\x7e]+$/.test(note) && note.split(':').length === 6, note.slice(0, 40));
+    const relue = s.dechiffrerCleDeSecours(note, phrase);
+    check('relue avec sa phrase : la meme cle', crypto.createPublicKey(relue).export({ type: 'spki', format: 'der' })
+      .equals(SECOURS.publicKey.export({ type: 'spki', format: 'der' })));
+    const d = seules({ cle: 'secours', signature: s.signerAvecLeSecours(relue, messageSigne(CHAMPS)) });
+    check('ce qu elle signe passe chez l application', verdict(d, CHAMPS, [TROIS[2]]).ok);
+    const raison = (n, p = phrase) => { try { s.dechiffrerCleDeSecours(n, p); return null; } catch (e) { return e.message; } };
+    const refusee = (n, p) => raison(n, p) !== null;
+    check('phrase fausse : refusee', refusee(note, `${phrase}!`));
+    const parties = note.split(':');
+    const abimee = (i) => parties.map((p, j) => (j === i ? (p[0] === 'A' ? 'B' : 'A') + p.slice(1) : p)).join(':');
+    check('un caractere change dans le sel, l iv, l etiquette ou le chiffre : refusee',
+      [2, 3, 4, 5].every((i) => refusee(abimee(i))));
+    check('entete inconnue : refusee', refusee(note.replace('alcora-secours-1', 'alcora-secours-2')));
+    check('parametres demesures : refuses avant tout calcul',
+      /hors bornes/.test(raison(note.replace(/scrypt-\d+/, 'scrypt-30')) ?? ''));
+    const autre = s.chiffrerCleDeSecours(SECOURS.privateKey, phrase).split(':');
+    check('chaque note a son sel et son iv', autre[2] !== parties[2] && autre[3] !== parties[3]);
+    check('les espaces autour de la note collee sont sans effet', !refusee(`  ${note}\n`));
+    check('la phrase en Unicode decompose est la meme phrase',
+      !refusee(s.chiffrerCleDeSecours(SECOURS.privateKey, 'clé de café du matin'), 'clé de café du matin'));
+    let courte = false;
+    try { s.chiffrerCleDeSecours(SECOURS.privateKey, 'x'.repeat(s.PHRASE_MIN - 1)); } catch { courte = true; }
+    check(`une phrase de moins de ${s.PHRASE_MIN} caracteres : refusee`, courte);
+    let rsa = false;
+    try { s.chiffrerCleDeSecours(NOTRE.privateKey, phrase); } catch { rsa = true; }
+    check('une cle qui n est pas Ed25519 : refusee', rsa);
   }
 
   console.log('\n=== La cle epinglee est celle du vrai certificat ===');

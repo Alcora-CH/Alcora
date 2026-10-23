@@ -126,6 +126,20 @@ soit ~185 Mo à chaque version, quel que soit le différentiel. Ne jamais promet
   texte signé) ; changer de certificat sans publier D'ABORD une version qui connaît
   l'ancienne et la nouvelle clé (`CLES`). La sauvegarde `signature/Alcora-signature.pfx`
   n'est lisible que depuis ce compte Windows : la perte du compte ferait perdre la clé.
+- **Plusieurs signatures, depuis la 2.37.0** (transition du 24.10.2026) : `npm run
+  publier` ajoute à la déclaration la signature de la **puce** (clé TPM non exportable,
+  `scripts/cle-tpm.mjs`, PIN demandé par Windows à chaque publication), dans
+  `signatures`. Une clé de **secours** Ed25519 (`scripts/cle-secours.mjs`) est épinglée
+  aussi ; sa partie privée n'existe que chiffrée, dans une note Proton Pass. La publication
+  exige trois verdicts : l'application avec toutes ses clés, l'application avec la **seule**
+  clé de la puce, et les postes 2.30.0 à 2.36.0 avec **leur** code —
+  `scripts/authenticite-postes-2.30-2.36.cjs`, copie figée dont un test épingle
+  l'empreinte. Ces postes ne lisent que `signature` (celle du certificat) : tant qu'il en
+  reste un, ce garde-fou ne se retire pas. **Phase 2**, une fois chaque poste en 2.37.0 ou
+  plus : retirer la clé du certificat de `CLES` (il ne signera plus que les exécutables),
+  le garde-fou des anciens postes, puis la sauvegarde `.pfx` et son mot de passe `.pwd`.
+  Ne jamais créer la clé `Alcora-declaration` depuis un environnement dont les écritures
+  dans le profil sont redirigées : elle y masquerait la vraie.
 - **Durcissement de ce qui est livré** (`scripts/durcissement.mjs`, appelé par les deux
   constructions) : la page doit porter la politique de contenu resserrée, l'archive
   `app.asar` n'emporte que ce qu'admet sa liste blanche, et l'exécutable reçoit ses

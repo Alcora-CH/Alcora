@@ -16,12 +16,26 @@
  * est couvert — executables, bibliotheques, donnees —, sans exception pour les DLL signees
  * par Microsoft et sans rien demander a Windows.
  *
- * Signer : scripts/declaration.mjs, a la construction.
+ * Signer : scripts/declaration.mjs, a la construction (cle du certificat) et a la
+ * publication (cle de la puce, depuis la 2.37.0).
+ *
+ * PLUSIEURS SIGNATURES depuis la 2.37.0 (decision du 24.10.2026). La cle du certificat est
+ * exportable : sa sauvegarde .pfx dort sur le disque. La relaie une cle RSA 2048 NEE dans la
+ * puce TPM du poste de construction — non exportable, protegee par un PIN demande a chaque
+ * publication — et, si ce poste etait perdu, une cle de SECOURS Ed25519 gardee hors du PC,
+ * chiffree par une phrase de passe. Pendant la transition, chaque declaration garde la
+ * signature historique (« signature », la seule que lisent les postes 2.30.0 a 2.36.0, qui
+ * ignorent tout autre champ) et ajoute les nouvelles dans « signatures ». Le texte signe, lui,
+ * ne change pas : FORMAT reste 1. Leur verification, recopiee a l'identique dans
+ * scripts/authenticite-postes-2.30-2.36.cjs, relit chaque publication.
  */
 
 const crypto = require('node:crypto');
 
 const FORMAT = 1;
+/** Au plus tant de signatures par declaration : de quoi tenir une transition, pas davantage. */
+const SIGNATURES_MAX = 4;
+const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 
 /*
  * Les cles de confiance — une LISTE, pour qu'un changement de certificat reste possible.
@@ -30,10 +44,14 @@ const FORMAT = 1;
  * l'ancienne ET la nouvelle, signee par l'ancienne ; ne signer avec la seule nouvelle
  * qu'une fois cette version installee partout. Dans l'autre ordre, chaque poste refuserait
  * toutes les mises a jour suivantes, et ne s'en sortirait que par une reinstallation.
+ *
+ * « role » ne sert qu'a la publication (scripts/publier.mjs) : « puce » designe la cle dont
+ * la signature est exigee a chaque version. La verification, elle, les traite toutes pareil.
  */
 const CLES = [
   {
     nom: 'CN=Alcora 66FBA4FD6EE142FB8385814070C4ECEDD90ACBA2 (2026-2036)',
+    role: 'certificat',
     pem: [
       '-----BEGIN PUBLIC KEY-----',
       'MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAlyOebK4OS2c90JCr/GxT',
@@ -64,6 +82,41 @@ function messageSigne({ paquet, version, fichier, taille, sha256 }) {
 const refus = (raison) => ({ ok: false, raison });
 
 /**
+ * Une cle a-t-elle signe ces octets ? RSA : SHA-256 et PKCS#1 v1.5, comme le certificat et
+ * la puce. Ed25519 : la cle de secours. Une cle illisible n'a rien signe — sans planter.
+ */
+function signeePar(cle, message, octets) {
+  try {
+    const publique = crypto.createPublicKey(cle.pem);
+    if (publique.asymmetricKeyType === 'ed25519') return crypto.verify(null, message, publique, octets);
+    if (publique.asymmetricKeyType === 'rsa') {
+      return crypto.verify('sha256', message, { key: publique, padding: crypto.constants.RSA_PKCS1_PADDING }, octets);
+    }
+  } catch { /* cle ou signature illisible : simplement pas celle-ci */ }
+  return false;
+}
+
+/**
+ * Les signatures portees par une declaration, ou null si leur forme est fausse : la
+ * historique (« signature ») et les suivantes (« signatures »), au moins une en tout.
+ */
+function signaturesDe({ signature, signatures }) {
+  const toutes = [];
+  if (signature !== undefined) {
+    if (typeof signature !== 'string' || !BASE64.test(signature)) return null;
+    toutes.push(signature);
+  }
+  if (signatures !== undefined) {
+    if (!Array.isArray(signatures) || signatures.length > SIGNATURES_MAX) return null;
+    for (const s of signatures) {
+      if (!s || typeof s !== 'object' || typeof s.signature !== 'string' || !BASE64.test(s.signature)) return null;
+      toutes.push(s.signature);
+    }
+  }
+  return toutes.length ? toutes : null;
+}
+
+/**
  * La declaration est-elle signee par une cle de confiance, et dit-elle exactement ce que
  * le manifeste annonce ?
  *
@@ -77,11 +130,12 @@ function verifierDeclaration(declaration, attendu, { cles = CLES } = {}) {
   if (!declaration || typeof declaration !== 'object' || Array.isArray(declaration)) {
     return refus('declaration unreadable');
   }
-  const { format, paquet, version, fichier, taille, sha256, signature } = declaration;
+  const { format, paquet, version, fichier, taille, sha256 } = declaration;
   if (format !== FORMAT) return refus(`unknown declaration format (${format})`);
+  const signatures = signaturesDe(declaration);
   if (typeof paquet !== 'string' || typeof version !== 'string' || typeof fichier !== 'string'
     || !Number.isSafeInteger(taille) || typeof sha256 !== 'string' || !/^[0-9A-F]{64}$/.test(sha256)
-    || typeof signature !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(signature)) {
+    || !signatures) {
     return refus('malformed declaration');
   }
 
@@ -95,17 +149,16 @@ function verifierDeclaration(declaration, attendu, { cles = CLES } = {}) {
   if (sha256 !== String(attendu.sha256).toUpperCase()) ecarts.push('fingerprint');
   if (ecarts.length) return refus(`declaration does not match the manifest (${ecarts.join(', ')})`);
 
+  // Une signature valide d'une cle de confiance suffit : les autres peuvent etre celles d'une
+  // cle que ce poste ne connait pas encore, ou plus.
   const message = messageSigne({ paquet, version, fichier, taille, sha256 });
-  const octets = Buffer.from(signature, 'base64');
-  for (const cle of cles) {
-    let valide = false;
-    try {
-      valide = crypto.verify('sha256', message,
-        { key: cle.pem, padding: crypto.constants.RSA_PKCS1_PADDING }, octets);
-    } catch { /* cle ou signature illisible : simplement pas celle-ci */ }
-    if (valide) return { ok: true, cle: cle.nom };
+  for (const signature of signatures) {
+    const octets = Buffer.from(signature, 'base64');
+    for (const cle of cles) {
+      if (signeePar(cle, message, octets)) return { ok: true, cle: cle.nom };
+    }
   }
   return refus('signature not made by a trusted key');
 }
 
-module.exports = { CLES, FORMAT, messageSigne, nomDeclaration, verifierDeclaration };
+module.exports = { CLES, FORMAT, SIGNATURES_MAX, messageSigne, nomDeclaration, verifierDeclaration };
