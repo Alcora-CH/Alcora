@@ -92,10 +92,10 @@ function PontManquant() {
   return (
     <div className="grid h-full place-items-center p-8">
       <div className="max-w-md text-center">
-        <p className="mb-2 text-[15px] font-semibold">{t('app.pontTitre')}</p>
-        <p className="text-[13px] text-muted">
-          {t('app.pontDetail1')} <span className="font-mono text-[12px]">journal.txt</span>,
-          {' '}{t('app.pontDetail2')} <span className="font-mono text-[12px]">%APPDATA%\Alcora</span>.
+        <p className="mb-2 text-titre font-semibold">{t('app.pontTitre')}</p>
+        <p className="text-muted">
+          {t('app.pontDetail1')} <span className="font-mono text-meta">journal.txt</span>,
+          {' '}{t('app.pontDetail2')} <span className="font-mono text-meta">%APPDATA%\Alcora</span>.
         </p>
       </div>
     </div>
