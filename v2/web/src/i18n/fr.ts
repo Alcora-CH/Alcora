@@ -530,6 +530,10 @@ export const fr = {
   // Revue du groupe Direct (23.10.2026)
   'systeme.seuleEnLigne': '1, en ligne',
   'systeme.seuleHorsLigne': '1, hors ligne',
+
+  // Liens d'une detection vers la relecture (23.10.2026)
+  'activite.revoir': 'Revoir à cet instant',
+  'extrait.voirRelecture': 'Voir dans la relecture',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

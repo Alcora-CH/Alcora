@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, Download, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
+import { AlertCircle, Download, History, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { CommandesVideo } from '../video/CommandesVideo';
 import { imageDeLaVideo, useSonVideo } from '../video/outils';
@@ -36,9 +36,11 @@ function mmss(s: number): string {
   return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 }
 
-export function LecteurExtrait({ detection, onFermer }: {
+export function LecteurExtrait({ detection, onFermer, onRelecture }: {
   detection: Detection;
   onFermer: () => void;
+  /** « Voir dans la relecture » : la relecture de cette caméra, à l'heure de la détection. */
+  onRelecture?: () => void;
 }) {
   useLangue();
   /* Le lecteur se referme EN PARTANT : « onFermer » n'est appele qu'une fois
@@ -157,6 +159,14 @@ export function LecteurExtrait({ detection, onFermer }: {
             {detection.debut ? ` · ${horloge(new Date(detection.debut))}` : ''}
           </p>
         </div>
+        {/* De la séquence à la relecture, à cet instant : pour voir ce qui précède et ce qui
+            suit, au-delà des quelques secondes de l'extrait. */}
+        {onRelecture && (
+          <button onClick={() => { onRelecture(); fermer(); }}
+                  className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted transition-colors hover:border-line2 hover:text-ink">
+            <History className="h-3.5 w-3.5" /> {t('extrait.voirRelecture')}
+          </button>
+        )}
         {url && !illisible && (
           <button onClick={() => { void enregistrer(); }} title={t('extrait.enregistrerExtrait')}
                   className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted transition-colors hover:border-line2 hover:text-ink">

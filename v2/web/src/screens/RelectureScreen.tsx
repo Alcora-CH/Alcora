@@ -113,18 +113,23 @@ function etiquetteGraduation(ms: number, pas: number): string {
 
 type Morceau = { url: string; debut: number; fin: number };
 
-export function RelectureScreen({ cameras, relais, cameraInitiale }: {
+export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitial }: {
   cameras: DiscoveredCamera[];
   relais: RelaisAcces | null;
   /** Camera visee par un bouton du direct : on arrive sur elle. */
   cameraInitiale?: string | null;
+  /**
+   * L'instant vise par « Revoir a cet instant » (une detection de l'Activite, une sequence).
+   * Un objet et non un nombre : viser deux fois le meme instant doit se rejouer.
+   */
+  instantInitial?: { t: number } | null;
 }) {
   useLangue();
   const [cameraId, setCameraId] = useState<string>(() => cameraInitiale ?? cameras[0]?.id ?? '');
   const camera = cameras.find((c) => c.id === cameraId) ?? cameras[0];
   const archive: Archive | null = camera?.archive ?? null;
 
-  const [jour, setJour] = useState<number>(() => minuit(Date.now()));
+  const [jour, setJour] = useState<number>(() => minuit(instantInitial?.t ?? Date.now()));
   /** Position de lecture, en temps ABSOLU. C'est la verite ; le reste s'en deduit. */
   const [instant, setInstant] = useState<number | null>(null);
   const [chargement, setChargement] = useState(false);
@@ -212,6 +217,17 @@ export function RelectureScreen({ cameras, relais, cameraInitiale }: {
    * l'instant qu'on n'a pas demandé. C'est d'autant plus vicieux que les deux réussissent.
    */
   const demande = useRef(0);
+
+  /*
+   * Viser un instant APRES une remise a zero (autre camera, autre jour).
+   *
+   * La remise a zero repasse la case active a 0 ; viser dans le meme passage chargerait le
+   * morceau dans l'ancienne case, qui ne serait plus a l'antenne : un ecran vide. L'instant
+   * attend donc dans `enAttente`, la remise a zero le confie a `aViser`, et la visee se fait
+   * au rendu suivant, case 0 en place.
+   */
+  const enAttente = useRef<number | null>(null);
+  const [aViser, setAViser] = useState<{ t: number } | null>(null);
 
   const courant = morceaux[actif];
 
@@ -331,7 +347,35 @@ export function RelectureScreen({ cameras, relais, cameraInitiale }: {
     setDefinition(null);
     setErreur(null);
     setEnLecture(false);
+    if (enAttente.current !== null) { setAViser({ t: enAttente.current }); enAttente.current = null; }
   }, [jour, cameraId]);
+
+  useEffect(() => {
+    if (!aViser) return;
+    setAViser(null);
+    void allerA(aViser.t);
+  }, [aViser, allerA]);
+
+  /* « Revoir a cet instant » : la bonne camera, le bon jour, puis l'instant. */
+  useEffect(() => {
+    if (!instantInitial) return;
+    const cam = cameraInitiale && cameras.some((c) => c.id === cameraInitiale) ? cameraInitiale : cameraId;
+    const j = minuit(instantInitial.t);
+    if (cam !== cameraId || j !== jour) {
+      enAttente.current = instantInitial.t;
+      setCameraId(cam);
+      setJour(j);
+    } else setAViser({ t: instantInitial.t });
+    // Seule la demande compte : la camera et le jour courants ne doivent pas la rejouer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instantInitial]);
+
+  /** Changer de camera GARDE l'instant regarde : c'est ce qu'on veut comparer. */
+  const changerCamera = (id: string) => {
+    if (id === cameraId) return;
+    enAttente.current = instant;
+    setCameraId(id);
+  };
 
   const basculer = useCallback(() => {
     const v = lecteurs[actif].current;
@@ -624,7 +668,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale }: {
         {cameras.length > 1 && (
           <div className="flex w-[160px] shrink-0 flex-col gap-2.5">
             {cameras.map((c) => (
-              <button key={c.id} onClick={() => setCameraId(c.id)}
+              <button key={c.id} onClick={() => changerCamera(c.id)}
                       className="carte-flottante overflow-hidden rounded-lg text-left transition-colors"
                       style={c.id === cameraId ? { borderColor: 'var(--accent)' } : undefined}>
                 <div className="aspect-video" style={{ background: 'rgba(255,255,255,.06)' }} />

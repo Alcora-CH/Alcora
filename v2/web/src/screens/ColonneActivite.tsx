@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { PanelRightClose } from 'lucide-react';
+import { History, PanelRightClose } from 'lucide-react';
 import { t, useLangue } from '../i18n';
 import { parHeure, useActivite } from '../lib/activiteJour';
 import { ceQuiAEteVu, ilYa } from '../lib/lisible';
@@ -20,9 +20,11 @@ import type { DetectionVive } from '../types/protect';
 
 const RECENTES = 5;
 
-export function ColonneActivite({ onOuvrir, onToutes, onMasquer }: {
+export function ColonneActivite({ onOuvrir, onRevoir, onToutes, onMasquer }: {
   /** Une détection a été cliquée : le lecteur est tenu plus haut. */
   onOuvrir: (d: DetectionVive) => void;
+  /** « Revoir à cet instant » : la relecture, sur sa caméra, à son heure. */
+  onRevoir: (camera: string | null, t: number) => void;
   onToutes: () => void;
   onMasquer: () => void;
 }) {
@@ -110,7 +112,7 @@ export function ColonneActivite({ onOuvrir, onToutes, onMasquer }: {
             const src = aVignette ? `/vignette/${d.id}`
               : !finie && d.camera ? `/instantane/${d.camera}?t=${d.debut ?? 0}` : null;
             return (
-              <li key={d.id ?? String(d.debut)}>
+              <li key={d.id ?? String(d.debut)} className="group/rec relative">
                 <button type="button" onClick={() => onOuvrir(d)} disabled={!d.id || d.debut === null}
                         className="flex w-full items-center gap-3 rounded-[9px] px-2.5 py-2 text-left transition-colors hover:bg-card2 disabled:cursor-default disabled:hover:bg-transparent">
                   <span className="h-10 w-[72px] shrink-0 overflow-hidden rounded-md bg-card2">
@@ -123,10 +125,18 @@ export function ColonneActivite({ onOuvrir, onToutes, onMasquer }: {
                     <span className="block truncate">{ceQuiAEteVu(d)}</span>
                     <span className="block truncate text-meta text-muted">{d.cameraNom ?? ''}</span>
                   </span>
-                  <span className="shrink-0 text-meta tabular-nums text-soft">
+                  <span className="shrink-0 text-meta tabular-nums text-soft group-focus-within/rec:invisible group-hover/rec:invisible">
                     {d.debut ? ilYa(d.debut) : ''}
                   </span>
                 </button>
+                {/* D'une détection à la relecture : avant, il fallait aller dans Relecture et
+                    chercher l'heure à la main. Le bouton prend la place du « il y a » au
+                    survol ; il reste atteignable au clavier. */}
+                {d.debut !== null && (
+                  <Bouton variante="fantome" taille="petit" icone={History} titre={t('activite.revoir')}
+                          onClick={() => onRevoir(d.camera, d.debut as number)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 focus-visible:opacity-100 group-hover/rec:opacity-100" />
+                )}
               </li>
             );
           })}

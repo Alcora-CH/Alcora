@@ -502,4 +502,8 @@ export const it: Record<Cle, string> = {
   // Revue du groupe Direct (23.10.2026)
   'systeme.seuleEnLigne': '1, online',
   'systeme.seuleHorsLigne': '1, offline',
+
+  // Liens d'une detection vers la relecture (23.10.2026)
+  'activite.revoir': 'Rivedi in questo istante',
+  'extrait.voirRelecture': 'Vedi nella riproduzione',
 };

@@ -203,6 +203,24 @@ export default function App() {
    * y arriver sur une autre serait un contresens.
    */
   const [cameraCible, setCameraCible] = useState<string | null>(null);
+  /** L'instant visé par « Revoir à cet instant » : la relecture y arrive directement. */
+  const [instantCible, setInstantCible] = useState<{ t: number } | null>(null);
+  /**
+   * Changer d'espace, éventuellement pour une caméra. Un seul chemin, qui OUBLIE l'instant
+   * visé : sans cela, la relecture rouverte depuis le rail reviendrait à la dernière
+   * détection revue, sans que rien ne le dise.
+   */
+  const allerVers = useCallback((id: string, camera: string | null = null) => {
+    setCameraCible(camera);
+    setInstantCible(null);
+    setEspace(id);
+  }, []);
+  /** « Revoir à cet instant » : une détection mène à la relecture, sur sa caméra, à son heure. */
+  const revoirA = useCallback((camera: string | null, t: number) => {
+    setCameraCible(camera);
+    setInstantCible({ t });
+    setEspace('relecture');
+  }, []);
   /** Une seule camera parle a la fois : deux flux ensemble donnent une bouillie. */
   const [sonSur, setSonSur] = useState<string | null>(null);
   /**
@@ -290,13 +308,13 @@ export default function App() {
 
   /** Les quatre commandes du bandeau de chaque camera. */
   const actionsTuile = useMemo(() => ({
-    onRelecture: (id: string) => { setCameraCible(id); setEspace('relecture'); },
-    onDetections: (id: string) => { setCameraCible(id); setEspace('detections'); },
+    onRelecture: (id: string) => allerVers('relecture', id),
+    onDetections: (id: string) => allerVers('detections', id),
     onCapture: (nom: string, octets: ArrayBuffer) => bridge.capturer(nom, octets),
     onSon: (id: string) => setSonSur(id),
     sonSur,
     sonParDefaut: confort?.sonParDefaut ?? false,
-  }), [sonSur, confort]);
+  }), [sonSur, confort, allerVers]);
 
   /*
    * ATTENTION — tout crochet doit rester AU-DESSUS des sorties anticipees de ce composant
@@ -605,7 +623,7 @@ export default function App() {
 
   /* Le guide de la console vit dans l'écran de connexion, atteint par « Modifier la
      connexion » des réglages : on y renvoie plutôt que d'ouvrir une seconde page. */
-  const versLeGuide = () => { setCameraCible(null); setEspace('reglages'); };
+  const versLeGuide = () => allerVers('reglages');
 
   /* Dès que l'inventaire est lu, même vide : c'est le menu qui dit « Aucune caméra ». */
   const menuCameras = (sombre?: boolean) => relais !== null && (
@@ -620,7 +638,7 @@ export default function App() {
     || cameras.some((c) => !c.online);
   const barre = (
     <BarreEtat relay={relay} systeme={systeme} cameras={cameras} espace={espace}
-               onSysteme={() => { setCameraCible(null); setEspace('systeme'); }}
+               onSysteme={() => allerVers('systeme')}
                onRaccourcis={() => setRaccourcis(true)} />
   );
 
@@ -730,7 +748,7 @@ export default function App() {
           avait cliqué le bouton, sans que rien ne l'indique. */}
       {habille && (
         <Rail espace={espace} marqueAnimee={fondAnime}
-              onChoisir={(id: Espace) => { setCameraCible(null); setEspace(id); }} />
+              onChoisir={(id: Espace) => allerVers(id)} />
       )}
 
       <main className="relative flex min-w-0 flex-1 flex-col bg-bg">
@@ -798,7 +816,8 @@ export default function App() {
         ) : espace === 'detections' ? (
           <RechercheScreen cameras={cameras} cameraInitiale={cameraCible} />
         ) : espace === 'relecture' ? (
-          <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible} />
+          <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible}
+                           instantInitial={instantCible} />
         ) : espace === 'alertes' ? (
           <VeillesScreen cameras={cameras} />
         ) : espace === 'systeme' ? (
@@ -839,8 +858,8 @@ export default function App() {
           prendre de la place. La replier change la largeur des images — et donc la
           qualité demandée au contrôleur : c'est un geste, jamais un survol. */}
       {habille && espace === 'direct' && activiteVisible && (
-        <ColonneActivite onOuvrir={ouvrirDetection}
-                         onToutes={() => { setCameraCible(null); setEspace('detections'); }}
+        <ColonneActivite onOuvrir={ouvrirDetection} onRevoir={revoirA}
+                         onToutes={() => allerVers('detections')}
                          onMasquer={() => setActiviteVisible(false)} />
       )}
     </div>
@@ -860,7 +879,9 @@ export default function App() {
 
       {/* Par-dessus tout : une bulle cliquée doit montrer sa séquence sans rien déranger. */}
       {sequence && (
-        <LecteurExtrait detection={sequence} onFermer={() => setSequence(null)} />
+        <LecteurExtrait detection={sequence} onFermer={() => setSequence(null)}
+                        onRelecture={sequence.debut !== null
+                          ? () => revoirA(sequence.camera, sequence.debut as number) : undefined} />
       )}
 
       {/* « Ce qui a changé » — après l'intro, jamais par-dessus elle, et une seule fois. */}
