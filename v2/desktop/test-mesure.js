@@ -51,6 +51,50 @@ console.log('\n=== Les sommes, et les unites ===');
   check('rien a lire ne fait rien planter', {}, resumer(undefined));
 }
 
+console.log('\n=== Le processeur se lit au temps CUMULE, pas au pourcentage d Electron ===');
+{
+  /*
+   * Releve reel du 23.10.2026 sous Electron 45 : une page qui calcule 90 % du temps annonce
+   * percentCPUUsage = 2,74 (rapporte aux 32 fils de la machine) pour 4,43 s de processeur
+   * en 5 s. Seul le second chiffre dit la verite.
+   */
+  const page = { type: 'Tab', pid: 7, cpu: { percentCPUUsage: 2.74, cumulativeCPUUsage: 4.43 }, memory: {} };
+  check('la page qui calcule pese 88,6 % d un coeur, pas 2,7', '88.6',
+    resumer([page], new Map([[7, 0]]), 5000).renderer.cpu.toFixed(1));
+  const repos = { type: 'Utility', pid: 9, cpu: { percentCPUUsage: -0.04, cumulativeCPUUsage: 0.061 }, memory: {} };
+  check('un pourcentage negatif ne passe pas : au repos, zero', '0.0',
+    resumer([repos], new Map([[9, 0.061]]), 5000).other.cpu.toFixed(1));
+  const ne = { type: 'Tab', pid: 11, cpu: { cumulativeCPUUsage: 1.5 }, memory: {} };
+  check('un processus ne pendant l intervalle : tout son temps lui revient', '15.0',
+    resumer([ne], new Map(), 10_000).renderer.cpu.toFixed(1));
+  const recycle = { type: 'Tab', pid: 7, cpu: { cumulativeCPUUsage: 0.5 }, memory: {} };
+  check('un identifiant redonne a un processus neuf : son temps, pas un negatif', '5.0',
+    resumer([recycle], new Map([[7, 2]]), 10_000).renderer.cpu.toFixed(1));
+
+  let t = 0;
+  const releves = [
+    [{ type: 'Tab', pid: 3, cpu: { cumulativeCPUUsage: 1 }, memory: {} }],
+    [{ type: 'Tab', pid: 3, cpu: { cumulativeCPUUsage: 4 }, memory: {} }],
+    [{ type: 'Tab', pid: 3, cpu: { cumulativeCPUUsage: 5.5 }, memory: {} }],
+  ];
+  const lignes = [];
+  const m = new Mesure({
+    obtenir: () => releves.shift(), etatFenetre: () => ({ visible: true }),
+    journal: { info: (_q, l) => lignes.push(l) }, periodeMs: 60 * 60_000, horloge: () => t,
+  });
+  m.demarrer();
+  m.contexte({ espace: 'direct', tuiles: 1 });
+  t = 30_000;
+  m.consigner();
+  check('le compteur compare au releve du depart : 3 s en 30 s = 10 %', true,
+    lignes.length === 1 && lignes[0].includes('renderer 10.0%'));
+  t = 60_000;
+  m.consigner();
+  check('puis au releve PRECEDENT, pas a celui du depart : 1,5 s en 30 s = 5 %', true,
+    lignes.length === 2 && lignes[1].includes('renderer 5.0%'));
+  m.arreter();
+}
+
 console.log('\n=== Ce que la page annonce est filtre ===');
 check('un contexte complet passe', { espace: 'direct', tuiles: 2, ciel: 'fixe' },
   normaliser({ espace: 'direct', tuiles: 2, ciel: 'fixe', autre: 'jete' }));

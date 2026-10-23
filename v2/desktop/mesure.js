@@ -41,16 +41,40 @@ function role(m) {
 const ORDRE = ['main', 'renderer', 'gpu', 'network', 'audio', 'other'];
 
 /**
+ * Le processeur d'un processus sur l'intervalle, en % d'UN coeur.
+ *
+ * Calcule par DIFFERENCE de temps processeur cumule (secondes), jamais lu dans
+ * « percentCPUUsage ». Mesure du 23.10.2026 sous Electron 45 : une page qui calcule 90 % du
+ * temps y valait 2,74 — le chiffre est rapporte a TOUTE la machine (88 % / 32 fils = 2,75)
+ * et sort meme negatif pour un utilitaire au repos (-0,04). Le temps cumule, lui, disait
+ * 4,43 s en 5 s. Lu tel quel, chaque avant/apres aurait ete faux d'un facteur trente-deux.
+ *
+ * Un processus absent du releve precedent est ne pendant l'intervalle : tout son temps
+ * cumule lui appartient. De meme si son temps RECULE : Windows a redonne son identifiant a
+ * un processus neuf. Sans temps cumule (ancienne version), on retombe sur l'autre chiffre,
+ * faute de mieux.
+ */
+function processeur(m, avant, dureeMs) {
+  const cumul = Number(m.cpu?.cumulativeCPUUsage);
+  if (!Number.isFinite(cumul) || !(dureeMs > 0)) return Number(m.cpu?.percentCPUUsage) || 0;
+  const precedent = avant?.get(m.pid) ?? 0;
+  const ecoule = cumul >= precedent ? cumul - precedent : cumul;
+  return ecoule / (dureeMs / 1000) * 100;
+}
+
+/**
  * Additionne par role. La memoire d'Electron est en kilo-octets ; « privateBytes » n'existe
  * que sous Windows, on se rabat sinon sur l'ensemble de travail.
  *
+ * @param {Map<number, number>} [avant]  temps cumule de chaque processus au releve precedent
+ * @param {number} [dureeMs]             duree de l'intervalle
  * @returns {Record<string, { cpu: number, mo: number, n: number }>}
  */
-function resumer(metriques) {
+function resumer(metriques, avant, dureeMs) {
   const r = {};
   for (const m of metriques ?? []) {
     const cle = role(m);
-    const cpu = Number(m.cpu?.percentCPUUsage) || 0;
+    const cpu = processeur(m, avant, dureeMs);
     const ko = Number(m.memory?.privateBytes ?? m.memory?.workingSetSize) || 0;
     r[cle] ??= { cpu: 0, mo: 0, n: 0 };
     r[cle].cpu += cpu;
@@ -58,6 +82,16 @@ function resumer(metriques) {
     r[cle].n += 1;
   }
   return r;
+}
+
+/** Le temps cumule de chaque processus d'un releve, pour le releve suivant. */
+function cumuls(metriques) {
+  const c = new Map();
+  for (const m of metriques ?? []) {
+    const v = Number(m.cpu?.cumulativeCPUUsage);
+    if (Number.isFinite(v)) c.set(m.pid, v);
+  }
+  return c;
 }
 
 /**
@@ -101,9 +135,9 @@ function ligne(resume, contexte, etatFenetre, dureeMs) {
 }
 
 /**
- * Le compteur. `obtenir` lit app.getAppMetrics() ; chaque appel rend la moyenne DEPUIS
- * l'appel precedent — c'est pourquoi on l'appelle une fois au depart, pour rien, et a
- * chaque fin d'intervalle ensuite.
+ * Le compteur. `obtenir` lit app.getAppMetrics() ; le releve du depart sert de point de
+ * reference, et chaque fin d'intervalle compare le temps processeur cumule de chaque
+ * processus a celui du releve precedent (voir `processeur`).
  */
 class Mesure {
   constructor({ obtenir, etatFenetre, journal, periodeMs = PERIODE_MS, horloge = Date.now }) {
@@ -114,12 +148,14 @@ class Mesure {
     this.horloge = horloge;
     this.ctx = null;
     this.depuis = null;
+    /** Temps processeur cumule de chaque processus, au releve precedent. */
+    this.avant = new Map();
     this.etat = null;
     this.minuterie = null;
   }
 
   demarrer() {
-    this.obtenir();                       // amorce : le premier appel rend toujours zero
+    this.avant = cumuls(this.obtenir());  // amorce : le point de depart des differences
     this.depuis = this.horloge();
     this.etat = this.etatFenetre();
     this.minuterie = setInterval(() => this.consigner(), this.periodeMs);
@@ -155,7 +191,8 @@ class Mesure {
     const duree = maintenant - this.depuis;
     if (duree < DUREE_MIN_MS) return;
     const metriques = this.obtenir();
-    this.journal.info('metrics', ligne(resumer(metriques), this.ctx, this.etat, duree));
+    this.journal.info('metrics', ligne(resumer(metriques, this.avant, duree), this.ctx, this.etat, duree));
+    this.avant = cumuls(metriques);
     this.depuis = maintenant;
     this.etat = this.etatFenetre();
   }
@@ -172,4 +209,4 @@ class Mesure {
   }
 }
 
-module.exports = { Mesure, resumer, normaliser, ligne, role, PERIODE_MS, DUREE_MIN_MS, ESPACES };
+module.exports = { Mesure, resumer, cumuls, normaliser, ligne, role, PERIODE_MS, DUREE_MIN_MS, ESPACES };

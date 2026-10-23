@@ -39,6 +39,24 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.31.0',
+    date: '23.10.2026',
+    fr: [
+      'Moteur Electron 45.0.0 au lieu de 44.9.3 (Chromium 156), avec ses correctifs de sécurité. '
+      + 'Rien ne change à l’écran, et rien n’est à ressaisir.',
+      'L’application note dans son journal ce qu’elle consomme — processeur et mémoire, par '
+      + 'processus —, avec l’écran affiché, le nombre d’images et l’état de la fenêtre. C’est ce '
+      + 'qui permettra de mesurer, chiffres à l’appui, ce que la prochaine version allège.',
+    ],
+    en: [
+      'Electron engine 45.0.0 instead of 44.9.3 (Chromium 156), with its security fixes. Nothing '
+      + 'changes on screen, and nothing to type again.',
+      'The application records in its log what it consumes — processor and memory, per process '
+      + '— together with the screen shown, the number of images and the window state. That is '
+      + 'what will measure, with figures, what the next version makes lighter.',
+    ],
+  },
+  {
     version: '2.30.0',
     date: '23.10.2026',
     fr: [
