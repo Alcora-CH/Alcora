@@ -280,7 +280,7 @@ const verdict = (d, attendu = CHAMPS, cles = CLES_TEST) => verifierDeclaration(d
     const ecart = (copie) => s.ecartDeNote(copie, note) ?? '';
     check('diagnostic : presse-papiers vide', /vide/.test(ecart('  \n')));
     check('diagnostic : autre texte, sans le montrer',
-      /Rien de la clé/.test(ecart('mot-de-passe-fictif')) && !ecart('mot-de-passe-fictif').includes('fictif'));
+      /pas dans ce qui a été copié/.test(ecart('mot-de-passe-fictif')) && !ecart('mot-de-passe-fictif').includes('fictif'));
     check('diagnostic : ligne abimee', /tronquée ou abîmée/.test(ecart(note.replace('scrypt', 'scr ypt'))));
     // Le cas du 24.10.2026 : le titre de la note reprenait le nom, la cle masquee n'etait pas copiee.
     check('diagnostic : un titre qui reprend le nom n est pas une ligne abimee',
