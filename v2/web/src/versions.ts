@@ -39,6 +39,30 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.35.0',
+    date: '23.10.2026',
+    fr: [
+      'Relire plusieurs caméras au même instant, jusqu’à quatre : le « + » doré d’une caméra, '
+      + 'dans la relecture, l’ajoute à côté, la croix la retire. La caméra active (bordure dorée) '
+      + 'mène, les autres suivent son heure, image par image en pause ; un clic sur une autre la '
+      + 'rend active, et une seule caméra parle à la fois.',
+      'La frise et la pellicule montrent les détections de toutes les caméras affichées, et '
+      + 'l’export d’une plage écrit un fichier par caméra, l’un après l’autre.',
+      'Les morceaux de vidéo de toutes les caméras se demandent au contrôleur dans une seule '
+      + 'file, jamais deux à la fois : deux caméras relues ensemble l’occupent environ 7 % du temps.',
+    ],
+    en: [
+      'Replay several cameras at the same moment, up to four: a camera’s gold “+”, in the replay, '
+      + 'adds it alongside, the cross removes it. The active camera (gold border) leads, the others '
+      + 'follow its time, frame by frame when paused; a click on another one makes it active, and '
+      + 'one camera speaks at a time.',
+      'The timeline and the film strip show the detections of every camera shown, and a range '
+      + 'export writes one file per camera, one after the other.',
+      'The video chunks of every camera are requested from the controller in a single queue, '
+      + 'never two at once: two cameras replayed together keep it busy about 7 % of the time.',
+    ],
+  },
+  {
     version: '2.34.0',
     date: '23.10.2026',
     fr: [
