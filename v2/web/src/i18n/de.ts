@@ -329,7 +329,7 @@ export const de: Record<Cle, string> = {
   'recherche.enCours': 'Suche läuft…',
   'recherche.objetUn': 'Objekt',
   'recherche.objetPlusieurs': 'Objekte',
-  'recherche.tronque': 'nur die 300 jüngsten — grenze ein, um alles zu sehen',
+  'recherche.tronque': 'Nur die 300 jüngsten — grenze ein, um alles zu sehen',
   'recherche.filtrageNote': 'Motiv vom Controller gefiltert, der Rest hier',
   'recherche.rien': 'Nichts passt.',
   'recherche.rienSeuil': 'Die Mindestkonfidenz ist vielleicht zu hoch.',
@@ -511,4 +511,21 @@ export const de: Record<Cle, string> = {
   // Relecture (direction Observatoire, 23.10.2026)
   'video.imageEntiere': 'Ganzes Bild',
   'relecture.vitesse': 'Wiedergabegeschwindigkeit',
+
+  // Detections (direction Observatoire, 23.10.2026) : couleurs nommees, en-tete, etats
+  'couleur.gray': 'Grau',
+  'couleur.white': 'Weiss',
+  'couleur.black': 'Schwarz',
+  'couleur.blue': 'Blau',
+  'couleur.yellow': 'Gelb',
+  'couleur.red': 'Rot',
+  'couleur.green': 'Grün',
+  'couleur.brown': 'Braun',
+  'couleur.silver': 'Silber',
+  'couleur.orange': 'Orange',
+  'couleur.beige': 'Beige',
+  'recherche.toutesCameras': 'Alle Kameras',
+  'recherche.nCameras': '{n} Kameras',
+  'recherche.retirerSeuil': 'Mindestkonfidenz entfernen',
+  'recherche.revoirCourt': 'Wiedergabe',
 };

@@ -308,7 +308,7 @@ export const it: Record<Cle, string> = {
   'extrait.enregistre': 'Salvato:',
 
   'recherche.chercher': 'Cerca',
-  'recherche.placeholder': 'targa, o nome…',
+  'recherche.placeholder': 'Targa, o nome…',
   'recherche.chercherAria': 'Cerca una targa o un nome',
   'recherche.tolerante1':
     'Ricerca tollerante: il controller restituisce più letture possibili della stessa ' +
@@ -326,11 +326,11 @@ export const it: Record<Cle, string> = {
   'recherche.periode': 'Periodo',
   'recherche.periode7': '7 giorni',
   'recherche.periode30': '30 giorni',
-  'recherche.enCours': 'ricerca…',
+  'recherche.enCours': 'Ricerca…',
   'recherche.objetUn': 'oggetto',
   'recherche.objetPlusieurs': 'oggetti',
-  'recherche.tronque': 'mostrati i 300 più recenti — restringi per vedere tutto',
-  'recherche.filtrageNote': 'soggetto filtrato dal controller, il resto qui',
+  'recherche.tronque': 'Mostrati i 300 più recenti — restringi per vedere tutto',
+  'recherche.filtrageNote': 'Soggetto filtrato dal controller, il resto qui',
   'recherche.rien': 'Nulla corrisponde.',
   'recherche.rienSeuil': 'La confidenza minima è forse troppo alta.',
   'recherche.rienTexte': 'Prova con meno caratteri — le ultime cifre bastano.',
@@ -510,4 +510,21 @@ export const it: Record<Cle, string> = {
   // Relecture (direction Observatoire, 23.10.2026)
   'video.imageEntiere': 'Immagine intera',
   'relecture.vitesse': 'Velocità di riproduzione',
+
+  // Detections (direction Observatoire, 23.10.2026) : couleurs nommees, en-tete, etats
+  'couleur.gray': 'Grigio',
+  'couleur.white': 'Bianco',
+  'couleur.black': 'Nero',
+  'couleur.blue': 'Blu',
+  'couleur.yellow': 'Giallo',
+  'couleur.red': 'Rosso',
+  'couleur.green': 'Verde',
+  'couleur.brown': 'Marrone',
+  'couleur.silver': 'Argento',
+  'couleur.orange': 'Arancione',
+  'couleur.beige': 'Beige',
+  'recherche.toutesCameras': 'Tutte le telecamere',
+  'recherche.nCameras': '{n} telecamere',
+  'recherche.retirerSeuil': 'Rimuovi la confidenza minima',
+  'recherche.revoirCourt': 'Rivedi',
 };

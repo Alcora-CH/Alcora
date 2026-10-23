@@ -814,7 +814,7 @@ export default function App() {
             }}
           />
         ) : espace === 'detections' ? (
-          <RechercheScreen cameras={cameras} cameraInitiale={cameraCible} />
+          <RechercheScreen cameras={cameras} cameraInitiale={cameraCible} onRevoir={revoirA} />
         ) : espace === 'relecture' ? (
           <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible}
                            instantInitial={instantCible} />

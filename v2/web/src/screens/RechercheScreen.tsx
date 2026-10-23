@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Loader2, Search, ShieldCheck } from 'lucide-react';
+import { AlertCircle, History, Loader2, Search, ShieldCheck } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { LecteurExtrait } from './LecteurExtrait';
 import { localeDates, t, useLangue } from '../i18n';
-import { nomSujet, nomVehicule } from '../i18n/sujets';
+import { nomCouleur, nomSujet, nomVehicule } from '../i18n/sujets';
+import { Bouton } from '../ui/Bouton';
+import { Carte, EnTete } from '../ui/Cadre';
+import { Champ } from '../ui/Champ';
+import { Puce } from '../ui/Puce';
+import { Segment } from '../ui/Segment';
+import { cx } from '../ui/cx';
 import type {
   CriteresRecherche, Detection, DiscoveredCamera, ObjetDetecte, Recensement,
 } from '../types/protect';
@@ -37,13 +43,25 @@ const PERIODES = [
   { id: 'mois', cle: 'recherche.periode30', ms: 30 * 86_400_000 },
 ] as const;
 
+/** Un groupe de filtres : son titre, puis ses choix. */
+function Filtre({ titre, children }: { titre: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-2.5 text-corps font-semibold">{titre}</h2>
+      {children}
+    </section>
+  );
+}
+
 const horaire = (d: Date) => new Intl.DateTimeFormat(localeDates(),
   { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(d);
 
-export function RechercheScreen({ cameras, cameraInitiale }: {
+export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
   cameras: DiscoveredCamera[];
   /** Camera visee par un bouton du direct : on arrive filtre sur elle. */
   cameraInitiale?: string | null;
+  /** « Revoir a cet instant » : la relecture de cette camera, a l'heure de la detection. */
+  onRevoir: (camera: string | null, t: number) => void;
 }) {
   useLangue();
   const [texte, setTexte] = useState('');
@@ -107,222 +125,210 @@ export function RechercheScreen({ cameras, cameraInitiale }: {
     });
   };
 
-  const Titre = ({ children }: { children: React.ReactNode }) => (
-    <h4 className="mb-2 mt-4 text-[10.5px] font-semibold uppercase tracking-wider text-soft first:mt-0">
-      {children}
-    </h4>
-  );
-
-  const Puce = ({ on, onClick, children, n }: {
-    on: boolean; onClick: () => void; children: React.ReactNode; n?: number;
-  }) => (
-    <button onClick={onClick} aria-pressed={on}
-            className="flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[12px] transition-colors"
-            style={on
-              ? { background: 'var(--accent-soft)', color: 'var(--accent)', borderColor: 'transparent' }
-              : { color: 'var(--soft)', borderColor: 'var(--line)' }}>
-      {children}
-      {/* Le compte réel, collé au choix : c'est ce que Protect ne dit nulle part. */}
-      {n !== undefined && <span className="font-mono text-[10px] opacity-70">{n}</span>}
-    </button>
-  );
+  /* La précision de l'en-tête : sur quelles caméras porte la recherche. */
+  const precision = camerasChoisies.length === 0 ? t('recherche.toutesCameras')
+    : camerasChoisies.length === 1 ? (cameras.find((c) => c.id === camerasChoisies[0])?.name ?? '')
+      : t('recherche.nCameras', { n: camerasChoisies.length });
 
   return (
-    <div className="relative flex h-full min-h-0 gap-4 p-4">
-
-      {/* ---- les filtres : un îlot qui flotte à gauche ---- */}
-      <div className="ilot w-[252px] shrink-0 overflow-y-auto p-4">
-        <Titre>{t('recherche.chercher')}</Titre>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2"
-                  style={{ color: 'var(--soft)' }} />
-          <input value={texte} onChange={(e) => setTexte(e.target.value)}
-                 placeholder={t('recherche.placeholder')}
-                 aria-label={t('recherche.chercherAria')}
-                 className="w-full rounded-lg border border-line bg-transparent py-1.5 pl-8 pr-2.5 text-[12.5px] text-ink" />
-        </div>
-        <p className="mt-1.5 text-[11px] leading-relaxed text-soft">
-          {t('recherche.tolerante1')} <span className="font-mono">O</span> {t('recherche.tolerante2')}
-          <span className="font-mono"> 0</span>{t('recherche.tolerante3')}
-        </p>
-
-        {recensement && recensement.sujets.length > 0 && (
-          <>
-            <Titre>{t('recherche.sujet')}</Titre>
-            <div className="flex flex-wrap gap-1.5">
-              {recensement.sujets.map((s) => (
-                <Puce key={s.valeur} n={s.n} on={sujets.includes(s.valeur)}
-                      onClick={() => bascule(sujets, setSujets, s.valeur)}>
-                  {nomSujet(s.valeur)}
-                </Puce>
-              ))}
-            </div>
-          </>
+    <div className="relative flex h-full flex-col">
+      <EnTete
+        titre={t('espace.detections')}
+        precision={precision}
+        actions={(
+          <Segment etiquette={t('recherche.periode')} valeur={periode} onChange={setPeriode}
+                   options={PERIODES.map((p) => ({ valeur: p.id, libelle: t(p.cle) }))} />
         )}
+      />
 
-        <Titre>{t('recherche.confiance')}</Titre>
-        <input type="range" min={0} max={100} step={5} value={seuil}
-               onChange={(e) => setSeuil(Number(e.target.value))}
-               aria-label={t('recherche.confiance')}
-               className="w-full" style={{ accentColor: 'var(--accent)' }} />
-        <div className="flex justify-between font-mono text-[10px] text-soft">
-          <span>0</span><span>{seuil}</span><span>100</span>
-        </div>
-        {/* Le piège que seule la mesure a révélé : les sons n'ont pas de score. */}
-        <p className="mt-1.5 text-[11px] leading-relaxed text-soft">
-          {t('recherche.confianceDetail')}
-        </p>
+      <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)]">
 
-        {recensement && recensement.types.length > 0 && (
-          <>
-            <Titre>{t('recherche.typeVehicule')}</Titre>
-            <div className="flex flex-wrap gap-1.5">
-              {recensement.types.map((ty) => (
-                <Puce key={ty.valeur} n={ty.n} on={types.includes(ty.valeur)}
-                      onClick={() => bascule(types, setTypes, ty.valeur)}>
-                  {nomVehicule(ty.valeur)}
-                </Puce>
-              ))}
-            </div>
-          </>
-        )}
+        {/* ---- les filtres : une colonne, dans l'ordre où l'on affine ---- */}
+        <aside className="flex flex-col gap-[22px] overflow-y-auto border-r border-line bg-card px-5 pb-6 pt-[18px]">
+          <Champ id="recherche-texte" libelle={t('recherche.chercher')} icone={Search}
+                 value={texte} onChange={(e) => setTexte(e.target.value)}
+                 placeholder={t('recherche.placeholder')} aria-label={t('recherche.chercherAria')}
+                 aide={<>
+                   {t('recherche.tolerante1')} <span className="font-mono">O</span> {t('recherche.tolerante2')}
+                   <span className="font-mono"> 0</span>{t('recherche.tolerante3')}
+                 </>} />
 
-        {recensement && recensement.couleurs.length > 0 && (
-          <>
-            <Titre>{t('recherche.couleur')}</Titre>
-            {/* Les couleurs se montrent, elles ne s'écrivent pas. */}
-            <div className="flex flex-wrap gap-2">
-              {recensement.couleurs.map((c) => (
-                <button key={c.valeur} onClick={() => bascule(couleurs, setCouleurs, c.valeur)}
-                        aria-pressed={couleurs.includes(c.valeur)}
-                        title={`${c.valeur} — ${c.n}`}
-                        className="relative h-7 w-7 rounded-md border-2 transition-colors"
-                        style={{ background: TEINTE_COULEUR[c.valeur] ?? 'var(--card2)',
-                                 borderColor: couleurs.includes(c.valeur) ? 'var(--accent)' : 'var(--line2)' }}>
-                  <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 font-mono text-[9px] text-soft">
-                    {c.n}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="h-4" />
-          </>
-        )}
-
-        {cameras.length > 1 && (
-          <>
-            <Titre>{t('recherche.camera')}</Titre>
-            <div className="flex flex-wrap gap-1.5">
-              <Puce on={camerasChoisies.length === 0} onClick={() => setCameras([])}>{t('commun.toutes')}</Puce>
-              {cameras.map((c) => (
-                <Puce key={c.id} on={camerasChoisies.includes(c.id)}
-                      onClick={() => bascule(camerasChoisies, setCameras, c.id)}>
-                  {c.name}
-                </Puce>
-              ))}
-            </div>
-          </>
-        )}
-
-        <Titre>{t('recherche.periode')}</Titre>
-        <div className="flex flex-wrap gap-1.5">
-          {PERIODES.map((p) => (
-            <Puce key={p.id} on={periode === p.id} onClick={() => setPeriode(p.id)}>{t(p.cle)}</Puce>
-          ))}
-        </div>
-      </div>
-
-      {/* ---- les résultats ---- */}
-      <div className="min-w-0 flex-1 overflow-y-auto">
-        {/* Le bandeau d'état, en îlot détaché : total, troncature, note de filtrage. */}
-        <div className="ilot flex items-center gap-3 px-4 py-2.5">
-          <span className="font-mono text-[11.5px] text-soft">
-            {chargement ? t('recherche.enCours')
-              : `${total} ${total > 1 ? t('recherche.objetPlusieurs') : t('recherche.objetUn')}`}
-          </span>
-          {chargement && <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: 'var(--soft)' }} />}
-          {tronque && (
-            <span className="text-[11.5px]" style={{ color: 'var(--warn)' }}>
-              {t('recherche.tronque')}
-            </span>
+          {recensement && recensement.sujets.length > 0 && (
+            <Filtre titre={t('recherche.sujet')}>
+              <div className="flex flex-wrap gap-1.5">
+                {/* Le compte réel, collé au choix : c'est ce que Protect ne dit nulle part. */}
+                {recensement.sujets.map((s) => (
+                  <Puce key={s.valeur} compte={s.n} allumee={sujets.includes(s.valeur)}
+                        onClick={() => bascule(sujets, setSujets, s.valeur)}>
+                    {nomSujet(s.valeur)}
+                  </Puce>
+                ))}
+              </div>
+            </Filtre>
           )}
-          <span className="ml-auto text-[11px] text-soft">
-            {t('recherche.filtrageNote')}
-          </span>
-        </div>
 
-        {erreur && (
-          <div className="ilot my-4 p-4">
-            <p className="flex gap-2 text-[13px]" style={{ color: 'var(--warn)' }}>
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><span>{erreur}</span>
-            </p>
+          <Filtre titre={t('recherche.confiance')}>
+            <input type="range" min={0} max={100} step={5} value={seuil}
+                   onChange={(e) => setSeuil(Number(e.target.value))}
+                   aria-label={t('recherche.confiance')}
+                   className="w-full accent-[var(--accent)]" />
+            <div className="flex justify-between text-meta tabular-nums text-soft">
+              <span>0</span><b className="font-medium text-accent">{seuil} %</b><span>100</span>
+            </div>
+            {/* Le piège que seule la mesure a révélé : les sons n'ont pas de score. */}
+            <p className="mt-1.5 text-meta leading-normal text-soft">{t('recherche.confianceDetail')}</p>
+          </Filtre>
+
+          {recensement && recensement.types.length > 0 && (
+            <Filtre titre={t('recherche.typeVehicule')}>
+              <div className="flex flex-wrap gap-1.5">
+                {recensement.types.map((ty) => (
+                  <Puce key={ty.valeur} compte={ty.n} allumee={types.includes(ty.valeur)}
+                        onClick={() => bascule(types, setTypes, ty.valeur)}>
+                    {nomVehicule(ty.valeur)}
+                  </Puce>
+                ))}
+              </div>
+            </Filtre>
+          )}
+
+          {recensement && recensement.couleurs.length > 0 && (
+            <Filtre titre={t('recherche.couleur')}>
+              {/* La pastille ET le nom : la teinte seule laissait deviner gris ou argent. */}
+              <div className="flex flex-wrap gap-1.5">
+                {recensement.couleurs.map((c) => (
+                  <Puce key={c.valeur} compte={c.n} allumee={couleurs.includes(c.valeur)}
+                        echantillon={TEINTE_COULEUR[c.valeur] ?? 'var(--card2)'}
+                        onClick={() => bascule(couleurs, setCouleurs, c.valeur)}>
+                    {nomCouleur(c.valeur)}
+                  </Puce>
+                ))}
+              </div>
+            </Filtre>
+          )}
+
+          {cameras.length > 1 && (
+            <Filtre titre={t('recherche.camera')}>
+              <div className="flex flex-wrap gap-1.5">
+                <Puce allumee={camerasChoisies.length === 0} onClick={() => setCameras([])}>{t('commun.toutes')}</Puce>
+                {cameras.map((c) => (
+                  <Puce key={c.id} allumee={camerasChoisies.includes(c.id)}
+                        onClick={() => bascule(camerasChoisies, setCameras, c.id)}>
+                    {c.name}
+                  </Puce>
+                ))}
+              </div>
+            </Filtre>
+          )}
+        </aside>
+
+        {/* ---- les résultats ---- */}
+        <div className="flex min-h-0 flex-col">
+          {/* La barre d'état des résultats : total, troncature, note de filtrage. */}
+          <div className="flex shrink-0 items-center gap-3.5 border-b border-line px-5 py-3">
+            <b className="font-semibold tabular-nums">
+              {chargement ? t('recherche.enCours')
+                : `${total} ${total > 1 ? t('recherche.objetPlusieurs') : t('recherche.objetUn')}`}
+            </b>
+            {chargement && <Loader2 className="h-4 w-4 animate-spin text-soft" aria-hidden />}
+            {tronque && <span className="text-warn">{t('recherche.tronque')}</span>}
+            <span className="ml-auto text-meta text-soft">{t('recherche.filtrageNote')}</span>
           </div>
-        )}
 
-        {!chargement && !erreur && objets.length === 0 && (
-          <p className="p-6 text-[13px] text-soft">
-            {t('recherche.rien')} {seuil > 0 && `${t('recherche.rienSeuil')} `}
-            {texte && t('recherche.rienTexte')}
-          </p>
-        )}
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-[18px]">
+            {erreur && (
+              <Carte className="mx-auto mt-6 max-w-md p-5 text-center">
+                <AlertCircle className="mx-auto mb-2 h-5 w-5 text-warn" aria-hidden />
+                <p>{erreur}</p>
+              </Carte>
+            )}
 
-        <div className="m-cascade grid gap-3 py-4"
-             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(178px, 1fr))' }}>
-          {objets.map((o) => (
-            /* Cartes flottantes : la levée au survol remplace le changement de bord. */
-            <button key={o.objectId} onClick={() => ouvrir(o)}
-                    className="carte-flottante relative overflow-hidden rounded-xl text-left transition-transform hover:-translate-y-[3px]">
-              <div className="aspect-video">
-                {o.vignette && o.id && (
-                  <img src={`/vignette/${o.id}`} alt="" loading="lazy"
-                       className="h-full w-full object-cover"
-                       onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+            {/* Rien ne correspond : on dit pourquoi, et l'on offre de retirer le filtre fautif. */}
+            {!chargement && !erreur && objets.length === 0 && (
+              <Carte className="mx-auto mt-6 max-w-md p-5 text-center">
+                <p className="font-semibold">{t('recherche.rien')}</p>
+                {seuil > 0 && (
+                  <>
+                    <p className="mt-1.5 text-meta text-soft">{t('recherche.rienSeuil')}</p>
+                    <Bouton taille="petit" className="mt-2.5" onClick={() => setSeuil(0)}>
+                      {t('recherche.retirerSeuil')}
+                    </Bouton>
+                  </>
                 )}
-              </div>
+                {texte && <p className="mt-1.5 text-meta text-soft">{t('recherche.rienTexte')}</p>}
+              </Carte>
+            )}
 
-              <div className="pointer-events-none absolute inset-x-1.5 top-1.5 flex gap-1.5 font-mono text-[9px]">
-                <span className="rounded px-1.5 py-0.5" style={{ background: 'rgba(10,12,15,.72)', color: '#c9c3b8' }}>
-                  {o.debut ? horaire(new Date(o.debut)) : '—'}
-                </span>
-                <span className="truncate rounded px-1.5 py-0.5"
-                      style={{ background: 'rgba(10,12,15,.72)', color: '#c9c3b8' }}>
-                  {o.cameraNom ?? ''}
-                </span>
-                {/* Une plaque ou un nom a été reconnu — le texte, lui, ne quitte jamais
-                    le processus principal. */}
-                {o.identifie && (
-                  <span className="ml-auto grid h-4 w-4 place-items-center rounded"
-                        title={t('recherche.identifie')}
-                        style={{ background: 'rgba(10,12,15,.72)', color: 'var(--accent-d)' }}>
-                    <ShieldCheck className="h-2.5 w-2.5" />
-                  </span>
-                )}
-              </div>
-
-              <div className="pointer-events-none absolute inset-x-1.5 bottom-1.5 flex items-center gap-1.5">
-                <span className="truncate rounded px-1.5 py-0.5 text-[10px]"
-                      style={{ background: 'rgba(10,12,15,.72)', color: '#dad5cb' }}>
-                  {[o.vehicule?.valeur ? nomVehicule(o.vehicule.valeur) : nomSujet(o.type),
-                    o.couleur?.valeur].filter(Boolean).join(' · ')}
-                </span>
-                {/* La confiance montrée est celle de l'ATTRIBUT quand il y en a un : c'est
-                    elle qui compte quand on cherche « une voiture blanche ». */}
-                {(o.couleur?.confiance ?? o.vehicule?.confiance ?? o.confiance) !== null && (
-                  <span className="ml-auto rounded px-1.5 py-0.5 font-mono text-[9.5px]"
-                        style={{ background: 'rgba(10,12,15,.72)',
-                                 color: (o.couleur?.confiance ?? o.vehicule?.confiance ?? o.confiance ?? 0) >= 80
-                                   ? 'var(--ok)' : 'var(--ink)' }}>
-                    {o.couleur?.confiance ?? o.vehicule?.confiance ?? o.confiance} %
-                  </span>
-                )}
-              </div>
-            </button>
-          ))}
+            <div className="m-cascade grid auto-rows-max content-start gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(214px,1fr))]">
+              {objets.map((o) => {
+                /* La confiance montrée est celle de l'ATTRIBUT quand il y en a un : c'est elle
+                   qui compte quand on cherche « une voiture blanche ». */
+                const confiance = o.couleur?.confiance ?? o.vehicule?.confiance ?? o.confiance;
+                return (
+                  <div key={o.objectId} className="group/obj relative">
+                    <button type="button" onClick={() => ouvrir(o)}
+                            className="block w-full overflow-hidden rounded-[10px] border border-line2 bg-card text-left transition hover:-translate-y-0.5 hover:border-accent-ligne">
+                      {/* La vignette nette : plus rien posé dessus, sinon le badge. */}
+                      <div className="relative aspect-video bg-black">
+                        {o.vignette && o.id && (
+                          <img src={`/vignette/${o.id}`} alt="" loading="lazy"
+                               className="h-full w-full object-cover"
+                               onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+                        )}
+                        {/* Une plaque ou un nom a été reconnu — le texte, lui, ne quitte jamais
+                            le processus principal. */}
+                        {o.identifie && (
+                          <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-md text-accent"
+                                title={t('recherche.identifie')} style={{ background: 'rgba(12,15,20,.8)' }}>
+                            <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+                            <span className="sr-only">{t('recherche.identifie')}</span>
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-[1fr_auto] gap-y-[3px] px-[11px] pb-2.5 pt-[9px]">
+                        <span className="flex min-w-0 items-center gap-[7px]">
+                          <span className="truncate">
+                            {o.vehicule?.valeur ? nomVehicule(o.vehicule.valeur) : nomSujet(o.type)}
+                          </span>
+                          {o.couleur?.valeur && (
+                            <>
+                              <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/25"
+                                    style={{ background: TEINTE_COULEUR[o.couleur.valeur] ?? 'var(--card2)' }} />
+                              <span className="truncate">{nomCouleur(o.couleur.valeur)}</span>
+                            </>
+                          )}
+                        </span>
+                        {confiance !== null && confiance !== undefined && (
+                          <span className={cx('text-right text-meta tabular-nums', confiance >= 80 ? 'text-ok' : 'text-muted')}>
+                            {confiance} %
+                          </span>
+                        )}
+                        <span className="col-span-2 truncate text-meta text-muted">
+                          {[o.debut ? horaire(new Date(o.debut)) : '—', o.cameraNom].filter(Boolean).join(', ')}
+                        </span>
+                      </div>
+                    </button>
+                    {/* D'une détection à la relecture, à cet instant (ajout du 23.10.2026). */}
+                    {o.debut !== null && (
+                      <Bouton taille="petit" icone={History} titre={t('activite.revoir')}
+                              onClick={() => onRevoir(o.camera, o.debut as number)}
+                              className="veil absolute left-2 top-2 opacity-0 focus-visible:opacity-100 group-hover/obj:opacity-100"
+                              style={{ color: 'var(--on-1)' }}>
+                        {t('recherche.revoirCourt')}
+                      </Bouton>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
       {ouvert && (
-        <LecteurExtrait key={ouvert.id} detection={ouvert} onFermer={() => setOuvert(null)} />
+        <LecteurExtrait key={ouvert.id} detection={ouvert} onFermer={() => setOuvert(null)}
+                        onRelecture={ouvert.debut !== null
+                          ? () => onRevoir(ouvert.camera, ouvert.debut as number) : undefined} />
       )}
     </div>
   );

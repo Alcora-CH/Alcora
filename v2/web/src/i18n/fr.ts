@@ -330,7 +330,7 @@ export const fr = {
 
   // ---- la recherche fine dans les detections
   'recherche.chercher': 'Chercher',
-  'recherche.placeholder': 'plaque, ou nom…',
+  'recherche.placeholder': 'Plaque, ou nom…',
   'recherche.chercherAria': 'Chercher une plaque ou un nom',
   'recherche.tolerante1':
     'Recherche tolérante : le contrôleur rend plusieurs lectures possibles d’une même ' +
@@ -348,11 +348,11 @@ export const fr = {
   'recherche.periode': 'Période',
   'recherche.periode7': '7 jours',
   'recherche.periode30': '30 jours',
-  'recherche.enCours': 'recherche…',
+  'recherche.enCours': 'Recherche…',
   'recherche.objetUn': 'objet',
   'recherche.objetPlusieurs': 'objets',
-  'recherche.tronque': 'affichage limité aux 300 plus récents — affine pour tout voir',
-  'recherche.filtrageNote': 'sujet filtré par le contrôleur, le reste ici',
+  'recherche.tronque': 'Affichage limité aux 300 plus récents — affine pour tout voir',
+  'recherche.filtrageNote': 'Sujet filtré par le contrôleur, le reste ici',
   'recherche.rien': 'Rien ne correspond.',
   'recherche.rienSeuil': 'La confiance minimale est peut-être trop haute.',
   'recherche.rienTexte': 'Essaie avec moins de caractères — les derniers chiffres suffisent.',
@@ -538,6 +538,23 @@ export const fr = {
   // Relecture (direction Observatoire, 23.10.2026)
   'video.imageEntiere': 'Image entière',
   'relecture.vitesse': 'Vitesse de lecture',
+
+  // Detections (direction Observatoire, 23.10.2026) : couleurs nommees, en-tete, etats
+  'couleur.gray': 'Gris',
+  'couleur.white': 'Blanc',
+  'couleur.black': 'Noir',
+  'couleur.blue': 'Bleu',
+  'couleur.yellow': 'Jaune',
+  'couleur.red': 'Rouge',
+  'couleur.green': 'Vert',
+  'couleur.brown': 'Brun',
+  'couleur.silver': 'Argent',
+  'couleur.orange': 'Orange',
+  'couleur.beige': 'Beige',
+  'recherche.toutesCameras': 'Toutes les caméras',
+  'recherche.nCameras': '{n} caméras',
+  'recherche.retirerSeuil': 'Retirer la confiance minimale',
+  'recherche.revoirCourt': 'Revoir',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

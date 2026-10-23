@@ -306,7 +306,7 @@ export const en: Record<Cle, string> = {
   'extrait.enregistre': 'Saved:',
 
   'recherche.chercher': 'Search',
-  'recherche.placeholder': 'plate, or name…',
+  'recherche.placeholder': 'Plate, or name…',
   'recherche.chercherAria': 'Search for a plate or a name',
   'recherche.tolerante1':
     'Tolerant search: the controller returns several possible readings of the same ' +
@@ -324,11 +324,11 @@ export const en: Record<Cle, string> = {
   'recherche.periode': 'Period',
   'recherche.periode7': '7 days',
   'recherche.periode30': '30 days',
-  'recherche.enCours': 'searching…',
+  'recherche.enCours': 'Searching…',
   'recherche.objetUn': 'object',
   'recherche.objetPlusieurs': 'objects',
-  'recherche.tronque': 'showing the 300 most recent — narrow down to see everything',
-  'recherche.filtrageNote': 'subject filtered by the controller, the rest here',
+  'recherche.tronque': 'Showing the 300 most recent — narrow down to see everything',
+  'recherche.filtrageNote': 'Subject filtered by the controller, the rest here',
   'recherche.rien': 'Nothing matches.',
   'recherche.rienSeuil': 'The minimum confidence may be too high.',
   'recherche.rienTexte': 'Try fewer characters — the last digits are enough.',
@@ -508,4 +508,21 @@ export const en: Record<Cle, string> = {
   // Relecture (direction Observatoire, 23.10.2026)
   'video.imageEntiere': 'Whole image',
   'relecture.vitesse': 'Playback speed',
+
+  // Detections (direction Observatoire, 23.10.2026) : couleurs nommees, en-tete, etats
+  'couleur.gray': 'Gray',
+  'couleur.white': 'White',
+  'couleur.black': 'Black',
+  'couleur.blue': 'Blue',
+  'couleur.yellow': 'Yellow',
+  'couleur.red': 'Red',
+  'couleur.green': 'Green',
+  'couleur.brown': 'Brown',
+  'couleur.silver': 'Silver',
+  'couleur.orange': 'Orange',
+  'couleur.beige': 'Beige',
+  'recherche.toutesCameras': 'All cameras',
+  'recherche.nCameras': '{n} cameras',
+  'recherche.retirerSeuil': 'Remove the minimum confidence',
+  'recherche.revoirCourt': 'Replay',
 };

@@ -46,3 +46,20 @@ export function nomVehicule(brut: string): string {
   const cle = VEHICULE_CLE[brut];
   return cle ? t(cle) : brut;
 }
+
+/*
+ * Les couleurs relevees par le controleur. Il ne rend qu'un mot anglais ; la pastille seule
+ * (jusqu'au 23.10.2026) laissait deviner « gris » ou « argent », et le nom n'apparaissait
+ * qu'en anglais, en infobulle.
+ */
+const COULEUR_CLE: Record<string, Cle> = {
+  gray: 'couleur.gray', grey: 'couleur.gray', white: 'couleur.white', black: 'couleur.black',
+  blue: 'couleur.blue', yellow: 'couleur.yellow', red: 'couleur.red', green: 'couleur.green',
+  brown: 'couleur.brown', silver: 'couleur.silver', orange: 'couleur.orange', beige: 'couleur.beige',
+};
+
+/** Le nom d'une couleur dans la langue courante — meme regle que les sujets. */
+export function nomCouleur(brut: string): string {
+  const cle = COULEUR_CLE[brut];
+  return cle ? t(cle) : brut;
+}

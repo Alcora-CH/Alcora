@@ -242,3 +242,29 @@ mire vidéo (lecture, zoom, son, capture, jours, 900 × 600 à 1600 × 960).
 
 Non vérifié à l'œil : le calendrier natif ouvert par le bouton du jour (il ne se capture pas
 dans le panneau de prévisualisation ; l'appel réussit sur un vrai clic).
+
+## 7. Où est passé chaque élément — Détections (23.10.2026)
+
+Troisième groupe, même branche, vérifié dans la démo.
+
+- [x] Chercher + note « recherche tolérante » (O / 0, derniers chiffres) : colonne de
+      filtres, en tête, libellé au-dessus du champ.
+- [x] Sujet, Type de véhicule, avec leur compte réel : puces, compte en gris.
+- [x] Confiance minimale (0, valeur, 100) + note sur les sons : curseur, valeur en or.
+- [x] Couleur, avec son compte : pastille **et nom traduit** (ajout — le nom n'existait qu'en
+      anglais, en infobulle).
+- [x] Caméra (Toutes / chaque caméra, si plus d'une) : puces.
+- [x] Période (Aujourd'hui / 7 jours / 30 jours) : sélecteur de l'en-tête ; la précision de
+      l'en-tête dit sur quelles caméras porte la recherche.
+- [x] Compte d'objets, « Recherche… » + rouet, troncature à 300 (orange), note « sujet
+      filtré par le contrôleur » : barre au-dessus des résultats.
+- [x] Carte : vignette nette, badge « identifié » sur la vignette ; SOUS l'image, en 12 à
+      13 px : sujet ou véhicule, pastille et nom de la couleur, confiance (verte dès 80 %),
+      date, heure et caméra. Clic = séquence.
+- [x] **« Revoir »** sur chaque carte (ajout) : la relecture à cet instant ; « Voir dans la
+      relecture » aussi depuis la séquence ouverte ici.
+- [x] Erreur ; « Rien ne correspond. » + seuil peut-être trop haut + **« Retirer la
+      confiance minimale »** (ajout) + « moins de caractères » : dans la zone des résultats.
+
+Non vérifié dans la démo : l'état « Rien ne correspond » (le simulateur ignore la confiance
+minimale et rend toujours des objets).
