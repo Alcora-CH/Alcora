@@ -209,3 +209,36 @@ Rien n'a disparu ; ce qui change de forme est dit, les ajouts sont marqués.
 
 **Pas dans ce groupe** : « Revoir à cet instant » depuis l'Activité (vient avec la
 Relecture) ; les en-têtes des autres écrans (leurs groupes).
+
+## 6. Où est passé chaque élément — Relecture (23.10.2026)
+
+Deuxième groupe, même branche, relu contre la section 3 et vérifié dans la démo sur la
+mire vidéo (lecture, zoom, son, capture, jours, 900 × 600 à 1600 × 960).
+
+- [x] Nom de la caméra et changement de caméra : puces avec miniature dans l'en-tête (la
+      miniature cède la place sous 1180 px). Changer de caméra **garde désormais l'instant**
+      — l'inventaire le disait, le code revenait au direct.
+- [x] « Revenir au direct » (vert, si une séquence est lue) : en-tête (icône seule sous
+      1100 px).
+- [x] Jour précédent / date bornée / nom du jour / jour suivant : en-tête ; la date est un
+      bouton qui ouvre le calendrier du système, « Aujourd'hui » / « Hier » à côté.
+- [x] Avant tout clic, le direct + invite ; sans relais, l'autre invite ; deux lecteurs qui
+      se relaient ; « Extraction… » ; erreur + « Revenir au direct » : dans l'image.
+- [x] Horodatage, définition lue (+ « définition réduite » en orange) : bandeau du lecteur,
+      HORS de l'image.
+- [x] Zoom (« Image entière »), son, capture : bandeau du lecteur, avec leur nom — comme au
+      direct. Indicateur de zoom + « interpolé », confirmation de capture : sur l'image.
+- [x] Transport (lecture, −10 s, +10 s, image par image, vitesses) : console sous l'image,
+      avec l'**heure regardée** en grand (ajout).
+- [x] Frise : toutes ses couches et gestes, dans la console ; « Molette pour zoomer, clic
+      pour voir ».
+- [x] Pellicule : filtres, compte, cartes de 132 px (vignette, heure, genre coloré), carte
+      en cours en or, « Rien de détecté ce jour-là. ».
+- [x] Teintes par genre : celles de la palette A (or, bleu, vert, mauve, gris).
+- [x] Clavier : inchangé.
+- [x] **Liens** (ajout) : « Revoir à cet instant » sur chaque détection récente de
+      l'Activité, « Voir dans la relecture » dans la séquence d'une détection.
+- [x] Fenêtre basse : l'image garde 260 px au moins, la page défile pour le reste.
+
+Non vérifié à l'œil : le calendrier natif ouvert par le bouton du jour (il ne se capture pas
+dans le panneau de prévisualisation ; l'appel réussit sur un vrai clic).

@@ -289,10 +289,10 @@ export const en: Record<Cle, string> = {
   'relecture.detectionUne': 'detection',
   'relecture.detectionPlusieurs': 'detections',
   'relecture.rienDetecte': 'Nothing detected that day.',
-  'relecture.journeeEntiere': 'whole day',
+  'relecture.journeeEntiere': 'Whole day',
   'relecture.revoirJournee': 'View the whole day again',
-  'relecture.toutVoir': 'see all',
-  'relecture.molette': 'scroll to zoom',
+  'relecture.toutVoir': 'See all',
+  'relecture.molette': 'Scroll to zoom, click to view',
   'relecture.cliquerPourVoir': 'click to view',
 
   'extrait.cameraInconnue': 'unknown camera',
@@ -504,4 +504,8 @@ export const en: Record<Cle, string> = {
   // Liens d'une detection vers la relecture (23.10.2026)
   'activite.revoir': 'Replay at this moment',
   'extrait.voirRelecture': 'See in replay',
+
+  // Relecture (direction Observatoire, 23.10.2026)
+  'video.imageEntiere': 'Whole image',
+  'relecture.vitesse': 'Playback speed',
 };

@@ -311,10 +311,10 @@ export const fr = {
   'relecture.detectionUne': 'détection',
   'relecture.detectionPlusieurs': 'détections',
   'relecture.rienDetecte': 'Rien de détecté ce jour-là.',
-  'relecture.journeeEntiere': 'journée entière',
+  'relecture.journeeEntiere': 'Journée entière',
   'relecture.revoirJournee': 'Revoir la journée entière',
-  'relecture.toutVoir': 'tout voir',
-  'relecture.molette': 'molette pour zoomer',
+  'relecture.toutVoir': 'Tout voir',
+  'relecture.molette': 'Molette pour zoomer, clic pour voir',
   'relecture.cliquerPourVoir': 'cliquer pour voir',
 
   // ---- le lecteur d'un extrait
@@ -534,6 +534,10 @@ export const fr = {
   // Liens d'une detection vers la relecture (23.10.2026)
   'activite.revoir': 'Revoir à cet instant',
   'extrait.voirRelecture': 'Voir dans la relecture',
+
+  // Relecture (direction Observatoire, 23.10.2026)
+  'video.imageEntiere': 'Image entière',
+  'relecture.vitesse': 'Vitesse de lecture',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */
