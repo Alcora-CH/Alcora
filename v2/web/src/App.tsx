@@ -45,8 +45,11 @@ const CLE_FOND = 'alcora.fond';
  * Passe de 26 a 34 px le 29.07.2026 : il porte desormais les quatre commandes de la
  * camera, sorties de l'image ou elles se fondaient dans la scene. Le cout en hauteur
  * d'image est negligeable ; le gain est qu'il n'y a plus rien a decouvrir.
+ *
+ * Puis 44 px avec la direction « Observatoire » (23.10.2026) : les commandes portent leur
+ * nom a cote de l'icone, et le nom de la camera se lit d'un coup d'oeil.
  */
-const H_ETIQUETTE = 34;
+const H_ETIQUETTE = 44;
 /** Espace entre les vues, en pixels. Zero est un choix legitime : images bord a bord. */
 const CLE_ESPACE = 'protectviewer.espace';
 /** Ordre des cameras choisi a la souris. Liste d'identifiants, jamais elaguee : une
@@ -717,8 +720,9 @@ export default function App() {
           </div>
         )}
 
-        {/* Rappel fugace : en plein écran plus rien n'indique comment revenir. */}
-        {indice && (
+        {/* Rappel fugace : en plein écran plus rien n'indique comment revenir. Hors du plein
+            écran, l'en-tête et la ligne des gestes le disent déjà : il ne ferait que s'y poser. */}
+        {indice && pleinEcran && (
           <div className="veil m-surgit pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-md px-3 py-1.5"
                style={{ color: 'var(--on-2)' }}>
             {t('app.echapRevenir')}

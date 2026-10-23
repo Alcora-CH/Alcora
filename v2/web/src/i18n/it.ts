@@ -493,4 +493,11 @@ export const it: Record<Cle, string> = {
   'activite.recentes': 'Recenti',
   'activite.aucune': 'Nessun rilevamento oggi.',
   'activite.toutes': 'Tutti i rilevamenti',
+
+  // Bandeau des tuiles (direction Observatoire, 23.10.2026)
+  'tuile.revoirCourt': 'Rivedi',
+  'tuile.detectionsCourt': 'Rilevamenti',
+  'tuile.imageCourt': 'Immagine',
+  'tuile.sonCourt': 'Audio',
+  'tuile.reprise': 'Nuovo tentativo tra {n} s',
 };

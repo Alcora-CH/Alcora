@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, Play, ScanSearch, Volume2, VolumeX } from 'lucide-react';
+import { Camera, History, ScanSearch, Volume2, VolumeX, type LucideIcon } from 'lucide-react';
 import { connectWhep, type WhepSession } from './whep';
 import { attenteReprise, causeDeReprise } from './sante';
 import { pickChannel, qualityLabel, relayPath } from './channel';
 import { nombre, t, useLangue } from '../i18n';
+import { Bouton } from '../ui/Bouton';
+import { cx } from '../ui/cx';
 
 /**
  * Delai d'immobilite avant de reevaluer le canal apres un changement de taille.
@@ -70,39 +72,36 @@ export interface CameraTileProps {
  * camera et sa definition dans un bandeau HORS de l'image. C'est la que ces commandes
  * doivent vivre : visibles en permanence, jamais en concurrence avec la video, toujours au
  * meme endroit. Il n'y a plus rien a decouvrir.
+ *
+ * Direction « Observatoire » (23.10.2026) : le bouton commun, et son NOM a cote de l'icone
+ * — « Revoir », « Detections », « Image », « Son ». Sur une tuile etroite, l'icone seule
+ * (requete de conteneur) ; l'etiquette au survol dit alors le reste.
  */
-function BoutonTuile({ titre, onClick, children, actif, desactive }: {
+function BoutonTuile({ titre, court, icone, onClick, actif, desactive }: {
   titre: string;
+  /** Le nom court, a cote de l'icone quand la tuile est assez large. */
+  court: string;
+  icone: LucideIcon;
   onClick: () => void;
-  children: React.ReactNode;
   actif?: boolean;
   desactive?: boolean;
 }) {
   return (
     <div className="group/bt relative shrink-0">
-      <button
-        type="button"
-        aria-label={titre}
-        disabled={desactive}
+      <Bouton
+        variante={actif ? 'actif' : 'fantome'} taille="petit" icone={icone}
+        aria-label={titre} disabled={desactive}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
         onPointerDown={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
-        className="grid h-[26px] w-[26px] place-items-center rounded-md border transition-colors
-                   hover:brightness-125 disabled:opacity-30"
-        style={{
-          background: actif ? 'var(--accent)' : 'var(--card2)',
-          borderColor: actif ? 'var(--accent)' : 'var(--line2)',
-          color: actif ? '#1b1e23' : 'var(--ink)',
-        }}
       >
-        {children}
-      </button>
+        <span className="@max-[680px]:hidden">{court}</span>
+      </Bouton>
 
       {/*
         L'etiquette est POSEE PAR L'APPLICATION, pas par le systeme.
-        Celle du systeme met une seconde a venir, et l'infobulle du conteneur — « glisser
-        pour reorganiser » — passait devant. Elle s'ouvre vers le BAS : le bandeau est en
-        haut de la tuile, une etiquette vers le haut serait coupee par la tuile voisine.
+        Celle du systeme met une seconde a venir. Elle s'ouvre vers le BAS : le bandeau est
+        en haut de la tuile, une etiquette vers le haut serait coupee par la tuile voisine.
 
         Elle est calee sur le bord DROIT du bouton, pas sur son centre. Centree, celle des
         deux derniers boutons sortait de l'ecran — ils sont contre le bord droit de la
@@ -110,15 +109,25 @@ function BoutonTuile({ titre, onClick, children, actif, desactive }: {
         toujours vers l'interieur, quel que soit le bouton et quelle que soit la tuile.
       */}
       <span
-        className="pointer-events-none absolute right-0 top-full z-30 mt-1 hidden
-                   whitespace-nowrap rounded-md px-2.5 py-1 text-[12px] group-hover/bt:block"
-        style={{ background: 'rgba(14,17,22,.96)', color: '#eae5db',
-                 border: '1px solid rgba(255,255,255,.18)', boxShadow: '0 4px 14px rgba(0,0,0,.55)' }}
+        className="pointer-events-none absolute right-0 top-full z-30 mt-1 hidden whitespace-nowrap
+                   rounded-md border border-line2 px-2.5 py-1 text-meta group-hover/bt:block"
+        style={{ background: 'rgba(14,17,22,.96)', color: '#eae5db', boxShadow: '0 4px 14px rgba(0,0,0,.55)' }}
       >
         {titre}
       </span>
     </div>
   );
+}
+
+/** « Reprise automatique dans 4 s » : le compte, et lui seul, se redessine chaque seconde. */
+function Decompte({ jusqua }: { jusqua: number }) {
+  const [maintenant, setMaintenant] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setMaintenant(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const s = Math.max(0, Math.ceil((jusqua - maintenant) / 1000));
+  return <>{t('tuile.reprise', { n: s })}</>;
 }
 
 type Status = 'attente' | 'connexion' | 'direct' | 'erreur';
@@ -165,6 +174,8 @@ export function CameraTile({
   const sessionRef = useRef<WhepSession | null>(null);
 
   const [status, setStatus] = useState<Status>('attente');
+  /** Instant de la prochaine tentative, tant que la tuile est en erreur : il se dit. */
+  const [repriseA, setRepriseA] = useState<number | null>(null);
   /** Incremente pour forcer une reconnexion : gel detecte, ou echec a reprendre. */
   const [generation, setGeneration] = useState(0);
   const essaisRef = useRef(0);
@@ -281,9 +292,10 @@ export function CameraTile({
    * controleur repondre a nouveau, l'image ne revenait jamais sans relancer l'application.
    */
   useEffect(() => {
-    if (status !== 'erreur') return;
+    if (status !== 'erreur') { setRepriseA(null); return; }
     const attente = attenteReprise(essaisRef.current, REPRISE_MS);
     essaisRef.current += 1;
+    setRepriseA(Date.now() + attente);
     console.log(`[tuile ${camera.name}] nouvelle tentative dans ${attente} ms`);
     const t = window.setTimeout(() => setGeneration((g) => g + 1), attente);
     return () => clearTimeout(t);
@@ -440,8 +452,7 @@ export function CameraTile({
       ref={containerRef}
       /* La cellule est deja dimensionnee a la bonne proportion par la mosaique : imposer
          « aspect-video » ici ferait s'affronter deux regles sur le meme arrondi. */
-      className={`group relative h-full w-full select-none overflow-hidden bg-black ${
-        cadre ? 'rounded-md border tuile-flottante' : ''}`}
+      className="group relative h-full w-full select-none overflow-hidden bg-black"
       style={{ cursor: zoomed ? 'grab' : 'default' }}
       {...vue.gestes}
     >
@@ -453,10 +464,9 @@ export function CameraTile({
       {/* Confirmation de capture : au CENTRE, et franche. Discrete dans un coin, elle
           laissait douter que quelque chose ait ete enregistre. */}
       {capture && (
-        <div className="m-surgit pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center">
-          <span className="max-w-[86%] truncate rounded-lg px-3 py-1.5 text-[12.5px]"
-                style={{ background: 'rgba(14,17,22,.92)', color: '#eae5db',
-                         border: '1px solid rgba(255,255,255,.16)' }}>
+        <div className="m-surgit pointer-events-none absolute inset-x-0 bottom-12 z-20 flex justify-center">
+          <span className="max-w-[86%] truncate rounded-[9px] border border-line2 px-3.5 py-2"
+                style={{ background: 'rgba(12,15,20,.92)', color: '#f2efe8' }}>
             {capture}
           </span>
         </div>
@@ -467,50 +477,62 @@ export function CameraTile({
               style={{ display: zoomed ? 'block' : 'none' }} />
 
       {zoomed && (
-        <div className="veil pointer-events-none absolute bottom-3 left-3 rounded-lg px-2.5 py-1">
-          <span className="font-mono text-[11px]"
-                style={{ color: upscaling ? 'var(--bad)' : 'var(--on-1)' }}>
-            {nombre(zoom, 2)}×{upscaling ? ` · ${t('video.interpole')}` : ''}
-          </span>
+        <div className="veil pointer-events-none absolute bottom-2.5 left-2.5 flex h-6 items-center gap-1.5 rounded-md px-2.5 text-meta tabular-nums"
+             style={{ color: 'var(--on-1)' }}>
+          {nombre(zoom, 2)}×
+          {upscaling && <span className="text-bad">{t('video.interpole')}</span>}
         </div>
       )}
 
       {status !== 'direct' && (
-        <div className="absolute inset-0 grid place-items-center">
-          <span className="font-mono text-[12px]" style={{ color: 'var(--muted)' }}>
-            {status === 'erreur' ? t('tuile.fluxIndisponible')
-              : status === 'attente' ? '' : t('tuile.connexion')}
-          </span>
+        <div className="absolute inset-0 grid place-items-center text-center">
+          <div>
+            <p className="text-muted">
+              {status === 'erreur' ? t('tuile.fluxIndisponible')
+                : status === 'attente' ? '' : t('tuile.connexion')}
+            </p>
+            {/* La prochaine tentative se dit : un « Flux indisponible » muet ressemble à
+                une panne définitive, alors que la tuile réessaie d'elle-même. */}
+            {status === 'erreur' && repriseA !== null && (
+              <p className="mt-1 text-meta text-soft"><Decompte jusqua={repriseA} /></p>
+            )}
+          </div>
         </div>
       )}
 
       {/*
         Activite en cours, reprise de Protect.
         ------------------------------------------------------------------
-        Le halo est pose sur le CADRE, hors de l'image : un voile par-dessus la video
-        masquerait justement ce qu'on veut faire regarder. Le trait tourne tant que la
-        detection dure, et s'eteint a sa fin — les deux bouts viennent de la liaison temps
-        reel, celle qui previent trois secondes avant Protect.
+        La pastille dit QUOI ; le cadre d'or, pose sur la tuile, dit OU. Rien en voile sur
+        l'image : masquer ce qu'on veut justement faire regarder serait un contresens.
 
-        « pointer-events-none » est indispensable : sans lui, le halo intercepterait la
+        Le cadre ne tourne plus (direction « Observatoire ») : le trait lumineux animait
+        un degrade conique, que le navigateur repeignait a chaque image pendant toute la
+        detection — un travail de plus, pendant qu'un flux 4K decode. Seul le point de la
+        pastille respire, en opacite.
+
+        « pointer-events-none » est indispensable : sans lui, la pastille intercepterait la
         molette et le glisser, et l'on ne pourrait plus zoomer sur la camera ou il se passe
         quelque chose — exactement celle qu'on veut regarder.
       */}
       {activite && (
-        <>
-          <div className="halo-activite pointer-events-none absolute inset-0 z-10"
-               style={cadre ? { borderRadius: '0.375rem' } : undefined} />
-          <div className="veil m-surgit pointer-events-none absolute right-2 top-2 z-10 flex items-center gap-1.5 rounded-full px-2 py-[3px]">
-            <span className="point-activite h-1.5 w-1.5 rounded-full"
-                  style={{ background: 'var(--accent-d)' }} />
-            <span className="text-[11px]" style={{ color: 'var(--on-1)' }}>
-              {activite.libelle}
-            </span>
-          </div>
-        </>
+        <div className="veil m-surgit pointer-events-none absolute right-2.5 top-2.5 z-10 flex h-[26px] items-center gap-[7px] rounded-[13px] px-2.5 text-meta"
+             style={{ color: 'var(--on-1)' }}>
+          <span className="point-activite h-[7px] w-[7px] rounded-full bg-accent" />
+          {activite.libelle}
+        </div>
       )}
     </div>
   );
+
+  /* Le cadre d'or de l'activite : contour et halo autour de la tuile quand elle a un cadre ;
+     anneau interieur quand les images se touchent, pour ne pas deborder sur la voisine. */
+  const halo = activite
+    ? (cadre
+      ? { borderColor: 'var(--accent-ligne)',
+          boxShadow: '0 0 0 1px var(--accent-ligne), 0 0 28px -6px rgba(220,169,92,.45), 0 18px 40px -18px rgba(0,0,0,.7)' }
+      : undefined)
+    : undefined;
 
   /*
    * L'etiquette vit HORS de l'image, au-dessus d'elle.
@@ -518,53 +540,69 @@ export function CameraTile({
    * Posee dessus, elle masquait une partie de la scene — et redoublait l'horodatage que
    * les cameras incrustent elles-memes. Dehors, elle ne cache plus rien et reste lisible
    * quelle que soit la luminosite du flux.
+   *
+   * La tuile est une carte de l'instrument (maquette A) : bandeau et image dans le meme
+   * cadre. Quand l'espacement est nul, plus de cadre — les images se touchent — mais le
+   * bandeau garde sa surface pleine : du texte pose sur le ciel se lisait mal.
    */
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className={cx(
+      '@container relative flex h-full w-full flex-col overflow-hidden',
+      cadre && 'rounded-xl border border-line2 shadow-[0_18px_40px_-18px_rgba(0,0,0,.7)]',
+      hauteurEtiquette > 0 && 'bg-card',
+    )} style={halo}>
       {/* A hauteur nulle (l'invite de la relecture), le bandeau ne se rend pas du
           tout : son contenu deborderait d'un conteneur a zero pixel et viendrait
           s'imprimer sur le haut de l'image. */}
       {hauteurEtiquette > 0 && (
-      <div className="flex shrink-0 items-center gap-2 px-1.5 pb-1"
+      <div className="flex shrink-0 items-center gap-2.5 pl-3.5 pr-2"
            style={{ height: hauteurEtiquette }}>
-        <span className="truncate text-[12.5px]" style={{ color: 'var(--ink)' }}>{camera.name}</span>
+        <span className="truncate text-titre font-semibold">{camera.name}</span>
         {channel && (
-          <span className="shrink-0 font-mono text-[10.5px]"
-                style={{ color: channel.quality === 'high' ? 'var(--accent-d)' : 'var(--soft)' }}>
+          <span className="shrink-0 whitespace-nowrap text-meta text-muted @max-[380px]:hidden">
             {qualityLabel(channel)}
           </span>
         )}
-        <span className="shrink-0 font-mono text-[10px]"
-              style={{ color: status === 'direct' ? 'var(--ok)' : 'var(--soft)' }}>
-          {status === 'direct' ? '' : status === 'erreur' ? t('commun.horsLigne') : '…'}
-        </span>
+        {status === 'direct' ? (
+          <span className="inline-flex shrink-0 items-center gap-1.5 text-meta text-ok">
+            <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-current" />{t('espace.direct')}
+          </span>
+        ) : status === 'erreur' ? (
+          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-meta text-soft">
+            <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-current" />{t('systeme.horsLigne')}
+          </span>
+        ) : null}
 
         {/* Les commandes vivent ICI, dans le bandeau, et non sur l'image. Visibles en
             permanence : il n'y a plus rien a decouvrir au survol. */}
         {actions && (
           <div className="ml-auto flex shrink-0 items-center gap-1">
-            <BoutonTuile titre={t('tuile.revoir')} onClick={() => actions.onRelecture?.(camera.id)}>
-              <Play className="h-3.5 w-3.5" />
-            </BoutonTuile>
-            <BoutonTuile titre={t('tuile.detections')} onClick={() => actions.onDetections?.(camera.id)}>
-              <ScanSearch className="h-3.5 w-3.5" />
-            </BoutonTuile>
-            <BoutonTuile titre={t('video.capturer')} onClick={() => { void capturer(); }}>
-              <Camera className="h-3.5 w-3.5" />
-            </BoutonTuile>
+            <BoutonTuile titre={t('tuile.revoir')} court={t('tuile.revoirCourt')} icone={History}
+                         onClick={() => actions.onRelecture?.(camera.id)} />
+            <BoutonTuile titre={t('tuile.detections')} court={t('tuile.detectionsCourt')} icone={ScanSearch}
+                         onClick={() => actions.onDetections?.(camera.id)} />
+            <BoutonTuile titre={t('video.capturer')} court={t('tuile.imageCourt')} icone={Camera}
+                         onClick={() => { void capturer(); }} />
             <BoutonTuile
               titre={!aDuSon ? t('video.pasDeSon')
                      : sonActif ? t('video.couperSon') : t('tuile.ecouter')}
+              court={t('tuile.sonCourt')}
+              icone={sonActif ? Volume2 : VolumeX}
               desactive={!aDuSon}
               actif={sonActif}
-              onClick={() => basculerSon()}>
-              {sonActif ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
-            </BoutonTuile>
+              onClick={() => basculerSon()} />
           </div>
         )}
       </div>
       )}
-      <div className="min-h-0 flex-1">{image}</div>
+      <div className="relative min-h-0 flex-1">
+        {image}
+        {/* Images jointives : l'anneau d'or se pose A L'INTERIEUR, au-dessus de l'image. */}
+        {activite && !cadre && (
+          <div aria-hidden className="pointer-events-none absolute inset-0 z-10"
+               style={{ boxShadow: 'inset 0 0 0 2px var(--accent-ligne)' }} />
+        )}
+      </div>
     </div>
   );
 }

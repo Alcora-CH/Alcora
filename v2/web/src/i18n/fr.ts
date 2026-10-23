@@ -521,6 +521,13 @@ export const fr = {
   'activite.recentes': 'Récentes',
   'activite.aucune': 'Aucune détection aujourd’hui.',
   'activite.toutes': 'Toutes les détections',
+
+  // Bandeau des tuiles (direction Observatoire, 23.10.2026)
+  'tuile.revoirCourt': 'Revoir',
+  'tuile.detectionsCourt': 'Détections',
+  'tuile.imageCourt': 'Image',
+  'tuile.sonCourt': 'Son',
+  'tuile.reprise': 'Reprise automatique dans {n} s',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */
