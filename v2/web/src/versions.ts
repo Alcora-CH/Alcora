@@ -40,7 +40,7 @@ export function changementsDe(v: Version): string[] {
 export const VERSIONS: Version[] = [
   {
     version: '2.36.0',
-    date: '23.10.2026',
+    date: '24.10.2026',
     fr: [
       'Les dispositions du mur : le bouton « Disposition », à côté de « Caméras », garde les caméras '
       + 'affichées et leur ordre sous un nom, et y revient d’un clic — ou de Ctrl + 1 à 9, jusqu’à '
