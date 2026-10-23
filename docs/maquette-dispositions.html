@@ -1,0 +1,1811 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette, dispositions du mur</title>
+<!--
+  Quatrième fonction d'après la refonte (docs/plan-ux.md) : les dispositions enregistrées du
+  mur. C'est la maquette A validée le 23.10.2026, ENTIÈRE : l'écran Direct y est à contenu
+  identique à l'application, les dispositions s'y AJOUTENT. Inventaire fait avant de dessiner :
+  aujourd'hui, ce que montre le mur tient en deux réglages gardés dans le navigateur — l'ordre
+  des caméras (à la souris) et les caméras masquées (menu « Caméras ») ; la caméra isolée est
+  un geste passager ; l'espacement est un réglage d'apparence, commun à tout. Une disposition
+  garde donc les caméras affichées ET leur ordre. Deux variantes d'accès, les mêmes états.
+  Données, noms et images fictifs.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600&display=swap" rel="stylesheet">
+<style>
+/* ===================================================================== banc */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #08090b; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+input { font: inherit; }
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.banc { position: fixed; inset: 0 0 auto 0; height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 14px;
+        background: #f1efe9; color: #23252a; font: 500 13px/1 "Barlow", system-ui, sans-serif; z-index: 100; overflow-x: auto; }
+.banc b { font-weight: 600; white-space: nowrap; }
+.banc .seg { display: flex; background: #dedbd2; border-radius: 8px; padding: 3px; gap: 2px; }
+.banc .seg button { padding: 6px 10px; border-radius: 6px; color: #4a4c52; white-space: nowrap; }
+.banc .seg button[aria-pressed="true"] { background: #fff; color: #15171a; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.banc .note { margin-left: auto; color: #6c6e74; white-space: nowrap; }
+#scene { position: absolute; inset: 44px 0 0 0; }
+[hidden] { display: none !important; }
+
+/* ===================================================================== A — jetons */
+.appA {
+  --nuit: #0e131b; --instrument: #151b25; --graphite: #1e2633; --graphite2: #283242;
+  --ligne: rgba(206,214,229,.09); --ligne2: rgba(206,214,229,.17);
+  --lumiere: #ece8df; --texte2: #a9b0bc; --texte3: #737d8b;
+  --alcor: #dca95c; --alcor-doux: rgba(220,169,92,.14); --alcor-ligne: rgba(220,169,92,.42);
+  --vert: #74c494; --rouge: #e3735f; --orange: #e0a23c;
+  --personne: #dca95c; --vehicule: #86afcf; --animal: #74c494; --son: #b997d6; --mouvement: #6b7480;
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  /* Les dimensions de structure : la variante compacte (« B ») les redéfinit. */
+  --rail: 84px; --etat: 34px; --activite: 312px; --bandeau: 44px; --ecart: 16px; --marge: 20px;
+  position: absolute; inset: 0; display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) var(--etat);
+  background: var(--nuit); color: var(--lumiere);
+  font: 400 13px/1.45 "Atkinson Hyperlegible Next", system-ui, sans-serif;
+}
+.appA[data-vue="connexion"] { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.appA * { scrollbar-width: thin; scrollbar-color: var(--graphite2) transparent; }
+.appA .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.appA .num { font-variant-numeric: tabular-nums; }
+.appA p { margin: 0; }
+
+/* ---------------------------------------------------------------- rail */
+.A-rail { grid-row: 1; grid-column: 1; display: flex; flex-direction: column; gap: 2px; padding: 14px 8px; background: var(--instrument); border-right: 1px solid var(--ligne); }
+.A-rail .marque { display: grid; place-items: center; height: 44px; margin-bottom: 10px; color: var(--alcor); }
+.A-rail .marque svg { width: 30px; height: 30px; }
+.A-rail .esp { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 2px 8px; border-radius: 10px; color: var(--texte2); font-size: 12px; position: relative; }
+.A-rail .esp svg { width: 20px; height: 20px; }
+.A-rail .esp:hover, .A-rail .esp[aria-current="true"] { background: var(--graphite); color: var(--lumiere); }
+.A-rail .esp[aria-current="true"]::before { content: ""; position: absolute; left: -8px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--alcor); }
+.A-rail .esp[aria-current="true"] svg { color: var(--alcor); }
+.A-rail .bas { margin-top: auto; }
+
+/* ---------------------------------------------------------------- cadre commun */
+.A-main { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
+.A-tete { height: 64px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 20px 0 24px; border-bottom: 1px solid var(--ligne); background: var(--instrument); }
+.A-tete h1 { font-size: 19px; font-weight: 600; margin: 0; }
+.A-tete .sous { color: var(--texte2); font-size: 13px; }
+.A-tete .actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.A-corps { flex: 1; min-height: 0; overflow: auto; }
+
+.A-btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 8px; background: var(--graphite); border: 1px solid var(--ligne2); color: var(--lumiere); font-size: 13px; white-space: nowrap; }
+.A-btn:hover { background: var(--graphite2); }
+.A-btn.petit { height: 28px; padding: 0 9px; font-size: 12.5px; border-radius: 7px; gap: 6px; }
+.A-btn.fantome { background: transparent; border-color: transparent; color: var(--texte2); }
+.A-btn.fantome:hover { background: var(--graphite); color: var(--lumiere); }
+.A-btn.primaire { background: var(--alcor); border-color: var(--alcor); color: #1d1608; font-weight: 600; }
+.A-btn.danger { background: var(--rouge); border-color: var(--rouge); color: #1d0b07; font-weight: 600; }
+.A-btn.actif { background: var(--alcor-doux); border-color: var(--alcor-ligne); color: var(--alcor); }
+.A-btn.vert { color: var(--vert); border-color: rgba(116,196,148,.35); background: rgba(116,196,148,.08); }
+.A-btn.icone { width: 32px; padding: 0; justify-content: center; }
+.A-btn.petit.icone { width: 28px; }
+.A-btn[disabled] { opacity: .35; cursor: default; }
+.A-btn .compte { color: var(--texte3); font-size: 12px; }
+.A-kbd { font-family: var(--mono); font-size: 11.5px; color: var(--texte3); border: 1px solid var(--ligne2); border-radius: 5px; padding: 0 5px; line-height: 18px; }
+.A-seg { display: inline-flex; padding: 3px; border-radius: 9px; background: var(--graphite); border: 1px solid var(--ligne2); }
+.A-seg button { height: 26px; padding: 0 11px; border-radius: 6px; color: var(--texte2); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.A-seg button[aria-pressed="true"] { background: var(--alcor-doux); color: var(--alcor); }
+.A-puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.A-puce { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px; border-radius: 14px; border: 1px solid var(--ligne2); color: var(--texte2); font-size: 12.5px; }
+.A-puce:hover { color: var(--lumiere); }
+.A-puce .n { color: var(--texte3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.A-puce[aria-pressed="true"] { background: var(--alcor-doux); border-color: var(--alcor-ligne); color: var(--alcor); }
+.A-puce[aria-pressed="true"] .n { color: inherit; opacity: .75; }
+.A-puce .ech { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); }
+.A-puce.urgence { border-color: rgba(227,115,95,.4); }
+.A-interrupteur { position: relative; width: 40px; height: 22px; flex: none; border-radius: 11px; background: var(--graphite2); }
+.A-interrupteur::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #5d6676; transition: left .14s; }
+.A-interrupteur[aria-checked="true"] { background: var(--alcor); }
+.A-interrupteur[aria-checked="true"]::after { left: 21px; background: #1d1608; }
+.A-interrupteur.vert[aria-checked="true"] { background: var(--vert); }
+.A-champ { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--ligne2); background: var(--graphite); color: var(--lumiere); }
+.A-champ input { flex: 1; min-width: 0; border: 0; background: transparent; color: inherit; outline: none; font-size: 13.5px; }
+.A-champ input::placeholder { color: var(--texte3); }
+.A-champ:focus-within { border-color: var(--alcor-ligne); }
+.A-champ .mono-in { font-family: var(--mono); letter-spacing: .04em; }
+.A-curseur { width: 100%; accent-color: var(--alcor); }
+.A-etiq { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; }
+.A-aide { margin-top: 6px; color: var(--texte3); font-size: 12.5px; line-height: 1.5; }
+.A-carte-p { background: var(--instrument); border: 1px solid var(--ligne2); border-radius: 12px; }
+
+/* ---------------------------------------------------------------- Direct */
+.A-mur { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.A-ciel { position: absolute; inset: 0; background-color: var(--nuit); background-size: cover; background-position: center; }
+.A-grille { position: absolute; inset: 0 0 30px 0; display: grid; justify-content: center; align-content: center; padding: 20px; gap: 16px; }
+.A-indice { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; color: var(--texte3); font-size: 12px; }
+.A-tuile { container-type: inline-size; background: var(--instrument); border: 1px solid var(--ligne2); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px -18px rgba(0,0,0,.7); display: flex; flex-direction: column; }
+.A-tuile.active { border-color: var(--alcor-ligne); box-shadow: 0 0 0 1px var(--alcor-ligne), 0 0 28px -6px rgba(220,169,92,.45), 0 18px 40px -18px rgba(0,0,0,.7); }
+.A-bandeau { height: var(--bandeau); flex: none; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; }
+.A-bandeau .nom { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.A-bandeau .canal { color: var(--texte2); font-size: 12.5px; white-space: nowrap; }
+.A-bandeau .direct { display: inline-flex; align-items: center; gap: 6px; color: var(--vert); font-size: 12.5px; }
+.A-bandeau .direct::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.A-bandeau .hors { display: inline-flex; align-items: center; gap: 6px; color: var(--texte3); font-size: 12.5px; white-space: nowrap; }
+.A-bandeau .hors::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.A-bandeau .cmds { margin-left: auto; display: flex; gap: 4px; }
+.A-bandeau .cmds .A-btn { background: transparent; border-color: transparent; color: var(--texte2); }
+.A-bandeau .cmds .A-btn:hover { background: var(--graphite); color: var(--lumiere); }
+.A-bandeau .cmds .A-btn.actif { background: var(--alcor-doux); color: var(--alcor); }
+.A-bandeau .temps { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+@container (max-width: 640px) { .A-bandeau .cmds .lib { display: none; } .A-bandeau .cmds .A-btn { width: 28px; padding: 0; justify-content: center; } }
+@container (max-width: 380px) { .A-bandeau .canal { display: none; } }
+.A-image { position: relative; flex: 1; min-height: 0; background: #000 center/cover no-repeat; }
+.A-image.contenue { background-size: contain; }
+.A-image .pastille { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; border-radius: 13px; background: rgba(12,15,20,.78); color: #f2efe8; font-size: 12.5px; }
+.A-image .pastille::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--alcor); animation: pouls 1.8s infinite; }
+@keyframes pouls { 0% { box-shadow: 0 0 0 0 rgba(220,169,92,.6); } 70%, 100% { box-shadow: 0 0 0 7px rgba(220,169,92,0); } }
+@media (prefers-reduced-motion: reduce) { .A-image .pastille::before { animation: none; } }
+.A-image .zoom { position: absolute; left: 10px; bottom: 10px; height: 24px; padding: 0 9px; border-radius: 6px; background: rgba(12,15,20,.78); color: #f2efe8; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.A-image .zoom .interpole { color: var(--rouge); }
+.A-image .toast { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); padding: 8px 14px; border-radius: 9px; background: rgba(12,15,20,.92); border: 1px solid var(--ligne2); color: #f2efe8; font-size: 13px; white-space: nowrap; }
+.A-activite { grid-row: 1; grid-column: 3; width: var(--activite); display: flex; flex-direction: column; background: var(--instrument); border-left: 1px solid var(--ligne); min-height: 0; }
+.A-activite .tete { height: 64px; flex: none; display: flex; align-items: center; padding: 0 12px 0 20px; border-bottom: 1px solid var(--ligne); }
+.A-activite h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.A-activite .tete .A-btn { margin-left: auto; }
+.A-bloc { padding: 18px 20px; border-bottom: 1px solid var(--ligne); }
+.A-bloc h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; display: flex; align-items: baseline; gap: 8px; }
+.A-bloc h3 .val { margin-left: auto; font-weight: 400; color: var(--texte2); }
+.A-histo { display: flex; align-items: flex-end; gap: 2px; height: 56px; }
+.A-histo i { flex: 1; border-radius: 2px 2px 0 0; background: var(--alcor); }
+.A-histo i.vide { background: var(--graphite2); }
+.A-histo i.nonlu { background: repeating-linear-gradient(135deg, var(--graphite) 0 3px, var(--graphite2) 3px 6px); height: 100% !important; }
+.A-axe { display: flex; justify-content: space-between; margin-top: 6px; color: var(--texte3); font-size: 11.5px; }
+.A-recentes { list-style: none; margin: 0; padding: 6px 10px; overflow: auto; }
+.A-recentes li { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 9px; cursor: pointer; }
+.A-recentes li:hover { background: var(--graphite); }
+.A-recentes .vig { width: 72px; height: 40px; flex: none; border-radius: 6px; background: #000 center/cover; }
+.A-recentes .ou { font-size: 12px; color: var(--texte2); }
+.A-recentes .quand { margin-left: auto; color: var(--texte3); font-size: 12px; white-space: nowrap; }
+.A-recentes .aller { opacity: 0; margin-left: 4px; }
+.A-recentes li:hover .aller, .A-recentes li.survole .aller { opacity: 1; }
+.A-recentes li.survole { background: var(--graphite); }
+.A-lien { display: block; margin: 4px 20px 16px; color: var(--alcor); font-size: 13px; }
+.A-etat { grid-row: 2; grid-column: 1 / -1; display: flex; align-items: center; padding: 0 8px 0 14px; background: var(--instrument); border-top: 1px solid var(--ligne); font-size: 12.5px; color: var(--texte2); }
+.A-etat > span { display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; height: 18px; border-right: 1px solid var(--ligne2); white-space: nowrap; }
+.A-etat > span:first-child { padding-left: 0; }
+.A-etat .ok::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--vert); }
+.A-etat b { font-weight: 500; color: var(--lumiere); }
+.A-etat .barre { width: 44px; height: 5px; border-radius: 3px; background: var(--graphite2); overflow: hidden; }
+.A-etat .barre i { display: block; height: 100%; width: 98%; background: var(--alcor); }
+.A-etat .prive { margin-left: auto; border-right: 0; color: var(--texte3); }
+.A-etat .heure { border-left: 1px solid var(--ligne2); border-right: 0; color: var(--lumiere); }
+.A-etat .A-btn { margin-left: 4px; }
+.A-systeme { position: fixed; right: 10px; bottom: 42px; width: min(940px, calc(100% - 20px)); z-index: 20; display: grid; grid-template-columns: repeat(3, 1fr); box-shadow: 0 30px 70px -20px rgba(0,0,0,.85); }
+.A-systeme .groupe { padding: 18px 20px 20px; border-right: 1px solid var(--ligne); }
+.A-systeme .groupe:last-child { border-right: 0; }
+.A-systeme h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; }
+.A-ligne { display: flex; align-items: baseline; gap: 10px; padding: 4px 0; font-size: 13px; }
+.A-ligne .k { color: var(--texte2); }
+.A-ligne .v { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+.A-ligne .v.ok { color: var(--vert); } .A-ligne .v.alerte { color: var(--orange); }
+.A-note { margin-top: 6px; font-size: 12px; color: var(--texte3); line-height: 1.45; }
+.A-defs { display: flex; gap: 6px; margin-top: 10px; }
+.A-defs span { font-size: 12px; padding: 2px 8px; border-radius: 6px; background: var(--graphite); color: var(--texte3); }
+.A-defs span.on { background: var(--alcor-doux); color: var(--alcor); }
+.A-disque { height: 6px; border-radius: 3px; background: var(--graphite2); margin: 10px 0 6px; overflow: hidden; }
+.A-disque i { display: block; height: 100%; width: 98%; background: linear-gradient(90deg, var(--alcor), #efc581); }
+.A-etatrelais { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 9px; background: var(--graphite); margin-bottom: 12px; }
+.A-etatrelais::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--vert); margin-top: 6px; flex: none; }
+.A-prive { display: flex; gap: 8px; align-items: center; margin-top: 14px; color: var(--vert); font-size: 12.5px; }
+.A-cams { position: absolute; top: 56px; right: 20px; width: 360px; z-index: 20; padding: 8px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.85); }
+.A-cams .cam { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 9px; }
+.A-cams .cam:hover { background: var(--graphite); }
+.A-cams .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--vert); flex: none; }
+.A-cams .pt.non { background: var(--texte3); }
+.A-cams .def { font-size: 12px; color: var(--texte2); }
+.A-cams .def.rtsp { color: var(--orange); }
+.A-cams .cam .A-btn { margin-left: auto; }
+.A-cams .remede { margin: 6px 10px; padding: 10px 12px; border-radius: 9px; background: rgba(224,162,60,.09); color: #e9c27f; font-size: 12.5px; line-height: 1.5; }
+.A-cams .remede a { color: var(--alcor); display: inline-block; margin-top: 6px; }
+.A-maj { position: absolute; left: 50%; top: 76px; transform: translateX(-50%); z-index: 15; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; font-size: 13px; white-space: nowrap; box-shadow: 0 20px 50px -20px rgba(0,0,0,.8); }
+
+/* ---------------------------------------------------------------- Relecture */
+.A-rel { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 20px 16px; }
+.A-chips { display: flex; gap: 6px; }
+.A-chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 4px; border-radius: 9px; border: 1px solid var(--ligne2); background: var(--graphite); font-size: 13px; }
+.A-chip .mini { width: 44px; height: 26px; border-radius: 5px; background: #000 center/cover; }
+.A-chip[aria-pressed="true"] { border-color: var(--alcor-ligne); background: var(--alcor-doux); color: var(--alcor); }
+.A-jour { display: flex; align-items: center; gap: 4px; }
+.A-jour .date .quand { color: var(--texte3); }
+.A-lecteur { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.A-console { flex: none; padding: 12px 16px 10px; }
+.A-transport { display: flex; align-items: center; gap: 6px; }
+.A-transport .lire { width: 40px; height: 40px; border-radius: 10px; background: var(--alcor); color: #1d1608; display: grid; place-items: center; }
+.A-transport .lire svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+.A-transport .t { font-family: var(--mono); font-size: 15px; margin: 0 14px 0 10px; font-variant-numeric: tabular-nums; }
+.A-frise-tete { display: flex; align-items: center; gap: 10px; margin: 12px 0 6px; font-size: 12.5px; color: var(--texte2); }
+.A-frise-tete .aide { margin-left: auto; color: var(--texte3); }
+.frise { position: relative; height: 52px; border-radius: 8px; overflow: hidden; cursor: crosshair; background: var(--graphite); }
+.frise > * { position: absolute; }
+.frise .enreg, .frise .futur, .frise .grad, .frise .survol { top: 0; bottom: 0; }
+.frise .grad { width: 1px; background: rgba(255,255,255,.12); }
+.frise .lab { bottom: 3px; transform: translateX(-50%); font-size: 11px; color: var(--texte3); pointer-events: none; }
+.frise .rep { width: 3px; border-radius: 2px; pointer-events: none; }
+.frise .rep.vis { top: 8px; height: 20px; }
+.frise .rep.mvt { top: 18px; height: 10px; }
+.frise .tete { top: -2px; bottom: -2px; width: 2px; background: var(--alcor); box-shadow: 0 0 10px rgba(220,169,92,.8); pointer-events: none; }
+.frise .survol { width: 1px; background: rgba(255,255,255,.4); pointer-events: none; display: none; }
+.lecture-survol { height: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12.5px; }
+.A-filtres { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.A-filtres .compte { margin-left: auto; color: var(--texte2); font-size: 12.5px; }
+.A-cartes { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+.A-carte { width: 132px; flex: none; border-radius: 9px; overflow: hidden; background: var(--instrument); border: 1px solid var(--ligne2); cursor: pointer; }
+.A-carte.en-cours { border-color: var(--alcor); }
+.A-carte .vig { aspect-ratio: 16/9; background: #000 center/cover; }
+.A-carte .pied { display: flex; justify-content: space-between; padding: 6px 8px; font-size: 12px; }
+.A-carte .pied .h { color: var(--texte2); font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- Détections */
+.A-det { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+.A-filtres-col { overflow-y: auto; padding: 18px 20px 24px; border-right: 1px solid var(--ligne); background: var(--instrument); }
+.A-filtres-col section + section { margin-top: 22px; }
+.A-filtres-col h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+.A-graduation { display: flex; justify-content: space-between; color: var(--texte3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.A-graduation b { color: var(--alcor); font-weight: 500; }
+.A-resultats { display: flex; flex-direction: column; min-height: 0; }
+.A-res-barre { display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-bottom: 1px solid var(--ligne); font-size: 13px; }
+.A-res-barre .tronque { color: var(--orange); }
+.A-res-barre .note { margin-left: auto; color: var(--texte3); font-size: 12.5px; }
+.A-grille-det { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); grid-auto-rows: max-content; gap: 14px; align-content: start; }
+.A-objet { border-radius: 10px; overflow: hidden; background: var(--instrument); border: 1px solid var(--ligne2); cursor: pointer; transition: border-color .14s, transform .14s; }
+.A-objet:hover { border-color: var(--alcor-ligne); transform: translateY(-2px); }
+.A-objet .vig { aspect-ratio: 16/9; background: #000 center/cover; position: relative; }
+.A-objet .ident { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 6px; background: rgba(12,15,20,.8); color: var(--alcor); display: grid; place-items: center; }
+.A-objet .infos { padding: 9px 11px 10px; display: grid; grid-template-columns: 1fr auto; row-gap: 3px; }
+.A-objet .quoi { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.A-objet .ech { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); }
+.A-objet .score { font-size: 12.5px; color: var(--texte2); font-variant-numeric: tabular-nums; text-align: right; }
+.A-objet .score.haut { color: var(--vert); }
+.A-objet { position: relative; }
+.A-objet .aller { position: absolute; top: 8px; left: 8px; opacity: 0; background: rgba(12,15,20,.85); border-color: var(--ligne2); }
+.A-objet:hover .aller, .A-objet.survole .aller { opacity: 1; }
+.A-objet .ou { font-size: 12px; color: var(--texte3); grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- Alertes */
+.A-page { max-width: 1040px; margin: 0 auto; padding: 22px 24px 40px; }
+.A-intro { color: var(--texte2); font-size: 13px; line-height: 1.55; max-width: 760px; margin-bottom: 18px; }
+.A-veilles { overflow: hidden; }
+.A-veille + .A-veille { border-top: 1px solid var(--ligne); }
+.A-veille .ligne { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto auto 28px; align-items: center; gap: 16px; padding: 14px 16px; cursor: pointer; }
+.A-veille .ligne:hover { background: rgba(255,255,255,.02); }
+.A-veille.eteinte .ligne { opacity: .55; }
+.A-veille .cloche { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; background: var(--alcor-doux); color: var(--alcor); }
+.A-veille.eteinte .cloche { background: var(--graphite); color: var(--texte3); }
+.A-veille .nom { font-size: 14px; font-weight: 600; }
+.A-veille .resume { font-size: 12.5px; color: var(--texte2); margin-top: 2px; }
+.A-veille .quand { font-size: 12.5px; color: var(--texte2); white-space: nowrap; }
+.A-veille .cout { font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.A-veille .detail { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 36px; padding: 6px 16px 22px 68px; }
+.A-veille .detail h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+.A-semaine { display: grid; grid-template-columns: 36px 1fr; gap: 4px 10px; margin-top: 12px; font-size: 12px; color: var(--texte3); }
+.A-semaine .barre { position: relative; height: 12px; border-radius: 3px; background: var(--graphite); }
+.A-semaine .barre i { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--alcor); opacity: .75; }
+.A-semaine .axe { grid-column: 2; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.A-maitre { display: flex; align-items: center; gap: 12px; padding: 6px 14px 6px 10px; border-radius: 10px; background: var(--graphite); border: 1px solid var(--ligne2); }
+.A-maitre .t { font-weight: 600; }
+.A-maitre .p { font-size: 12px; color: var(--texte2); }
+.A-veille .detail h3.suite, .A-raccourcis h3.suite { margin-top: 22px; }
+.A-entre { color: var(--texte2); font-size: 12.5px; margin: 0 4px 0 8px; }
+.A-enreg { display: inline-flex; align-items: center; gap: 6px; color: var(--vert); font-size: 12.5px; }
+
+/* ---------------------------------------------------------------- Réglages */
+.A-reg { display: grid; grid-template-columns: 220px minmax(0, 760px); gap: 40px; max-width: 1060px; margin: 0 auto; padding: 24px 24px 60px; }
+.A-sommaire { position: sticky; top: 0; align-self: start; display: flex; flex-direction: column; gap: 2px; padding-top: 4px; }
+.A-sommaire a { padding: 8px 12px; border-radius: 8px; color: var(--texte2); text-decoration: none; font-size: 13px; }
+.A-sommaire a:hover { background: var(--graphite); color: var(--lumiere); }
+.A-sommaire a[aria-current="true"] { background: var(--graphite); color: var(--lumiere); box-shadow: inset 3px 0 0 var(--alcor); }
+.A-section + .A-section { margin-top: 30px; }
+.A-section h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.A-rangee { display: flex; gap: 24px; align-items: center; padding: 16px 18px; }
+.A-rangee + .A-rangee { border-top: 1px solid var(--ligne); }
+.A-rangee .txt { flex: 1; min-width: 0; }
+.A-rangee .titre { font-size: 13.5px; font-weight: 500; }
+.A-rangee .expl { margin-top: 3px; color: var(--texte2); font-size: 12.5px; line-height: 1.5; }
+.A-rangee .val { color: var(--texte2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.A-version { display: flex; align-items: center; gap: 14px; }
+.A-version svg { width: 34px; height: 34px; color: var(--alcor); }
+.A-version .v { font-size: 17px; font-weight: 600; }
+.A-histoire { padding: 16px 18px; }
+.A-histoire + .A-histoire { border-top: 1px solid var(--ligne); }
+.A-histoire .tete { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.A-histoire .no { font-weight: 600; font-variant-numeric: tabular-nums; }
+.A-histoire .date { color: var(--texte3); font-size: 12.5px; }
+.A-histoire .installee { font-size: 12px; padding: 1px 8px; border-radius: 6px; background: var(--alcor-doux); color: var(--alcor); }
+.A-histoire ul { margin: 0; padding-left: 18px; color: var(--texte2); font-size: 13px; line-height: 1.55; }
+.A-histoire li + li { margin-top: 5px; }
+.A-chemin { font-family: var(--mono); font-size: 12.5px; color: var(--texte2); word-break: break-all; }
+.A-avert { display: flex; gap: 10px; padding: 12px 14px; border-radius: 9px; background: rgba(227,115,95,.09); color: #f0a898; font-size: 13px; line-height: 1.5; }
+
+/* ---------------------------------------------------------------- Système */
+.A-sys { max-width: 1240px; margin: 0 auto; padding: 22px 24px 40px; }
+.A-sys-haut { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.A-sys-bloc { padding: 16px 18px 18px; }
+.A-sys-bloc h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+.A-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.A-table th { text-align: left; font-weight: 500; color: var(--texte3); font-size: 12.5px; padding: 8px 18px; border-top: 1px solid var(--ligne); border-bottom: 1px solid var(--ligne); }
+.A-table td { padding: 12px 18px; vertical-align: top; border-bottom: 1px solid var(--ligne); }
+.A-table tr:last-child td { border-bottom: 0; }
+.A-table .nom { font-weight: 600; }
+.A-table .sec { color: var(--texte3); font-size: 12.5px; margin-top: 2px; }
+.A-table .pt { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--texte3); margin-right: 8px; }
+.A-table .pt.ok { background: var(--vert); }
+.A-table .flux { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.A-table .flux + .flux { margin-top: 3px; }
+.A-table .flux b { font-weight: 500; display: inline-block; width: 72px; }
+.A-table .flux span { color: var(--texte3); margin-left: 8px; }
+
+.A-sys-cams { margin-top: 18px; }
+.A-sys-titre { margin: 0; padding: 16px 18px 12px; font-size: 15px; font-weight: 600; }
+
+/* ---------------------------------------------------------------- Raccourcis */
+.A-raccourcis { width: min(880px, 94vw); max-height: 82vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px -30px rgba(0,0,0,.9); }
+.A-raccourcis .tete { display: flex; align-items: center; gap: 12px; padding: 16px 16px 14px 20px; border-bottom: 1px solid var(--ligne); }
+.A-raccourcis .tete .titre { font-size: 15px; font-weight: 600; }
+.A-raccourcis .tete .A-btn { margin-left: auto; }
+.A-raccourcis .corps { overflow-y: auto; padding: 18px 20px 22px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 28px; }
+.A-raccourcis h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+.A-raccourcis dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: baseline; font-size: 13px; }
+.A-raccourcis dt { white-space: nowrap; }
+.A-raccourcis dd { margin: 0; color: var(--texte2); }
+
+/* ---------------------------------------------------------------- planche des états */
+.appA.A-planche { display: block; overflow: auto; }
+.A-planche-page { max-width: 1400px; margin: 0 auto; padding: 24px 28px 50px; }
+.A-planche h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; }
+.A-planche .intro { color: var(--texte2); margin-bottom: 20px; max-width: 820px; }
+.A-etats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.A-etat-carte { display: flex; flex-direction: column; overflow: hidden; }
+.A-etat-carte > .leg { padding: 12px 16px; border-bottom: 1px solid var(--ligne); }
+.A-etat-carte > .leg b { font-weight: 600; }
+.A-etat-carte > .leg p { margin-top: 3px; color: var(--texte3); font-size: 12.5px; }
+.A-etat-carte .scene { position: relative; height: 260px; background: var(--nuit); overflow: hidden; }
+.A-etat-carte .barre-etat { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; display: flex; align-items: center; gap: 14px; padding: 0 14px; background: var(--instrument); border-top: 1px solid var(--ligne); font-size: 12.5px; color: var(--texte2); }
+.A-pastille { display: inline-flex; align-items: center; gap: 7px; }
+.A-pastille::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.A-panne { position: absolute; inset: 0 0 30px 0; display: grid; place-items: center; text-align: center; padding: 20px; }
+.A-panne .boite { max-width: 440px; }
+.A-panne .titre { font-size: 15px; font-weight: 600; }
+.A-panne .remede { margin-top: 8px; color: #e9c27f; line-height: 1.5; }
+.A-panne .remede.grave { color: #f0a898; }
+.A-panne .prochaine { margin-top: 8px; color: var(--texte3); font-size: 12.5px; }
+.A-panne .boutons { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+.A-bandeau-rouge { padding: 10px 12px; border-radius: 9px; background: rgba(227,115,95,.12); color: #f0a898; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+
+.ajout-a { display: inline-block; font-size: 11.5px; padding: 0 6px; border-radius: 4px; background: rgba(220,169,92,.16); color: var(--alcor); }
+
+/* ---------------------------------------------------------------- Connexion */
+.A-cnx { grid-row: 1; grid-column: 1; position: relative; overflow: hidden; }
+.A-cnx .A-ciel { position: absolute; inset: 0; }
+.A-cnx-defile { position: absolute; inset: 0; overflow-y: auto; }
+.A-cnx-page { max-width: 1120px; margin: 0 auto; padding: 36px 28px 0; }
+.A-cnx-tete { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.A-cnx-tete svg { width: 36px; height: 36px; color: var(--alcor); }
+.A-cnx-tete h1 { margin: 0; font-size: 22px; font-weight: 600; }
+.A-cnx-sous { color: var(--texte2); font-size: 13.5px; margin: 0 0 14px 50px; }
+.A-demo { margin: 0 0 22px 50px; display: inline-block; padding: 6px 12px; border-radius: 8px; background: rgba(224,162,60,.1); color: #e9c27f; font-size: 12.5px; }
+.A-cnx-colonnes { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 24px; align-items: start; }
+.A-cnx-form { display: flex; flex-direction: column; gap: 16px; }
+.A-bloc-f { padding: 18px 20px; }
+.A-bloc-f h2 { margin: 0 0 14px; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.A-bloc-f .champ + .champ { margin-top: 14px; }
+.A-reprise { border-color: var(--alcor-ligne); background: linear-gradient(rgba(220,169,92,.08), rgba(220,169,92,.08)), var(--instrument); }
+.A-etapes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.A-etapes li { display: flex; gap: 10px; font-size: 13px; }
+.A-etapes .ic { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; flex: none; margin-top: 1px; background: rgba(116,196,148,.16); color: var(--vert); }
+.A-etapes .ic svg { width: 12px; height: 12px; stroke-width: 2.5; }
+.A-etapes .msg { color: var(--texte3); font-size: 12.5px; }
+.A-trouvees { margin-top: 14px; padding: 12px 14px; border-radius: 9px; background: var(--graphite); }
+.A-trouvees h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+.A-trouvees li { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 2px 0; }
+.A-trouvees .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--vert); }
+.A-trouvees .def { color: var(--texte3); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.A-case { display: flex; gap: 10px; align-items: center; margin-top: 14px; font-size: 13.5px; }
+.A-case input { width: 16px; height: 16px; accent-color: var(--alcor); }
+.A-actions { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; margin: 4px -20px 0; background: linear-gradient(transparent, var(--nuit) 30%); }
+.A-guide { position: sticky; top: 20px; padding: 18px 20px; }
+.A-guide .cadre { margin-top: 14px; height: 340px; border-radius: 10px; border: 1px solid var(--ligne2); background: #0b1017; display: grid; place-items: center; color: var(--texte3); font-size: 12.5px; text-align: center; padding: 20px; }
+.A-guide .cadre ol { text-align: left; margin: 0; padding-left: 20px; color: var(--texte2); line-height: 1.9; }
+.A-details { margin-top: 10px; }
+.A-details summary { cursor: pointer; color: var(--texte2); font-size: 12.5px; }
+.A-details-corps { margin-top: 8px; padding: 12px 14px; border-radius: 9px; background: var(--graphite); color: var(--texte2); font-size: 13px; line-height: 1.55; }
+.A-guide-titre { margin: 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.A-divulg { color: var(--texte2); font-size: 13px; line-height: 1.55; }
+.A-divulg + .A-divulg { margin-top: 8px; }
+
+/* ---------------------------------------------------------------- superpositions */
+.A-voile { position: fixed; inset: 44px 0 0 0; z-index: 40; background: rgba(8,11,16,.72); display: grid; place-items: center; }
+.A-extrait { position: fixed; inset: 64px 40px 30px; z-index: 41; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px -30px rgba(0,0,0,.9); }
+.A-extrait .tete { display: flex; align-items: center; gap: 14px; padding: 14px 16px 14px 20px; border-bottom: 1px solid var(--ligne); }
+.A-extrait .tete .titre { font-size: 15px; font-weight: 600; }
+.A-extrait .tete .sous { font-size: 12.5px; color: var(--texte2); }
+.A-extrait .tete .actions { margin-left: auto; display: flex; gap: 8px; }
+.A-extrait .transport { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--ligne); }
+.A-extrait .transport .lire { width: 38px; height: 38px; border-radius: 10px; background: var(--alcor); color: #1d1608; display: grid; place-items: center; }
+.A-extrait .transport .lire svg { fill: currentColor; stroke: none; width: 17px; height: 17px; }
+.A-extrait .transport .t { font-family: var(--mono); font-size: 13px; color: var(--texte2); font-variant-numeric: tabular-nums; }
+.A-extrait .transport input { flex: 1; accent-color: var(--alcor); }
+.A-extrait .pied { padding: 9px 20px; border-top: 1px solid var(--ligne); color: var(--vert); font-size: 12.5px; }
+.A-extrait .pied .A-chemin { color: var(--vert); }
+.A-nouv { width: min(580px, 92vw); max-height: 78vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px -30px rgba(0,0,0,.9); }
+.A-nouv .tete { display: flex; align-items: center; gap: 12px; padding: 16px 16px 14px 20px; border-bottom: 1px solid var(--ligne); }
+.A-nouv .tete svg.m { width: 28px; height: 28px; color: var(--alcor); }
+.A-nouv .tete .titre { font-size: 15px; font-weight: 600; }
+.A-nouv .tete .sous { font-size: 12.5px; color: var(--texte2); }
+.A-nouv .tete .A-btn { margin-left: auto; }
+.A-nouv .corps { overflow-y: auto; padding: 16px 20px; }
+.A-nouv .corps h3 { margin: 0 0 8px; font-size: 13px; display: flex; gap: 10px; align-items: baseline; }
+.A-nouv .corps h3 span { color: var(--texte3); font-weight: 400; font-size: 12.5px; }
+.A-nouv .corps ul { margin: 0; padding-left: 18px; color: var(--texte2); font-size: 13px; line-height: 1.55; }
+.A-nouv .corps li + li { margin-top: 7px; }
+.A-nouv .pied { padding: 14px 20px; border-top: 1px solid var(--ligne); }
+.A-nouv .pied .A-btn { width: 100%; justify-content: center; height: 38px; }
+
+/* =====================================================================
+   VARIANTE B — DENSITÉ « LINEAR » : les tailles seules.
+   Couleurs, disposition et contenu sont ceux de A. Repères pris sur Linear :
+   texte courant 12,5 px, secondaire 11,5, titres 13-14 ; boutons 28 et 24 px ;
+   en-têtes 46 px ; rangées 32-36 px ; icônes 14 px ; marges de 12 à 14 px.
+   ===================================================================== */
+.appA.compact { font-size: 12.5px; --rail: 64px; --etat: 28px; --activite: 264px; --bandeau: 34px; --ecart: 10px; --marge: 12px; }
+.appA.compact svg.i { width: 14px; height: 14px; }
+/* rail */
+.compact .A-rail { padding: 10px 6px; }
+.compact .A-rail .marque { height: 36px; margin-bottom: 6px; }
+.compact .A-rail .marque svg { width: 22px; height: 22px; }
+.compact .A-rail .esp { padding: 7px 2px 6px; gap: 3px; font-size: 10.5px; border-radius: 7px; }
+.compact .A-rail .esp svg { width: 17px; height: 17px; }
+.compact .A-rail .esp[aria-current="true"]::before { left: -6px; top: 9px; bottom: 9px; }
+/* cadre et composants */
+.compact .A-tete { height: 46px; gap: 12px; padding: 0 12px 0 16px; }
+.compact .A-tete h1 { font-size: 14px; }
+.compact .A-tete .sous { font-size: 12px; }
+.compact .A-tete .actions { gap: 6px; }
+.compact .A-btn { height: 28px; padding: 0 10px; border-radius: 6px; font-size: 12.5px; gap: 6px; }
+.compact .A-btn.petit { height: 24px; padding: 0 7px; font-size: 12px; border-radius: 5px; gap: 5px; }
+.compact .A-btn.icone { width: 28px; padding: 0; }
+.compact .A-btn.petit.icone { width: 24px; }
+.compact .A-btn .compte { font-size: 11.5px; }
+.compact .A-kbd { font-size: 11px; line-height: 16px; padding: 0 4px; }
+.compact .A-seg { padding: 2px; border-radius: 7px; }
+.compact .A-seg button { height: 22px; padding: 0 9px; font-size: 12px; border-radius: 5px; }
+.compact .A-puces { gap: 5px; }
+.compact .A-puce { height: 23px; padding: 0 9px; border-radius: 12px; font-size: 12px; gap: 6px; }
+.compact .A-puce .n { font-size: 11px; }
+.compact .A-interrupteur { width: 32px; height: 18px; }
+.compact .A-interrupteur::after { width: 12px; height: 12px; }
+.compact .A-interrupteur[aria-checked="true"]::after { left: 17px; }
+.compact .A-champ { height: 30px; padding: 0 10px; border-radius: 6px; }
+.compact .A-champ input { font-size: 12.5px; }
+.compact .A-etiq { font-size: 12px; margin-bottom: 5px; }
+.compact .A-aide { font-size: 11.5px; margin-top: 4px; }
+.compact .A-carte-p { border-radius: 8px; }
+/* mur */
+.compact .A-indice { font-size: 11px; bottom: 7px; }
+.compact .A-grille { bottom: 24px; }
+.compact .A-tuile { border-radius: 8px; }
+.compact .A-bandeau { gap: 8px; padding: 0 5px 0 10px; }
+.compact .A-bandeau .nom { font-size: 13px; }
+.compact .A-bandeau .canal, .compact .A-bandeau .direct, .compact .A-bandeau .hors { font-size: 11.5px; }
+.compact .A-bandeau .temps { font-size: 12.5px; }
+@container (max-width: 640px) { .compact .A-bandeau .cmds .A-btn { width: 24px; padding: 0; } }
+.compact .A-image .pastille { height: 22px; padding: 0 8px; font-size: 11.5px; top: 8px; right: 8px; }
+.compact .A-image .zoom { height: 20px; padding: 0 7px; font-size: 11px; left: 8px; bottom: 8px; }
+.compact .A-image .toast { padding: 6px 12px; font-size: 12px; bottom: 36px; }
+/* activité */
+.compact .A-activite .tete { height: 46px; padding: 0 8px 0 14px; }
+.compact .A-activite h2 { font-size: 13px; }
+.compact .A-bloc { padding: 12px 14px; }
+.compact .A-bloc h3 { font-size: 12px; margin-bottom: 8px; }
+.compact .A-histo { height: 44px; }
+.compact .A-axe { font-size: 10.5px; margin-top: 4px; }
+.compact .A-recentes { padding: 4px 6px; }
+.compact .A-recentes li { gap: 10px; padding: 5px 8px; border-radius: 6px; }
+.compact .A-recentes .vig { width: 56px; height: 32px; border-radius: 4px; }
+.compact .A-recentes .ou { font-size: 11.5px; }
+.compact .A-recentes .quand { font-size: 11px; }
+.compact .A-lien { margin: 4px 14px 12px; font-size: 12px; }
+/* barre d'état */
+.compact .A-etat { font-size: 11.5px; padding: 0 6px 0 12px; }
+.compact .A-etat > span { padding: 0 10px; height: 14px; gap: 6px; }
+.compact .A-etat > span:first-child { padding-left: 0; }
+.compact .A-etat .barre { width: 36px; height: 4px; }
+/* menus du direct */
+.compact .A-cams { width: 300px; top: 40px; right: 12px; padding: 6px; }
+.compact .A-cams .cam { gap: 10px; padding: 6px 8px; border-radius: 6px; }
+.compact .A-cams .def { font-size: 11.5px; }
+.compact .A-cams .remede { font-size: 11.5px; padding: 8px 10px; margin: 4px 8px; }
+.compact .A-maj { top: 56px; font-size: 12px; padding: 6px 6px 6px 12px; gap: 10px; }
+/* relecture */
+.compact .A-rel { gap: 10px; padding: 12px 14px; }
+.compact .A-chip { height: 28px; font-size: 12px; border-radius: 6px; padding: 0 10px 0 3px; gap: 6px; }
+.compact .A-chip .mini { width: 34px; height: 20px; border-radius: 4px; }
+.compact .A-console { padding: 8px 12px 6px; }
+.compact .A-transport .lire { width: 30px; height: 30px; border-radius: 7px; }
+.compact .A-transport .lire svg { width: 14px; height: 14px; }
+.compact .A-transport .t { font-size: 13px; margin: 0 10px 0 8px; }
+.compact .A-frise-tete { margin: 8px 0 4px; font-size: 11.5px; }
+.compact .frise { height: 40px; border-radius: 6px; }
+.compact .frise .lab { font-size: 10px; }
+.compact .frise .rep.vis { top: 6px; height: 16px; }
+.compact .frise .rep.mvt { top: 14px; height: 8px; }
+.compact .lecture-survol { font-size: 11.5px; height: 16px; }
+.compact .A-filtres { margin-bottom: 6px; gap: 5px; }
+.compact .A-filtres .compte { font-size: 11.5px; }
+.compact .A-cartes { gap: 8px; }
+.compact .A-carte { width: 108px; border-radius: 6px; }
+.compact .A-carte .pied { padding: 4px 6px; font-size: 11px; }
+/* détections */
+.compact .A-det { grid-template-columns: 248px minmax(0, 1fr); }
+.compact .A-filtres-col { padding: 12px 14px 16px; }
+.compact .A-filtres-col section + section { margin-top: 16px; }
+.compact .A-filtres-col h2 { font-size: 12px; margin-bottom: 7px; }
+.compact .A-graduation { font-size: 11px; }
+.compact .A-res-barre { padding: 8px 14px; font-size: 12px; gap: 10px; }
+.compact .A-res-barre .note { font-size: 11.5px; }
+.compact .A-grille-det { padding: 12px 14px; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); }
+.compact .A-objet { border-radius: 7px; }
+.compact .A-objet .infos { padding: 6px 8px 7px; row-gap: 2px; }
+.compact .A-objet .quoi { font-size: 12px; gap: 6px; }
+.compact .A-objet .ech { width: 8px; height: 8px; }
+.compact .A-objet .score { font-size: 11.5px; }
+.compact .A-objet .ou { font-size: 11px; }
+.compact .A-objet .ident { width: 20px; height: 20px; }
+.compact .A-objet .aller { top: 6px; left: 6px; }
+/* alertes */
+.compact .A-page { padding: 14px 16px 28px; max-width: 960px; }
+.compact .A-intro { font-size: 12px; margin-bottom: 12px; }
+.compact .A-maitre { gap: 10px; padding: 4px 10px 4px 8px; border-radius: 7px; }
+.compact .A-maitre .p { font-size: 11px; }
+.compact .A-enreg { font-size: 11.5px; }
+.compact .A-veille .ligne { grid-template-columns: 28px minmax(0, 1fr) auto auto 20px; gap: 12px; padding: 8px 12px; }
+.compact .A-veille .cloche { width: 28px; height: 28px; border-radius: 6px; }
+.compact .A-veille .nom { font-size: 13px; }
+.compact .A-veille .resume, .compact .A-veille .quand, .compact .A-veille .cout { font-size: 11.5px; }
+.compact .A-veille .detail { gap: 16px 26px; padding: 4px 12px 14px 52px; }
+.compact .A-veille .detail h3 { font-size: 12px; margin-bottom: 7px; }
+.compact .A-veille .detail h3.suite, .compact .A-raccourcis h3.suite { margin-top: 14px; }
+.compact .A-entre { font-size: 11.5px; }
+.compact .A-semaine { font-size: 11px; gap: 3px 8px; margin-top: 8px; }
+.compact .A-semaine .barre { height: 9px; }
+/* réglages */
+.compact .A-reg { grid-template-columns: 180px minmax(0, 680px); gap: 28px; padding: 16px 16px 40px; }
+.compact .A-sommaire a { padding: 5px 10px; font-size: 12.5px; border-radius: 6px; }
+.compact .A-section + .A-section { margin-top: 22px; }
+.compact .A-section h2 { font-size: 13px; margin-bottom: 7px; }
+.compact .A-rangee { gap: 16px; padding: 10px 14px; }
+.compact .A-rangee .titre { font-size: 12.5px; }
+.compact .A-rangee .expl, .compact .A-rangee .val { font-size: 11.5px; }
+.compact .A-version { gap: 10px; }
+.compact .A-version svg { width: 26px; height: 26px; }
+.compact .A-version .v { font-size: 14px; }
+.compact .A-histoire { padding: 10px 14px; }
+.compact .A-histoire .date { font-size: 11.5px; }
+.compact .A-histoire ul { font-size: 12px; }
+.compact .A-chemin { font-size: 11.5px; }
+.compact .A-avert { font-size: 12px; padding: 8px 10px; }
+/* système */
+.compact .A-sys { padding: 14px 16px 28px; }
+.compact .A-sys-haut { gap: 12px; }
+.compact .A-sys-bloc { padding: 10px 12px 12px; }
+.compact .A-sys-bloc h2 { font-size: 13px; margin-bottom: 8px; }
+.compact .A-ligne { font-size: 12px; padding: 2px 0; }
+.compact .A-note { font-size: 11px; }
+.compact .A-defs span { font-size: 11px; }
+.compact .A-etatrelais { padding: 7px 9px; margin-bottom: 8px; }
+.compact .A-prive { font-size: 11.5px; margin-top: 10px; }
+.compact .A-disque { height: 5px; margin: 8px 0 4px; }
+.compact .A-sys-cams { margin-top: 12px; }
+.compact .A-sys-titre { padding: 10px 12px 8px; font-size: 13px; }
+.compact .A-table { font-size: 12px; }
+.compact .A-table th { font-size: 11.5px; padding: 6px 12px; }
+.compact .A-table td { padding: 7px 12px; }
+.compact .A-table .sec { font-size: 11.5px; }
+.compact .A-table .flux b { width: 60px; }
+/* connexion */
+.compact .A-cnx-page { padding: 24px 20px 0; max-width: 1040px; }
+.compact .A-cnx-tete { gap: 10px; }
+.compact .A-cnx-tete svg { width: 26px; height: 26px; }
+.compact .A-cnx-tete h1 { font-size: 16px; }
+.compact .A-cnx-sous { font-size: 12.5px; margin: 0 0 10px 36px; }
+.compact .A-demo { font-size: 11.5px; margin: 0 0 16px 36px; padding: 4px 10px; }
+.compact .A-cnx-colonnes { grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; }
+.compact .A-cnx-form { gap: 10px; }
+.compact .A-bloc-f { padding: 12px 14px; }
+.compact .A-bloc-f h2 { font-size: 13px; margin-bottom: 9px; }
+.compact .A-bloc-f .champ + .champ { margin-top: 10px; }
+.compact .A-etapes { gap: 7px; }
+.compact .A-etapes li { font-size: 12px; gap: 8px; }
+.compact .A-etapes .ic { width: 15px; height: 15px; }
+.compact .A-etapes .ic svg { width: 10px; height: 10px; }
+.compact .A-etapes .msg { font-size: 11.5px; }
+.compact .A-trouvees { padding: 8px 10px; margin-top: 10px; }
+.compact .A-trouvees h3 { font-size: 12px; }
+.compact .A-trouvees li { font-size: 12px; }
+.compact .A-case { font-size: 12.5px; margin-top: 10px; }
+.compact .A-actions { padding: 10px 14px; margin: 2px -14px 0; }
+.compact .A-guide { padding: 12px 14px; }
+.compact .A-guide-titre { font-size: 13px; }
+.compact .A-guide .cadre { height: 280px; margin-top: 10px; font-size: 11.5px; }
+.compact .A-divulg { font-size: 12px; }
+.compact .A-details summary { font-size: 11.5px; }
+.compact .A-details-corps { font-size: 12px; padding: 8px 10px; border-radius: 6px; }
+/* superpositions */
+.compact .A-extrait { inset: 54px 32px 24px; }
+.compact .A-extrait .tete { padding: 8px 10px 8px 14px; gap: 10px; }
+.compact .A-extrait .tete .titre { font-size: 13px; }
+.compact .A-extrait .tete .sous { font-size: 11.5px; }
+.compact .A-extrait .transport { padding: 8px 12px; gap: 8px; }
+.compact .A-extrait .transport .lire { width: 30px; height: 30px; border-radius: 7px; }
+.compact .A-extrait .transport .lire svg { width: 13px; height: 13px; }
+.compact .A-extrait .transport .t { font-size: 12px; }
+.compact .A-extrait .pied { padding: 6px 14px; font-size: 11.5px; }
+.compact .A-nouv { width: min(500px, 92vw); }
+.compact .A-nouv .tete { padding: 10px 10px 10px 14px; gap: 10px; }
+.compact .A-nouv .tete svg.m { width: 22px; height: 22px; }
+.compact .A-nouv .tete .titre { font-size: 13px; }
+.compact .A-nouv .tete .sous { font-size: 11.5px; }
+.compact .A-nouv .corps { padding: 10px 14px; }
+.compact .A-nouv .corps h3 { font-size: 12px; }
+.compact .A-nouv .corps ul { font-size: 12px; }
+.compact .A-nouv .pied { padding: 10px 14px; }
+.compact .A-nouv .pied .A-btn { height: 30px; }
+.compact .A-raccourcis { width: min(780px, 94vw); }
+.compact .A-raccourcis .tete { padding: 10px 10px 10px 14px; }
+.compact .A-raccourcis .tete .titre { font-size: 13px; }
+.compact .A-raccourcis .corps { padding: 12px 14px 14px; gap: 16px 22px; }
+.compact .A-raccourcis h3 { font-size: 12px; margin-bottom: 7px; }
+.compact .A-raccourcis dl { font-size: 12px; gap: 6px 10px; }
+/* planche des états */
+.compact .A-planche-page { padding: 16px 18px 32px; }
+.compact.A-planche h1 { font-size: 15px; }
+.compact.A-planche .intro { font-size: 12px; margin-bottom: 14px; }
+.compact .A-etats { gap: 14px; }
+.compact .A-etat-carte > .leg { padding: 8px 12px; }
+.compact .A-etat-carte > .leg p { font-size: 11.5px; }
+.compact .A-etat-carte .scene { height: 220px; }
+.compact .A-etat-carte .barre-etat { height: 26px; font-size: 11.5px; }
+.compact .A-panne .titre { font-size: 13px; }
+.compact .A-panne .prochaine { font-size: 11.5px; }
+.compact .A-bandeau-rouge { font-size: 12px; padding: 8px 10px; }
+.compact .ajout-a { font-size: 10.5px; }
+
+/* ===================================================================== carte */
+.carte { position: absolute; inset: 0; overflow: auto; background: #f1efe9; color: #23252a; font: 400 14px/1.5 "Barlow", system-ui, sans-serif; padding: 28px 32px 60px; }
+.carte h2 { font: 600 22px "Barlow Semi Condensed", sans-serif; margin: 0 0 4px; }
+.carte p.intro { max-width: 820px; color: #4a4c52; margin: 0 0 20px; }
+.carte table { border-collapse: collapse; width: 100%; max-width: 1300px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.carte th, .carte td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid #e6e3da; }
+.carte thead th { background: #23252a; color: #f1efe9; font: 600 14px "Barlow Semi Condensed", sans-serif; position: sticky; top: 0; }
+.carte tr.groupe td { background: #e9e6dd; font: 600 14px "Barlow Semi Condensed", sans-serif; }
+.carte td:first-child { font-weight: 500; width: 28%; }
+.carte .ajout { display: inline-block; font: 600 12px "Barlow Semi Condensed", sans-serif; color: #8a5a0a; background: #f5e3c3; border-radius: 3px; padding: 0 5px; margin-left: 4px; }
+
+/* ===================================================================== dispositions du mur */
+.D-menu { position: absolute; top: 56px; right: 196px; width: 400px; z-index: 22; padding: 8px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.85); }
+.D-menu h3 { margin: 4px 10px 8px; font-size: 13px; font-weight: 600; color: var(--texte2); }
+.D-ligne { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 9px; cursor: pointer; }
+.D-ligne:hover, .D-ligne.active { background: var(--graphite); }
+.D-ligne .coche { color: var(--alcor); }
+.D-ligne .nom { font-weight: 600; }
+.D-ligne .quoi { font-size: 12px; color: var(--texte2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.D-ligne .quoi .absente { color: var(--orange); }
+.D-ligne .gestes { display: flex; gap: 2px; opacity: .0; }
+.D-ligne:hover .gestes, .D-ligne.active .gestes { opacity: 1; }
+.D-ligne .gestes .A-btn { width: 26px; height: 26px; padding: 0; justify-content: center; }
+.D-sep { height: 1px; background: var(--ligne); margin: 6px 4px; }
+.D-action { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 10px; border-radius: 9px; color: var(--alcor); font-weight: 600; }
+.D-action:hover { background: var(--alcor-doux); }
+.D-vide { padding: 10px 10px 4px; color: var(--texte2); font-size: 12.5px; line-height: 1.55; }
+.D-nommer { padding: 8px 10px 10px; }
+.D-nommer .A-champ { margin: 6px 0; }
+.D-nommer .aide { font-size: 12px; color: var(--texte3); line-height: 1.5; }
+.D-nommer .boutons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.D-modif { margin: 4px 6px 6px; padding: 10px 12px; border-radius: 9px; background: var(--alcor-doux); border: 1px solid var(--alcor-ligne); font-size: 12.5px; }
+.D-modif .boutons { display: flex; gap: 6px; margin-top: 8px; }
+.D-barre { flex: none; display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 20px 0 24px; border-bottom: 1px solid var(--ligne); background: var(--instrument); }
+.D-barre .lab { color: var(--texte3); font-size: 12.5px; margin-right: 4px; }
+.D-barre .modif { color: var(--alcor); font-size: 12px; margin-left: 6px; }
+.D-barre .droite { margin-left: auto; display: flex; gap: 6px; align-items: center; color: var(--texte3); font-size: 12px; }
+.D-notes { position: absolute; inset: 0; overflow-y: auto; padding: 28px 32px 40px; background: #0e131b; color: #ece8df;
+  font: 400 13px/1.5 "Atkinson Hyperlegible Next", system-ui, sans-serif; z-index: 50; }
+.D-notes h2 { margin: 0 0 6px; font-size: 17px; }
+.D-notes p { color: #a9b0bc; max-width: 900px; }
+.D-notes table { width: 100%; max-width: 1400px; border-collapse: collapse; margin-top: 18px; }
+.D-notes th, .D-notes td { text-align: left; padding: 9px 12px; border-bottom: 1px solid rgba(206,214,229,.09); vertical-align: top; }
+.D-notes th { color: #a9b0bc; font-weight: 500; }
+.D-notes .ajout { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; font-size: 11px; background: rgba(220,169,92,.14); color: #dca95c; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="marque" viewBox="0 0 64 64"><path fill="currentColor" fill-rule="evenodd" stroke="none" d="M18 4H46A14 14 0 0 1 60 18V46A14 14 0 0 1 46 60H18A14 14 0 0 1 4 46V18A14 14 0 0 1 18 4ZM14 37a11 11 0 1 0 22 0a11 11 0 1 0 -22 0ZM40.6 22a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM35.64 30.12L40.74 26.32L39.66 24.88L34.56 28.68Z"/></symbol>
+  <symbol id="i-direct" viewBox="0 0 24 24"><path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+  <symbol id="i-detections" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/></symbol>
+  <symbol id="i-relecture" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="i-alertes" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"/></symbol>
+  <symbol id="i-cloche-off" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0M17 17H4a1 1 0 0 1-.74-1.67C4.59 13.96 6 12.5 6 8a6 6 0 0 1 .26-1.74M8.67 3.32A6 6 0 0 1 18 8c0 2.8.55 4.42 1.27 5.52M2 2l20 20"/></symbol>
+  <symbol id="i-reglages" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+  <symbol id="i-son" viewBox="0 0 24 24"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.4 18.4a9 9 0 0 0 0-12.8"/></symbol>
+  <symbol id="i-muet" viewBox="0 0 24 24"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="m22 9-6 6M16 9l6 6"/></symbol>
+  <symbol id="i-plein" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol>
+  <symbol id="i-cameras" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-oeil" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-oeil-barre" viewBox="0 0 24 24"><path d="M10.73 5.08a10.74 10.74 0 0 1 11.2 6.57 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49M14.08 14.16a3 3 0 0 1-4.24-4.24M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14M2 2l20 20"/></symbol>
+  <symbol id="i-g" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-d" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-haut" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+  <symbol id="i-bas" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-radio" viewBox="0 0 24 24"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5M19.1 4.9C23 8.8 23 15.1 19.1 19"/></symbol>
+  <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M8 11h6"/></symbol>
+  <symbol id="i-chercher" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-prec" viewBox="0 0 24 24"><path d="M19 20 9 12l10-8zM5 19V5"/></symbol>
+  <symbol id="i-suiv" viewBox="0 0 24 24"><path d="m5 4 10 8-10 8zM19 5v14"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></symbol>
+  <symbol id="i-panneau" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></symbol>
+  <symbol id="i-bouclier" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-dossier" viewBox="0 0 24 24"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-telecharger" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-livre" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+  <symbol id="i-reprise" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-systeme" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></symbol>
+  <symbol id="i-clavier" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+  <symbol id="i-externe" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-relancer" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-alerte" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-dispo" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/><rect x="13" y="14" width="8" height="7" rx="1.5"/></symbol>
+  <symbol id="i-crayon" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.98-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/></symbol>
+  <symbol id="i-corbeille" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-retour" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+</svg>
+
+<div class="banc">
+  <b>Dispositions du mur</b>
+  <div class="seg" id="choixVariante">
+    <button data-variante="1" aria-pressed="true">Variante 1 — menu « Disposition »</button>
+    <button data-variante="2" aria-pressed="false">Variante 2 — barre sous l'en-tête</button>
+  </div>
+  <div class="seg" id="choixEtat">
+    <button data-etat="aucune" aria-pressed="false">Aucune encore</button>
+    <button data-etat="liste" aria-pressed="true">Trois enregistrées</button>
+    <button data-etat="nommer" aria-pressed="false">Enregistrer…</button>
+    <button data-etat="modifiee" aria-pressed="false">Modifiée</button>
+    <button data-etat="absente" aria-pressed="false">Caméra absente</button>
+    <button data-etat="notes" aria-pressed="false">Ce qui s'ajoute</button>
+  </div>
+  <span class="note">Données fictives</span>
+  <div id="choixVue" hidden><button data-vue="direct" aria-pressed="true">Direct</button><button data-vue="carte">Carte</button></div>
+  <div id="choixTaille" hidden><button data-taille="a" aria-pressed="true">A</button></div>
+</div>
+
+<main id="scene">
+<section class="appA" id="appA" data-vue="direct">
+
+  <nav class="A-rail" data-hors="connexion" aria-label="Espaces">
+    <div class="marque" title="Alcora"><svg><use href="#marque"/></svg></div>
+    <button class="esp" data-esp="direct"><svg class="i"><use href="#i-direct"/></svg>Direct</button>
+    <button class="esp" data-esp="relecture"><svg class="i"><use href="#i-relecture"/></svg>Relecture</button>
+    <button class="esp" data-esp="detections"><svg class="i"><use href="#i-detections"/></svg>Détections</button>
+    <button class="esp" data-esp="alertes"><svg class="i"><use href="#i-alertes"/></svg>Alertes</button>
+    <button class="esp bas" data-esp="systeme"><svg class="i"><use href="#i-systeme"/></svg>Système</button>
+    <button class="esp" data-esp="reglages"><svg class="i"><use href="#i-reglages"/></svg>Réglages</button>
+  </nav>
+
+  <div class="A-main" data-hors="connexion">
+
+    <!-- ============================================================ DIRECT -->
+    <header class="A-tete" data-vues="direct ouvert extrait nouveautes raccourcis">
+      <h1>Direct</h1>
+      <span class="sous">2 caméras sur 3 affichées</span>
+      <div class="actions">
+        <button class="A-btn"><svg class="i"><use href="#i-cameras"/></svg>Caméras <span class="compte">2/3</span><svg class="i"><use href="#i-bas"/></svg></button>
+        <span id="dispoBouton"></span>
+        <button class="A-btn"><svg class="i"><use href="#i-plein"/></svg>Plein écran <span class="A-kbd">F11</span></button>
+      </div>
+    </header>
+    <div id="dispoBarre" data-vues="direct"></div>
+    <div class="D-menu A-carte-p" id="dispoMenu" hidden></div>
+    <div class="A-mur" data-vues="direct ouvert extrait nouveautes raccourcis">
+      <div class="A-ciel ciel"></div>
+      <div class="A-grille" id="grilleA">
+        <article class="A-tuile active">
+          <div class="A-bandeau">
+            <span class="nom">Allée</span><span class="canal">Haute 2160p</span><span class="direct">Direct</span>
+            <div class="cmds">
+              <button class="A-btn petit" title="Revoir cette caméra"><svg class="i"><use href="#i-relecture"/></svg><span class="lib">Revoir</span></button>
+              <button class="A-btn petit" title="Ses détections"><svg class="i"><use href="#i-detections"/></svg><span class="lib">Détections</span></button>
+              <button class="A-btn petit" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg><span class="lib">Image</span></button>
+              <button class="A-btn petit actif" title="Couper le son"><svg class="i"><use href="#i-son"/></svg><span class="lib">Son</span></button>
+            </div>
+          </div>
+          <div class="A-image" style="background-image:url('../site/assets/allee.jpg')">
+            <span class="pastille">Personne</span>
+            <span class="toast" data-vues="ouvert">Image enregistrée : Allée 2026-10-23 23-55-03.jpg</span>
+          </div>
+        </article>
+        <article class="A-tuile">
+          <div class="A-bandeau">
+            <span class="nom">Bureaux</span><span class="canal">Haute 1512p</span><span class="direct">Direct</span>
+            <div class="cmds">
+              <button class="A-btn petit" title="Revoir cette caméra"><svg class="i"><use href="#i-relecture"/></svg><span class="lib">Revoir</span></button>
+              <button class="A-btn petit" title="Ses détections"><svg class="i"><use href="#i-detections"/></svg><span class="lib">Détections</span></button>
+              <button class="A-btn petit" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg><span class="lib">Image</span></button>
+              <button class="A-btn petit" disabled title="Ce flux ne porte pas de son"><svg class="i"><use href="#i-muet"/></svg><span class="lib">Son</span></button>
+            </div>
+          </div>
+          <div class="A-image" style="background-image:url('../site/assets/bureaux.jpg')">
+            <span class="zoom">1,8× <span class="interpole" data-vues="ouvert">interpolé</span></span>
+          </div>
+        </article>
+      </div>
+      <div class="A-indice">Glisser une image la déplace. Un double-clic, ou les touches 1 à 9, l'isolent.</div>
+    </div>
+    <div class="A-cams A-carte-p" data-vues="ouvert" role="dialog" aria-label="Caméras">
+      <div class="cam"><span class="pt"></span><div><div>Allée</div><div class="def num">3840 × 2160</div></div><button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></div>
+      <div class="cam"><span class="pt"></span><div><div>Bureaux</div><div class="def num">2688 × 1512</div></div><button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></div>
+      <div class="cam" style="opacity:.6"><span class="pt"></span><div><div>Portail</div><div class="def rtsp">RTSP désactivé</div></div><button class="A-btn petit" disabled title="Aucun flux à afficher"><svg class="i"><use href="#i-oeil-barre"/></svg>Masquée</button></div>
+      <p class="remede">Cette caméra ne diffuse pas : active le RTSP dans Protect, sur la caméra, section Avancé. Alcora la reprendra toute seule.<br><a href="#">Voir le guide, étape par étape</a></p>
+    </div>
+    <div class="A-maj A-carte-p" data-vues="ouvert">Version 2.31.0 prête. <button class="A-btn petit primaire">Redémarrer maintenant</button><button class="A-btn petit fantome">Plus tard</button></div>
+
+    <!-- ============================================================ RELECTURE -->
+    <header class="A-tete" data-vues="relecture">
+      <h1>Relecture</h1>
+      <div class="A-chips">
+        <button class="A-chip" aria-pressed="true"><span class="mini" style="background-image:url('../site/assets/allee.jpg')"></span>Allée</button>
+        <button class="A-chip" aria-pressed="false"><span class="mini" style="background-image:url('../site/assets/bureaux.jpg')"></span>Bureaux</button>
+      </div>
+      <div class="actions">
+        <button class="A-btn vert"><svg class="i"><use href="#i-radio"/></svg>Revenir au direct</button>
+        <div class="A-jour">
+          <button class="A-btn icone fantome" title="Jour précédent"><svg class="i"><use href="#i-g"/></svg></button>
+          <button class="A-btn date" title="Jour à relire"><svg class="i"><use href="#i-cal"/></svg>jeudi 23 octobre <span class="quand">Aujourd'hui</span></button>
+          <button class="A-btn icone fantome" disabled title="Jour suivant"><svg class="i"><use href="#i-d"/></svg></button>
+        </div>
+      </div>
+    </header>
+    <div class="A-rel" data-vues="relecture">
+      <div class="A-lecteur A-carte-p">
+        <div class="A-bandeau">
+          <span class="temps">23.10.2026  23:55:03</span><span class="canal num">3840 × 2160</span>
+          <div class="cmds">
+            <button class="A-btn petit actif" title="Revenir à l'image entière (2×)"><svg class="i"><use href="#i-zoom"/></svg><span class="lib">Image entière</span></button>
+            <button class="A-btn petit" title="Activer le son"><svg class="i"><use href="#i-muet"/></svg><span class="lib">Son</span></button>
+            <button class="A-btn petit" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg><span class="lib">Image</span></button>
+          </div>
+        </div>
+        <div class="A-image contenue" style="background-image:url('../site/assets/allee.jpg')"><span class="zoom">2,00×</span></div>
+      </div>
+      <div class="A-console A-carte-p">
+        <div class="A-transport">
+          <button class="lire" title="Pause"><svg class="i"><use href="#i-pause"/></svg></button>
+          <span class="t">23:55:03</span>
+          <button class="A-btn petit fantome num">−10 s</button>
+          <button class="A-btn petit fantome num">+10 s</button>
+          <button class="A-btn petit icone fantome" title="Image précédente"><svg class="i"><use href="#i-prec"/></svg></button>
+          <button class="A-btn petit icone fantome" title="Image suivante"><svg class="i"><use href="#i-suiv"/></svg></button>
+          <div class="A-seg" style="margin-left:auto" aria-label="Vitesse"><button>0,25×</button><button>0,5×</button><button aria-pressed="true">1×</button><button>2×</button></div>
+        </div>
+        <div class="A-frise-tete"><span>Journée entière</span><span class="aide">Molette pour zoomer, clic pour voir</span></div>
+        <div class="frise" id="friseA"></div>
+        <div class="lecture-survol" id="survolA"></div>
+      </div>
+      <div>
+        <div class="A-filtres">
+          <button class="A-puce" aria-pressed="true">Tout</button><button class="A-puce">Personnes</button><button class="A-puce">Véhicules</button><button class="A-puce">Animaux</button><button class="A-puce">Sons</button>
+          <span class="compte" id="compteA"></span>
+        </div>
+        <div class="A-cartes" id="cartesA"></div>
+      </div>
+    </div>
+
+    <!-- ============================================================ DÉTECTIONS -->
+    <header class="A-tete" data-vues="detections">
+      <h1>Détections</h1>
+      <span class="sous">Toutes les caméras</span>
+      <div class="actions">
+        <div class="A-seg" aria-label="Période"><button>Aujourd'hui</button><button aria-pressed="true">7 jours</button><button>30 jours</button></div>
+      </div>
+    </header>
+    <div class="A-det" data-vues="detections">
+      <aside class="A-filtres-col">
+        <section>
+          <label class="A-etiq" for="cherche">Chercher</label>
+          <div class="A-champ"><svg class="i"><use href="#i-chercher"/></svg><input id="cherche" placeholder="Plaque, ou nom…" aria-label="Chercher une plaque ou un nom"></div>
+          <p class="A-aide">Recherche tolérante : le contrôleur rend plusieurs lectures possibles d'une même plaque. Taper <span class="mono">O</span> trouvera aussi <span class="mono">0</span>, et les derniers chiffres suffisent.</p>
+        </section>
+        <section><h2>Sujet</h2>
+          <div class="A-puces"><button class="A-puce">Personne <span class="n">381</span></button><button class="A-puce" aria-pressed="true">Véhicule <span class="n">321</span></button><button class="A-puce">Animal <span class="n">63</span></button><button class="A-puce">Visage <span class="n">13</span></button></div>
+        </section>
+        <section><h2>Confiance minimale</h2>
+          <input class="A-curseur" type="range" min="0" max="100" step="5" value="60" aria-label="Confiance minimale">
+          <div class="A-graduation"><span>0</span><b>60 %</b><span>100</span></div>
+          <p class="A-aide">Ne s'applique qu'aux sujets visuels. Les détections sonores n'ont pas de score — les filtrer par confiance les supprimerait toutes.</p>
+        </section>
+        <section><h2>Type de véhicule</h2>
+          <div class="A-puces"><button class="A-puce" aria-pressed="true">SUV <span class="n">221</span></button><button class="A-puce">Voiture <span class="n">37</span></button><button class="A-puce">Fourgon <span class="n">15</span></button><button class="A-puce">Moto <span class="n">13</span></button><button class="A-puce">Vélo <span class="n">4</span></button><button class="A-puce">Camion <span class="n">1</span></button></div>
+        </section>
+        <section><h2>Couleur</h2>
+          <div class="A-puces"><button class="A-puce"><span class="ech" style="background:#8a8a8a"></span>Gris <span class="n">106</span></button><button class="A-puce"><span class="ech" style="background:#e8e6e1"></span>Blanc <span class="n">63</span></button><button class="A-puce"><span class="ech" style="background:#1d1f22"></span>Noir <span class="n">52</span></button><button class="A-puce"><span class="ech" style="background:#3f6fa8"></span>Bleu <span class="n">3</span></button><button class="A-puce"><span class="ech" style="background:#d8c14a"></span>Jaune <span class="n">9</span></button></div>
+        </section>
+        <section><h2>Caméra</h2>
+          <div class="A-puces"><button class="A-puce" aria-pressed="true">Toutes</button><button class="A-puce">Allée</button><button class="A-puce">Bureaux</button></div>
+        </section>
+      </aside>
+      <div class="A-resultats">
+        <div class="A-res-barre"><b class="num">48 objets</b><span class="tronque" data-vues="__jamais">Affichage limité aux 300 plus récents — affine pour tout voir</span><span class="note">Sujet filtré par le contrôleur, le reste ici</span></div>
+        <div class="A-grille-det" id="grilleDet"></div>
+      </div>
+    </div>
+
+    <!-- ============================================================ ALERTES -->
+    <header class="A-tete" data-vues="alertes">
+      <h1>Alertes</h1>
+      <span class="sous">Ce qui mérite qu'Alcora te prévienne sur ce PC, et quand</span>
+      <div class="actions">
+        <span class="A-enreg"><svg class="i"><use href="#i-ok"/></svg>Enregistré</span>
+        <div class="A-maitre">
+          <button class="A-interrupteur vert" role="switch" aria-checked="true" aria-label="Désactiver la veille"></button>
+          <div><div class="t">Veille active</div><div class="p">profil Nuit</div></div>
+        </div>
+      </div>
+    </header>
+    <div class="A-corps" data-vues="alertes">
+      <div class="A-page">
+        <p class="A-intro">Cet interrupteur est celui d'Alcora, indépendant de l'armement de Protect. Les deux peuvent différer : Alcora préviendra sur ce PC même si Protect reste silencieux.</p>
+        <div class="A-veilles A-carte-p">
+          <div class="A-veille">
+            <div class="ligne">
+              <button class="cloche" title="Désactiver"><svg class="i"><use href="#i-alertes"/></svg></button>
+              <div><div class="nom">Une personne est détectée</div><div class="resume">Personne, sur toutes les caméras</div></div>
+              <span class="quand">Quand la veille est active</span>
+              <span class="cout" style="color:var(--vert)">~1 par jour</span>
+              <svg class="i"><use href="#i-haut"/></svg>
+            </div>
+            <div class="detail">
+              <div>
+                <h3>Ce qui déclenche</h3>
+                <div class="A-puces">
+                  <button class="A-puce" aria-pressed="true">Personne <span class="n">1/j</span></button><button class="A-puce">Véhicule <span class="n" style="color:var(--orange)">14/j</span></button><button class="A-puce">Animal <span class="n">5/j</span></button><button class="A-puce">Colis</button>
+                  <button class="A-puce urgence">Bris de verre</button><button class="A-puce urgence">Fumée</button><button class="A-puce urgence">Sirène</button><button class="A-puce urgence">Monoxyde</button>
+                  <button class="A-puce">Aboiement <span class="n">6/j</span></button><button class="A-puce">Parole <span class="n" style="color:var(--rouge)">88/j</span></button><button class="A-puce">Pleurs</button><button class="A-puce">Mouvement <span class="n" style="color:var(--rouge)">157/j</span></button>
+                </div>
+                <h3 class="suite">Sur quelles caméras</h3>
+                <div class="A-puces"><button class="A-puce" aria-pressed="true">Toutes</button><button class="A-puce">Allée</button><button class="A-puce">Bureaux</button></div>
+                <h3 class="suite">Ce que ça fait</h3>
+                <div class="A-puces" style="align-items:center"><button class="A-puce" aria-pressed="true">Son</button><span class="A-entre">au plus une bulle toutes les</span><button class="A-puce">1 min</button><button class="A-puce" aria-pressed="true">5 min</button><button class="A-puce">15 min</button><button class="A-puce">1 h</button></div>
+                <p class="A-aide">Une personne qui reste dans le champ produit une détection toutes les quinze secondes. Sans cette retenue, autant de bulles.</p>
+              </div>
+              <div>
+                <h3>Quand</h3>
+                <div class="A-seg"><button>Toujours</button><button aria-pressed="true">Quand la veille est active</button><button>Sur un horaire à moi</button></div>
+                <p class="A-aide">Suit l'interrupteur et ses horaires.</p>
+                <h3 class="suite">Selon quel horaire</h3>
+                <div class="A-puces"><button class="A-puce">En permanence</button><button class="A-puce" aria-pressed="true">Nuit</button><button class="A-puce">Absence</button></div>
+                <div class="A-semaine" id="semaine"></div>
+              </div>
+            </div>
+          </div>
+          <div class="A-veille">
+            <div class="ligne">
+              <button class="cloche" title="Désactiver"><svg class="i"><use href="#i-alertes"/></svg></button>
+              <div><div class="nom">Bris de verre, fumée, sirène, monoxyde</div><div class="resume">Bris de verre, Fumée, Sirène, Monoxyde, sur toutes les caméras</div></div>
+              <span class="quand">Toujours</span>
+              <span class="cout" style="color:var(--vert)">presque jamais</span>
+              <svg class="i"><use href="#i-bas"/></svg>
+            </div>
+          </div>
+          <div class="A-veille eteinte">
+            <div class="ligne">
+              <button class="cloche" title="Activer"><svg class="i"><use href="#i-cloche-off"/></svg></button>
+              <div><div class="nom">Un véhicule dans l'allée</div><div class="resume">Véhicule, sur Allée</div></div>
+              <span class="quand">Sur un horaire à moi</span>
+              <span class="cout" style="color:var(--orange)">~14 par jour</span>
+              <svg class="i"><use href="#i-bas"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ RÉGLAGES -->
+    <header class="A-tete" data-vues="reglages">
+      <h1>Réglages</h1>
+      <span class="sous">Version installée, connexion au contrôleur, et où trouver le journal.</span>
+    </header>
+    <div class="A-corps" data-vues="reglages">
+      <div class="A-reg">
+        <nav class="A-sommaire" aria-label="Sections">
+          <a href="#r-version" aria-current="true">Version</a><a href="#r-langue">Langue</a><a href="#r-apparence">Apparence</a><a href="#r-demarrage">Démarrage</a>
+          <a href="#r-captures">Captures et son</a><a href="#r-connexion">Connexion</a><a href="#r-probleme">En cas de problème</a><a href="#r-aide">Aide</a><a href="#r-apropos">À propos</a><a href="#r-historique">Ce qui a changé</a>
+        </nav>
+        <div>
+          <section class="A-section" id="r-version"><h2>Version</h2>
+            <div class="A-carte-p">
+              <div class="A-rangee">
+                <div class="txt A-version"><svg><use href="#marque"/></svg><div><div class="v num">Alcora 2.30.0</div><p class="expl">L'application vérifie d'elle-même les nouvelles versions, les télécharge en silence, puis propose de redémarrer.</p></div></div>
+                <button class="A-btn">Vérifier maintenant</button>
+              </div>
+            </div>
+          </section>
+          <section class="A-section" id="r-langue"><h2>Langue</h2>
+            <div class="A-carte-p"><div class="A-rangee">
+              <div class="txt"><p class="expl" style="margin:0">L'interface et les notifications. « Automatique » suit la langue de Windows.</p></div>
+              <div class="A-seg"><button aria-pressed="true">Automatique</button><button>Français</button><button>English</button><button>Deutsch</button><button>Italiano</button></div>
+            </div></div>
+          </section>
+          <section class="A-section" id="r-apparence"><h2>Apparence</h2>
+            <div class="A-carte-p">
+              <div class="A-rangee" style="flex-wrap:wrap">
+                <div class="txt"><div class="titre">Espacement entre les vues</div><p class="expl">À « aucun », les images se touchent, sans cadre — un seul mur d'images.</p></div>
+                <span class="val">16 px</span>
+                <input class="A-curseur" type="range" min="0" max="24" value="16" aria-label="Espacement entre les vues" style="flex-basis:100%">
+              </div>
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Fond animé</div><p class="expl">Le planétarium derrière les images : étoiles, filantes, nébuleuses. Fixe s'il est éteint ; il se fige aussi de lui-même si Windows demande de réduire les animations.</p></div>
+                <button class="A-interrupteur" role="switch" aria-checked="false" aria-label="Fond animé"></button>
+              </div>
+            </div>
+          </section>
+          <section class="A-section" id="r-demarrage"><h2>Démarrage</h2>
+            <div class="A-carte-p"><div class="A-rangee">
+              <div class="txt"><div class="titre">Ouvrir Alcora avec Windows</div><p class="expl">L'application se lance dès l'ouverture de la session Windows.</p></div>
+              <button class="A-interrupteur" role="switch" aria-checked="true" aria-label="Ouvrir Alcora avec Windows"></button>
+            </div></div>
+          </section>
+          <section class="A-section" id="r-captures"><h2>Captures et son</h2>
+            <div class="A-carte-p">
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Où vont les captures</div><p class="A-chemin" style="margin-top:4px">C:\Users\Exemple\Pictures\Alcora</p></div>
+                <button class="A-btn"><svg class="i"><use href="#i-dossier"/></svg>Changer</button><button class="A-btn fantome">Ouvrir le dossier</button>
+              </div>
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Son actif dès l'ouverture</div><p class="expl">Éteint par défaut : un mur d'images qui se met à parler tout seul au lancement est vite insupportable. Le son se demande caméra par caméra, sous l'image.</p></div>
+                <button class="A-interrupteur" role="switch" aria-checked="false" aria-label="Son actif dès l'ouverture"></button>
+              </div>
+            </div>
+          </section>
+          <section class="A-section" id="r-connexion"><h2>Connexion</h2>
+            <div class="A-carte-p">
+              <div class="A-rangee"><div class="txt"><div class="titre">Contrôleur</div></div><span class="mono">10.0.0.1</span></div>
+              <div class="A-rangee"><div class="txt"><div class="titre">Compte</div></div><span class="mono">alcora-lecture</span></div>
+              <div class="A-rangee"><div class="txt"><div class="titre">Identité vérifiée</div></div><span style="color:var(--vert)">oui</span></div>
+              <div class="A-rangee" style="display:block">
+                <div class="A-avert"><svg class="i" style="margin-top:2px"><use href="#i-alerte"/></svg><span>Le mot de passe et la clé à deux facteurs seront effacés de ce PC, et l'écran de connexion réapparaîtra. Les caméras cesseront de s'afficher jusqu'à ce que tu les saisisses à nouveau.</span></div>
+                <div style="display:flex;gap:8px;margin-top:12px"><button class="A-btn danger">Effacer et ressaisir</button><button class="A-btn fantome">Annuler</button></div>
+                <p class="A-aide">Montré ici après un clic sur « Modifier la connexion » ; la confirmation se retire d'elle-même au bout de six secondes.</p>
+              </div>
+            </div>
+          </section>
+          <section class="A-section" id="r-probleme"><h2>En cas de problème</h2>
+            <div class="A-carte-p"><div class="A-rangee">
+              <div class="txt"><p class="expl" style="margin:0 0 6px">Tout ce que fait l'application est consigné dans un fichier. C'est ce fichier qu'il faut envoyer lorsque quelque chose ne fonctionne pas.</p><p class="A-chemin">C:\Users\Exemple\AppData\Roaming\Alcora\journal.txt</p></div>
+              <button class="A-btn"><svg class="i"><use href="#i-dossier"/></svg>Ouvrir le dossier</button>
+            </div></div>
+          </section>
+          <section class="A-section" id="r-aide"><h2>Aide</h2>
+            <div class="A-carte-p">
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Raccourcis clavier</div><p class="expl">Tous les gestes du clavier et de la souris, écran par écran. La touche <span class="A-kbd">?</span> les montre partout.</p></div>
+                <button class="A-btn" data-aller="raccourcis"><svg class="i"><use href="#i-clavier"/></svg>Voir les raccourcis</button>
+              </div>
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Activer le RTSP sur la console</div><p class="expl">Le guide étape par étape, le même que sur l'écran de connexion.</p></div>
+                <button class="A-btn"><svg class="i"><use href="#i-livre"/></svg>Ouvrir le guide</button>
+              </div>
+            </div>
+          </section>
+          <section class="A-section" id="r-apropos"><h2>À propos</h2>
+            <div class="A-carte-p">
+              <div class="A-rangee"><div class="txt"><div class="titre">Alcora</div><p class="expl">Client de bureau pour UniFi Protect, entièrement local. Non affilié à Ubiquiti.</p></div><span class="mono">2.30.0</span></div>
+              <div class="A-rangee"><div class="txt"><div class="titre">Moteur</div></div><span class="mono">Electron 44.9.3</span></div>
+              <div class="A-rangee"><div class="txt"><div class="titre">Relais vidéo</div></div><span class="mono">MediaMTX v1.21.2</span></div>
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Licence</div><p class="expl">GPL-3.0 — © Thomas. Le code source est public ; toute œuvre dérivée doit le rester.</p></div>
+                <button class="A-btn fantome"><svg class="i"><use href="#i-externe"/></svg>Code source</button>
+              </div>
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Composants de tiers</div><p class="expl">Les licences de chaque bibliothèque embarquée.</p></div>
+                <button class="A-btn fantome">Voir les licences</button>
+              </div>
+              <div class="A-rangee"><div class="txt"><div class="titre">Site</div></div><button class="A-btn fantome"><svg class="i"><use href="#i-externe"/></svg>alcora.ch</button></div>
+            </div>
+          </section>
+          <section class="A-section" id="r-historique"><h2>Ce qui a changé</h2>
+            <div class="A-carte-p" id="historique"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ SYSTÈME -->
+    <header class="A-tete" data-vues="systeme">
+      <h1>Système</h1>
+      <span class="sous">Le contrôleur, ses enregistrements et chaque caméra, vus d'Alcora</span>
+      <div class="actions"><button class="A-btn fantome" data-aller="reglages"><svg class="i"><use href="#i-dossier"/></svg>Journal de l'application</button></div>
+    </header>
+    <div class="A-corps" data-vues="systeme">
+      <div class="A-sys">
+        <div class="A-sys-haut">
+          <section class="A-carte-p A-sys-bloc">
+            <h2>Contrôleur</h2>
+            <div class="A-etatrelais">Flux vidéo prêt.</div>
+            <div class="A-ligne"><span class="k">Nom</span><span class="v ok">UDM-PRO</span></div>
+            <div class="A-ligne"><span class="k">Heure</span><span class="v horloge">23:55:03</span></div>
+            <div class="A-ligne"><span class="k">Protect</span><span class="v">désarmé</span></div>
+            <div class="A-ligne"><span class="k">Caméras</span><span class="v">3, toutes en ligne</span></div>
+            <div class="A-defs"><span>HD ×0</span><span class="on">2K ×1</span><span class="on">4K ×1</span></div>
+            <div class="A-prive"><svg class="i"><use href="#i-bouclier"/></svg>Aucune image ne quitte votre réseau.</div>
+          </section>
+          <section class="A-carte-p A-sys-bloc">
+            <h2>Enregistrements</h2>
+            <div class="A-ligne"><span class="k">Le plus ancien</span><span class="v">14.05.26</span></div>
+            <div class="A-ligne"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
+            <div class="A-ligne"><span class="k">Pleine définition</span><span class="v alerte">29 j</span></div>
+            <div class="A-ligne"><span class="k">Rétention annoncée</span><span class="v alerte">393 j</span></div>
+            <div class="A-ligne"><span class="k">État du disque</span><span class="v">non homologué</span></div>
+            <p class="A-note" style="margin-top:0">Le disque ne figure pas sur la liste d'Ubiquiti. Il enregistre normalement ; seul leur support s'en réserve le droit de refus.</p>
+            <div class="A-ligne"><span class="k">Écrit par jour</span><span class="v">129 Go</span></div>
+            <div class="A-disque"><i></i></div>
+            <div class="A-ligne"><span class="k">Disque</span><span class="v">5,85 To / 5,94 To</span></div>
+            <p class="A-note">Rotation automatique. Un disque plein est normal.</p>
+          </section>
+          <section class="A-carte-p A-sys-bloc">
+            <h2>Versions</h2>
+            <div class="A-ligne"><span class="k">Alcora</span><span class="v ok">2.30.0</span></div>
+            <div class="A-ligne"><span class="k">Protect</span><span class="v">6.1.79</span></div>
+            <div class="A-ligne"><span class="k">UniFi OS</span><span class="v">4.3.6</span></div>
+            <div class="A-ligne"><span class="k">Disponible</span><span class="v alerte">6.2.17</span></div>
+            <div class="A-ligne"><span class="k">Allumé depuis</span><span class="v">24 j</span></div>
+          </section>
+        </div>
+        <section class="A-carte-p A-sys-cams">
+          <h2 class="A-sys-titre">Caméras</h2>
+          <table class="A-table">
+            <thead><tr><th>Caméra</th><th>État</th><th>Flux</th><th>Archive</th><th>Dernière détection</th><th>Mosaïque</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="nom">Allée</div><div class="sec">G6 Bullet</div></td>
+                <td><span class="pt ok"></span>En ligne</td>
+                <td><div class="flux"><b>Haute</b> 3840 × 2160 <span>30 i/s</span> <span>16 Mbit/s</span></div><div class="flux"><b>Moyenne</b> 1280 × 720 <span>30 i/s</span> <span>2 Mbit/s</span></div><div class="flux"><b>Basse</b> 640 × 360 <span>15 i/s</span> <span>0,3 Mbit/s</span></div></td>
+                <td>depuis le 14.05.26<div class="sec">pleine définition 29 j</div></td>
+                <td>Personne<div class="sec">il y a 12 s</div></td>
+                <td><button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></td>
+              </tr>
+              <tr>
+                <td><div class="nom">Bureaux</div><div class="sec">G5 Turret Ultra</div></td>
+                <td><span class="pt ok"></span>En ligne</td>
+                <td><div class="flux"><b>Haute</b> 2688 × 1512 <span>30 i/s</span> <span>8 Mbit/s</span></div><div class="flux"><b>Moyenne</b> 1280 × 720 <span>30 i/s</span> <span>2 Mbit/s</span></div><div class="flux"><b>Basse</b> 640 × 360 <span>15 i/s</span> <span>0,3 Mbit/s</span></div></td>
+                <td>depuis le 14.05.26<div class="sec">pleine définition 31 j</div></td>
+                <td>Mouvement<div class="sec">il y a 6 min</div></td>
+                <td><button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></td>
+              </tr>
+              <tr>
+                <td><div class="nom">Portail</div><div class="sec">G4 Instant</div></td>
+                <td><span class="pt ok"></span>En ligne</td>
+                <td><span style="color:var(--orange)">RTSP désactivé</span><div class="sec">Active le RTSP dans Protect, sur la caméra, section Avancé. <a href="#" style="color:var(--alcor)">Voir le guide</a></div></td>
+                <td>depuis le 02.09.26<div class="sec">pleine définition 29 j</div></td>
+                <td>—</td>
+                <td><button class="A-btn petit" disabled><svg class="i"><use href="#i-oeil-barre"/></svg>Masquée</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <aside class="A-activite" data-vues="direct ouvert extrait nouveautes raccourcis" aria-label="Activité">
+    <div class="tete"><h2>Activité</h2><button class="A-btn icone fantome" title="Masquer l'activité"><svg class="i"><use href="#i-panneau"/></svg></button></div>
+    <div class="A-bloc">
+      <h3>Aujourd'hui <span class="val num" id="totalJour"></span></h3>
+      <div class="A-histo" id="histoA"></div>
+      <div class="A-axe num"><span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span></div>
+    </div>
+    <div class="A-bloc" style="padding-bottom:6px;border-bottom:0"><h3 style="margin:0">Récentes</h3></div>
+    <ul class="A-recentes" id="recentesA"></ul>
+    <a class="A-lien" href="#">Toutes les détections</a>
+  </aside>
+
+  <footer class="A-etat" data-hors="connexion">
+    <span class="ok">Flux vidéo prêt</span>
+    <span>Contrôleur <b>UDM-PRO</b></span>
+    <span>Protect <b>désarmé</b></span>
+    <span>Archive <b>5 mois 12 j</b></span>
+    <span>Disque <span class="barre"><i></i></span><b>98 %</b></span>
+    <span class="prive"><svg class="i"><use href="#i-bouclier"/></svg>Aucune image ne quitte votre réseau</span>
+    <span class="heure mono horloge">23:55:03</span>
+    <button class="A-btn petit fantome" data-aller="raccourcis" title="Raccourcis clavier (?)">Raccourcis <span class="A-kbd">?</span></button>
+    <button class="A-btn petit fantome" data-aller="systeme">Système<svg class="i"><use href="#i-d"/></svg></button>
+  </footer>
+
+
+  <!-- ============================================================ CONNEXION -->
+  <div class="A-cnx" data-vues="connexion">
+    <div class="A-ciel ciel"></div>
+    <div class="A-cnx-defile">
+      <div class="A-cnx-page">
+        <div class="A-cnx-tete"><svg><use href="#marque"/></svg><h1>Connexion au contrôleur</h1></div>
+        <p class="A-cnx-sous">L'application interroge ton contrôleur pour découvrir les caméras. Rien n'est envoyé ailleurs.</p>
+        <p class="A-demo">Mode démonstration : aucune connexion réelle n'est établie.</p>
+        <div class="A-cnx-colonnes">
+          <div class="A-cnx-form">
+            <section class="A-carte-p A-bloc-f A-reprise">
+              <p style="display:flex;gap:10px"><svg class="i" style="color:var(--alcor);margin-top:2px"><use href="#i-reprise"/></svg><span>Une connexion précédente est conservée sur ce PC (<span class="mono">10.0.0.1</span>). Tu peux la reprendre sans rien ressaisir.</span></p>
+              <div style="margin-top:14px"><button class="A-btn primaire">Reprendre cette connexion</button></div>
+            </section>
+            <section class="A-carte-p A-bloc-f">
+              <h2>Contrôleur</h2>
+              <div class="champ"><label class="A-etiq">Adresse du contrôleur</label><div class="A-champ"><input value="10.0.0.1" placeholder="192.168.1.1" spellcheck="false"></div><p class="A-aide">L'adresse IP de ton UDM, Cloud Key ou UNVR.</p></div>
+            </section>
+            <section class="A-carte-p A-bloc-f">
+              <h2>Compte</h2>
+              <div class="champ"><label class="A-etiq">Identifiant</label><div class="A-champ"><input value="alcora-lecture" spellcheck="false"></div><p class="A-aide">Utilise un compte dédié à cette application, avec des droits limités.</p></div>
+              <div class="champ"><label class="A-etiq">Mot de passe</label><div class="A-champ"><input type="password" value="motdepassefictif"><button class="A-btn petit icone fantome" title="Afficher le mot de passe"><svg class="i"><use href="#i-oeil"/></svg></button></div></div>
+              <div class="champ"><label class="A-etiq">Clé d'authentification à deux facteurs</label><div class="A-champ"><input class="mono-in" type="password" value="cle-fictive" placeholder="laisser vide si le compte n'en a pas"><button class="A-btn petit icone fantome" title="Afficher la clé"><svg class="i"><use href="#i-oeil"/></svg></button></div>
+                <details class="A-details" open><summary>Où trouver cette clé ?</summary>
+                  <div class="A-details-corps">
+                    <p>Sur le site de gestion de ton compte Ubiquiti, lors de l'ajout d'une application d'authentification, choisis « saisie manuelle » plutôt que de scanner le code : la clé s'affiche alors en toutes lettres.</p>
+                    <p style="margin-top:8px">Garde cette même clé enrôlée sur ton téléphone. Si cette application en devenait l'unique détentrice, perdre ce PC te bloquerait l'accès à ton compte.</p>
+                  </div></details>
+              </div>
+            </section>
+            <section class="A-carte-p A-bloc-f">
+              <h2>Vérification <span style="font-size:12.5px;font-weight:400;color:var(--texte3)" data-vues="__jamais">C'est plus long que prévu…</span></h2>
+              <ul class="A-etapes">
+                <li><span class="ic"><svg class="i"><use href="#i-ok"/></svg></span><div>Joindre le contrôleur<div class="msg">Répond en 34 ms.</div></div></li>
+                <li><span class="ic"><svg class="i"><use href="#i-ok"/></svg></span><div>Vérifier son identité<div class="msg">Empreinte épinglée, identique à la précédente.</div></div></li>
+                <li><span class="ic"><svg class="i"><use href="#i-ok"/></svg></span><div>S'authentifier</div></li>
+                <li><span class="ic"><svg class="i"><use href="#i-ok"/></svg></span><div>Lire les caméras<div class="msg">3 caméras.</div></div></li>
+                <li><span class="ic"><svg class="i"><use href="#i-ok"/></svg></span><div>Vérifier les flux<div class="msg">2 flux sur 3 ; Portail n'a pas de RTSP.</div></div></li>
+              </ul>
+              <div class="A-trouvees"><h3>Caméras trouvées</h3><ul style="list-style:none;margin:0;padding:0">
+                <li><span class="pt"></span>Allée <span class="def">3840 × 2160</span></li>
+                <li><span class="pt"></span>Bureaux <span class="def">2688 × 1512</span></li>
+                <li><span class="pt" style="background:var(--texte3)"></span>Portail <span class="def">aucun flux</span></li>
+              </ul></div>
+            </section>
+            <section class="A-carte-p A-bloc-f">
+              <h2>Rester connecté</h2>
+              <p class="A-divulg">Pour se reconnecter seule après un redémarrage, l'application conserve sur ce PC ton mot de passe et la clé qui produit les codes à usage unique, chiffrés par Windows pour ton compte Windows uniquement.</p>
+              <p class="A-divulg">Concrètement : une personne qui ouvrirait une session sous ton compte Windows pourrait se connecter au contrôleur sans avoir ton téléphone. En revanche, ton compte reste protégé face à quelqu'un qui ne connaîtrait que ton mot de passe.</p>
+              <label class="A-case"><input type="checkbox" checked>Rester connecté sur ce PC</label>
+            </section>
+            <div class="A-actions"><button class="A-btn">Tester la connexion</button><button class="A-btn primaire">Enregistrer et démarrer</button></div>
+          </div>
+          <aside class="A-carte-p A-guide">
+            <h2 class="A-guide-titre"><svg class="i" style="color:var(--alcor)"><use href="#i-livre"/></svg>À préparer sur la console<button class="A-btn petit" style="margin-left:auto"><svg class="i"><use href="#i-plein"/></svg>Agrandir</button></h2>
+            <p class="A-aide" style="color:var(--texte2)">Le RTSP activé sur chaque caméra (Protect → caméra → Avancé). Alcora ne demande jamais d'URL : elle lit les adresses toute seule, mais le RTSP doit être ouvert.</p>
+            <div class="cadre"><div><p style="margin-bottom:12px">Le guide animé de la console, inchangé (guide-rtsp.html)</p><ol><li>Ouvrir Protect</li><li>Choisir la caméra</li><li>Section Avancé</li><li>Activer un flux RTSP</li></ol></div></div>
+            <p class="A-aide" style="margin-top:14px;color:var(--texte2)">Un compte dédié à Alcora, avec droits de visionnage — pas ton compte propriétaire.</p>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SUPERPOSITIONS -->
+<div class="appA" style="position:static;display:contents">
+  <div class="A-voile" data-vues="extrait nouveautes"></div>
+  <section class="A-extrait A-carte-p" data-vues="extrait" role="dialog" aria-label="Séquence de la détection">
+    <div class="tete">
+      <div><div class="titre">Personne</div><div class="sous num">Allée, 23.10.2026 23:55:03</div></div>
+      <div class="actions"><button class="A-btn" data-aller="relecture"><svg class="i"><use href="#i-relecture"/></svg>Voir dans la relecture</button><button class="A-btn"><svg class="i"><use href="#i-telecharger"/></svg>Enregistrer l'extrait</button><button class="A-btn icone fantome" title="Fermer (Échap)"><svg class="i"><use href="#i-x"/></svg></button></div>
+    </div>
+    <div class="A-bandeau" style="border-bottom:1px solid var(--ligne)">
+      <span class="canal">Séquence de 24 s autour de la détection</span>
+      <div class="cmds">
+        <button class="A-btn petit" title="Activer le son"><svg class="i"><use href="#i-muet"/></svg><span class="lib">Son</span></button>
+        <button class="A-btn petit" title="Enregistrer une image"><svg class="i"><use href="#i-image"/></svg><span class="lib">Image</span></button>
+      </div>
+    </div>
+    <div class="A-image contenue" style="background-image:url('../site/assets/allee.jpg')"></div>
+    <div class="transport">
+      <button class="lire" title="Pause"><svg class="i"><use href="#i-pause"/></svg></button>
+      <button class="A-btn petit icone fantome" title="Image précédente (←)"><svg class="i"><use href="#i-prec"/></svg></button>
+      <button class="A-btn petit icone fantome" title="Image suivante (→)"><svg class="i"><use href="#i-suiv"/></svg></button>
+      <span class="t">0:07</span><input type="range" min="0" max="24" value="7" aria-label="Position dans la séquence"><span class="t">0:24</span>
+      <div class="A-seg"><button>0,25×</button><button>0,5×</button><button aria-pressed="true">1×</button><button>2×</button></div>
+    </div>
+    <div class="pied">Enregistré : <span class="A-chemin">C:\Users\Exemple\Videos\Alcora\Allée 2026-10-23 23-55-03.mp4</span></div>
+  </section>
+  <div class="A-voile" data-vues="raccourcis">
+    <section class="A-raccourcis A-carte-p" role="dialog" aria-label="Raccourcis clavier">
+      <div class="tete"><svg class="i" style="color:var(--alcor);width:20px;height:20px"><use href="#i-clavier"/></svg><div class="titre">Raccourcis clavier</div><button class="A-btn icone fantome" title="Fermer (Échap)"><svg class="i"><use href="#i-x"/></svg></button></div>
+      <div class="corps">
+        <div>
+          <h3>Direct</h3>
+          <dl>
+            <dt><span class="A-kbd">1</span> à <span class="A-kbd">9</span></dt><dd>Isoler la caméra correspondante</dd>
+            <dt><span class="A-kbd">0</span></dt><dd>Revenir à la mosaïque</dd>
+            <dt>Double-clic</dt><dd>Isoler une image, ou revenir</dd>
+            <dt>Glisser</dt><dd>Réorganiser la mosaïque</dd>
+            <dt>Molette</dt><dd>Zoomer dans l'image</dd>
+            <dt><span class="A-kbd">F11</span></dt><dd>Plein écran</dd>
+            <dt><span class="A-kbd">Échap</span></dt><dd>Quitter le plein écran</dd>
+          </dl>
+        </div>
+        <div>
+          <h3>Relecture</h3>
+          <dl>
+            <dt><span class="A-kbd">Espace</span></dt><dd>Lecture ou pause</dd>
+            <dt><span class="A-kbd">←</span> <span class="A-kbd">→</span></dt><dd>Reculer ou avancer de 10 s</dd>
+            <dt><span class="A-kbd">+</span> <span class="A-kbd">−</span></dt><dd>Zoomer ou dézoomer</dd>
+            <dt>Clic sur la frise</dt><dd>Aller à cet instant</dd>
+            <dt>Molette sur la frise</dt><dd>Resserrer la journée, jusqu'à la minute</dd>
+          </dl>
+        </div>
+        <div>
+          <h3>Séquence d'une détection</h3>
+          <dl>
+            <dt><span class="A-kbd">Espace</span></dt><dd>Lecture ou pause</dd>
+            <dt><span class="A-kbd">←</span> <span class="A-kbd">→</span></dt><dd>Image par image</dd>
+            <dt><span class="A-kbd">+</span> <span class="A-kbd">−</span></dt><dd>Zoomer ou dézoomer</dd>
+            <dt><span class="A-kbd">Échap</span></dt><dd>Fermer</dd>
+          </dl>
+          <h3 class="suite">Partout</h3>
+          <dl><dt><span class="A-kbd">?</span></dt><dd>Afficher ces raccourcis</dd></dl>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="A-voile" data-vues="nouveautes" style="background:transparent">
+    <section class="A-nouv A-carte-p" role="dialog" aria-label="Ce qui a changé">
+      <div class="tete"><svg class="m"><use href="#marque"/></svg><div><div class="titre">Alcora s'est mise à jour</div><div class="sous num">Ce qui a changé depuis la version 2.29.3</div></div><button class="A-btn icone fantome" title="Fermer (Échap)"><svg class="i"><use href="#i-x"/></svg></button></div>
+      <div class="corps" id="nouveautes"></div>
+      <div class="pied"><button class="A-btn primaire">Compris</button></div>
+    </section>
+  </div>
+</div>
+
+<!-- ============================================================ ÉTATS DÉGRADÉS -->
+<section class="appA A-planche" data-vues="etats">
+  <div class="A-planche-page">
+    <h1>États dégradés</h1>
+    <p class="intro">Ce que l'application montre quand quelque chose ne va pas. Chaque message et chaque remède sont ceux de l'application aujourd'hui ; seuls changent l'emplacement et la forme, sauf les deux ajouts marqués.</p>
+    <div class="A-etats">
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Contrôleur injoignable</b><p>Reprise automatique : aucun bouton, l'application réessaie seule.</p></div>
+        <div class="scene">
+          <div class="A-ciel ciel" style="position:absolute;inset:0;opacity:.5"></div>
+          <div class="A-panne"><div class="boite">
+            <div class="titre">Le contrôleur est injoignable.</div>
+            <p class="remede">Vérifie l'adresse saisie et que ce PC est bien sur le même réseau.</p>
+            <p class="prochaine">Nouvelle tentative dans 8 secondes.</p>
+          </div></div>
+          <div class="barre-etat"><span class="A-pastille" style="color:var(--orange)">Connexion au contrôleur impossible.</span><span style="margin-left:auto" class="mono horloge">23:55:03</span></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Identité du contrôleur changée</b><p>Arrêt volontaire : c'est une sécurité. « Réessayer » n'apparaît que lorsque réessayer seul ne servirait à rien.</p></div>
+        <div class="scene">
+          <div class="A-ciel ciel" style="position:absolute;inset:0;opacity:.5"></div>
+          <div class="A-panne"><div class="boite">
+            <div class="titre">L'identité du contrôleur a changé depuis la première connexion.</div>
+            <p class="remede grave">Si tu viens de réinstaller ou mettre à jour le contrôleur, réassocie-le dans les réglages. Sinon, ne poursuis pas.</p>
+            <div class="boutons"><button class="A-btn"><svg class="i"><use href="#i-relancer"/></svg>Réessayer</button><button class="A-btn fantome">Ouvrir les réglages</button></div>
+          </div></div>
+          <div class="barre-etat"><span class="A-pastille" style="color:var(--rouge)">Connexion arrêtée : identité du contrôleur changée</span></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Une caméra hors ligne</b><p>Les autres continuent. La tuile garde sa place et le dit dans son bandeau. <span class="ajout-a">ajout : la prochaine tentative est annoncée</span></p></div>
+        <div class="scene" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 14px 44px">
+          <article class="A-tuile"><div class="A-bandeau"><span class="nom">Allée</span><span class="direct">Direct</span></div><div class="A-image" style="background-image:url('../site/assets/allee.jpg')"></div></article>
+          <article class="A-tuile"><div class="A-bandeau"><span class="nom">Bureaux</span><span class="hors">Hors ligne</span></div>
+            <div class="A-image" style="background:#07090c;display:grid;place-items:center;text-align:center"><div><div style="color:var(--texte2)">Flux indisponible</div><div style="color:var(--texte3);font-size:12px;margin-top:4px">Reprise automatique dans 4 s</div></div></div></article>
+          <div class="barre-etat"><span class="A-pastille" style="color:var(--vert)">Flux vidéo prêt</span><span>1 caméra hors ligne</span></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Enregistrement suspendu</b><p>Passe avant tout le reste : sans lui, cinq mois d'archive et un disque à moitié plein auraient l'air de fonctionner.</p></div>
+        <div class="scene" style="padding:16px 16px 44px">
+          <div class="A-carte-p" style="padding:14px 16px;max-width:420px">
+            <div style="font-weight:600;margin-bottom:10px">Enregistrements</div>
+            <div class="A-bandeau-rouge">Enregistrement suspendu sur le contrôleur. Rien de nouveau n'est conservé.</div>
+            <div class="A-ligne"><span class="k">Le plus ancien</span><span class="v">14.05.26</span></div>
+            <div class="A-ligne"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
+          </div>
+          <div class="barre-etat"><span class="A-pastille" style="color:var(--vert)">Flux vidéo prêt</span><span class="A-pastille" style="color:var(--rouge)">Enregistrement suspendu</span></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Mise à jour refusée</b><p>Aujourd'hui, un message générique. <span class="ajout-a">ajout : la raison, et la certitude que la version installée reste en service</span></p></div>
+        <div class="scene" style="padding:16px">
+          <div class="A-carte-p"><div class="A-rangee">
+            <div class="txt A-version"><svg><use href="#marque"/></svg><div><div class="v num">Alcora 2.30.0</div>
+              <p class="expl" style="color:#f0a898">La version 2.31.0 a été refusée : elle ne porte pas la signature d'Alcora. La version installée reste en service.</p></div></div>
+            <button class="A-btn">Vérifier maintenant</button>
+          </div></div>
+          <div class="A-carte-p" style="margin-top:12px"><div class="A-rangee">
+            <div class="txt A-version"><svg><use href="#marque"/></svg><div><div class="v num">Alcora 2.30.0</div>
+              <p class="expl" style="color:var(--orange)">La vérification des mises à jour n'a pas abouti. Elle réessaiera d'elle-même.</p></div></div>
+            <button class="A-btn">Vérifier maintenant</button>
+          </div></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Rien à montrer, ou lecture impossible</b><p>Un écran vide dit pourquoi et quoi tenter. <span class="ajout-a">ajout : un bouton qui retire le filtre fautif</span></p></div>
+        <div class="scene" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="A-carte-p" style="display:grid;place-items:center;text-align:center;padding:18px">
+            <div><div style="font-weight:600">Rien ne correspond.</div><p class="A-aide">La confiance minimale est peut-être trop haute.</p><button class="A-btn petit" style="margin-top:10px">Retirer la confiance minimale</button></div>
+          </div>
+          <div class="A-carte-p" style="display:grid;place-items:center;text-align:center;padding:18px">
+            <div><svg class="i" style="color:var(--orange);width:20px;height:20px"><use href="#i-alerte"/></svg><div style="margin-top:6px">Les veilles n'ont pas pu être lues.</div><p class="A-aide">Le contrôleur n'a pas répondu.</p></div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CARTE -->
+<section class="carte" data-vues="carte">
+  <h2>Où va chaque élément — Détections, Alertes, Réglages, Connexion, superpositions</h2>
+  <p class="intro">Complète le tableau de docs/maquette-ux.html (Direct, panneau Surveillance, Relecture), inchangé. Tout ce que l'inventaire recense pour les autres écrans est ici ; les ajouts sont marqués. L'introduction (la Grande Ourse qui devient la marque) ne change pas : c'est le seul moment animé de l'application, et il fait déjà ce que la direction A demande.</p>
+  <table>
+    <thead><tr><th>Élément</th><th>Aujourd'hui</th><th>A — Observatoire</th></tr></thead>
+    <tbody>
+      <tr class="groupe"><td colspan="3">Partout</td></tr>
+      <tr><td>Panneau Surveillance</td><td>À gauche de chaque écran</td><td>Retiré de ces écrans : barre d'état en bas, détail dans Système</td></tr>
+      <tr><td>Titre d'écran</td><td>Réglages seulement</td><td>En-tête commun à tous les écrans : titre, précision, actions à droite <span class="ajout">ajout</span></td></tr>
+      <tr><td>Intitulés de section</td><td>Petites capitales espacées</td><td>Casse ordinaire, 13 ou 15 px</td></tr>
+      <tr class="groupe"><td colspan="3">Structure (décidé le 23.10.2026)</td></tr>
+      <tr><td>Ordre du rail</td><td>Direct, Détections, Relecture, Alertes ; Réglages</td><td>Direct, Relecture, Détections, Alertes ; Système, Réglages — l'ordre du temps : maintenant, avant, chercher, prévenir</td></tr>
+      <tr><td>Contrôleur, enregistrements, versions</td><td>Panneau Surveillance</td><td>Page Système (et l'essentiel dans la barre d'état, qui y mène) <span class="ajout">ajout : page</span></td></tr>
+      <tr><td>État de chaque caméra</td><td>Pastille + définition maximale</td><td>Tableau Système : modèle, en ligne, chaque flux (définition, images/s, débit), RTSP + remède, archive, dernière détection, masquage <span class="ajout">ajout : flux, archive et dernière détection par caméra</span></td></tr>
+      <tr><td>D'une détection à la relecture</td><td>Impossible : il faut aller dans Relecture et chercher l'heure</td><td>« Revoir à cet instant » sur l'Activité et les cartes de Détections, « Voir dans la relecture » dans la séquence <span class="ajout">ajout</span></td></tr>
+      <tr><td>Raccourcis clavier et gestes</td><td>Nulle part (quelques infobulles)</td><td>Fenêtre « Raccourcis » : touche <b>?</b>, barre d'état, Réglages <span class="ajout">ajout</span></td></tr>
+      <tr><td>Versions du moteur et du relais, licence, sources, licences des composants, site</td><td>Fichier NOTICES-TIERS.txt à côté de l'exécutable</td><td>Réglages, section À propos <span class="ajout">ajout</span></td></tr>
+      <tr><td>États dégradés</td><td>Messages et remèdes, chacun à sa place</td><td>Mêmes textes, mis en forme (planche « États dégradés ») ; mise à jour refusée : raison dite <span class="ajout">ajout</span> ; caméra hors ligne : prochaine tentative annoncée <span class="ajout">ajout</span></td></tr>
+      <tr class="groupe"><td colspan="3">Détections</td></tr>
+      <tr><td>Chercher + note « recherche tolérante » (O / 0, derniers chiffres)</td><td>Îlot de filtres, en tête</td><td>Colonne de filtres, en tête</td></tr>
+      <tr><td>Sujet, avec compte réel</td><td>Puces</td><td>Puces, compte en gris</td></tr>
+      <tr><td>Confiance minimale (0, valeur, 100) + note sur les sons</td><td>Curseur</td><td>Curseur, valeur en or</td></tr>
+      <tr><td>Type de véhicule, avec compte</td><td>Puces</td><td>Puces</td></tr>
+      <tr><td>Couleur, avec compte</td><td>Carrés de couleur seuls, nom anglais en infobulle</td><td>Pastille + nom français + compte <span class="ajout">ajout : nom traduit</span></td></tr>
+      <tr><td>Caméra (Toutes / chaque caméra)</td><td>Puces</td><td>Puces</td></tr>
+      <tr><td>Période (Aujourd'hui / 7 jours / 30 jours)</td><td>Puces en bas des filtres</td><td>Sélecteur de l'en-tête</td></tr>
+      <tr><td>Compte d'objets, « recherche… », troncature à 300, note « sujet filtré par le contrôleur »</td><td>Îlot au-dessus des résultats</td><td>Barre au-dessus des résultats (troncature en orange quand elle s'applique)</td></tr>
+      <tr><td>Carte : vignette, date et heure, caméra, sujet ou véhicule, couleur, confiance (verte dès 80 %), badge « identifié »</td><td>Tout en surimpression sur la vignette, 9 à 10 px</td><td>Vignette nette ; texte SOUS l'image, 12 à 13 px ; badge sur la vignette</td></tr>
+      <tr><td>Erreur, « Rien ne correspond », seuil trop haut, moins de caractères</td><td>Sous la barre</td><td>Inchangé, dans la grille</td></tr>
+      <tr><td>Clic sur une carte = séquence</td><td>Lecteur d'extrait</td><td>Lecteur d'extrait (onglet « Extrait »)</td></tr>
+      <tr class="groupe"><td colspan="3">Alertes (veilles)</td></tr>
+      <tr><td>Interrupteur d'Alcora, profil actif, « enregistré », erreur</td><td>Îlot de tête</td><td>À droite de l'en-tête</td></tr>
+      <tr><td>Note « indépendant de l'armement de Protect »</td><td>Sous l'interrupteur</td><td>Introduction de la page</td></tr>
+      <tr><td>Veille : activer, nom, sujets, caméras, quand, volume attendu coloré, estompée si éteinte</td><td>Îlot par veille</td><td>Ligne d'une liste unique ; mêmes informations, alignées en colonnes</td></tr>
+      <tr><td>Détail : ce qui déclenche (volume par sujet), caméras, quand + aide, horaire et semaine dessinée, son, retenue + explication</td><td>Déplié sous la veille, une colonne</td><td>Déplié sur deux colonnes</td></tr>
+      <tr><td>Sujets d'urgence (verre, fumée, sirène, monoxyde)</td><td>Distingués dans le code, pas à l'écran</td><td>Bord rougeâtre <span class="ajout">ajout</span></td></tr>
+      <tr><td>Volumes indisponibles, lecture échouée, chargement</td><td>Notes et sablier</td><td>Inchangé</td></tr>
+      <tr class="groupe"><td colspan="3">Réglages</td></tr>
+      <tr><td>Toutes les sections (Version, Langue, Apparence, Démarrage, Captures et son, Ce qui a changé, Connexion, En cas de problème)</td><td>Une colonne étroite (640 px)</td><td>Sommaire à gauche + sections ; « Ce qui a changé » passe en dernier <span class="ajout">ajout : sommaire</span></td></tr>
+      <tr><td>Version : marque, numéro, état de la mise à jour (6 états), « Vérifier maintenant »</td><td>Îlot</td><td>Ligne, bouton à droite</td></tr>
+      <tr><td>Fond animé</td><td>Interrupteur, allumé par défaut</td><td>Interrupteur, éteint par défaut : le ciel reste, mais fixe</td></tr>
+      <tr><td>Connexion : contrôleur, compte, identité vérifiée ; modifier → avertissement → effacer / annuler (6 s)</td><td>Îlot</td><td>Lignes ; avertissement en rouge doux, bouton « Effacer » rouge</td></tr>
+      <tr><td>Historique de toutes les versions, la version installée marquée</td><td>Une carte par version</td><td>Liste dans une seule carte, la version installée marquée</td></tr>
+      <tr class="groupe"><td colspan="3">Connexion</td></tr>
+      <tr><td>Titre, sous-titre, mode démonstration</td><td>Colonne centrée de 620 px</td><td>En-tête avec la marque</td></tr>
+      <tr><td>Reprise d'une connexion conservée (hôte, reprise…, échec)</td><td>Îlot ambre en tête</td><td>Carte dorée en tête du formulaire</td></tr>
+      <tr><td>Guide de la console (cadre animé, agrandir / réduire) + RTSP + compte dédié</td><td>Au milieu du formulaire</td><td>Colonne de droite, toujours visible pendant la saisie</td></tr>
+      <tr><td>Adresse, identifiant, mot de passe, clé 2FA (afficher / masquer), aide « Où trouver cette clé ? »</td><td>Deux îlots</td><td>Deux cartes, libellés en casse ordinaire</td></tr>
+      <tr><td>Vérification : 5 étapes avec état, message, remède, détail technique ; « plus long que prévu » ; caméras trouvées</td><td>Îlot</td><td>Carte, coches vertes</td></tr>
+      <tr><td>Rester connecté : deux paragraphes + case</td><td>Îlot</td><td>Carte</td></tr>
+      <tr><td>Tester / Enregistrer et démarrer ; erreur d'enregistrement</td><td>Barre collante</td><td>Barre collante, fondue dans le ciel</td></tr>
+      <tr class="groupe"><td colspan="3">Superpositions</td></tr>
+      <tr><td>Lecteur d'extrait : sujet, caméra et heure, enregistrer, fermer (Échap)</td><td>En-tête</td><td>En-tête</td></tr>
+      <tr><td>Zoom, son, capture</td><td><b>Sur</b> l'image</td><td>Bandeau au-dessus de l'image, comme partout</td></tr>
+      <tr><td>Extraction (pourcentage), séquence illisible, format non décodable + enregistrer</td><td>Centre de l'image</td><td>Inchangé</td></tr>
+      <tr><td>Transport : lecture, image par image, position (mm:ss / curseur / durée), vitesses ; « Enregistré : chemin »</td><td>Bas</td><td>Bas</td></tr>
+      <tr><td>Nouveautés : titre, depuis quelle version, notes par version, Compris, fermer</td><td>Boîte de verre sur voile flouté</td><td>Boîte pleine sur voile sombre (sans flou : plus léger)</td></tr>
+    </tbody>
+  </table>
+</section>
+</main>
+
+<script>
+/* ---------------------------------------------------------------- vues */
+const app = document.getElementById('appA');
+const ESPACE = { direct: 'direct', ouvert: 'direct', extrait: 'direct', nouveautes: 'direct', raccourcis: 'direct', relecture: 'relecture', detections: 'detections', alertes: 'alertes', systeme: 'systeme', reglages: 'reglages' };
+function afficher(vue) {
+  app.dataset.vue = vue;
+  app.hidden = vue === 'carte' || vue === 'etats';
+  for (const el of document.querySelectorAll('[data-vues]')) el.hidden = !el.dataset.vues.split(' ').includes(vue);
+  for (const el of document.querySelectorAll('[data-hors]')) el.hidden = el.dataset.hors.split(' ').includes(vue);
+  for (const b of document.querySelectorAll('.A-rail .esp')) b.setAttribute('aria-current', String(b.dataset.esp === ESPACE[vue]));
+  requestAnimationFrame(caler);
+}
+const choix = document.getElementById('choixVue');
+choix.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  for (const x of choix.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+  afficher(b.dataset.vue);
+});
+for (const b of document.querySelectorAll('.A-rail .esp')) b.addEventListener('click', () => choix.querySelector(`[data-vue="${b.dataset.esp}"]`).click());
+/* Les liens entre écrans : « Revoir à cet instant », « Système », « Raccourcis »… */
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-aller]'); if (!a) return;
+  e.stopPropagation(); choix.querySelector(`[data-vue="${a.dataset.aller}"]`).click();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === '?') choix.querySelector('[data-vue="raccourcis"]').click();
+  else if (e.key === 'Escape' && ['raccourcis', 'extrait', 'nouveautes'].includes(app.dataset.vue)) choix.querySelector('[data-vue="direct"]').click();
+});
+
+/* ---------------------------------------------------------------- taille A / B */
+const choixTaille = document.getElementById('choixTaille');
+function taille(t) {
+  for (const x of choixTaille.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x.dataset.taille === t));
+  for (const el of document.querySelectorAll('.appA')) el.classList.toggle('compact', t === 'b');
+  try { localStorage.setItem('maquette.taille', t); } catch { /* sans mémoire, la maquette marche */ }
+  requestAnimationFrame(caler);
+}
+choixTaille.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) taille(b.dataset.taille); });
+
+/* ---------------------------------------------------------------- horloge */
+function horloge() { const h = new Date().toLocaleTimeString('fr-CH'); for (const n of document.querySelectorAll('.horloge')) n.textContent = h; }
+horloge(); setInterval(horloge, 1000);
+
+/* ---------------------------------------------------------------- mosaïque */
+function caler() {
+  const g = document.getElementById('grilleA'); if (!g.clientWidth) return;
+  const css = getComputedStyle(app), px = (v) => parseFloat(css.getPropertyValue(v));
+  const n = 2, bandeau = px('--bandeau'), ecart = px('--ecart'), marge = px('--marge');
+  g.style.gap = `${ecart}px`; g.style.padding = `${marge}px`;
+  const L = g.clientWidth - 2 * marge, H = g.clientHeight - 2 * marge;
+  let mieux = null;
+  for (let col = 1; col <= n; col++) {
+    const rangs = Math.ceil(n / col);
+    let w = (L - (col - 1) * ecart) / col, h = w * 9 / 16 + bandeau;
+    if (h * rangs + (rangs - 1) * ecart > H) { h = (H - (rangs - 1) * ecart) / rangs; w = (h - bandeau) * 16 / 9; }
+    if (!mieux || w > mieux.w) mieux = { col, w: Math.floor(w), h: Math.floor(h) };
+  }
+  g.style.gridTemplateColumns = `repeat(${mieux.col}, ${mieux.w}px)`;
+  g.style.gridAutoRows = `${mieux.h}px`;
+}
+window.addEventListener('resize', caler);
+
+/* ---------------------------------------------------------------- ciel fixe */
+(function ciel() {
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  let etoiles = '';
+  for (let i = 0; i < 260; i++) {
+    const x = r() * 1600, y = r() * 1000, t = r();
+    etoiles += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(t < .93 ? .5 + t * .6 : 1.3 + t * .5).toFixed(2)}" fill="#e8e4da" opacity="${(.18 + r() * .55).toFixed(2)}"/>`;
+  }
+  const o = [[1180,760],[1250,742],[1312,770],[1372,792],[1388,868],[1478,880],[1492,800]];
+  let traits = o.slice(0, -1).map((p, i) => `<line x1="${p[0]}" y1="${p[1]}" x2="${o[i+1][0]}" y2="${o[i+1][1]}"/>`).join('') + '<line x1="1372" y1="792" x2="1492" y2="800"/>';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice"><defs>
+    <radialGradient id="n" cx=".18" cy=".2" r=".5"><stop offset="0" stop-color="#2a3550" stop-opacity=".55"/><stop offset="1" stop-color="#0e131b" stop-opacity="0"/></radialGradient>
+    <radialGradient id="m" cx=".85" cy=".85" r=".45"><stop offset="0" stop-color="#3a2f22" stop-opacity=".35"/><stop offset="1" stop-color="#0e131b" stop-opacity="0"/></radialGradient></defs>
+    <rect width="1600" height="1000" fill="url(#n)"/><rect width="1600" height="1000" fill="url(#m)"/>${etoiles}
+    <g stroke="#e8e4da" stroke-opacity=".16">${traits}</g>${o.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="2.2" fill="#e8e4da" opacity=".7"/>`).join('')}<circle cx="1252" cy="728" r="1.4" fill="#dca95c"/></svg>`;
+  for (const c of document.querySelectorAll('.ciel')) c.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+})();
+
+/* ---------------------------------------------------------------- données fictives */
+let graine = 42; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+const NOMS = { person: 'Personne', vehicle: 'Véhicule', animal: 'Animal', son: 'Son', motion: 'Mouvement' };
+const VAR = { person: 'personne', vehicle: 'vehicule', animal: 'animal', son: 'son', motion: 'mouvement' };
+const IMG = ['../site/assets/allee.jpg', '../site/assets/bureaux.jpg'];
+const CAM = ['Allée', 'Bureaux'];
+const minuit = new Date(); minuit.setHours(0, 0, 0, 0);
+const MAINTENANT = minuit.getTime() + (23 * 3600 + 58 * 60) * 1000;
+const INSTANT = minuit.getTime() + (23 * 3600 + 55 * 60 + 3) * 1000;
+const det = [];
+for (let i = 0; i < 143; i++) {
+  let h; do { h = alea() * 24; } while (alea() > (h > 6.5 && h < 21 ? 1 : .25));
+  const g = alea(); const genre = g < .3 ? 'person' : g < .5 ? 'vehicle' : g < .58 ? 'animal' : g < .68 ? 'son' : 'motion';
+  det.push({ t: minuit.getTime() + h * 3600e3, genre, cam: alea() < .62 ? 0 : 1, score: genre === 'son' || genre === 'motion' ? null : 58 + Math.round(alea() * 38),
+             pos: `${Math.round(alea() * 100)}% ${Math.round(alea() * 100)}%`, zoom: 180 + Math.round(alea() * 140) });
+}
+det.push({ t: INSTANT, genre: 'person', cam: 0, score: 82, pos: '40% 60%', zoom: 240 });
+det.sort((a, b) => a.t - b.t);
+const hm = (t) => new Date(t).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
+const hms = (t) => new Date(t).toLocaleTimeString('fr-CH');
+const vig = (d) => `background-image:url('${IMG[d.cam]}');background-size:${d.zoom}%;background-position:${d.pos}`;
+
+/* Activité du jour : la première heure n'a pas été lue (cas « partiel »), d'où « ≥ ». */
+(function () {
+  const parH = new Array(24).fill(0); for (const d of det) parH[new Date(d.t).getHours()]++;
+  const max = Math.max(...parH);
+  document.getElementById('histoA').innerHTML = parH.map((n, h) => h < 1 ? '<i class="nonlu" title="00h — non lu"></i>'
+    : `<i class="${n ? '' : 'vide'}" style="height:${Math.max(4, n / max * 100)}%" title="${String(h).padStart(2, '0')}h — ${n}"></i>`).join('');
+  document.getElementById('totalJour').textContent = `≥ ${det.length} détections`;
+  const rec = [['Personne', 0, '12 s', 1], ['Véhicule, Plaque', 0, '54 s', 2], ['Aboiement', 0, '1 min', 3], ['Personne', 1, '3 min', 4], ['Mouvement', 1, '6 min', 5]];
+  document.getElementById('recentesA').innerHTML = rec.map(([g, c, il, k]) =>
+    `<li class="${k === 1 ? 'survole' : ''}"><span class="vig" style="${vig({ ...det[det.length - k], cam: c })}"></span><div><div>${g}</div><div class="ou">${CAM[c]}</div></div><span class="quand">il y a ${il}</span><button class="A-btn petit icone fantome aller" data-aller="relecture" title="Revoir à cet instant"><svg class="i"><use href="#i-relecture"/></svg></button></li>`).join('');
+})();
+
+/* Pellicule de la relecture. */
+document.getElementById('compteA').textContent = `${det.length} détections`;
+document.getElementById('cartesA').innerHTML = [...det].reverse().slice(0, 30).map((d) =>
+  `<div class="A-carte ${d.t === INSTANT ? 'en-cours' : ''}"><div class="vig" style="${vig(d)}"></div><div class="pied"><span class="h">${hm(d.t)}</span><span style="color:var(--${VAR[d.genre]})">${NOMS[d.genre]}</span></div></div>`).join('');
+
+/* Frise. */
+(function frise() {
+  const el = document.getElementById('friseA'), sortie = document.getElementById('survolA');
+  const J = 86400e3, f = (t) => (t - minuit.getTime()) / J;
+  let h = `<div class="enreg" style="left:0;right:${(1 - f(MAINTENANT)) * 100}%;background:repeating-linear-gradient(90deg,rgba(220,169,92,.14) 0 2px,rgba(220,169,92,.08) 2px 4px)"></div>`;
+  h += `<div class="futur" style="left:${f(MAINTENANT) * 100}%;right:0;background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.05) 5px 10px)"></div>`;
+  for (let k = 3; k < 24; k += 3) h += `<div class="grad" style="left:${k / 24 * 100}%"></div><span class="lab" style="left:${k / 24 * 100}%">${String(k).padStart(2, '0')} h</span>`;
+  for (const d of det) h += `<div class="rep ${d.genre === 'motion' ? 'mvt' : 'vis'}" style="left:${f(d.t) * 100}%;background:var(--${VAR[d.genre]})"></div>`;
+  h += `<div class="tete" style="left:${f(INSTANT) * 100}%"></div><div class="survol"></div>`;
+  el.innerHTML = h;
+  const trait = el.querySelector('.survol');
+  el.addEventListener('mousemove', (e) => {
+    const r = el.getBoundingClientRect(), x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const t = minuit.getTime() + x * J, tol = J / r.width * 7;
+    let p = null, ec = Infinity; for (const d of det) { const v = Math.abs(d.t - t); if (v < tol && v < ec) { ec = v; p = d; } }
+    trait.style.display = 'block'; trait.style.left = `${x * 100}%`;
+    sortie.innerHTML = `<span style="color:var(--texte2)">${hms(p ? p.t : t)}</span>` + (p ? ` <span style="color:var(--${VAR[p.genre]})">${NOMS[p.genre]}${p.score ? ` ${p.score} %` : ''}</span> <span style="color:var(--texte3)">— cliquer pour voir</span>` : '');
+  });
+  el.addEventListener('mouseleave', () => { trait.style.display = 'none'; sortie.innerHTML = ''; });
+})();
+
+/* Détections : 48 objets, SUV filtrés, confiance 60 %. */
+(function () {
+  const COUL = [['Gris', '#8a8a8a'], ['Blanc', '#e8e6e1'], ['Noir', '#1d1f22'], ['Bleu', '#3f6fa8'], ['Jaune', '#d8c14a']];
+  const out = [];
+  for (let i = 0; i < 48; i++) {
+    const d = det[(i * 7) % det.length], c = COUL[Math.floor(alea() * (alea() < .8 ? 3 : 5))], s = 60 + Math.round(alea() * 37);
+    const jour = 23 - Math.floor(i / 9);
+    out.push(`<div class="A-objet ${i === 1 ? 'survole' : ''}" role="button" tabindex="0"><div class="vig" style="${vig(d)}">${i % 11 === 3 ? '<span class="ident" title="Une plaque ou un nom a été reconnu"><svg class="i" style="width:14px;height:14px"><use href="#i-bouclier"/></svg></span>' : ''}</div>
+      <div class="infos"><span class="quoi">SUV <span class="ech" style="background:${c[1]}"></span>${c[0]}</span><span class="score ${s >= 80 ? 'haut' : ''}">${s} %</span>
+      <span class="ou">${jour}.10, ${hm(d.t)}, ${CAM[d.cam]}</span></div><button class="A-btn petit aller" data-aller="relecture" title="Revoir à cet instant"><svg class="i"><use href="#i-relecture"/></svg>Revoir</button></div>`);
+  }
+  document.getElementById('grilleDet').innerHTML = out.join('');
+})();
+
+/* Alertes : la semaine du profil Nuit (22:00 → 06:30, une plage qui franchit minuit). */
+(function () {
+  const jours = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const deb = 22 / 24, fin = 6.5 / 24;
+  document.getElementById('semaine').innerHTML = jours.map((j) =>
+    `<span>${j}</span><div class="barre"><i style="left:0;width:${fin * 100}%"></i><i style="left:${deb * 100}%;width:${(1 - deb) * 100}%"></i></div>`).join('')
+    + '<div class="axe"><span>00 h</span><span>06 h</span><span>12 h</span><span>18 h</span><span>24 h</span></div>';
+})();
+
+/* Réglages et Nouveautés : les vraies notes de la 2.30.0 et des précédentes. */
+(function () {
+  const V = [
+    ['2.30.0', '23.10.2026', ['Le relais vidéo ne répond plus qu\u2019à Alcora. Il exige un mot de passe, tiré au hasard à chaque démarrage, refuse toute page web, et ses services inutiles — interface de contrôle comprise — sont éteints.',
+      'Les mises à jour sont authentifiées : une version qui ne porte pas de déclaration signée par la clé d\u2019Alcora est refusée.',
+      'L\u2019application est durcie : bac à sable de Chromium, aucune autorisation accordée à la page, exécutable qui refuse de servir d\u2019interpréteur.']],
+    ['2.29.3', '05.10.2026', ['Une page tout juste relancée par la surveillance ne peut plus être relancée une seconde fois à tort.']],
+  ];
+  document.getElementById('historique').innerHTML = V.map(([no, date, l], i) =>
+    `<div class="A-histoire"><div class="tete"><span class="no">${no}</span><span class="date">${date}</span>${i === 0 ? '<span class="installee">installée</span>' : ''}</div><ul>${l.map((x) => `<li>${x}</li>`).join('')}</ul></div>`).join('');
+  document.getElementById('nouveautes').innerHTML = V.slice(0, 1).map(([no, date, l]) =>
+    `<h3>${no} <span>${date}</span></h3><ul style="margin-bottom:16px">${l.map((x) => `<li>${x}</li>`).join('')}</ul>`).join('');
+})();
+
+afficher('direct');
+let tailleGardee = 'a'; try { tailleGardee = localStorage.getItem('maquette.taille') || 'a'; } catch { /* idem */ }
+taille(tailleGardee);
+</script>
+<script>
+/* ===================================================================== dispositions du mur */
+(function () {
+  const ic = (id) => `<svg class="i"><use href="#${id}"/></svg>`;
+  const DISPOS = [
+    { nom: 'Tout', cams: ['Allée', 'Bureaux'] },
+    { nom: 'Allée seule', cams: ['Allée'] },
+    { nom: 'Nuit', cams: ['Bureaux', 'Allée'] },
+  ];
+  const etat = { variante: '1', etat: 'liste' };
+  const notes = document.createElement('section');
+  notes.className = 'D-notes';
+  notes.hidden = true;
+  notes.innerHTML = `<h2>Ce qui s'ajoute au direct</h2>
+    <p>Rien de l'écran actuel ne disparaît : en-tête, menu « Caméras », plein écran, mur, colonne Activité, gestes
+      (glisser, double-clic, chiffres 1 à 9), barre d'état restent à leur place. Une disposition garde les caméras
+      affichées et leur ordre ; elle ne touche ni aux veilles, ni à la relecture, ni à l'espacement (Réglages).</p>
+    <table><thead><tr><th>Élément</th><th>Variante 1 — menu « Disposition »</th><th>Variante 2 — barre sous l'en-tête</th></tr></thead><tbody>
+      <tr><td>Accès</td><td>Un bouton à côté de « Caméras », qui porte le nom de la disposition en cours</td><td>Une barre de 44 px sous l'en-tête : une puce par disposition, toujours visible</td></tr>
+      <tr><td>Passer de l'une à l'autre</td><td colspan="2">Un clic, ou <b>Maj + 1 à 9</b> (les chiffres seuls isolent déjà une caméra) <span class="ajout">ajout</span></td></tr>
+      <tr><td>Enregistrer</td><td colspan="2">« Enregistrer la disposition actuelle… » : un nom, et ce qu'elle gardera est dit en clair (« Allée, Bureaux — dans cet ordre »). Pendant qu'on nomme, un clic à côté ne ferme rien ; Entrée enregistre, Échap annule</td></tr>
+      <tr><td>Modifiée</td><td colspan="2">Une caméra déplacée, masquée ou réaffichée après coup : la disposition se dit « modifiée », avec « Mettre à jour » et « Revenir »</td></tr>
+      <tr><td>Renommer, supprimer</td><td>Au survol de chaque ligne du menu ; supprimer demande confirmation</td><td>Par « Gérer… », qui ouvre le même panneau</td></tr>
+      <tr><td>Caméra absente</td><td colspan="2">Retirée du contrôleur : la disposition s'applique sans elle, et le menu le dit</td></tr>
+      <tr><td>Nouvelle caméra</td><td colspan="2">Elle n'entre dans aucune disposition existante : on l'ajoute par « Caméras », puis « Mettre à jour »</td></tr>
+      <tr><td>Plein écran</td><td colspan="2">Le menu suit les commandes du plein écran, comme « Caméras » ; Maj + chiffre marche partout</td></tr>
+      <tr><td>Où c'est gardé</td><td colspan="2">Sur ce PC, avec l'ordre et les caméras masquées d'aujourd'hui ; au plus neuf dispositions</td></tr>
+    </tbody></table>`;
+  document.getElementById('scene').appendChild(notes);
+
+  const active = () => (etat.etat === 'aucune' ? null : DISPOS[0]);
+  const ligne = (d, i) => {
+    const absente = etat.etat === 'absente' && d.nom === 'Nuit';
+    const quoi = absente ? `Bureaux, Allée, <span class="absente">Jardin absente</span>` : d.cams.join(', ');
+    return `<div class="D-ligne ${i === 0 ? 'active' : ''}" role="button">
+      <span class="coche">${i === 0 ? ic('i-ok') : ''}</span>
+      <div style="min-width:0"><div class="nom">${d.nom}${i === 0 && etat.etat === 'modifiee' ? ' <span style="color:var(--alcor);font-weight:500;font-size:12px">· modifiée</span>' : ''}</div><div class="quoi">${quoi}</div></div>
+      <span class="A-kbd">Maj ${i + 1}</span>
+      <span class="gestes"><button class="A-btn petit fantome" title="Renommer « ${d.nom} »">${ic('i-crayon')}</button><button class="A-btn petit fantome" title="Supprimer « ${d.nom} »">${ic('i-corbeille')}</button></span>
+    </div>`;
+  };
+  function panneau() {
+    if (etat.etat === 'aucune') {
+      return `<h3>Dispositions</h3><p class="D-vide">Une disposition garde les caméras affichées et leur ordre. Enregistre celle-ci pour y revenir d'un clic — ou de Maj + chiffre.</p>
+        <div class="D-sep"></div><button class="D-action">${ic('i-plus')}Enregistrer la disposition actuelle…</button>`;
+    }
+    let h = `<h3>Dispositions</h3>${DISPOS.map(ligne).join('')}`;
+    if (etat.etat === 'modifiee') {
+      h += `<div class="D-modif">Tu as changé le mur depuis « Tout » (Bureaux déplacée en premier).
+        <div class="boutons"><button class="A-btn petit primaire">Mettre à jour « Tout »</button><button class="A-btn petit">${ic('i-retour')}Revenir à « Tout »</button></div></div>`;
+    }
+    if (etat.etat === 'absente') {
+      h += `<p class="D-vide" style="color:var(--orange)">« Nuit » contenait Jardin, qui n'est plus sur le contrôleur : elle s'applique sans elle.</p>`;
+    }
+    h += '<div class="D-sep"></div>';
+    if (etat.etat === 'nommer') {
+      h += `<div class="D-nommer"><span class="A-etiq">Nom de la nouvelle disposition</span>
+        <div class="A-champ"><input value="Soirée" aria-label="Nom de la nouvelle disposition"></div>
+        <p class="aide">Ce que tu vois maintenant : <b style="color:var(--lumiere)">Allée, Bureaux</b> — dans cet ordre. Elle prendra Maj 4.</p>
+        <p class="aide">Entrée enregistre, Échap annule ; un clic à côté ne ferme rien tant que tu nommes.</p>
+        <div class="boutons"><button class="A-btn petit">Annuler</button><button class="A-btn petit primaire">Enregistrer</button></div></div>`;
+    } else h += `<button class="D-action">${ic('i-plus')}Enregistrer la disposition actuelle…</button>`;
+    return h;
+  }
+
+  function rendre() {
+    notes.hidden = etat.etat !== 'notes';
+    if (etat.etat === 'notes') return;
+    const v1 = etat.variante === '1';
+    const a = active();
+    const modif = etat.etat === 'modifiee';
+    document.getElementById('dispoBouton').innerHTML = v1
+      ? `<button class="A-btn ${etat.etat !== 'aucune' ? '' : ''}" title="Dispositions du mur (Maj + 1 à 9)">${ic('i-dispo')}${a ? `${a.nom}${modif ? ' <span style="color:var(--alcor);font-size:12px">· modifiée</span>' : ''}` : 'Disposition'}${ic('i-bas')}</button>`
+      : '';
+    const barre = document.getElementById('dispoBarre');
+    barre.className = v1 ? '' : 'D-barre';
+    barre.innerHTML = v1 ? '' : `<span class="lab">Disposition</span>`
+      + (etat.etat === 'aucune' ? '' : DISPOS.map((d, i) => `<button class="A-puce" aria-pressed="${i === 0}">${i === 0 ? ic('i-ok') : ''}${d.nom}${i === 0 && modif ? '<span class="modif">· modifiée</span>' : ''}</button>`).join(''))
+      + (modif ? '<button class="A-btn petit primaire">Mettre à jour « Tout »</button><button class="A-btn petit">Revenir</button>' : '')
+      + `<button class="A-btn petit fantome">${ic('i-plus')}Enregistrer…</button>`
+      + `<span class="droite">Maj + 1 à 9<button class="A-btn petit fantome">Gérer…</button></span>`;
+    const menu = document.getElementById('dispoMenu');
+    menu.hidden = !(v1 || etat.etat === 'nommer');
+    menu.innerHTML = panneau();
+    menu.style.top = v1 ? '56px' : '100px';
+    // La precision de l'en-tete dit la disposition.
+    const sous = document.querySelector('header.A-tete[data-vues~="direct"] .sous');
+    if (sous) sous.textContent = a ? `${a.nom}${modif ? ' (modifiée)' : ''} · 2 caméras sur 3 affichées` : '2 caméras sur 3 affichées';
+  }
+  for (const [id, cle] of [['choixVariante', 'variante'], ['choixEtat', 'etat']]) {
+    const s = document.getElementById(id);
+    s.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      for (const x of s.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+      etat[cle] = b.dataset[cle];
+      rendre();
+    });
+  }
+  if (typeof afficher === 'function') afficher('direct');
+  rendre();
+})();
+</script>
+</body>
+</html>
