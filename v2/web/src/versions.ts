@@ -39,6 +39,48 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.32.0',
+    date: '23.10.2026',
+    fr: [
+      'Une nouvelle présentation, pensée d’un bout à l’autre : une barre de navigation qui nomme '
+      + 'ses écrans (Direct, Relecture, Détections, Alertes, puis Système et Réglages), une barre '
+      + 'd’état en bas de chaque écran, des textes plus lisibles — police Atkinson Hyperlegible, '
+      + 'cinq tailles seulement — et les mêmes boutons partout.',
+      'Le direct : le panneau « Surveillance » laisse la place à une colonne Activité, que l’on '
+      + 'peut retirer, et à un menu Caméras. Le nom de chaque caméra et ses commandes se lisent '
+      + 'au-dessus de l’image, jamais dessus ; une image interrompue dit dans combien de secondes '
+      + 'elle reprend.',
+      'Une page Système rassemble l’état du contrôleur, des enregistrements et de chaque caméra, '
+      + 'ainsi que les versions en service.',
+      'Une détection s’ouvre dans la relecture, à son instant, et la relecture garde l’heure '
+      + 'choisie quand on change de caméra.',
+      'Les réglages ont un sommaire, une Aide et une page À propos, licences comprises. La touche '
+      + '« ? » affiche les raccourcis clavier.',
+      'Le ciel étoilé est désormais fixe et les surfaces sont pleines, sans flou : moins de '
+      + 'travail pour la carte graphique. « Fond animé », dans les réglages, le remet en '
+      + 'mouvement.',
+      'Une mise à jour refusée dit pourquoi, au démarrage aussi, au lieu de passer pour « à jour ».',
+    ],
+    en: [
+      'A new layout, thought through from end to end: a navigation bar that names its screens '
+      + '(Live, Replay, Detections, Alerts, then System and Settings), a status bar at the bottom '
+      + 'of every screen, more readable text — Atkinson Hyperlegible typeface, five sizes only — '
+      + 'and the same buttons everywhere.',
+      'Live view: the “Surveillance” panel gives way to an Activity column, which can be removed, '
+      + 'and to a Cameras menu. Each camera’s name and controls sit above the image, never on '
+      + 'it; an interrupted image says in how many seconds it resumes.',
+      'A System page gathers the state of the controller, of the recordings and of every camera, '
+      + 'along with the versions in use.',
+      'A detection opens in the replay, at its moment, and the replay keeps the chosen time when '
+      + 'switching camera.',
+      'Settings have a table of contents, a Help and an About page, licences included. The “?” '
+      + 'key shows the keyboard shortcuts.',
+      'The starry sky is now still and the surfaces are solid, without blur: less work for the '
+      + 'graphics card. “Animated background”, in the settings, sets it moving again.',
+      'A refused update says why, at startup too, instead of passing for “up to date”.',
+    ],
+  },
+  {
     version: '2.31.0',
     date: '23.10.2026',
     fr: [

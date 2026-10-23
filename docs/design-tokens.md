@@ -1,6 +1,6 @@
 # Système de design — direction « Observatoire »
 
-Retenue par Thomas le 23.10.2026 sur `docs/maquette-ux-a.html` (plan : `docs/plan-ux.md`).
+Retenue par le mainteneur le 23.10.2026 sur `docs/maquette-ux-a.html` (plan : `docs/plan-ux.md`).
 Ce document décrit ce qui est **en vigueur dans le code** : les jetons vivent dans
 `v2/web/src/index.css`, les composants dans `v2/web/src/ui/`. Le catalogue de tous les
 composants s'ouvre en développement avec `npm run web` puis `?catalogue` dans l'adresse.
@@ -83,4 +83,4 @@ dégradé tournant repeint à chaque image.
 L'horodatage gravé dans le flux est incrusté par le firmware de la caméra (`osdSettings`),
 pas par l'application : aucun rendu Protect à imiter. Les informations d'Alcora (heure de
 la relecture, définition lue, commandes) vivent **hors de l'image**, dans le bandeau
-au-dessus d'elle — décision de Thomas, après deux refus de boutons posés sur l'image.
+au-dessus d'elle — décision du mainteneur, après deux refus de boutons posés sur l'image.

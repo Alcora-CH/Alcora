@@ -100,8 +100,10 @@ Chaque étape finit par une vérification ; rien ne passe à la suivante sans el
 
 ## Où en est le chantier
 
-- **Étape 1** : la mesure intégrée est sur `main` (97ce7a7, lignes « metrics » du journal) ;
-  Electron 45 attend qu'une 45.0.x ait mûri (la 45.0.0 date du 21.10.2026).
+- **Étape 1 — faite, publiée en 2.31.0 le 23.10.2026** : Electron 45.0.0 seul, et la mesure
+  intégrée (lignes « metrics » du journal), corrigée au passage : sous Electron 45,
+  `percentCPUUsage` est rapporté à toute la machine et peut sortir négatif, la charge se
+  calcule donc par différence de temps processeur cumulé.
 - **Étape 4** : fondations sur la branche `ux-fondations` (polices, palette, surfaces pleines,
   ciel fixe, composants communs).
 - **Étape 5, premier groupe — mur, panneau et rail : codé le 23.10.2026** sur la même
@@ -115,11 +117,10 @@ Chaque étape finit par une vérification ; rien ne passe à la suivante sans el
   inventaire (`docs/inventaire-ecrans.md`, sections 6 à 11). Deux revues indépendantes (39
   remarques fondées, toutes corrigées, correctifs relus). L'état « mise à jour refusée »
   qui dit sa raison est fait aussi, avec ses tests.
-- **Reste** : les captures et mesures avant/après sur le poste (la démo n'a pas de flux
-  vidéo, et la mesure arrive avec la version Electron 45), puis l'essai de Thomas. Rien
-  n'est publié : la branche attend la version Electron 45, qui part seule d'abord.
+- **Reste** : publier la refonte (2.32.0), puis les mesures avant/après et l'essai sur le
+  poste de référence (la démo n'a pas de flux vidéo).
 
 ## Ce qui n'est pas dans ce chantier
 
-Migration de la clé de signature vers la puce TPM (prévue avec une version proche, sur
-demande du mainteneur), cloud, Android Auto.
+Migration de la clé de signature vers la puce TPM (prévue juste après ce chantier, dans
+une version à elle), cloud, Android Auto.
