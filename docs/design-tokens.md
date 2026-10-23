@@ -1,100 +1,70 @@
-# Direction artistique — alignee sur UniFi Protect
+# Système de design — direction « Observatoire »
 
-Valeurs issues du jeu de variables CSS publie par Ubiquiti (919 tokens « desktop »),
-et non d'une estimation a l'oeil. Ce qui est extrapole est marque comme tel.
-Implementation : `v2/web/src/index.css` (variables CSS). Ce document a longtemps renvoye a
-`src/ProtectViewer/Themes/Tokens.xaml`, fichier de la v1 en C# supprimee le 28.07.2026 :
-les VALEURS ci-dessous n'ont pas bouge, seul leur point d'application a change.
+Retenue par Thomas le 23.10.2026 sur `docs/maquette-ux-a.html` (plan : `docs/plan-ux.md`).
+Ce document décrit ce qui est **en vigueur dans le code** : les jetons vivent dans
+`v2/web/src/index.css`, les composants dans `v2/web/src/ui/`. Le catalogue de tous les
+composants s'ouvre en développement avec `npm run web` puis `?catalogue` dans l'adresse.
 
-## Les deux rampes de gris
+Il remplace l'ancienne direction « alignée sur UniFi Protect » (valeurs relevées sur le
+CSS public d'Ubiquiti, juillet 2026) : plus rien ne l'appliquait depuis le thème « Nuit
+lecture », et elle contredisait la maquette validée.
 
-C'est le point le plus important, et le plus facile a rater.
+## L'idée
 
-| Rampe | Usage | Teinte |
+Un instrument d'observation de nuit. Le ciel ne vit plus que là où il n'y a pas d'image,
+et il est **fixe par défaut** (réglage « Fond animé »). Les surfaces sont pleines — plus
+aucun flou nulle part. L'or d'Alcor est **réservé à ce qui est observé** : le direct actif,
+la sélection, la tête de lecture, l'action principale.
+
+## Couleurs (`:root`, mêmes noms qu'avant : chaque classe Tailwind suit)
+
+| Jeton | Valeur | Rôle |
 |---|---|---|
-| **app** | chassis : rail, panneaux, fonds | legerement bleutee, `hsl(214, 8%, L)` |
-| **oncolor** | tout ce qui flotte AU-DESSUS de la video | strictement neutre, `hsl(0, 0%, L)` |
+| `--bg` | `#0e131b` | nuit : le fond |
+| `--card` | `#151b25` | instrument : rail, en-têtes, cartes |
+| `--card2` | `#1e2633` | graphite : boutons, champs |
+| `--card3` | `#283242` | graphite appuyé : survol, piste d'interrupteur |
+| `--line` / `--line2` | `rgba(206,214,229,.09)` / `.17` | séparateurs / contours |
+| `--ink` / `--muted` / `--soft` | `#ece8df` / `#a9b0bc` / `#737d8b` | texte : principal, secondaire, tertiaire |
+| `--accent` | `#dca95c` | Alcor |
+| `--accent-soft` / `--accent-ligne` | or à 14 % / à 42 % | fond / contour d'un élément sélectionné |
+| `--sur-accent` / `--sur-bad` | `#1d1608` / `#1d0b07` | texte posé sur l'or / sur le rouge |
+| `--ok` / `--warn` / `--bad` / `--info` | `#74c494` / `#e0a23c` / `#e3735f` / `#86afcf` | en ligne / attention / erreur / information |
 
-Poser une surface bleutee sur une image se repere instantanement. Une pastille
-d'horodatage doit utiliser `B.OnBg*` / `B.OnText*`, jamais `B.Bg*` / `B.Text*`.
+La rampe `--on-*` (neutre) reste réservée à ce qui se pose **sur la vidéo**.
 
-## Couleurs
+## Texte : cinq tailles, et aucune autre
 
-| Token | Valeur | Role |
+| Classe | Taille | Rôle |
 |---|---|---|
-| `B.Bg0` | `#131416` | fond principal |
-| `B.Bg1` | `#1C1E21` | panneaux, cartes |
-| `B.Bg2` | `#282B2F` | menus, survol appuye |
-| `B.Bg3` | `#34383D` | champs, pistes de barre |
-| `B.Bg4` | `#42474D` | bordure de bouton |
-| `B.Text1` | `#F9FAFA` | valeurs, titres |
-| `B.Text2` | `#DEE0E3` | libelles |
-| `B.Text3` | `#B7BCC2` | tertiaire **et icones** |
-| `B.Text4` | `#737C87` | desactive, micro-libelles |
-| `B.Divider` | `#12F9FAFA` | blanc a 7 %, **pas un gris opaque** |
-| `B.RowHover` | `#05F9FAFA` | survol a 2 % |
-| `B.RowSelected` | `#1A4797FF` | bleu a 10 % |
-| `B.Accent` | `#4797FF` | action, actif, selection |
-| `B.Positive` | `#37BE5F` | en ligne |
-| `B.Notice` | `#E79613` | avertissement |
-| `B.Destructive` | `#EE6368` | erreur, hors ligne |
+| `text-micro` | 11 px | graduations, libellés du rail, comptes dans une puce |
+| `text-meta` | 12 px | précisions, aides, petits boutons |
+| `text-corps` | 13 px | le texte courant, les boutons, les champs |
+| `text-titre` | 15 px | titres de section |
+| `text-ecran` | 19 px | le titre de chaque écran |
 
-**Piege evite :** l'accent du theme sombre est `#4797FF`. Le `#006FFF` que l'on croise
-partout est la valeur du theme **clair** ; sur `#131416` il manque de contraste.
+L'inventaire du 23.10.2026 en comptait quinze, de 9 à 20 px. Police : **Atkinson
+Hyperlegible Next** (variable, embarquée), dessinée pour la lisibilité ; **Atkinson
+Hyperlegible Mono** pour les horodatages et les valeurs techniques seulement. Les intitulés
+s'écrivent en casse ordinaire — plus de petites capitales espacées.
 
-## Typographie
+## Formes
 
-Token officiel : `UI Sans, Lato, Arial`. UI Sans est proprietaire et non redistribuable ;
-**Lato est le repli designe par Ubiquiti lui-meme**, et il est deja installe sur cette
-machine — aucun telechargement necessaire. Repli suivant : Segoe UI.
+- Contrôles : **32 px** (normal) et **28 px** (petit), rayons 8 et 7 px.
+- Cartes : rayon **12 px**, contour `--line2`, ombre `0 18px 40px -18px rgba(0,0,0,.7)`.
+- Puces : 28 px, entièrement arrondies. Interrupteurs : 40 × 22 px.
+- En-tête d'écran : **64 px**.
 
-Graisses disponibles : **400 et 600 uniquement. Il n'y a pas de 500** — ne pas inventer
-de Medium.
+## Composants (`v2/web/src/ui/`)
 
-| Role | Graisse / taille |
-|---|---|
-| Titre de panneau | 600 / 15 |
-| Titre de section | 600 / 13 |
-| Libelle, valeur, bouton | 400 / 13 |
-| Micro-libelle | 400 / 11 |
-
-## Composition
-
-Protect est **dense**. Une palette parfaite avec des marges Windows par defaut ne
-ressemblera pas a UniFi.
-
-- Grille de base : **4 px**, tout est un multiple.
-- Hauteur de controle : **32 px** (densite « medium »).
-- Ligne libelle/valeur : **28 px**.
-- Rayons : **4 px** partout, **8 px** pour ce qui flotte. Pas de 6, pas de 12.
-- Bordures : **1 px**, sans exception.
-- Icones : 20 a 24 px, au niveau de texte 3.
-
-### Ce qui distingue Protect d'une interface sombre generique
-
-1. La hierarchie passe par la **profondeur de fond**, pas par les bordures. Si tu vois
-   tes bordures, tu es alle trop loin.
-2. Les separateurs sont du **blanc a 7 %** : le meme pinceau reste juste sur toutes les
-   profondeurs. Avec un gris opaque, il en faudrait un par fond.
-3. Le survol est a **2 %**. Presque rien.
-4. Les icones sont au **niveau de texte 3**, jamais au niveau 1. Le rail est discret,
-   le sujet c'est l'image.
-5. **Le bleu est rare** : action primaire, element actif, selection. Nulle part ailleurs.
-6. La rampe **oncolor** des qu'on passe au-dessus de la video.
+`Bouton` (normal, primaire, fantome, actif, vert, danger ; deux tailles ; icône seule avec
+titre obligatoire), `Segment`, `Puce`, `Interrupteur`, `Champ`, et dans `Cadre.tsx` :
+`EnTete`, `Carte`, `Section`, `Rangee`, `Touche`. Un écran ne style plus ses boutons sur
+place : il emploie ceux-ci.
 
 ## Horodatage sur l'image
 
-Constat qui change la donne : dans Protect, l'horodatage grave dans le flux est incruste
-par le **firmware de la camera** (`osdSettings`), pas dessine par l'application. Ni la
-police, ni la taille, ni le coin ne sont configurables. **Il n'existe donc aucun rendu
-Protect a imiter** : le choix est entierement libre.
-
-Retenu : pastille arrondie decollee du bord (marge 16, rayon 8, fond `OnBg0` a 70 %),
-texte en graisse **normale** — le gras trahit le « fait maison », c'est le fond qui doit
-porter le contraste.
-
-## Reserve
-
-[NON VERIFIE] Le CSS source est celui des sites publics d'Ubiquiti, pas de l'application
-Protect 7.1.87 elle-meme, qui est derriere authentification. Les valeurs sont authentiques ;
-leur usage exact dans Protect est une inference raisonnable.
+L'horodatage gravé dans le flux est incrusté par le firmware de la caméra (`osdSettings`),
+pas par l'application : aucun rendu Protect à imiter. Les informations d'Alcora (heure de
+la relecture, définition lue, commandes) vivent **hors de l'image**, dans le bandeau
+au-dessus d'elle — décision de Thomas, après deux refus de boutons posés sur l'image.

@@ -36,6 +36,26 @@
   --color-on-2: var(--on-2);
   --color-on-3: var(--on-3);
 
+  --color-card3: var(--card3);
+  --color-sur-accent: var(--sur-accent);
+  --color-sur-bad: var(--sur-bad);
+  --color-accent-ligne: var(--accent-ligne);
+
+  /*
+   * L'ÉCHELLE TYPOGRAPHIQUE : cinq tailles, et aucune autre.
+   *
+   * L'inventaire du 23.10.2026 en comptait QUINZE, de 9 à 20 px par demi-pixels — la cause
+   * mécanique de l'aspect « brouillon ». Chaque taille a un rôle, et le rôle se choisit,
+   * pas la taille : text-micro (graduations, libellés du rail), text-meta (précisions,
+   * aides, petits boutons), text-corps (le texte courant), text-titre (titres de section),
+   * text-ecran (le titre de chaque écran).
+   */
+  --text-micro: 11px;
+  --text-meta: 12px;
+  --text-corps: 13px;
+  --text-titre: 15px;
+  --text-ecran: 19px;
+
   --font-sans: "Atkinson Hyperlegible Next Variable", system-ui, "Segoe UI", sans-serif;
   /* La chasse fixe ne sert plus qu'aux horodatages et aux valeurs techniques. */
   --font-mono: "Atkinson Hyperlegible Mono Variable", "Cascadia Mono", Consolas, ui-monospace, monospace;
@@ -51,6 +71,7 @@
   --bg: #0e131b;                              /* nuit */
   --card: #151b25;                            /* instrument : rail, panneaux, cartes */
   --card2: #1e2633;                           /* graphite : contrôles, champs */
+  --card3: #283242;                           /* graphite appuyé : survol, piste */
   --line: rgba(206, 214, 229, 0.09);
   --line2: rgba(206, 214, 229, 0.17);
   --ink: #ece8df;                             /* lumière */
@@ -59,6 +80,9 @@
   --accent: #dca95c;                          /* Alcor */
   --accent-soft: rgba(220, 169, 92, 0.14);
   --accent-d: #e8bd78;
+  --accent-ligne: rgba(220, 169, 92, 0.42);   /* contour de ce qui est sélectionné */
+  --sur-accent: #1d1608;                      /* texte posé sur l'or */
+  --sur-bad: #1d0b07;                         /* texte posé sur le rouge */
   --ok: #74c494;
   --ok-soft: rgba(116, 196, 148, 0.12);
   --info: #86afcf;
@@ -411,8 +435,8 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: var(--text-corps);
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }

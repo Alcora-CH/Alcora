@@ -22,4 +22,14 @@ import App from './App.tsx'
  * Le cycle de vie des sessions est deja protege : chaque effet ne ferme que la session
  * qu'il a lui-meme ouverte (voir CameraTile). Ce reglage supprime le bruit, pas la rigueur.
  */
-createRoot(document.getElementById('root')!).render(<App />)
+const racine = createRoot(document.getElementById('root')!)
+
+/*
+ * Le catalogue des composants (`?catalogue`) n'existe qu'en developpement : la condition
+ * est remplacee par « false » a la construction, et l'import disparait avec elle.
+ */
+if (import.meta.env.DEV && new URLSearchParams(location.search).has('catalogue')) {
+  void import('./ui/Catalogue').then(({ Catalogue }) => racine.render(<Catalogue />))
+} else {
+  racine.render(<App />)
+}
