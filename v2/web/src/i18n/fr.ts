@@ -23,10 +23,10 @@ export const fr = {
   'espace.prochainLot': 'Cet espace arrive dans un prochain lot.',
 
   // ---- les canaux d'une camera, tels que Protect les hierarchise
-  'canal.haute': 'HAUTE',
-  'canal.moyenne': 'MOYENNE',
-  'canal.basse': 'BASSE',
-  'canal.colis': 'COLIS',
+  'canal.haute': 'Haute',
+  'canal.moyenne': 'Moyenne',
+  'canal.basse': 'Basse',
+  'canal.colis': 'Colis',
 
   // ---- les commandes d'une vue video, partagees par les trois ecrans
   'video.revenirImage': 'Revenir à l’image entière ({zoom}×)',
@@ -454,6 +454,32 @@ export const fr = {
   'tuile.revoir': 'Revoir cette caméra',
   'tuile.detections': 'Ses détections',
   'tuile.ecouter': 'Écouter cette caméra',
+
+  // Page Systeme (direction Observatoire, 23.10.2026)
+  'espace.systeme': 'Système',
+  'systeme.precision': 'Le contrôleur, ses enregistrements et chaque caméra, vus d’Alcora',
+  'systeme.journal': 'Journal de l’application',
+  'systeme.journalTitre': 'Ouvrir le dossier du journal',
+  'systeme.cameras': 'Caméras',
+  'systeme.toutesEnLigne': '{n}, toutes en ligne',
+  'systeme.dontHorsLigne': '{n}, dont {h} hors ligne',
+  'systeme.colCamera': 'Caméra',
+  'systeme.colEtat': 'État',
+  'systeme.colFlux': 'Flux',
+  'systeme.colArchive': 'Archive',
+  'systeme.colDetection': 'Dernière détection',
+  'systeme.colMosaique': 'Mosaïque',
+  'systeme.enLigne': 'En ligne',
+  'systeme.horsLigne': 'Hors ligne',
+  'systeme.depuisLe': 'depuis le {date}',
+  'systeme.pleineDef': 'pleine définition {duree}',
+  'systeme.ilYa': 'il y a {duree}',
+  'systeme.aucuneAujourdhui': 'aucune aujourd’hui',
+  'systeme.inconnue': 'inconnue',
+  'systeme.affichee': 'Affichée',
+  'systeme.masquee': 'Masquée',
+  'unite.ips': 'i/s',
+  'unite.mbits': 'Mbit/s',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

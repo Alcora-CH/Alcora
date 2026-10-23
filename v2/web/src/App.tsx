@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Bell, Clapperboard, Eye, EyeOff, Maximize2, Minimize2, PanelLeftClose, PanelLeftOpen, RotateCw,
+  Activity, Bell, Clapperboard, Eye, EyeOff, Maximize2, Minimize2, PanelLeftClose, PanelLeftOpen, RotateCw,
   Search, Settings, Video,
 } from 'lucide-react';
 import { CameraTile } from './video/CameraTile';
@@ -13,6 +13,7 @@ import { NouveautesScreen } from './screens/NouveautesScreen';
 import { CielScreen } from './screens/CielScreen';
 import { ColonneEtat } from './screens/ColonneEtat';
 import { VeillesScreen } from './screens/VeillesScreen';
+import { SystemeScreen } from './screens/SystemeScreen';
 import { Marque } from './Marque';
 import { Planetarium } from './Planetarium';
 import { bestChannel } from './video/channel';
@@ -23,6 +24,7 @@ import { definirLangue, t, useLangue } from './i18n';
 import { nomSujet } from './i18n/sujets';
 import type { RelaisAcces,
   Detection, DetectionVive, DiscoveredCamera, MajState, Nouveautes, Progression, RelayState,
+  SystemeEtat,
 } from './types/protect';
 
 const ESPACES = [
@@ -30,6 +32,7 @@ const ESPACES = [
   { id: 'detections', cle: 'espace.detections', Icon: Search },
   { id: 'relecture', cle: 'espace.relecture', Icon: Clapperboard },
   { id: 'alertes', cle: 'espace.alertes', Icon: Bell },
+  { id: 'systeme', cle: 'espace.systeme', Icon: Activity },
 ] as const;
 
 /** Le repli du panneau survit au redemarrage : le replier chaque fois userait. */
@@ -144,6 +147,8 @@ export default function App() {
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [cameras, setCameras] = useState<DiscoveredCamera[]>([]);
   const [relais, setRelais] = useState<RelaisAcces | null>(null);
+  /** L'etat du controleur : page Systeme et barre d'etat. Relu avec l'inventaire. */
+  const [systeme, setSysteme] = useState<SystemeEtat | null>(null);
   const [relay, setRelay] = useState<RelayState>({ running: false, message: 'Démarrage…' });
   const [espace, setEspace] = useState('direct');
   const [panneauOuvert, setPanneauOuvert] = useState(
@@ -476,8 +481,12 @@ export default function App() {
 
     let alive = true;
     const charger = async () => {
-      const [cams, acces] = await Promise.all([bridge.getCameras(), bridge.relais()]);
+      // L'etat du controleur vient de la meme decouverte que l'inventaire : il se relit avec
+      // lui. Son echec ne doit pas faire echouer l'inventaire, qui seul fait le direct.
+      const [cams, acces, sys] = await Promise.all([
+        bridge.getCameras(), bridge.relais(), bridge.systeme().catch(() => null)]);
       if (!alive) return;
+      if (sys) setSysteme(sys);
       console.log(`[inventaire] ${cams.length} caméra(s), relais ${acces?.base ?? 'indisponible'}`);
       setCameras(cams);
       setRelais(acces);
@@ -949,6 +958,10 @@ export default function App() {
           <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible} />
         ) : espace === 'alertes' ? (
           <VeillesScreen cameras={cameras} />
+        ) : espace === 'systeme' ? (
+          <SystemeScreen systeme={systeme} relay={relay} cameras={cameras} masquees={masquees}
+                         onBasculerMasquee={basculerMasquee} versionAlcora={infosVersion}
+                         onGuide={() => { setCameraCible(null); setEspace('reglages'); }} />
         ) : espace !== 'direct' ? (
           <div className="grid h-full place-items-center text-[13px] text-soft">
             {t('espace.prochainLot')}
