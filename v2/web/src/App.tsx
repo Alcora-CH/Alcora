@@ -14,6 +14,8 @@ import { CielScreen } from './screens/CielScreen';
 import { ColonneEtat } from './screens/ColonneEtat';
 import { VeillesScreen } from './screens/VeillesScreen';
 import { SystemeScreen } from './screens/SystemeScreen';
+import { BarreEtat } from './cadre/BarreEtat';
+import { Raccourcis } from './cadre/Raccourcis';
 import { Marque } from './Marque';
 import { Planetarium } from './Planetarium';
 import { bestChannel } from './video/channel';
@@ -175,6 +177,8 @@ export default function App() {
     setIsolee((v) => (v === id ? null : v));
   }, []);
   const [indice, setIndice] = useState(false);
+  /** La fenetre des raccourcis clavier (touche « ? », barre d'etat). */
+  const [raccourcis, setRaccourcis] = useState(false);
   const [espacement, setEspacement] = useState(() => {
     const brut = localStorage.getItem(CLE_ESPACE);
     const n = Number(brut);
@@ -451,7 +455,10 @@ export default function App() {
    */
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
+      const saisie = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
       if (e.key === 'F11') { e.preventDefault(); basculerPleinEcran(); }
+      // « ? » partout, sauf dans un champ ou il s'ecrit. La fenetre ouverte le traite elle-meme.
+      else if (e.key === '?' && !saisie) { e.preventDefault(); setRaccourcis(true); }
       else if (e.key === 'Escape') {
         if (isolee) setIsolee(null);
         else if (pleinEcran) basculerPleinEcran();
@@ -652,7 +659,10 @@ export default function App() {
 
   return (
     <FournisseurActivite>
-    <div className="relative flex h-full">
+    {/* La colonne : les espaces au-dessus, la barre d'etat dessous. Les surfaces qui couvrent
+        tout (sequence, nouveautes, introduction) sont posees sur CE cadre, barre comprise. */}
+    <div className="relative flex h-full flex-col">
+    <div className="relative flex min-h-0 flex-1">
       {/* La bande d'icones ne se replie jamais : c'est le seul point d'ancrage qui reste
           quand tout le reste est masque. Le plein ecran, lui, efface aussi celle-ci. */}
       {/* La bande n'est plus DÉMONTÉE en plein écran, seulement glissée hors du cadre :
@@ -1040,6 +1050,16 @@ export default function App() {
         )}
         </div>
       </main>
+    </div>
+
+      {/* La barre d'etat, sur tous les ecrans — sauf en plein ecran, ou rien ne reste pose. */}
+      {!pleinEcran && (
+        <BarreEtat relay={relay} systeme={systeme} cameras={cameras} espace={espace}
+                   onSysteme={() => { setCameraCible(null); setEspace('systeme'); }}
+                   onRaccourcis={() => setRaccourcis(true)} />
+      )}
+
+      {raccourcis && <Raccourcis onFermer={() => setRaccourcis(false)} />}
 
       {/* Par-dessus tout : une bulle cliquée doit montrer sa séquence sans rien déranger. */}
       {sequence && (

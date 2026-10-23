@@ -4,7 +4,7 @@ import { bridge } from '../lib/bridge';
 import { localeDates, t, useLangue } from '../i18n';
 import { derniereParCamera, useActivite } from '../lib/activiteJour';
 import {
-  JOUR_MS, armementLisible, ceQuiAEteVu, dateCourte, duree, etatDisqueLisible, go, ilYa, to,
+  JOUR_MS, archiveGlobale, armementLisible, ceQuiAEteVu, dateCourte, duree, etatDisqueLisible, go, ilYa, to,
 } from '../lib/lisible';
 import { seuleVisible, titreMasquage } from '../lib/masquage';
 import { Horloge } from '../cadre/Horloge';
@@ -87,16 +87,7 @@ export function SystemeScreen({
     return () => clearInterval(id);
   }, []);
 
-  const archive = useMemo(() => {
-    const toutes = systeme?.archive ?? [];
-    if (!toutes.length) return null;
-    return {
-      debut: Math.min(...toutes.map((a) => a.debut)),
-      frontiere: toutes.every((a) => a.frontiere !== null)
-        ? Math.min(...toutes.map((a) => a.frontiere as number)) : null,
-      fin: Math.max(...toutes.map((a) => a.fin)),
-    };
-  }, [systeme]);
+  const archive = useMemo(() => archiveGlobale(systeme?.archive), [systeme]);
 
   const remplissage = systeme?.disque
     ? (systeme.disque.utilise / systeme.disque.total) * 100 : null;

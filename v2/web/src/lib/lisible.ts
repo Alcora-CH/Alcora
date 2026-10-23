@@ -99,3 +99,18 @@ export function etatDisqueLisible(brut: string): { texte: string; ton: string; d
   }
   return { texte: brut, ton: 'var(--warn)' };
 }
+
+/**
+ * L'archive de l'ensemble des caméras : la plus profonde fait foi pour le début, la plus
+ * récente pour la fin. La frontière de pleine définition ne se dit que si CHAQUE caméra en
+ * a une — sinon la plus prudente mentirait sur celles qui n'en ont pas.
+ */
+export function archiveGlobale(archives: { debut: number; frontiere: number | null; fin: number }[] | undefined) {
+  if (!archives?.length) return null;
+  return {
+    debut: Math.min(...archives.map((a) => a.debut)),
+    frontiere: archives.every((a) => a.frontiere !== null)
+      ? Math.min(...archives.map((a) => a.frontiere as number)) : null,
+    fin: Math.max(...archives.map((a) => a.fin)),
+  };
+}
