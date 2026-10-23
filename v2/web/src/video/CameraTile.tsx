@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, History, ScanSearch, Volume2, VolumeX, type LucideIcon } from 'lucide-react';
 import { connectWhep, type WhepSession } from './whep';
 import { attenteReprise, causeDeReprise } from './sante';
-import { pickChannel, qualityLabel, relayPath } from './channel';
+import { bestChannel, pickChannel, qualityLabel, relayPath } from './channel';
 import { nombre, t, useLangue } from '../i18n';
 import { Bouton } from '../ui/Bouton';
 import { cx } from '../ui/cx';
@@ -90,7 +90,9 @@ function BoutonTuile({ titre, court, icone, onClick, actif, desactive }: {
     <div className="group/bt relative shrink-0">
       <Bouton
         variante={actif ? 'actif' : 'fantome'} taille="petit" icone={icone}
-        aria-label={titre} disabled={desactive}
+        /* Le nom commence par ce qu'on lit (« Son ») : une commande vocale qui le dit doit
+           trouver le bouton. La forme longue suit, pour le lecteur d'écran. */
+        aria-label={`${court} — ${titre}`} disabled={desactive}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
         onPointerDown={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
@@ -444,6 +446,8 @@ export function CameraTile({
     setTimeout(() => setCapture(null), 3200);
   }, [actions, camera.name]);
 
+  /* Aucun canal diffusable : la tuile attend pour toujours, et doit le dire. */
+  const sansFlux = !bestChannel(camera);
   const upscaling = vue.interpole;
   const zoomed = vue.agrandi;
 
@@ -489,7 +493,7 @@ export function CameraTile({
           <div>
             <p className="text-muted">
               {status === 'erreur' ? t('tuile.fluxIndisponible')
-                : status === 'attente' ? '' : t('tuile.connexion')}
+                : status === 'attente' ? (sansFlux ? t('camera.rtspDesactive') : '') : t('tuile.connexion')}
             </p>
             {/* La prochaine tentative se dit : un « Flux indisponible » muet ressemble à
                 une panne définitive, alors que la tuile réessaie d'elle-même. */}
@@ -571,7 +575,12 @@ export function CameraTile({
           <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-meta text-soft">
             <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-current" />{t('systeme.horsLigne')}
           </span>
-        ) : null}
+        ) : sansFlux ? (
+          /* La CAUSE plutôt que le silence : il manque un interrupteur sur la console. */
+          <span className="shrink-0 whitespace-nowrap text-meta text-warn">{t('camera.rtspDesactive')}</span>
+        ) : (
+          <span className="shrink-0 text-meta text-soft" aria-label={t('tuile.connexion')}>…</span>
+        )}
 
         {/* Les commandes vivent ICI, dans le bandeau, et non sur l'image. Visibles en
             permanence : il n'y a plus rien a decouvrir au survol. */}

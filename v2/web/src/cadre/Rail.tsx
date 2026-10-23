@@ -40,6 +40,7 @@ export function Rail({ espace, onChoisir, marqueAnimee }: {
 }) {
   const t = useLangue();
   const boutons = useRef(new Map<string, HTMLButtonElement>());
+  const rail = useRef<HTMLElement>(null);
 
   /*
    * Le repère SUIT l'espace choisi au lieu de sauter : c'est ce détail qui relie deux
@@ -49,8 +50,16 @@ export function Rail({ espace, onChoisir, marqueAnimee }: {
    */
   const [repere, setRepere] = useState<{ y: number; h: number } | null>(null);
   useLayoutEffect(() => {
-    const b = boutons.current.get(espace);
-    setRepere(b ? { y: b.offsetTop, h: b.offsetHeight } : null);
+    const mesurer = () => {
+      const b = boutons.current.get(espace);
+      setRepere(b ? { y: b.offsetTop, h: b.offsetHeight } : null);
+    };
+    mesurer();
+    /* Système et Réglages sont poussés en pied par un ressort : leur place suit la hauteur
+       de la fenêtre. Sans cet observateur, agrandir la fenêtre laissait le trait en l'air. */
+    const ro = new ResizeObserver(mesurer);
+    if (rail.current) ro.observe(rail.current);
+    return () => ro.disconnect();
   }, [espace, t]);
 
   const entree = ({ id, cle, Icone }: Entree) => {
@@ -72,7 +81,7 @@ export function Rail({ espace, onChoisir, marqueAnimee }: {
   return (
     /* Largeur minimale de la maquette, mais pas maximale : « Einstellungen » et
        « Impostazioni » ne tiennent pas dans 84 px, et un libellé coupé ne se lit plus. */
-    <nav aria-label={t('rail.espaces')}
+    <nav ref={rail} aria-label={t('rail.espaces')}
          className="relative flex min-w-[84px] shrink-0 flex-col gap-0.5 border-r border-line bg-card px-2 py-3.5">
       {repere && (
         <span aria-hidden

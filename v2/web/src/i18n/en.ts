@@ -498,4 +498,8 @@ export const en: Record<Cle, string> = {
   'tuile.imageCourt': 'Image',
   'tuile.sonCourt': 'Sound',
   'tuile.reprise': 'Automatic retry in {n} s',
+
+  // Revue du groupe Direct (23.10.2026)
+  'systeme.seuleEnLigne': '1, online',
+  'systeme.seuleHorsLigne': '1, offline',
 };

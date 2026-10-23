@@ -20,11 +20,20 @@ import type { DiscoveredCamera, RelayState, SystemeEtat } from '../types/protect
  * l'archive cèdent la place en premier.
  */
 
-/** Une case de la barre, séparée de la suivante par un filet. */
-function Case({ children, className }: { children: React.ReactNode; className?: string }) {
+/**
+ * Une case de la barre, séparée de la suivante par un filet.
+ *
+ * Rigide, sauf la case du message (« souple ») : c'est elle qui cède quand la fenêtre manque
+ * de place. Le choix passe par une propriété et non par une classe ajoutée : « shrink » et
+ * « shrink-0 » côte à côte, c'est l'ordre de la feuille de style qui tranche — et il
+ * tranchait pour « shrink-0 », si bien qu'un long message d'erreur poussait hors de l'écran
+ * le bouton qui mène à son remède.
+ */
+function Case({ children, className, souple }: { children: React.ReactNode; className?: string; souple?: boolean }) {
   return (
     <span className={cx(
-      'inline-flex h-[18px] shrink-0 items-center gap-[7px] whitespace-nowrap border-r border-line2 px-3.5 first:pl-0',
+      'inline-flex h-[18px] items-center gap-[7px] whitespace-nowrap border-r border-line2 px-3.5 first:pl-0',
+      souple ? 'min-w-0 shrink' : 'shrink-0',
       className,
     )}>
       {children}
@@ -54,7 +63,7 @@ export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccou
   return (
     <footer className="@container flex h-[34px] shrink-0 items-center border-t border-line bg-card pl-3.5 pr-2 text-meta text-muted">
       {/* L'état du flux d'abord, en couleur : c'est ce qu'on vient vérifier. */}
-      <Case className="min-w-0 shrink">
+      <Case souple>
         <Pastille ton={relay.running ? 'var(--ok)' : 'var(--warn)'} />
         <span className={cx('truncate', !relay.running && 'text-warn')}>{relay.message}</span>
       </Case>
@@ -108,8 +117,9 @@ export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccou
       <span className="inline-flex h-[18px] items-center border-l border-line2 px-3.5">
         <Horloge className="font-mono tabular-nums text-ink" />
       </span>
+      {/* Le nom accessible ne doit pas tomber à « ? » quand le libellé cède la place. */}
       <Bouton variante="fantome" taille="petit" titre={t('barre.raccourcisTitre')} onClick={onRaccourcis}
-              className="ml-1">
+              aria-label={t('raccourcis.titre')} className="ml-1">
         <span className="@max-[1180px]:hidden">{t('barre.raccourcis')}</span> <Touche>?</Touche>
       </Bouton>
       <Bouton variante={espace === 'systeme' ? 'actif' : 'fantome'} taille="petit" onClick={onSysteme}

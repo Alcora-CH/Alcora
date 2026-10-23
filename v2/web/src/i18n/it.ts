@@ -438,7 +438,7 @@ export const it: Record<Cle, string> = {
   'systeme.pleineDef': 'piena definizione {duree}',
   'systeme.ilYa': '{duree} fa',
   'systeme.aucuneAujourdhui': 'nessuno oggi',
-  'systeme.inconnue': 'sconosciuta',
+  'systeme.inconnue': 'sconosciuto',
   'systeme.affichee': 'Visibile',
   'systeme.masquee': 'Nascosta',
   'unite.ips': 'fps',
@@ -500,4 +500,8 @@ export const it: Record<Cle, string> = {
   'tuile.imageCourt': 'Immagine',
   'tuile.sonCourt': 'Audio',
   'tuile.reprise': 'Nuovo tentativo tra {n} s',
+
+  // Revue du groupe Direct (23.10.2026)
+  'systeme.seuleEnLigne': '1, online',
+  'systeme.seuleHorsLigne': '1, offline',
 };

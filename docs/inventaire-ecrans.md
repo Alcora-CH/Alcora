@@ -155,9 +155,10 @@ Rien n'a disparu ; ce qui change de forme est dit, les ajouts sont marqués.
       d'état (pastille + message) ; page Système, bloc Contrôleur (tout) ; centre du mur
       quand aucune image n'est possible (tout).
 - [x] Caméras (pastille, nom, définition ou « RTSP désactivé », masquer / réafficher,
-      dernière caméra visible protégée, caméra masquée estompée, « Aucune caméra pour
-      l'instant. », remède RTSP unique + lien du guide) : menu « Caméras » du direct (tout) et
-      tableau de la page Système.
+      dernière caméra visible protégée, caméra masquée estompée) : menu « Caméras » du direct
+      et tableau de la page Système. « Aucune caméra pour l'instant. » : menu (dès que
+      l'inventaire est lu, même vide), centre du mur, page Système. Remède RTSP + lien du
+      guide : UNE fois, sous la liste du menu et sous le tableau.
 - [x] Contrôleur, Heure, Protect : barre d'état et Système.
 - [x] Pastilles HD / 2K / 4K : Système.
 - [x] Détections récentes (≤ 5, vignette, sujet, caméra, « il y a », clic = séquence) :
@@ -169,15 +170,21 @@ Rien n'a disparu ; ce qui change de forme est dit, les ajouts sont marqués.
       rétentions annoncées en cas d'écart, état et note du disque, écrit par jour, barre,
       disque, note de rotation) : Système ; profondeur et remplissage aussi dans la barre.
 - [x] Versions : Système.
-- [x] « Aucune image ne quitte votre réseau. » : barre d'état, en permanence ; Système.
+- [x] « Aucune image ne quitte ton réseau. » (tutoyé, comme le reste de l'application) :
+      barre d'état, en toutes lettres à partir de 1280 px de large, l'icône et son infobulle en
+      dessous ; page Système.
 
 **Superpositions**
 - [x] Réduire / épingler le panneau : « Masquer l'activité » (tête de la colonne) et
       « Afficher l'activité » (en-tête) — un geste qui se garde, jamais un survol.
 - [x] Plein écran (F11) : bouton nommé de l'en-tête, touche affichée.
-- [x] Commandes du plein écran : « Quitter » ; « Afficher le panneau » devient le menu
-      « Caméras » ; rappel « Échap pour revenir » (désormais en plein écran seulement : hors
-      plein écran, l'en-tête et la ligne des gestes le disent).
+- [x] Commandes du plein écran : « Quitter » ; menu « Caméras » (direct) ; rappel « Échap
+      pour revenir » (en plein écran seulement : ailleurs, l'en-tête et la ligne des gestes le
+      disent). La lisière qui révélait le panneau est remplacée par la **barre d'état**, qui
+      revient avec les commandes au moindre mouvement et RESTE tant que quelque chose ne va
+      pas (flux arrêté, enregistrement suspendu, caméra hors ligne) : l'état, le remède et
+      « Réessayer » restent atteignables sans quitter le plein écran, par la page Système.
+      Les commandes ne s'effacent pas tant que le menu est ouvert.
 - [x] Mise à jour prête : inchangée (bas, centre), boutons communs.
 - [x] Lecteur d'extrait, « Ce qui a changé », introduction, panne de liaison : inchangés
       (leurs groupes viendront).
@@ -189,7 +196,8 @@ Rien n'a disparu ; ce qui change de forme est dit, les ajouts sont marqués.
 - [x] Mosaïque calculée, centrée, espacement des Réglages ; marge de 20 px en vue habillée.
 - [x] En-tête du direct (ajout) : nombre d'images affichées, ou la caméra isolée.
 - [x] Bandeau hors image, 44 px : nom ; qualité en casse ordinaire (grise : l'or est
-      réservé à ce qui est observé) ; « Direct » en vert ou « Hors ligne » ; quatre commandes
+      réservé à ce qui est observé) ; « Direct » en vert, « Hors ligne », « RTSP désactivé » en
+      orange, ou « … » pendant la connexion ; quatre commandes
       avec leur nom court (icônes seules sur tuile étroite) et l'étiquette maison au survol.
 - [x] « Connexion… », « Flux indisponible » + **prochaine tentative annoncée** (ajout),
       image figée détectée.

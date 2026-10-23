@@ -315,6 +315,8 @@ export default function App() {
    * application bloquee, pas a un choix.
    */
   const [commandes, setCommandes] = useState(false);
+  /** Le menu « Caméras » est ouvert : les commandes du plein écran ne s'effacent pas sous lui. */
+  const [menuOuvert, setMenuOuvert] = useState(false);
   useEffect(() => {
     if (!pleinEcran) { setCommandes(false); return; }
     let minuteur: number | undefined;
@@ -395,12 +397,20 @@ export default function App() {
    * AFFICHE, celui que l'utilisateur a choisi a la souris, pas l'ordre de l'inventaire.
    * Uniquement dans le direct : ailleurs, les chiffres appartiennent aux champs de saisie.
    */
+  /* L'introduction couvre-t-elle l'écran ? Calculé ici, avant le clavier qui en a besoin :
+     la fenêtre des raccourcis ne doit pas s'ouvrir sous ce qui la cacherait. */
+  const echecOuverture = !relay.running && Boolean(relay.permanent || relay.remedy);
+  const introVisible = !introFinie && !echecOuverture && (configured !== false || Boolean(maj?.demarrage));
+
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
       const saisie = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
       if (e.key === 'F11') { e.preventDefault(); basculerPleinEcran(); }
       // « ? » partout, sauf dans un champ ou il s'ecrit. La fenetre ouverte le traite elle-meme.
-      else if (e.key === '?' && !saisie) { e.preventDefault(); setRaccourcis(true); }
+      // Jamais sous ce qui couvre l'ecran (introduction, sequence, nouveautes), ni avant la
+      // configuration : elle s'ouvrirait invisible, et le prochain Echap fermerait les deux.
+      else if (e.key === '?' && !saisie && configured && !introVisible && !sequence
+               && !(introFinie && nouveautes)) { e.preventDefault(); setRaccourcis(true); }
       else if (e.key === 'Escape') {
         if (isolee) setIsolee(null);
         else if (pleinEcran) basculerPleinEcran();
@@ -471,7 +481,8 @@ export default function App() {
     void bridge.contexteMesure({
       espace: configured ? espace : 'connexion',
       tuiles: configured && espace === 'direct' ? tuilesAffichees : null,
-      ciel: fondAnime ? 'anime' : 'fixe',
+      // Le ciel ne vit plus qu'autour des images (et a la connexion) : ailleurs, il n'y en a pas.
+      ciel: configured && espace !== 'direct' ? 'aucun' : fondAnime ? 'anime' : 'fixe',
     }).catch(() => {});
   }, [configured, espace, tuilesAffichees, fondAnime]);
 
@@ -488,8 +499,7 @@ export default function App() {
    * mouvement. Elle s'efface d'elle-meme des qu'un echec demande l'attention : l'etat et
    * son remede ne se lisent pas a travers un ciel etoile.
    */
-  const echecOuverture = !relay.running && Boolean(relay.permanent || relay.remedy);
-  const intro = !introFinie && !echecOuverture && (configured !== false || maj?.demarrage) ? (
+  const intro = introVisible ? (
     <CielScreen maj={maj} relay={relay} progression={progression} pret={pret}
                 onFini={() => setIntroFinie(true)} />
   ) : null;
@@ -597,9 +607,21 @@ export default function App() {
      connexion » des réglages : on y renvoie plutôt que d'ouvrir une seconde page. */
   const versLeGuide = () => { setCameraCible(null); setEspace('reglages'); };
 
-  const menuCameras = (sombre?: boolean) => (
+  /* Dès que l'inventaire est lu, même vide : c'est le menu qui dit « Aucune caméra ». */
+  const menuCameras = (sombre?: boolean) => relais !== null && (
     <MenuCameras cameras={cameras} masquees={masquees} onBasculer={basculerMasquee}
-                 onGuide={versLeGuide} sombre={sombre} />
+                 onGuide={versLeGuide} sombre={sombre} onOuvert={sombre ? setMenuOuvert : undefined} />
+  );
+
+  const commandesVisibles = commandes || menuOuvert;
+  /* En plein écran, la barre d'état revient avec les commandes — et RESTE quand quelque chose
+     ne va pas : c'est par elle qu'on atteint l'état, le remède et « Réessayer ». */
+  const barreVisible = commandesVisibles || !relay.running || Boolean(systeme?.enregistrementSuspendu)
+    || cameras.some((c) => !c.online);
+  const barre = (
+    <BarreEtat relay={relay} systeme={systeme} cameras={cameras} espace={espace}
+               onSysteme={() => { setCameraCible(null); setEspace('systeme'); }}
+               onRaccourcis={() => setRaccourcis(true)} />
   );
 
   /*
@@ -620,7 +642,14 @@ export default function App() {
          */
         <div className="grid flex-1 place-items-center p-8">
           <div className="max-w-md text-center">
-            <p className="text-titre">{relay.message}</p>
+            {/* Le flux marche, l'inventaire est lu, et il est vide : c'est CELA qu'il faut dire,
+                pas « Flux vidéo prêt » sur un mur sans image. */}
+            {relay.running && relais !== null && cameras.length === 0 ? (
+              <>
+                <p className="text-titre">{t('app.aucuneCamera')}</p>
+                <p className="mt-2 text-muted">{relay.message}</p>
+              </>
+            ) : <p className="text-titre">{relay.message}</p>}
             {relay.remedy && <p className="mt-2 text-warn">{relay.remedy}</p>}
             {!relay.running && relay.permanent && (
               <Bouton icone={RotateCw} className="mt-4" onClick={() => { void bridge.retry(); }}>
@@ -736,10 +765,10 @@ export default function App() {
             révélait au bord de l'écran n'existe plus. */}
         {pleinEcran && (
           <div className="absolute right-3 top-3 z-30 flex gap-1.5"
-               style={{ opacity: commandes ? 1 : 0,
-                        pointerEvents: commandes ? undefined : 'none',
+               style={{ opacity: commandesVisibles ? 1 : 0,
+                        pointerEvents: commandesVisibles ? undefined : 'none',
                         transition: 'opacity var(--ample) var(--douce)' }}>
-            {espace === 'direct' && pret && menuCameras(true)}
+            {espace === 'direct' && menuCameras(true)}
             <Bouton icone={Minimize2} titre={t('app.quitterPleinEcranEchap')} onClick={basculerPleinEcran}
                     className="veil" style={{ color: 'var(--on-1)' }}>
               {t('app.quitter')}
@@ -788,7 +817,7 @@ export default function App() {
                 precision={pret ? precisionDirect : undefined}
                 actions={(
                   <>
-                    {pret && menuCameras()}
+                    {menuCameras()}
                     {!activiteVisible && (
                       <Bouton variante="fantome" icone={PanelRightOpen} titre={t('activite.afficher')}
                               onClick={() => setActiviteVisible(true)} />
@@ -816,11 +845,15 @@ export default function App() {
       )}
     </div>
 
-      {/* La barre d'état, sur tous les écrans — sauf en plein écran, où rien ne reste posé. */}
-      {!pleinEcran && (
-        <BarreEtat relay={relay} systeme={systeme} cameras={cameras} espace={espace}
-                   onSysteme={() => { setCameraCible(null); setEspace('systeme'); }}
-                   onRaccourcis={() => setRaccourcis(true)} />
+      {/* La barre d'état, sur tous les écrans. En plein écran, elle se pose sur l'image avec
+          les commandes — c'est elle qui remplace le panneau qu'on révélait au bord. */}
+      {!pleinEcran ? barre : (
+        <div className="absolute inset-x-0 bottom-0 z-30"
+             style={{ opacity: barreVisible ? 1 : 0,
+                      pointerEvents: barreVisible ? undefined : 'none',
+                      transition: 'opacity var(--ample) var(--douce)' }}>
+          {barre}
+        </div>
       )}
 
       {raccourcis && <Raccourcis onFermer={() => setRaccourcis(false)} />}

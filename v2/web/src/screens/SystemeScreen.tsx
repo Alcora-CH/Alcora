@@ -158,7 +158,9 @@ export function SystemeScreen({
               {armement && <Ligne k="Protect" v={armement.texte} ton={armement.ton} />}
               {systeme && systeme.cameras.total > 0 && (
                 <Ligne k={t('systeme.cameras')}
-                       v={systeme.cameras.enLigne >= systeme.cameras.total
+                       v={systeme.cameras.total === 1
+                         ? (systeme.cameras.enLigne >= 1 ? t('systeme.seuleEnLigne') : t('systeme.seuleHorsLigne'))
+                         : systeme.cameras.enLigne >= systeme.cameras.total
                          ? t('systeme.toutesEnLigne', { n: String(systeme.cameras.total) })
                          : t('systeme.dontHorsLigne', {
                            n: String(systeme.cameras.total),
@@ -260,7 +262,12 @@ export function SystemeScreen({
           </div>
 
           {/* ---- chaque caméra ---- */}
-          {cameras.length > 0 && (
+          {cameras.length === 0 ? (
+            <Carte className="mt-[18px] px-[18px] pb-4 pt-4">
+              <h2 className="mb-2 text-titre font-semibold">{t('systeme.cameras')}</h2>
+              <p className="text-soft">{t('app.aucuneCamera')}</p>
+            </Carte>
+          ) : (
             <Carte className="mt-[18px] overflow-x-auto">
               <h2 className="px-[18px] pb-3 pt-4 text-titre font-semibold">{t('systeme.cameras')}</h2>
               <table className="w-full border-collapse text-corps">
@@ -300,14 +307,7 @@ export function SystemeScreen({
                           )) : (
                             /* Sans canal diffusable, la CAUSE plutôt que le constat : il manque
                                un interrupteur sur la console, pas une panne. */
-                            <>
-                              <span className="text-warn">{t('camera.rtspDesactive')}</span>
-                              <p className="mt-0.5 max-w-[360px] text-meta text-soft">{t('camera.rtspRemede')}</p>
-                              <button type="button" onClick={onGuide}
-                                      className="m-pression mt-1 text-meta text-accent-d underline decoration-dotted underline-offset-2">
-                                {t('camera.guide')}
-                              </button>
-                            </>
+                            <span className="text-warn">{t('camera.rtspDesactive')}</span>
                           )}
                         </td>
                         <td className="whitespace-nowrap px-[18px] py-3">
@@ -336,13 +336,14 @@ export function SystemeScreen({
                         </td>
                         <td className="px-[18px] py-3">
                           {/* Le masquage retire l'image de la mosaïque, RIEN d'autre. */}
-                          <Bouton taille="petit" icone={masquee ? EyeOff : Eye}
+                          {/* Bouton bascule nommé par ce qu'on lit et la caméra ; l'action est
+                              dans l'infobulle (même règle que le menu « Caméras »). */}
+                          <Bouton taille="petit" icone={masquee ? EyeOff : Eye} aria-pressed={!masquee}
                                   disabled={seuleVisible(cameras, masquees, c.id)}
                                   titre={titreMasquage(cameras, masquees, c.id)}
-                                  aria-label={masquee ? t('app.afficherCamera', { nom: c.name })
-                                    : t('app.masquerCamera', { nom: c.name })}
                                   onClick={() => onBasculerMasquee(c.id)}>
                             {masquee ? t('systeme.masquee') : t('systeme.affichee')}
+                            <span className="sr-only">{`, ${c.name}`}</span>
                           </Bouton>
                         </td>
                       </tr>
@@ -350,6 +351,17 @@ export function SystemeScreen({
                   })}
                 </tbody>
               </table>
+              {/* Le REMÈDE, une seule fois sous le tableau : répété sous chaque caméra
+                  concernée, il noierait les lignes — c'était déjà la règle du panneau. */}
+              {cameras.some((c) => !c.channels.some((x) => x.streamable)) && (
+                <div className="border-t border-line px-[18px] py-3">
+                  <p className="text-meta leading-normal text-warn">{t('camera.rtspRemede')}</p>
+                  <button type="button" onClick={onGuide}
+                          className="m-pression mt-1 text-meta text-accent-d underline decoration-dotted underline-offset-2">
+                    {t('camera.guide')}
+                  </button>
+                </div>
+              )}
             </Carte>
           )}
         </div>

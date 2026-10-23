@@ -501,4 +501,8 @@ export const de: Record<Cle, string> = {
   'tuile.imageCourt': 'Bild',
   'tuile.sonCourt': 'Ton',
   'tuile.reprise': 'Neuer Versuch in {n} s',
+
+  // Revue du groupe Direct (23.10.2026)
+  'systeme.seuleEnLigne': '1, online',
+  'systeme.seuleHorsLigne': '1, offline',
 };

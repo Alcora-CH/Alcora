@@ -269,7 +269,7 @@ export const fr = {
   'colonne.versions': 'Versions',
   'colonne.disponible': 'Disponible',
   'colonne.allumeDepuis': 'Allumé depuis',
-  'colonne.aucuneImage': 'Aucune image ne quitte votre réseau.',
+  'colonne.aucuneImage': 'Aucune image ne quitte ton réseau.',
 
   // ---- la coquille du direct : panneau lateral, plein ecran, mosaique
   'app.reessayer': 'Réessayer',
@@ -477,7 +477,7 @@ export const fr = {
   'barre.suspendu': 'Enregistrement suspendu',
   'barre.uneHorsLigne': '1 caméra hors ligne',
   'barre.horsLigne': '{n} caméras hors ligne',
-  'barre.prive': 'Aucune image ne quitte votre réseau',
+  'barre.prive': 'Aucune image ne quitte ton réseau',
   'barre.raccourcis': 'Raccourcis',
   'barre.raccourcisTitre': 'Raccourcis clavier (?)',
   'raccourcis.titre': 'Raccourcis clavier',
@@ -528,6 +528,10 @@ export const fr = {
   'tuile.imageCourt': 'Image',
   'tuile.sonCourt': 'Son',
   'tuile.reprise': 'Reprise automatique dans {n} s',
+
+  // Revue du groupe Direct (23.10.2026)
+  'systeme.seuleEnLigne': '1, en ligne',
+  'systeme.seuleHorsLigne': '1, hors ligne',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

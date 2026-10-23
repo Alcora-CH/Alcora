@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ChevronDown, Eye, EyeOff, LayoutGrid } from 'lucide-react';
 import { t, useLangue } from '../i18n';
 import { seuleVisible, titreMasquage } from '../lib/masquage';
@@ -14,19 +14,30 @@ import type { DiscoveredCamera } from '../types/protect';
  * définition la plus fine ou « RTSP désactivé », et ce qu'il faut pour la masquer ou la
  * réafficher. Le remède du RTSP et le lien vers le guide suivent la liste, une seule fois.
  *
- * C'est un menu, pas une fenêtre de saisie : un clic ailleurs le referme.
+ * C'est un panneau dépliant, pas une fenêtre de saisie : un clic ailleurs le referme. Ni
+ * « menu » au sens d'ARIA — qui promet des flèches et ne laisse lire que ses entrées —, ni
+ * cases à cocher : chaque caméra est un bouton bascule, nommé par ce qu'on voit.
  */
-export function MenuCameras({ cameras, masquees, onBasculer, onGuide, sombre }: {
+export function MenuCameras({ cameras, masquees, onBasculer, onGuide, sombre, onOuvert }: {
   cameras: DiscoveredCamera[];
   masquees: string[];
   onBasculer: (id: string) => void;
   onGuide: () => void;
   /** En plein écran, le bouton se pose sur l'image : il prend la matière des voiles. */
   sombre?: boolean;
+  /** Le plein écran garde ses commandes tant que le panneau est ouvert : sinon il
+      s'effacerait sous la souris immobile, invisible mais toujours là. */
+  onOuvert?: (ouvert: boolean) => void;
 }) {
   useLangue();
   const [ouvert, setOuvert] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
+  const idPanneau = useId();
+
+  // onOuvert doit être stable (un setState) : sinon ces effets se rejoueraient à chaque rendu.
+  useEffect(() => { onOuvert?.(ouvert); }, [ouvert, onOuvert]);
+  /* Démonté ouvert (on quitte le plein écran), il ne doit pas laisser les commandes figées. */
+  useEffect(() => () => onOuvert?.(false), [onOuvert]);
 
   useEffect(() => {
     if (!ouvert) return;
@@ -50,7 +61,7 @@ export function MenuCameras({ cameras, masquees, onBasculer, onGuide, sombre }: 
 
   return (
     <div ref={zone} className="relative">
-      <Bouton icone={LayoutGrid} aria-expanded={ouvert} aria-haspopup="true"
+      <Bouton icone={LayoutGrid} aria-expanded={ouvert} aria-controls={idPanneau}
               onClick={() => setOuvert((o) => !o)}
               /* « veil » n'est pas dans une couche Tailwind : il l'emporte sur le fond du bouton. */
               className={cx(sombre && 'veil')} style={sombre ? { color: 'var(--on-1)' } : undefined}>
@@ -62,7 +73,7 @@ export function MenuCameras({ cameras, masquees, onBasculer, onGuide, sombre }: 
       </Bouton>
 
       {ouvert && (
-        <div role="menu" aria-label={t('systeme.cameras')}
+        <div id={idPanneau} role="group" aria-label={t('systeme.cameras')}
              className="m-boite absolute right-0 top-[calc(100%+8px)] z-40 w-[360px] rounded-xl border border-line2 bg-card p-2 shadow-[0_30px_70px_-20px_rgba(0,0,0,.85)]">
           {cameras.length === 0 && (
             <p className="px-2.5 py-2 text-corps text-soft">{t('app.aucuneCamera')}</p>
@@ -83,14 +94,14 @@ export function MenuCameras({ cameras, masquees, onBasculer, onGuide, sombre }: 
                     {best ? `${best.width} × ${best.height}` : t('camera.rtspDesactive')}
                   </div>
                 </div>
-                <Bouton taille="petit" icone={masquee ? EyeOff : Eye} role="menuitemcheckbox"
-                        aria-checked={!masquee}
+                {/* Nommé par ce qu'on lit (« Affichée ») et la caméra ; enfoncé quand l'image est
+                    dans la mosaïque. L'action, elle, est dans l'infobulle. */}
+                <Bouton taille="petit" icone={masquee ? EyeOff : Eye} aria-pressed={!masquee}
                         disabled={seuleVisible(cameras, masquees, c.id)}
                         titre={titreMasquage(cameras, masquees, c.id)}
-                        aria-label={masquee ? t('app.afficherCamera', { nom: c.name })
-                          : t('app.masquerCamera', { nom: c.name })}
                         onClick={() => onBasculer(c.id)}>
                   {masquee ? t('systeme.masquee') : t('systeme.affichee')}
+                  <span className="sr-only">{`, ${c.name}`}</span>
                 </Bouton>
               </div>
             );
