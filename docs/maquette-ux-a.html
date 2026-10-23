@@ -42,8 +42,10 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
   --vert: #74c494; --rouge: #e3735f; --orange: #e0a23c;
   --personne: #dca95c; --vehicule: #86afcf; --animal: #74c494; --son: #b997d6; --mouvement: #6b7480;
   --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  /* Les dimensions de structure : la variante compacte (« B ») les redéfinit. */
+  --rail: 84px; --etat: 34px; --activite: 312px; --bandeau: 44px; --ecart: 16px; --marge: 20px;
   position: absolute; inset: 0; display: grid;
-  grid-template-columns: 84px minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) 34px;
+  grid-template-columns: var(--rail) minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) var(--etat);
   background: var(--nuit); color: var(--lumiere);
   font: 400 13px/1.45 "Atkinson Hyperlegible Next", system-ui, sans-serif;
 }
@@ -119,7 +121,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-indice { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; color: var(--texte3); font-size: 12px; }
 .A-tuile { container-type: inline-size; background: var(--instrument); border: 1px solid var(--ligne2); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px -18px rgba(0,0,0,.7); display: flex; flex-direction: column; }
 .A-tuile.active { border-color: var(--alcor-ligne); box-shadow: 0 0 0 1px var(--alcor-ligne), 0 0 28px -6px rgba(220,169,92,.45), 0 18px 40px -18px rgba(0,0,0,.7); }
-.A-bandeau { height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; }
+.A-bandeau { height: var(--bandeau); flex: none; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; }
 .A-bandeau .nom { font-size: 14px; font-weight: 600; white-space: nowrap; }
 .A-bandeau .canal { color: var(--texte2); font-size: 12.5px; white-space: nowrap; }
 .A-bandeau .direct { display: inline-flex; align-items: center; gap: 6px; color: var(--vert); font-size: 12.5px; }
@@ -142,7 +144,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-image .zoom { position: absolute; left: 10px; bottom: 10px; height: 24px; padding: 0 9px; border-radius: 6px; background: rgba(12,15,20,.78); color: #f2efe8; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
 .A-image .zoom .interpole { color: var(--rouge); }
 .A-image .toast { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); padding: 8px 14px; border-radius: 9px; background: rgba(12,15,20,.92); border: 1px solid var(--ligne2); color: #f2efe8; font-size: 13px; white-space: nowrap; }
-.A-activite { grid-row: 1; grid-column: 3; width: 312px; display: flex; flex-direction: column; background: var(--instrument); border-left: 1px solid var(--ligne); min-height: 0; }
+.A-activite { grid-row: 1; grid-column: 3; width: var(--activite); display: flex; flex-direction: column; background: var(--instrument); border-left: 1px solid var(--ligne); min-height: 0; }
 .A-activite .tete { height: 64px; flex: none; display: flex; align-items: center; padding: 0 12px 0 20px; border-bottom: 1px solid var(--ligne); }
 .A-activite h2 { margin: 0; font-size: 15px; font-weight: 600; }
 .A-activite .tete .A-btn { margin-left: auto; }
@@ -225,6 +227,8 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .frise .grad { width: 1px; background: rgba(255,255,255,.12); }
 .frise .lab { bottom: 3px; transform: translateX(-50%); font-size: 11px; color: var(--texte3); pointer-events: none; }
 .frise .rep { width: 3px; border-radius: 2px; pointer-events: none; }
+.frise .rep.vis { top: 8px; height: 20px; }
+.frise .rep.mvt { top: 18px; height: 10px; }
 .frise .tete { top: -2px; bottom: -2px; width: 2px; background: var(--alcor); box-shadow: 0 0 10px rgba(220,169,92,.8); pointer-events: none; }
 .frise .survol { width: 1px; background: rgba(255,255,255,.4); pointer-events: none; display: none; }
 .lecture-survol { height: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12.5px; }
@@ -283,6 +287,11 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-semaine .barre { position: relative; height: 12px; border-radius: 3px; background: var(--graphite); }
 .A-semaine .barre i { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--alcor); opacity: .75; }
 .A-semaine .axe { grid-column: 2; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.A-maitre { display: flex; align-items: center; gap: 12px; padding: 6px 14px 6px 10px; border-radius: 10px; background: var(--graphite); border: 1px solid var(--ligne2); }
+.A-maitre .t { font-weight: 600; }
+.A-maitre .p { font-size: 12px; color: var(--texte2); }
+.A-veille .detail h3.suite, .A-raccourcis h3.suite { margin-top: 22px; }
+.A-entre { color: var(--texte2); font-size: 12.5px; margin: 0 4px 0 8px; }
 .A-enreg { display: inline-flex; align-items: center; gap: 6px; color: var(--vert); font-size: 12.5px; }
 
 /* ---------------------------------------------------------------- Réglages */
@@ -330,6 +339,9 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-table .flux + .flux { margin-top: 3px; }
 .A-table .flux b { font-weight: 500; display: inline-block; width: 72px; }
 .A-table .flux span { color: var(--texte3); margin-left: 8px; }
+
+.A-sys-cams { margin-top: 18px; }
+.A-sys-titre { margin: 0; padding: 16px 18px 12px; font-size: 15px; font-weight: 600; }
 
 /* ---------------------------------------------------------------- Raccourcis */
 .A-raccourcis { width: min(880px, 94vw); max-height: 82vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px -30px rgba(0,0,0,.9); }
@@ -399,6 +411,10 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-guide { position: sticky; top: 20px; padding: 18px 20px; }
 .A-guide .cadre { margin-top: 14px; height: 340px; border-radius: 10px; border: 1px solid var(--ligne2); background: #0b1017; display: grid; place-items: center; color: var(--texte3); font-size: 12.5px; text-align: center; padding: 20px; }
 .A-guide .cadre ol { text-align: left; margin: 0; padding-left: 20px; color: var(--texte2); line-height: 1.9; }
+.A-details { margin-top: 10px; }
+.A-details summary { cursor: pointer; color: var(--texte2); font-size: 12.5px; }
+.A-details-corps { margin-top: 8px; padding: 12px 14px; border-radius: 9px; background: var(--graphite); color: var(--texte2); font-size: 13px; line-height: 1.55; }
+.A-guide-titre { margin: 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 .A-divulg { color: var(--texte2); font-size: 13px; line-height: 1.55; }
 .A-divulg + .A-divulg { margin-top: 8px; }
 
@@ -429,6 +445,235 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-nouv .corps li + li { margin-top: 7px; }
 .A-nouv .pied { padding: 14px 20px; border-top: 1px solid var(--ligne); }
 .A-nouv .pied .A-btn { width: 100%; justify-content: center; height: 38px; }
+
+/* =====================================================================
+   VARIANTE B — DENSITÉ « LINEAR » : les tailles seules.
+   Couleurs, disposition et contenu sont ceux de A. Repères pris sur Linear :
+   texte courant 12,5 px, secondaire 11,5, titres 13-14 ; boutons 28 et 24 px ;
+   en-têtes 46 px ; rangées 32-36 px ; icônes 14 px ; marges de 12 à 14 px.
+   ===================================================================== */
+.appA.compact { font-size: 12.5px; --rail: 64px; --etat: 28px; --activite: 264px; --bandeau: 34px; --ecart: 10px; --marge: 12px; }
+.appA.compact svg.i { width: 14px; height: 14px; }
+/* rail */
+.compact .A-rail { padding: 10px 6px; }
+.compact .A-rail .marque { height: 36px; margin-bottom: 6px; }
+.compact .A-rail .marque svg { width: 22px; height: 22px; }
+.compact .A-rail .esp { padding: 7px 2px 6px; gap: 3px; font-size: 10.5px; border-radius: 7px; }
+.compact .A-rail .esp svg { width: 17px; height: 17px; }
+.compact .A-rail .esp[aria-current="true"]::before { left: -6px; top: 9px; bottom: 9px; }
+/* cadre et composants */
+.compact .A-tete { height: 46px; gap: 12px; padding: 0 12px 0 16px; }
+.compact .A-tete h1 { font-size: 14px; }
+.compact .A-tete .sous { font-size: 12px; }
+.compact .A-tete .actions { gap: 6px; }
+.compact .A-btn { height: 28px; padding: 0 10px; border-radius: 6px; font-size: 12.5px; gap: 6px; }
+.compact .A-btn.petit { height: 24px; padding: 0 7px; font-size: 12px; border-radius: 5px; gap: 5px; }
+.compact .A-btn.icone { width: 28px; padding: 0; }
+.compact .A-btn.petit.icone { width: 24px; }
+.compact .A-btn .compte { font-size: 11.5px; }
+.compact .A-kbd { font-size: 11px; line-height: 16px; padding: 0 4px; }
+.compact .A-seg { padding: 2px; border-radius: 7px; }
+.compact .A-seg button { height: 22px; padding: 0 9px; font-size: 12px; border-radius: 5px; }
+.compact .A-puces { gap: 5px; }
+.compact .A-puce { height: 23px; padding: 0 9px; border-radius: 12px; font-size: 12px; gap: 6px; }
+.compact .A-puce .n { font-size: 11px; }
+.compact .A-interrupteur { width: 32px; height: 18px; }
+.compact .A-interrupteur::after { width: 12px; height: 12px; }
+.compact .A-interrupteur[aria-checked="true"]::after { left: 17px; }
+.compact .A-champ { height: 30px; padding: 0 10px; border-radius: 6px; }
+.compact .A-champ input { font-size: 12.5px; }
+.compact .A-etiq { font-size: 12px; margin-bottom: 5px; }
+.compact .A-aide { font-size: 11.5px; margin-top: 4px; }
+.compact .A-carte-p { border-radius: 8px; }
+/* mur */
+.compact .A-indice { font-size: 11px; bottom: 7px; }
+.compact .A-grille { bottom: 24px; }
+.compact .A-tuile { border-radius: 8px; }
+.compact .A-bandeau { gap: 8px; padding: 0 5px 0 10px; }
+.compact .A-bandeau .nom { font-size: 13px; }
+.compact .A-bandeau .canal, .compact .A-bandeau .direct, .compact .A-bandeau .hors { font-size: 11.5px; }
+.compact .A-bandeau .temps { font-size: 12.5px; }
+@container (max-width: 640px) { .compact .A-bandeau .cmds .A-btn { width: 24px; padding: 0; } }
+.compact .A-image .pastille { height: 22px; padding: 0 8px; font-size: 11.5px; top: 8px; right: 8px; }
+.compact .A-image .zoom { height: 20px; padding: 0 7px; font-size: 11px; left: 8px; bottom: 8px; }
+.compact .A-image .toast { padding: 6px 12px; font-size: 12px; bottom: 36px; }
+/* activité */
+.compact .A-activite .tete { height: 46px; padding: 0 8px 0 14px; }
+.compact .A-activite h2 { font-size: 13px; }
+.compact .A-bloc { padding: 12px 14px; }
+.compact .A-bloc h3 { font-size: 12px; margin-bottom: 8px; }
+.compact .A-histo { height: 44px; }
+.compact .A-axe { font-size: 10.5px; margin-top: 4px; }
+.compact .A-recentes { padding: 4px 6px; }
+.compact .A-recentes li { gap: 10px; padding: 5px 8px; border-radius: 6px; }
+.compact .A-recentes .vig { width: 56px; height: 32px; border-radius: 4px; }
+.compact .A-recentes .ou { font-size: 11.5px; }
+.compact .A-recentes .quand { font-size: 11px; }
+.compact .A-lien { margin: 4px 14px 12px; font-size: 12px; }
+/* barre d'état */
+.compact .A-etat { font-size: 11.5px; padding: 0 6px 0 12px; }
+.compact .A-etat > span { padding: 0 10px; height: 14px; gap: 6px; }
+.compact .A-etat > span:first-child { padding-left: 0; }
+.compact .A-etat .barre { width: 36px; height: 4px; }
+/* menus du direct */
+.compact .A-cams { width: 300px; top: 40px; right: 12px; padding: 6px; }
+.compact .A-cams .cam { gap: 10px; padding: 6px 8px; border-radius: 6px; }
+.compact .A-cams .def { font-size: 11.5px; }
+.compact .A-cams .remede { font-size: 11.5px; padding: 8px 10px; margin: 4px 8px; }
+.compact .A-maj { top: 56px; font-size: 12px; padding: 6px 6px 6px 12px; gap: 10px; }
+/* relecture */
+.compact .A-rel { gap: 10px; padding: 12px 14px; }
+.compact .A-chip { height: 28px; font-size: 12px; border-radius: 6px; padding: 0 10px 0 3px; gap: 6px; }
+.compact .A-chip .mini { width: 34px; height: 20px; border-radius: 4px; }
+.compact .A-console { padding: 8px 12px 6px; }
+.compact .A-transport .lire { width: 30px; height: 30px; border-radius: 7px; }
+.compact .A-transport .lire svg { width: 14px; height: 14px; }
+.compact .A-transport .t { font-size: 13px; margin: 0 10px 0 8px; }
+.compact .A-frise-tete { margin: 8px 0 4px; font-size: 11.5px; }
+.compact .frise { height: 40px; border-radius: 6px; }
+.compact .frise .lab { font-size: 10px; }
+.compact .frise .rep.vis { top: 6px; height: 16px; }
+.compact .frise .rep.mvt { top: 14px; height: 8px; }
+.compact .lecture-survol { font-size: 11.5px; height: 16px; }
+.compact .A-filtres { margin-bottom: 6px; gap: 5px; }
+.compact .A-filtres .compte { font-size: 11.5px; }
+.compact .A-cartes { gap: 8px; }
+.compact .A-carte { width: 108px; border-radius: 6px; }
+.compact .A-carte .pied { padding: 4px 6px; font-size: 11px; }
+/* détections */
+.compact .A-det { grid-template-columns: 248px minmax(0, 1fr); }
+.compact .A-filtres-col { padding: 12px 14px 16px; }
+.compact .A-filtres-col section + section { margin-top: 16px; }
+.compact .A-filtres-col h2 { font-size: 12px; margin-bottom: 7px; }
+.compact .A-graduation { font-size: 11px; }
+.compact .A-res-barre { padding: 8px 14px; font-size: 12px; gap: 10px; }
+.compact .A-res-barre .note { font-size: 11.5px; }
+.compact .A-grille-det { padding: 12px 14px; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); }
+.compact .A-objet { border-radius: 7px; }
+.compact .A-objet .infos { padding: 6px 8px 7px; row-gap: 2px; }
+.compact .A-objet .quoi { font-size: 12px; gap: 6px; }
+.compact .A-objet .ech { width: 8px; height: 8px; }
+.compact .A-objet .score { font-size: 11.5px; }
+.compact .A-objet .ou { font-size: 11px; }
+.compact .A-objet .ident { width: 20px; height: 20px; }
+.compact .A-objet .aller { top: 6px; left: 6px; }
+/* alertes */
+.compact .A-page { padding: 14px 16px 28px; max-width: 960px; }
+.compact .A-intro { font-size: 12px; margin-bottom: 12px; }
+.compact .A-maitre { gap: 10px; padding: 4px 10px 4px 8px; border-radius: 7px; }
+.compact .A-maitre .p { font-size: 11px; }
+.compact .A-enreg { font-size: 11.5px; }
+.compact .A-veille .ligne { grid-template-columns: 28px minmax(0, 1fr) auto auto 20px; gap: 12px; padding: 8px 12px; }
+.compact .A-veille .cloche { width: 28px; height: 28px; border-radius: 6px; }
+.compact .A-veille .nom { font-size: 13px; }
+.compact .A-veille .resume, .compact .A-veille .quand, .compact .A-veille .cout { font-size: 11.5px; }
+.compact .A-veille .detail { gap: 16px 26px; padding: 4px 12px 14px 52px; }
+.compact .A-veille .detail h3 { font-size: 12px; margin-bottom: 7px; }
+.compact .A-veille .detail h3.suite, .compact .A-raccourcis h3.suite { margin-top: 14px; }
+.compact .A-entre { font-size: 11.5px; }
+.compact .A-semaine { font-size: 11px; gap: 3px 8px; margin-top: 8px; }
+.compact .A-semaine .barre { height: 9px; }
+/* réglages */
+.compact .A-reg { grid-template-columns: 180px minmax(0, 680px); gap: 28px; padding: 16px 16px 40px; }
+.compact .A-sommaire a { padding: 5px 10px; font-size: 12.5px; border-radius: 6px; }
+.compact .A-section + .A-section { margin-top: 22px; }
+.compact .A-section h2 { font-size: 13px; margin-bottom: 7px; }
+.compact .A-rangee { gap: 16px; padding: 10px 14px; }
+.compact .A-rangee .titre { font-size: 12.5px; }
+.compact .A-rangee .expl, .compact .A-rangee .val { font-size: 11.5px; }
+.compact .A-version { gap: 10px; }
+.compact .A-version svg { width: 26px; height: 26px; }
+.compact .A-version .v { font-size: 14px; }
+.compact .A-histoire { padding: 10px 14px; }
+.compact .A-histoire .date { font-size: 11.5px; }
+.compact .A-histoire ul { font-size: 12px; }
+.compact .A-chemin { font-size: 11.5px; }
+.compact .A-avert { font-size: 12px; padding: 8px 10px; }
+/* système */
+.compact .A-sys { padding: 14px 16px 28px; }
+.compact .A-sys-haut { gap: 12px; }
+.compact .A-sys-bloc { padding: 10px 12px 12px; }
+.compact .A-sys-bloc h2 { font-size: 13px; margin-bottom: 8px; }
+.compact .A-ligne { font-size: 12px; padding: 2px 0; }
+.compact .A-note { font-size: 11px; }
+.compact .A-defs span { font-size: 11px; }
+.compact .A-etatrelais { padding: 7px 9px; margin-bottom: 8px; }
+.compact .A-prive { font-size: 11.5px; margin-top: 10px; }
+.compact .A-disque { height: 5px; margin: 8px 0 4px; }
+.compact .A-sys-cams { margin-top: 12px; }
+.compact .A-sys-titre { padding: 10px 12px 8px; font-size: 13px; }
+.compact .A-table { font-size: 12px; }
+.compact .A-table th { font-size: 11.5px; padding: 6px 12px; }
+.compact .A-table td { padding: 7px 12px; }
+.compact .A-table .sec { font-size: 11.5px; }
+.compact .A-table .flux b { width: 60px; }
+/* connexion */
+.compact .A-cnx-page { padding: 24px 20px 0; max-width: 1040px; }
+.compact .A-cnx-tete { gap: 10px; }
+.compact .A-cnx-tete svg { width: 26px; height: 26px; }
+.compact .A-cnx-tete h1 { font-size: 16px; }
+.compact .A-cnx-sous { font-size: 12.5px; margin: 0 0 10px 36px; }
+.compact .A-demo { font-size: 11.5px; margin: 0 0 16px 36px; padding: 4px 10px; }
+.compact .A-cnx-colonnes { grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; }
+.compact .A-cnx-form { gap: 10px; }
+.compact .A-bloc-f { padding: 12px 14px; }
+.compact .A-bloc-f h2 { font-size: 13px; margin-bottom: 9px; }
+.compact .A-bloc-f .champ + .champ { margin-top: 10px; }
+.compact .A-etapes { gap: 7px; }
+.compact .A-etapes li { font-size: 12px; gap: 8px; }
+.compact .A-etapes .ic { width: 15px; height: 15px; }
+.compact .A-etapes .ic svg { width: 10px; height: 10px; }
+.compact .A-etapes .msg { font-size: 11.5px; }
+.compact .A-trouvees { padding: 8px 10px; margin-top: 10px; }
+.compact .A-trouvees h3 { font-size: 12px; }
+.compact .A-trouvees li { font-size: 12px; }
+.compact .A-case { font-size: 12.5px; margin-top: 10px; }
+.compact .A-actions { padding: 10px 14px; margin: 2px -14px 0; }
+.compact .A-guide { padding: 12px 14px; }
+.compact .A-guide-titre { font-size: 13px; }
+.compact .A-guide .cadre { height: 280px; margin-top: 10px; font-size: 11.5px; }
+.compact .A-divulg { font-size: 12px; }
+.compact .A-details summary { font-size: 11.5px; }
+.compact .A-details-corps { font-size: 12px; padding: 8px 10px; border-radius: 6px; }
+/* superpositions */
+.compact .A-extrait { inset: 54px 32px 24px; }
+.compact .A-extrait .tete { padding: 8px 10px 8px 14px; gap: 10px; }
+.compact .A-extrait .tete .titre { font-size: 13px; }
+.compact .A-extrait .tete .sous { font-size: 11.5px; }
+.compact .A-extrait .transport { padding: 8px 12px; gap: 8px; }
+.compact .A-extrait .transport .lire { width: 30px; height: 30px; border-radius: 7px; }
+.compact .A-extrait .transport .lire svg { width: 13px; height: 13px; }
+.compact .A-extrait .transport .t { font-size: 12px; }
+.compact .A-extrait .pied { padding: 6px 14px; font-size: 11.5px; }
+.compact .A-nouv { width: min(500px, 92vw); }
+.compact .A-nouv .tete { padding: 10px 10px 10px 14px; gap: 10px; }
+.compact .A-nouv .tete svg.m { width: 22px; height: 22px; }
+.compact .A-nouv .tete .titre { font-size: 13px; }
+.compact .A-nouv .tete .sous { font-size: 11.5px; }
+.compact .A-nouv .corps { padding: 10px 14px; }
+.compact .A-nouv .corps h3 { font-size: 12px; }
+.compact .A-nouv .corps ul { font-size: 12px; }
+.compact .A-nouv .pied { padding: 10px 14px; }
+.compact .A-nouv .pied .A-btn { height: 30px; }
+.compact .A-raccourcis { width: min(780px, 94vw); }
+.compact .A-raccourcis .tete { padding: 10px 10px 10px 14px; }
+.compact .A-raccourcis .tete .titre { font-size: 13px; }
+.compact .A-raccourcis .corps { padding: 12px 14px 14px; gap: 16px 22px; }
+.compact .A-raccourcis h3 { font-size: 12px; margin-bottom: 7px; }
+.compact .A-raccourcis dl { font-size: 12px; gap: 6px 10px; }
+/* planche des états */
+.compact .A-planche-page { padding: 16px 18px 32px; }
+.compact.A-planche h1 { font-size: 15px; }
+.compact.A-planche .intro { font-size: 12px; margin-bottom: 14px; }
+.compact .A-etats { gap: 14px; }
+.compact .A-etat-carte > .leg { padding: 8px 12px; }
+.compact .A-etat-carte > .leg p { font-size: 11.5px; }
+.compact .A-etat-carte .scene { height: 220px; }
+.compact .A-etat-carte .barre-etat { height: 26px; font-size: 11.5px; }
+.compact .A-panne .titre { font-size: 13px; }
+.compact .A-panne .prochaine { font-size: 11.5px; }
+.compact .A-bandeau-rouge { font-size: 12px; padding: 8px 10px; }
+.compact .ajout-a { font-size: 10.5px; }
 
 /* ===================================================================== carte */
 .carte { position: absolute; inset: 0; overflow: auto; background: #f1efe9; color: #23252a; font: 400 14px/1.5 "Barlow", system-ui, sans-serif; padding: 28px 32px 60px; }
@@ -487,10 +732,10 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 </svg>
 
 <div class="banc">
-  <b>Alcora — maquette A</b>
+  <b>Maquette A</b>
   <div class="seg" id="choixVue">
     <button data-vue="direct" aria-pressed="true">Direct</button>
-    <button data-vue="ouvert">Direct, menus</button>
+    <button data-vue="ouvert">Menus</button>
     <button data-vue="extrait">Extrait</button>
     <button data-vue="relecture">Relecture</button>
     <button data-vue="detections">Détections</button>
@@ -500,10 +745,14 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
     <button data-vue="connexion">Connexion</button>
     <button data-vue="nouveautes">Nouveautés</button>
     <button data-vue="raccourcis">Raccourcis</button>
-    <button data-vue="etats">États dégradés</button>
-    <button data-vue="carte">Où va chaque élément</button>
+    <button data-vue="etats">États</button>
+    <button data-vue="carte">Carte</button>
   </div>
-  <span class="note">Données et images fictives</span>
+  <div class="seg" id="choixTaille" title="Seules les tailles changent">
+    <button data-taille="a" aria-pressed="true">Taille A</button>
+    <button data-taille="b" aria-pressed="false">B (Linear)</button>
+  </div>
+  <span class="note">Données fictives</span>
 </div>
 
 <main id="scene">
@@ -669,9 +918,9 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
       <span class="sous">Ce qui mérite qu'Alcora te prévienne sur ce PC, et quand</span>
       <div class="actions">
         <span class="A-enreg"><svg class="i"><use href="#i-ok"/></svg>Enregistré</span>
-        <div style="display:flex;align-items:center;gap:12px;padding:6px 14px 6px 10px;border-radius:10px;background:var(--graphite);border:1px solid var(--ligne2)">
+        <div class="A-maitre">
           <button class="A-interrupteur vert" role="switch" aria-checked="true" aria-label="Désactiver la veille"></button>
-          <div><div style="font-weight:600">Veille active</div><div style="font-size:12px;color:var(--texte2)">profil Nuit</div></div>
+          <div><div class="t">Veille active</div><div class="p">profil Nuit</div></div>
         </div>
       </div>
     </header>
@@ -695,17 +944,17 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
                   <button class="A-puce urgence">Bris de verre</button><button class="A-puce urgence">Fumée</button><button class="A-puce urgence">Sirène</button><button class="A-puce urgence">Monoxyde</button>
                   <button class="A-puce">Aboiement <span class="n">6/j</span></button><button class="A-puce">Parole <span class="n" style="color:var(--rouge)">88/j</span></button><button class="A-puce">Pleurs</button><button class="A-puce">Mouvement <span class="n" style="color:var(--rouge)">157/j</span></button>
                 </div>
-                <h3 style="margin-top:22px">Sur quelles caméras</h3>
+                <h3 class="suite">Sur quelles caméras</h3>
                 <div class="A-puces"><button class="A-puce" aria-pressed="true">Toutes</button><button class="A-puce">Allée</button><button class="A-puce">Bureaux</button></div>
-                <h3 style="margin-top:22px">Ce que ça fait</h3>
-                <div class="A-puces" style="align-items:center"><button class="A-puce" aria-pressed="true">Son</button><span style="color:var(--texte2);font-size:12.5px;margin:0 4px 0 8px">au plus une bulle toutes les</span><button class="A-puce">1 min</button><button class="A-puce" aria-pressed="true">5 min</button><button class="A-puce">15 min</button><button class="A-puce">1 h</button></div>
+                <h3 class="suite">Ce que ça fait</h3>
+                <div class="A-puces" style="align-items:center"><button class="A-puce" aria-pressed="true">Son</button><span class="A-entre">au plus une bulle toutes les</span><button class="A-puce">1 min</button><button class="A-puce" aria-pressed="true">5 min</button><button class="A-puce">15 min</button><button class="A-puce">1 h</button></div>
                 <p class="A-aide">Une personne qui reste dans le champ produit une détection toutes les quinze secondes. Sans cette retenue, autant de bulles.</p>
               </div>
               <div>
                 <h3>Quand</h3>
                 <div class="A-seg"><button>Toujours</button><button aria-pressed="true">Quand la veille est active</button><button>Sur un horaire à moi</button></div>
                 <p class="A-aide">Suit l'interrupteur et ses horaires.</p>
-                <h3 style="margin-top:22px">Selon quel horaire</h3>
+                <h3 class="suite">Selon quel horaire</h3>
                 <div class="A-puces"><button class="A-puce">En permanence</button><button class="A-puce" aria-pressed="true">Nuit</button><button class="A-puce">Absence</button></div>
                 <div class="A-semaine" id="semaine"></div>
               </div>
@@ -884,8 +1133,8 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
             <div class="A-ligne"><span class="k">Allumé depuis</span><span class="v">24 j</span></div>
           </section>
         </div>
-        <section class="A-carte-p" style="margin-top:18px">
-          <h2 style="margin:0;padding:16px 18px 12px;font-size:15px;font-weight:600">Caméras</h2>
+        <section class="A-carte-p A-sys-cams">
+          <h2 class="A-sys-titre">Caméras</h2>
           <table class="A-table">
             <thead><tr><th>Caméra</th><th>État</th><th>Flux</th><th>Archive</th><th>Dernière détection</th><th>Mosaïque</th></tr></thead>
             <tbody>
@@ -968,8 +1217,8 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
               <div class="champ"><label class="A-etiq">Identifiant</label><div class="A-champ"><input value="alcora-lecture" spellcheck="false"></div><p class="A-aide">Utilise un compte dédié à cette application, avec des droits limités.</p></div>
               <div class="champ"><label class="A-etiq">Mot de passe</label><div class="A-champ"><input type="password" value="motdepassefictif"><button class="A-btn petit icone fantome" title="Afficher le mot de passe"><svg class="i"><use href="#i-oeil"/></svg></button></div></div>
               <div class="champ"><label class="A-etiq">Clé d'authentification à deux facteurs</label><div class="A-champ"><input class="mono-in" type="password" value="cle-fictive" placeholder="laisser vide si le compte n'en a pas"><button class="A-btn petit icone fantome" title="Afficher la clé"><svg class="i"><use href="#i-oeil"/></svg></button></div>
-                <details style="margin-top:10px" open><summary style="cursor:pointer;color:var(--texte2);font-size:12.5px">Où trouver cette clé ?</summary>
-                  <div style="margin-top:8px;padding:12px 14px;border-radius:9px;background:var(--graphite);color:var(--texte2);font-size:13px;line-height:1.55">
+                <details class="A-details" open><summary>Où trouver cette clé ?</summary>
+                  <div class="A-details-corps">
                     <p>Sur le site de gestion de ton compte Ubiquiti, lors de l'ajout d'une application d'authentification, choisis « saisie manuelle » plutôt que de scanner le code : la clé s'affiche alors en toutes lettres.</p>
                     <p style="margin-top:8px">Garde cette même clé enrôlée sur ton téléphone. Si cette application en devenait l'unique détentrice, perdre ce PC te bloquerait l'accès à ton compte.</p>
                   </div></details>
@@ -999,7 +1248,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
             <div class="A-actions"><button class="A-btn">Tester la connexion</button><button class="A-btn primaire">Enregistrer et démarrer</button></div>
           </div>
           <aside class="A-carte-p A-guide">
-            <h2 style="margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px"><svg class="i" style="color:var(--alcor)"><use href="#i-livre"/></svg>À préparer sur la console<button class="A-btn petit" style="margin-left:auto"><svg class="i"><use href="#i-plein"/></svg>Agrandir</button></h2>
+            <h2 class="A-guide-titre"><svg class="i" style="color:var(--alcor)"><use href="#i-livre"/></svg>À préparer sur la console<button class="A-btn petit" style="margin-left:auto"><svg class="i"><use href="#i-plein"/></svg>Agrandir</button></h2>
             <p class="A-aide" style="color:var(--texte2)">Le RTSP activé sur chaque caméra (Protect → caméra → Avancé). Alcora ne demande jamais d'URL : elle lit les adresses toute seule, mais le RTSP doit être ouvert.</p>
             <div class="cadre"><div><p style="margin-bottom:12px">Le guide animé de la console, inchangé (guide-rtsp.html)</p><ol><li>Ouvrir Protect</li><li>Choisir la caméra</li><li>Section Avancé</li><li>Activer un flux RTSP</li></ol></div></div>
             <p class="A-aide" style="margin-top:14px;color:var(--texte2)">Un compte dédié à Alcora, avec droits de visionnage — pas ton compte propriétaire.</p>
@@ -1069,7 +1318,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
             <dt><span class="A-kbd">+</span> <span class="A-kbd">−</span></dt><dd>Zoomer ou dézoomer</dd>
             <dt><span class="A-kbd">Échap</span></dt><dd>Fermer</dd>
           </dl>
-          <h3 style="margin-top:20px">Partout</h3>
+          <h3 class="suite">Partout</h3>
           <dl><dt><span class="A-kbd">?</span></dt><dd>Afficher ces raccourcis</dd></dl>
         </div>
       </div>
@@ -1264,6 +1513,16 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'Escape' && ['raccourcis', 'extrait', 'nouveautes'].includes(app.dataset.vue)) choix.querySelector('[data-vue="direct"]').click();
 });
 
+/* ---------------------------------------------------------------- taille A / B */
+const choixTaille = document.getElementById('choixTaille');
+function taille(t) {
+  for (const x of choixTaille.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x.dataset.taille === t));
+  for (const el of document.querySelectorAll('.appA')) el.classList.toggle('compact', t === 'b');
+  try { localStorage.setItem('maquette.taille', t); } catch { /* sans mémoire, la maquette marche */ }
+  requestAnimationFrame(caler);
+}
+choixTaille.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) taille(b.dataset.taille); });
+
 /* ---------------------------------------------------------------- horloge */
 function horloge() { const h = new Date().toLocaleTimeString('fr-CH'); for (const n of document.querySelectorAll('.horloge')) n.textContent = h; }
 horloge(); setInterval(horloge, 1000);
@@ -1271,7 +1530,9 @@ horloge(); setInterval(horloge, 1000);
 /* ---------------------------------------------------------------- mosaïque */
 function caler() {
   const g = document.getElementById('grilleA'); if (!g.clientWidth) return;
-  const n = 2, bandeau = 44, ecart = 16, marge = 20;
+  const css = getComputedStyle(app), px = (v) => parseFloat(css.getPropertyValue(v));
+  const n = 2, bandeau = px('--bandeau'), ecart = px('--ecart'), marge = px('--marge');
+  g.style.gap = `${ecart}px`; g.style.padding = `${marge}px`;
   const L = g.clientWidth - 2 * marge, H = g.clientHeight - 2 * marge;
   let mieux = null;
   for (let col = 1; col <= n; col++) {
@@ -1349,7 +1610,7 @@ document.getElementById('cartesA').innerHTML = [...det].reverse().slice(0, 30).m
   let h = `<div class="enreg" style="left:0;right:${(1 - f(MAINTENANT)) * 100}%;background:repeating-linear-gradient(90deg,rgba(220,169,92,.14) 0 2px,rgba(220,169,92,.08) 2px 4px)"></div>`;
   h += `<div class="futur" style="left:${f(MAINTENANT) * 100}%;right:0;background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.05) 5px 10px)"></div>`;
   for (let k = 3; k < 24; k += 3) h += `<div class="grad" style="left:${k / 24 * 100}%"></div><span class="lab" style="left:${k / 24 * 100}%">${String(k).padStart(2, '0')} h</span>`;
-  for (const d of det) h += `<div class="rep" style="left:${f(d.t) * 100}%;top:${d.genre === 'motion' ? 18 : 8}px;height:${d.genre === 'motion' ? 10 : 20}px;background:var(--${VAR[d.genre]})"></div>`;
+  for (const d of det) h += `<div class="rep ${d.genre === 'motion' ? 'mvt' : 'vis'}" style="left:${f(d.t) * 100}%;background:var(--${VAR[d.genre]})"></div>`;
   h += `<div class="tete" style="left:${f(INSTANT) * 100}%"></div><div class="survol"></div>`;
   el.innerHTML = h;
   const trait = el.querySelector('.survol');
@@ -1401,6 +1662,8 @@ document.getElementById('cartesA').innerHTML = [...det].reverse().slice(0, 30).m
 })();
 
 afficher('direct');
+let tailleGardee = 'a'; try { tailleGardee = localStorage.getItem('maquette.taille') || 'a'; } catch { /* idem */ }
+taille(tailleGardee);
 </script>
 </body>
 </html>
