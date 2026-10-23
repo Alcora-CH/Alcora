@@ -449,51 +449,19 @@ body {
 
 /* ---------------------------------------------------- L'activité en cours
 
-   Reprise du halo de Protect, choisi le 01.08.2026 parmi trois traitements
-   (docs/maquette-activite.html) : un segment lumineux parcourt le cadre tant que la
-   détection dure.
-
-   Le halo est posé sur le CADRE, jamais en voile sur l'image : masquer ce qu'on veut
-   justement faire regarder serait un contresens. Le masque à deux couches découpe
-   l'intérieur du dégradé conique, si bien que seule la bordure de deux pixels reçoit la
-   lumière.
-
-   `@property` est nécessaire : un angle déclaré comme simple variable CSS n'est pas
-   interpolable, et l'animation sauterait de 0 à 360° sans passer par les valeurs
-   intermédiaires. Chromium le gère depuis longtemps, et Alcora n'a que lui.
+   Le halo tournant de Protect (choisi le 01.08.2026, docs/maquette-activite.html) animait un
+   dégradé conique : le navigateur le repeignait à chaque image tant que la détection
+   durait. La direction « Observatoire » (23.10.2026) le remplace par un cadre d'or FIXE
+   (CameraTile.tsx) ; seul le point de la pastille respire encore, en opacité — le
+   compositeur s'en charge sans rien repeindre.
 
    Deux minutes de garde-fou côté application : si la trame de fin n'arrive jamais —
-   liaison coupée — le halo s'éteint seul plutôt que de tourner toute la nuit. */
-@property --angle-activite {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
-.halo-activite {
-  padding: 2px;
-  background: conic-gradient(from var(--angle-activite),
-              transparent 0deg 250deg,
-              var(--accent) 300deg,
-              var(--accent-d) 332deg,
-              transparent 360deg);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: halo-tourne 2.6s linear infinite;
-}
-@keyframes halo-tourne { to { --angle-activite: 360deg; } }
-
+   liaison coupée — le cadre s'éteint seul plutôt que de rester allumé toute la nuit. */
 .point-activite { animation: point-respire 1.4s ease-in-out infinite; }
 @keyframes point-respire { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
 
-/* Le mouvement peut gêner, et l'information ne doit pas en dépendre : à défaut de rotation,
-   le cadre reste allumé en continu. Ce qui compte est de savoir OÙ il se passe quelque
-   chose, pas que ça tourne. */
+/* Le mouvement peut gêner, et l'information ne doit pas en dépendre : le point reste allumé,
+   le cadre d'or dit toujours OÙ il se passe quelque chose. */
 @media (prefers-reduced-motion: reduce) {
-  .halo-activite {
-    animation: none;
-    background: var(--accent);
-  }
   .point-activite { animation: none; }
 }

@@ -98,6 +98,21 @@ Chaque étape finit par une vérification ; rien ne passe à la suivante sans el
      ou que la fenêtre est cachée, rendus React inutiles supprimés.
    - Cibles chiffrées fixées après la mesure de l'étape 1 sur un PC plus faible.
 
+## Où en est le chantier
+
+- **Étape 1** : la mesure intégrée est sur `main` (97ce7a7, lignes « metrics » du journal) ;
+  Electron 45 attend qu'une 45.0.x ait mûri (la 45.0.0 date du 21.10.2026).
+- **Étape 4** : fondations sur la branche `ux-fondations` (polices, palette, surfaces pleines,
+  ciel fixe, composants communs).
+- **Étape 5, premier groupe — mur, panneau et rail : codé le 23.10.2026** sur la même
+  branche, en six commits vérifiés un à un dans la démo (français, allemand, italien, de
+  900 à 1600 px) : rail nommé, barre d'état, page Système, fenêtre des raccourcis, en-tête
+  du direct, menu Caméras, colonne Activité, bandeau des tuiles ; panneau « Surveillance »
+  retiré, chacun de ses éléments relogé (`docs/inventaire-ecrans.md`, section 5).
+  **Reste pour ce groupe** : les captures et mesures avant/après sur le poste (la démo n'a
+  pas de flux vidéo, et la mesure arrive avec la version Electron 45), puis l'essai de
+  Thomas. Rien n'est publié : la branche attend la version Electron 45.
+
 ## Ce qui n'est pas dans ce chantier
 
 Migration de la clé de signature vers la puce TPM (prévue avec une version proche, sur

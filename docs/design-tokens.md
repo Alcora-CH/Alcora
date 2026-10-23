@@ -37,8 +37,8 @@ La rampe `--on-*` (neutre) reste réservée à ce qui se pose **sur la vidéo**.
 
 | Classe | Taille | Rôle |
 |---|---|---|
-| `text-micro` | 11 px | graduations, libellés du rail, comptes dans une puce |
-| `text-meta` | 12 px | précisions, aides, petits boutons |
+| `text-micro` | 11 px | graduations, comptes dans une puce |
+| `text-meta` | 12 px | précisions, aides, petits boutons, libellés du rail, barre d'état |
 | `text-corps` | 13 px | le texte courant, les boutons, les champs |
 | `text-titre` | 15 px | titres de section |
 | `text-ecran` | 19 px | le titre de chaque écran |
@@ -61,6 +61,22 @@ s'écrivent en casse ordinaire — plus de petites capitales espacées.
 titre obligatoire), `Segment`, `Puce`, `Interrupteur`, `Champ`, et dans `Cadre.tsx` :
 `EnTete`, `Carte`, `Section`, `Rangee`, `Touche`. Un écran ne style plus ses boutons sur
 place : il emploie ceux-ci.
+
+## Le cadre (`v2/web/src/cadre/`)
+
+Ce qui entoure tous les écrans : `Rail` (84 px au moins, icône et nom, repère d'or qui
+glisse), `BarreEtat` (34 px, sur tous les écrans, se resserre par requêtes de conteneur),
+`Horloge` (seule à se redessiner chaque seconde), `MenuCameras` (le direct et le plein
+écran), `Raccourcis` (touche **?**). Le panneau « Surveillance » n'existe plus : voir
+`docs/inventaire-ecrans.md`, section 5, pour la place de chacun de ses éléments.
+
+## La tuile du direct
+
+Une carte de l'instrument : bandeau de **44 px** et image dans le même cadre (rayon 12 px
+quand l'espacement n'est pas nul ; images jointives sinon, bandeau toujours plein). Les
+commandes portent leur nom court à côté de l'icône, l'icône seule sous 680 px de large.
+L'activité en cours : cadre d'or **fixe** et pastille dont seul le point respire — plus de
+dégradé tournant repeint à chaque image.
 
 ## Horodatage sur l'image
 

@@ -136,3 +136,68 @@ tuiles change et le flux se renégocie)
 | Intro | `CielScreen.tsx` | 10 | étapes de démarrage et de mise à jour |
 | Nouveautés | `NouveautesScreen.tsx` | 4 | liste des versions depuis la précédente |
 | Lecteur d'extrait | `LecteurExtrait.tsx` | 18 | séquence d'une détection, transport, enregistrer l'extrait |
+
+## 5. Où est passé chaque élément — cadre, panneau et mur (23.10.2026)
+
+Premier groupe recodé (branche `ux-fondations`, non publiée), relu élément par élément
+contre les sections 1 et 2 et vérifié dans la démo, en français, allemand et italien.
+Rien n'a disparu ; ce qui change de forme est dit, les ajouts sont marqués.
+
+**Rail** (`cadre/Rail.tsx`)
+- [x] Marque en tête — ne tourne plus qu'avec « Fond animé » (choix d'apparence).
+- [x] Espaces : icône **et nom**, dans l'ordre du temps : Direct, Relecture, Détections,
+      Alertes ; en pied Système (ajout) et Réglages. S'élargit pour l'allemand et l'italien.
+- [x] Repère d'or qui glisse.
+
+**Panneau « Surveillance »** — retiré, son contenu redistribué :
+- [x] Titre « Surveillance » : sans objet, le panneau n'existe plus.
+- [x] État (pastille, message, remède, « Réessayer » si l'échec est permanent) : barre
+      d'état (pastille + message) ; page Système, bloc Contrôleur (tout) ; centre du mur
+      quand aucune image n'est possible (tout).
+- [x] Caméras (pastille, nom, définition ou « RTSP désactivé », masquer / réafficher,
+      dernière caméra visible protégée, caméra masquée estompée, « Aucune caméra pour
+      l'instant. », remède RTSP unique + lien du guide) : menu « Caméras » du direct (tout) et
+      tableau de la page Système.
+- [x] Contrôleur, Heure, Protect : barre d'état et Système.
+- [x] Pastilles HD / 2K / 4K : Système.
+- [x] Détections récentes (≤ 5, vignette, sujet, caméra, « il y a », clic = séquence) :
+      colonne Activité, vignettes 72 × 40 ; la liste part de celles du jour au lancement
+      (ajout).
+- [x] Aujourd'hui · n (≥ si partiel), histogramme, heures non lues, infobulle, axe : colonne
+      Activité.
+- [x] Enregistrements (suspension en tête, plus ancien, profondeur, pleine définition,
+      rétentions annoncées en cas d'écart, état et note du disque, écrit par jour, barre,
+      disque, note de rotation) : Système ; profondeur et remplissage aussi dans la barre.
+- [x] Versions : Système.
+- [x] « Aucune image ne quitte votre réseau. » : barre d'état, en permanence ; Système.
+
+**Superpositions**
+- [x] Réduire / épingler le panneau : « Masquer l'activité » (tête de la colonne) et
+      « Afficher l'activité » (en-tête) — un geste qui se garde, jamais un survol.
+- [x] Plein écran (F11) : bouton nommé de l'en-tête, touche affichée.
+- [x] Commandes du plein écran : « Quitter » ; « Afficher le panneau » devient le menu
+      « Caméras » ; rappel « Échap pour revenir » (désormais en plein écran seulement : hors
+      plein écran, l'en-tête et la ligne des gestes le disent).
+- [x] Mise à jour prête : inchangée (bas, centre), boutons communs.
+- [x] Lecteur d'extrait, « Ce qui a changé », introduction, panne de liaison : inchangés
+      (leurs groupes viendront).
+- [x] Fond : le ciel ne vit plus qu'autour des images (et à la connexion).
+- [x] Gestes cachés : une ligne sous le mur, et la fenêtre « Raccourcis » (touche **?**,
+      barre d'état) — ajout.
+
+**Mur et tuile** (`App.tsx`, `video/CameraTile.tsx`)
+- [x] Mosaïque calculée, centrée, espacement des Réglages ; marge de 20 px en vue habillée.
+- [x] En-tête du direct (ajout) : nombre d'images affichées, ou la caméra isolée.
+- [x] Bandeau hors image, 44 px : nom ; qualité en casse ordinaire (grise : l'or est
+      réservé à ce qui est observé) ; « Direct » en vert ou « Hors ligne » ; quatre commandes
+      avec leur nom court (icônes seules sur tuile étroite) et l'étiquette maison au survol.
+- [x] « Connexion… », « Flux indisponible » + **prochaine tentative annoncée** (ajout),
+      image figée détectée.
+- [x] Zoom : facteur et « interpolé » en rouge.
+- [x] Activité en cours : cadre d'or FIXE + pastille (le halo tournant repeignait à chaque
+      image).
+- [x] Confirmation de capture centrée ; 60 % + contour en glisser ; un seul son à la fois.
+- [x] Pas prêt : message, remède, « Réessayer », au centre du mur.
+
+**Pas dans ce groupe** : « Revoir à cet instant » depuis l'Activité (vient avec la
+Relecture) ; les en-têtes des autres écrans (leurs groupes).
