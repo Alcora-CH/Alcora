@@ -87,6 +87,8 @@ export function Raccourcis({ onFermer }: { onFermer: () => void }) {
             <Ligne geste={t('raccourcis.molette')}>{t('raccourcis.moletteFait')}</Ligne>
             <Ligne geste={t('raccourcis.clicFrise')}>{t('raccourcis.clicFriseFait')}</Ligne>
             <Ligne geste={t('raccourcis.moletteFrise')}>{t('raccourcis.moletteFriseFait')}</Ligne>
+            <Ligne geste={<Touche>I</Touche>}>{t('raccourcis.debutPlage')}</Ligne>
+            <Ligne geste={<Touche>O</Touche>}>{t('raccourcis.finPlage')}</Ligne>
           </Groupe>
           <div className="flex flex-col gap-[22px]">
             <Groupe titre={t('raccourcis.sequence')}>

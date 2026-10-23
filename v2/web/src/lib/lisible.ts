@@ -18,6 +18,23 @@ export const JOUR_MS = 86_400_000;
 export const to = (n: number) => `${nombre(n / 1e12, 2)} ${t('unite.to')}`;
 export const go = (n: number) => `${Math.round(n / 1e9)} ${t('unite.go')}`;
 
+/** Un poids de fichier : en Mo sous le giga-octet, en Go au-delà (une décimale sous 10 Go). */
+export function poids(n: number): string {
+  if (n >= 1e9) return `${nombre(n / 1e9, n < 1e10 ? 1 : 0)} ${t('unite.go')}`;
+  return `${Math.max(1, Math.round(n / 1e6))} ${t('unite.mo')}`;
+}
+
+/** Une durée de vidéo, à la seconde : « 3 min 30 s », « 2 h 10 min », « 45 s ». */
+export function dureeVideo(ms: number): string {
+  const s = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  if (h) return m ? `${h} h ${m} min` : `${h} h`;
+  if (m) return r ? `${m} min ${r} s` : `${m} min`;
+  return `${r} s`;
+}
+
 export function duree(ms: number): string {
   const j = Math.floor(ms / JOUR_MS);
   if (j < 1) return `${Math.round(ms / 3_600_000)} h`;

@@ -1,5 +1,6 @@
-import { ChevronRight, ShieldCheck } from 'lucide-react';
+import { ChevronRight, Download, ShieldCheck } from 'lucide-react';
 import { localeDates, t, useLangue } from '../i18n';
+import { pourcentExport, useEtatExport } from '../lib/exportPlage';
 import { archiveGlobale, armementLisible, duree } from '../lib/lisible';
 import { Bouton } from '../ui/Bouton';
 import { Touche } from '../ui/Cadre';
@@ -45,15 +46,18 @@ function Pastille({ ton }: { ton: string }) {
   return <span aria-hidden className="h-[7px] w-[7px] shrink-0 rounded-full" style={{ background: ton }} />;
 }
 
-export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccourcis }: {
+export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccourcis, onRelecture }: {
   relay: RelayState;
   systeme: SystemeEtat | null;
   cameras: DiscoveredCamera[];
   espace: string;
   onSysteme: () => void;
   onRaccourcis: () => void;
+  /** L'export d'une plage continue hors de la relecture : un clic sur sa case y ramène. */
+  onRelecture: () => void;
 }) {
   useLangue();
+  const exportEnCours = useEtatExport();
   const archive = archiveGlobale(systeme?.archive);
   const armement = systeme?.armement ? armementLisible(systeme.armement) : null;
   const horsLigne = cameras.filter((c) => !c.online).length;
@@ -106,6 +110,23 @@ export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccou
             {new Intl.NumberFormat(localeDates(), { style: 'percent', maximumFractionDigits: 0 }).format(disque)}
           </b>
         </Case>
+      )}
+
+      {exportEnCours.etat === 'encours' && (
+        <button type="button" onClick={onRelecture}
+                title={t('export.barreTitre', {
+                  camera: exportEnCours.camera,
+                  debut: new Date(exportEnCours.debut).toLocaleTimeString(localeDates()),
+                  fin: new Date(exportEnCours.fin).toLocaleTimeString(localeDates()),
+                })}
+                className="inline-flex h-[18px] shrink-0 items-center gap-[7px] whitespace-nowrap border-r border-line2 px-3.5 text-accent hover:text-ink">
+          <Download className="h-4 w-4" aria-hidden />
+          {t('export.export')}
+          <span aria-hidden className="h-[5px] w-[60px] overflow-hidden rounded-[3px] bg-card3 @max-[1100px]:hidden">
+            <span className="block h-full bg-accent" style={{ width: `${pourcentExport(exportEnCours)}%` }} />
+          </span>
+          <b className="font-medium tabular-nums text-ink">{pourcentExport(exportEnCours)} %</b>
+        </button>
       )}
 
       {/* La promesse d'Alcora, en permanence — en toutes lettres quand la place le permet. */}

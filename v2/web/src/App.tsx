@@ -643,7 +643,8 @@ export default function App() {
   const barre = (
     <BarreEtat relay={relay} systeme={systeme} cameras={cameras} espace={espace}
                onSysteme={() => allerVers('systeme')}
-               onRaccourcis={() => setRaccourcis(true)} />
+               onRaccourcis={() => setRaccourcis(true)}
+               onRelecture={() => allerVers('relecture')} />
   );
 
   /*

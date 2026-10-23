@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertCircle, CalendarDays, Camera, ChevronLeft, ChevronRight, Pause, Play, Radio, SkipBack, SkipForward,
-  Volume2, VolumeX, ZoomOut,
+  AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, CalendarDays, Camera, ChevronLeft, ChevronRight, Pause, Play,
+  Radio, SkipBack, SkipForward, Volume2, VolumeX, ZoomOut,
 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { CameraTile } from '../video/CameraTile';
@@ -10,12 +10,14 @@ import { imageDeLaVideo, useSonVideo } from '../video/outils';
 import { useZoomVideo } from '../video/useZoomVideo';
 import { localeDates, nombre, t, useLangue } from '../i18n';
 import { Bouton } from '../ui/Bouton';
-import { Carte, EnTete } from '../ui/Cadre';
+import { Carte, EnTete, Touche } from '../ui/Cadre';
+import { acquitterExport, poserPlage, useEtatExport, usePlage, type Plage } from '../lib/exportPlage';
+import { LignePlage } from './LignePlage';
 import { Puce } from '../ui/Puce';
 import { Segment } from '../ui/Segment';
 import { cx } from '../ui/cx';
 import type { Cle } from '../i18n/fr';
-import type { Archive, Detection, DiscoveredCamera, RelaisAcces } from '../types/protect';
+import type { Archive, Detection, DiscoveredCamera, RaisonExport, RelaisAcces } from '../types/protect';
 
 /**
  * Relecture : parcourir une journee entiere, et pas seulement les detections.
@@ -154,6 +156,23 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
 
   const [detections, setDetections] = useState<Detection[]>([]);
   const [filtre, setFiltre] = useState<string>('tout');
+
+  /*
+   * L'export d'une plage (variante 1 de docs/maquette-export-plage.html). Les bornes vivent
+   * hors du composant (lib/exportPlage) : quitter la relecture ne les perd pas, et changer de
+   * camera les GARDE — les memes instants, vus d'ailleurs.
+   */
+  const plage = usePlage();
+  const etatExport = useEtatExport();
+  const [refus, setRefus] = useState<{ raison: RaisonExport; fichier?: string | null } | null>(null);
+  /** La frise se resserre sur une plage qu'on vient de completer : sinon, a l'echelle du jour, elle tient en un pixel. */
+  const [cadrer, setCadrer] = useState<{ debut: number; fin: number } | null>(null);
+  /**
+   * Le debit REEL des morceaux deja lus, par camera et par qualite : c'est lui qui estime le
+   * poids d'un export. La basse definition, au-dela de la frontiere, pese dix fois moins ;
+   * melanger les deux rendrait l'estimation fausse dans un sens ou dans l'autre.
+   */
+  const debits = useRef(new Map<string, { octets: number; ms: number }>());
 
   /*
    * DEUX lecteurs qui se relaient.
@@ -321,6 +340,12 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
       ? await bridge.sequence({ camera: camera.id, instant: cible, duree: PAS_MS })
       : await bridge.sequence({ camera: camera.id, depuis: cible, duree: PAS_SUITE_MS });
     if (g !== generation.current) return null;      // une remise a zero est passee entre-temps
+    if (s.octets > 0 && s.fin > s.debut) {
+      const qualite = archive?.frontiere != null && s.debut < archive.frontiere ? 'ld' : 'hd';
+      const cle = `${camera.id}:${qualite}`;
+      const d = debits.current.get(cle) ?? { octets: 0, ms: 0 };
+      debits.current.set(cle, { octets: d.octets + s.octets, ms: d.ms + (s.fin - s.debut) });
+    }
     if (valide && !valide()) return null;
     cibles.current[i] = viser;
     setMorceaux((m) => {
@@ -329,7 +354,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
       return n;
     });
     return s;
-  }, [camera]);
+  }, [camera, archive]);
 
   /* ---- viser un instant : c'est le geste principal ---- */
   const allerA = useCallback(async (cible: number, { lecture = true } = {}) => {
@@ -446,6 +471,65 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     void allerA(instant + secondes * 1000, { lecture: enLecture });
   }, [instant, enLecture, allerA]);
 
+  /* ---- la plage a exporter ---- */
+
+  /**
+   * Pose une borne. Posee a l'envers, la plage s'echange d'elle-meme : rien n'est refuse.
+   * Quand le geste COMPLETE la plage, la frise se resserre dessus.
+   */
+  const poserBorne = (quelle: 'debut' | 'fin', temps: number) => {
+    acquitterExport();
+    setRefus(null);
+    let debut = quelle === 'debut' ? temps : plage.debut;
+    let fin = quelle === 'fin' ? temps : plage.fin;
+    if (debut !== null && fin !== null && fin < debut) [debut, fin] = [fin, debut];
+    const completee = (plage.debut === null || plage.fin === null) && debut !== null && fin !== null;
+    poserPlage({ debut, fin });
+    if (completee) setCadrer({ debut: debut!, fin: fin! });
+  };
+  /** Une poignee glissee sur la frise : la frise borne deja le geste, rien ne s'echange. */
+  const glisserBorne = (quelle: 'debut' | 'fin', temps: number) => {
+    acquitterExport();
+    setRefus(null);
+    poserPlage({ ...plage, [quelle]: temps });
+  };
+  const effacerPlage = () => {
+    poserPlage({ debut: null, fin: null });
+    acquitterExport();
+    setRefus(null);
+  };
+
+  /** Le poids attendu : le debit observe de cette camera, a chaque qualite. 0 = inconnu. */
+  const estimation = useMemo(() => {
+    if (plage.debut === null || plage.fin === null || !camera) return 0;
+    const f = archive?.frontiere ?? null;
+    const parts: [number, number, string][] = f !== null && plage.debut < f
+      ? [[plage.debut, Math.min(f, plage.fin), 'ld'], [Math.max(f, plage.debut), plage.fin, 'hd']]
+      : [[plage.debut, plage.fin, 'hd']];
+    let total = 0;
+    for (const [a, b, q] of parts) {
+      if (b <= a) continue;
+      const d = debits.current.get(`${camera.id}:${q}`);
+      if (!d || d.ms <= 0) return 0;
+      total += (d.octets / d.ms) * (b - a);
+    }
+    return total;
+    // Les morceaux sont la : chaque nouveau morceau lu affine le debit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plage, camera, archive, morceaux]);
+
+  const exporter = async () => {
+    if (plage.debut === null || plage.fin === null || !camera) return;
+    acquitterExport();
+    setRefus(null);
+    try {
+      const r = await bridge.exporterPlage({ camera: camera.id, debut: plage.debut, fin: plage.fin, estimation });
+      if (!r.lance && r.raison) setRefus({ raison: r.raison, fichier: r.fichier });
+    } catch {
+      setRefus({ raison: 'interrompu' });
+    }
+  };
+
   const revenirAuDirect = useCallback(() => {
     generation.current += 1;
     setMorceaux([null, null]);
@@ -466,6 +550,14 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
       const cible = e.target as HTMLElement | null;
+      // I et O posent les bornes, meme apres un clic sur un bouton : seuls les champs de
+      // saisie gardent leurs lettres.
+      const lettre = e.key.toLowerCase();
+      if ((lettre === 'i' || lettre === 'o') && !e.ctrlKey && !e.metaKey && !e.altKey
+          && !(cible && /^(INPUT|SELECT|TEXTAREA)$/.test(cible.tagName))) {
+        if (instant !== null) { e.preventDefault(); poserBorne(lettre === 'i' ? 'debut' : 'fin', instant); }
+        return;
+      }
       if (cible && /^(BUTTON|INPUT|SELECT|TEXTAREA)$/.test(cible.tagName)) return;
 
       if (e.key === ' ') { e.preventDefault(); basculer(); }
@@ -729,6 +821,19 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                     disabled={!courant} onClick={() => pas(-1)} />
             <Bouton variante="fantome" taille="petit" icone={SkipForward} titre={t('video.imageSuivante')}
                     disabled={!courant} onClick={() => pas(1)} />
+            {/* Les bornes de la plage a exporter, posees a l'instant lu (touches I et O). */}
+            <span className="ml-2.5 flex items-center gap-1 border-l border-line2 pl-3">
+              <Bouton taille="petit" variante={plage.debut !== null ? 'actif' : 'normal'} icone={ArrowRightFromLine}
+                      titre={t('export.debutTitre')} disabled={instant === null}
+                      onClick={() => { if (instant !== null) poserBorne('debut', instant); }}>
+                {t('export.debut')} <Touche>I</Touche>
+              </Bouton>
+              <Bouton taille="petit" variante={plage.fin !== null ? 'actif' : 'normal'} icone={ArrowLeftFromLine}
+                      titre={t('export.finTitre')} disabled={instant === null}
+                      onClick={() => { if (instant !== null) poserBorne('fin', instant); }}>
+                {t('export.fin')} <Touche>O</Touche>
+              </Bouton>
+            </span>
             <Segment
               className="ml-auto" etiquette={t('relecture.vitesse')} valeur={vitesse}
               options={VITESSES.map((v) => ({ valeur: v, libelle: `${nombre(v, v === 0.25 ? 2 : v === 0.5 ? 1 : 0)}×` }))}
@@ -745,6 +850,17 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
             instant={instant}
             detections={affichees}
             onViser={(t) => { void allerA(t); }}
+            plage={plage}
+            onBorne={glisserBorne}
+            cadrer={cadrer}
+          />
+
+          <LignePlage
+            plage={plage} etat={etatExport} estimation={estimation}
+            definition={definition} aDuSon={son.aDuSon ?? null} frontiere={archive?.frontiere ?? null} refus={refus}
+            onEffacer={effacerPlage} onExporter={() => { void exporter(); }}
+            onAnnuler={() => { void bridge.exportAnnuler(); }} onMontrer={() => { void bridge.exportMontrer(); }}
+            onReessayer={() => { void exporter(); }}
           />
         </Carte>
 
@@ -803,19 +919,36 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
  *
  * La molette resserre la fenetre autour du curseur, de la journee entiere a la minute.
  */
-function Frise({ jour, archive, instant, detections, onViser }: {
+function Frise({ jour, archive, instant, detections, onViser, plage, onBorne, cadrer }: {
   jour: number;
   archive: Archive | null;
   instant: number | null;
   detections: Detection[];
   onViser: (t: number) => void;
+  /** La plage a exporter : un voile entre deux poignees qu'on glisse. */
+  plage: Plage;
+  onBorne: (quelle: 'debut' | 'fin', t: number) => void;
+  /** Se resserrer sur cette plage — un objet neuf a chaque demande. */
+  cadrer: { debut: number; fin: number } | null;
 }) {
   useLangue();
   const barre = useRef<HTMLDivElement>(null);
   const [vue, setVue] = useState({ debut: jour, duree: JOUR_MS });
   const [survol, setSurvol] = useState<{ t: number; x: number; d: Detection | null } | null>(null);
+  const [glisse, setGlisse] = useState<'debut' | 'fin' | null>(null);
 
   useEffect(() => { setVue({ debut: jour, duree: JOUR_MS }); }, [jour]);
+
+  /* Une marge d'un quart de la plage de chaque cote (trente secondes au moins) : on voit ce
+     qui l'entoure, et les poignees ne collent pas aux bords. */
+  useEffect(() => {
+    if (!cadrer) return;
+    const marge = Math.max((cadrer.fin - cadrer.debut) / 4, 30_000);
+    const duree = Math.max(ZOOM_MIN_MS, Math.min(JOUR_MS, cadrer.fin - cadrer.debut + 2 * marge));
+    setVue({ debut: Math.max(jour, Math.min(jour + JOUR_MS - duree, cadrer.debut - marge)), duree });
+    // Seule la demande compte, pas le jour : changer de jour remet deja la journee entiere.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cadrer]);
 
   /* La molette sur la frise zoome, et ne fait RIEN d'autre : la page peut défiler dans une
      fenêtre basse, et la frise filerait sous le curseur au milieu du geste. L'écouteur de
@@ -883,6 +1016,75 @@ function Frise({ jour, archive, instant, detections, onViser }: {
 
   const finReelle = archive ? Math.min(archive.fin, jour + JOUR_MS) : jour + JOUR_MS;
   const zoome = vue.duree < JOUR_MS;
+
+  /*
+   * Les bornes se glissent dans ce qui est enregistre, et jamais l'une par-dessus l'autre :
+   * un debut pousse au-dela de la fin s'arrete une seconde avant elle. Echanger les bornes
+   * en plein geste ferait changer de poignee sous le doigt.
+   */
+  const limite = Math.min(archive?.fin ?? Date.now(), Date.now());
+  const deplacer = (quelle: 'debut' | 'fin', t: number) => {
+    let v = Math.max(archive?.debut ?? jour, Math.min(limite, t));
+    if (quelle === 'debut' && plage.fin !== null) v = Math.min(v, plage.fin - 1000);
+    if (quelle === 'fin' && plage.debut !== null) v = Math.max(v, plage.debut + 1000);
+    onBorne(quelle, v);
+  };
+  /* Un debut seul s'ouvre jusqu'a la tete de lecture, en fondu : la fin reste a poser. */
+  const bandeFin = plage.fin ?? (plage.debut !== null && instant !== null && instant > plage.debut ? instant : null);
+  const bande = plage.debut !== null && bandeFin !== null && bandeFin > vue.debut && plage.debut < fin
+    ? { gauche: Math.max(0, enFraction(plage.debut)), droite: Math.max(0, 1 - enFraction(bandeFin)), ouverte: plage.fin === null }
+    : null;
+
+  /** Une poignee : glissee a la souris, ou aux fleches (une seconde, dix avec Maj). */
+  const borne = (quelle: 'debut' | 'fin', temps: number) => {
+    if (temps < vue.debut || temps > fin) return null;
+    const x = `${enFraction(temps) * 100}%`;
+    /* Deux bornes proches : leurs heures se chevaucheraient. Le debut se lit alors a gauche
+       de sa poignee, la fin a droite de la sienne. */
+    const autre = quelle === 'debut' ? plage.fin : plage.debut;
+    const serre = autre !== null && Math.abs(enFraction(autre) - enFraction(temps)) < 0.1;
+    const decalage = !serre ? '-translate-x-1/2' : quelle === 'debut' ? '-translate-x-[calc(100%+6px)]' : 'translate-x-[6px]';
+    return (
+      <Fragment key={quelle}>
+        <div role="slider" tabIndex={0}
+             aria-label={quelle === 'debut' ? t('raccourcis.debutPlage') : t('raccourcis.finPlage')}
+             aria-valuemin={archive?.debut ?? jour} aria-valuemax={limite} aria-valuenow={Math.round(temps)}
+             aria-valuetext={hms(temps)}
+             className="group absolute -inset-y-px z-10 grid w-3 -translate-x-1/2 cursor-ew-resize place-items-center outline-none"
+             style={{ left: x }}
+             onPointerDown={(e) => {
+               e.stopPropagation();
+               e.preventDefault();
+               e.currentTarget.setPointerCapture(e.pointerId);
+               setGlisse(quelle);
+             }}
+             onPointerMove={(e) => {
+               if (glisse !== quelle) return;
+               const p = instantSous(e.clientX);
+               if (p) deplacer(quelle, p.t);
+             }}
+             onPointerUp={(e) => {
+               setGlisse(null);
+               if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+             }}
+             onPointerCancel={() => setGlisse(null)}
+             onClick={(e) => e.stopPropagation()}
+             onKeyDown={(e) => {
+               if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+               e.preventDefault();
+               e.stopPropagation();
+               const pas = e.shiftKey ? 10_000 : 1000;
+               deplacer(quelle, temps + (e.key === 'ArrowLeft' ? -pas : pas));
+             }}>
+          <span aria-hidden className="h-[22px] w-1.5 rounded-[3px] bg-accent shadow-[0_0_0_2px_rgba(14,19,27,.9)] group-focus-visible:shadow-[0_0_0_2px_rgba(14,19,27,.9),0_0_0_4px_var(--accent)]" />
+        </div>
+        <span className={cx('pointer-events-none absolute top-[3px] z-10 whitespace-nowrap rounded px-[5px] py-0.5 font-mono text-micro text-accent', decalage)}
+              style={{ left: x, background: 'rgba(14,19,27,.85)' }}>
+          {hms(temps)}
+        </span>
+      </Fragment>
+    );
+  };
 
   return (
     /* La frise vit dans la console, sous le transport : toutes ses couches — graduations,
@@ -952,11 +1154,21 @@ function Frise({ jour, archive, instant, detections, onViser }: {
                         boxShadow: survol?.d?.id === d.id ? `0 0 8px ${TEINTE[genre(d)]}` : undefined }} />
         ))}
 
+        {bande && (
+          <div className="pointer-events-none absolute inset-y-0"
+               style={{ left: `${bande.gauche * 100}%`, right: `${bande.droite * 100}%`,
+                        background: bande.ouverte
+                          ? 'linear-gradient(90deg, rgba(220,169,92,.2), rgba(220,169,92,0))' : 'rgba(220,169,92,.2)' }} />
+        )}
+
         {instant !== null && instant >= vue.debut && instant <= fin && (
           <div className="pointer-events-none absolute -inset-y-0.5 w-0.5"
                style={{ left: `${enFraction(instant) * 100}%`, background: 'var(--accent)',
                         boxShadow: '0 0 10px rgba(220,169,92,.8)' }} />
         )}
+
+        {plage.debut !== null && borne('debut', plage.debut)}
+        {plage.fin !== null && borne('fin', plage.fin)}
 
         {/* Ce que l'on va viser, dit avant le clic. */}
         {survol && (
