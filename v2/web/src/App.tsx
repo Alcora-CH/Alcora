@@ -492,6 +492,24 @@ export default function App() {
     return () => { alive = false; unsubscribe(); };
   }, [configured]);
 
+  /*
+   * Le contexte de la mesure de charge (mesure.js, cote principal) : ce que la fenetre
+   * montre. Le nombre de tuiles suit la regle de la mosaique plus bas — calcule ICI, parce
+   * que tous les crochets doivent passer avant les sorties anticipees (l'ecran noir de la
+   * 2.10.0 venait d'un crochet place apres l'une d'elles).
+   */
+  const tuilesAffichees = !configured || relais === null ? 0
+    : isolee ? (cameras.some((c) => c.id === isolee && !masquees.includes(c.id)) ? 1 : 0)
+    : cameras.filter((c) => !masquees.includes(c.id)).length;
+  useEffect(() => {
+    if (!pontDisponible || configured === null) return;
+    void bridge.contexteMesure({
+      espace: configured ? espace : 'connexion',
+      tuiles: configured && espace === 'direct' ? tuilesAffichees : null,
+      ciel: fondAnime ? 'anime' : 'aucun',
+    }).catch(() => {});
+  }, [configured, espace, tuilesAffichees, fondAnime]);
+
   if (!pontDisponible) return <PontManquant />;
 
   const pret = relais !== null && cameras.length > 0;

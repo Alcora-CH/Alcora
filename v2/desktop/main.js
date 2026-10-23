@@ -49,6 +49,7 @@ const { RelaySupervisor } = require('./relay');
 const { ProtectClient } = require('./protect/client');
 const { essaiUtilisable } = require('./protect/essai');
 const surveillance = require('./surveillance');
+const { Mesure } = require('./mesure');
 const { Session } = require('./protect/session');
 const {
   fromBootstrap, relayPaths, etatPourInterface, camerasPourInterface,
@@ -337,6 +338,8 @@ async function servirUi(requete) {
 }
 
 let window = null;
+/** La charge par processus, consignee au journal avec son contexte (mesure.js). */
+let mesure = null;
 let store = null;
 let relay = null;
 let cameras = [];
@@ -638,6 +641,24 @@ function createWindow() {
   });
 
   surveillerLaPage(pages);
+
+  /*
+   * La mesure de charge (mesure.js) : une seule pour la vie de l'application. Une fenetre
+   * reduite, cachee ou remontree clot l'intervalle en cours — Chromium ralentit une page
+   * invisible, et les deux regimes ne doivent pas se meler dans une meme moyenne.
+   */
+  if (!mesure) {
+    mesure = new Mesure({
+      obtenir: () => app.getAppMetrics(),
+      etatFenetre: () => (window && !window.isDestroyed()
+        ? { visible: window.isVisible(), minimisee: window.isMinimized() } : null),
+      journal,
+    });
+    mesure.demarrer();
+  }
+  for (const evenement of ['minimize', 'restore', 'hide', 'show']) {
+    window.on(evenement, () => mesure?.fenetreChangee());
+  }
 
   /*
    * Aucune permission n'est accordee a la page.
@@ -1534,6 +1555,11 @@ let nouveautesEnAttente = null;
 
 ipcMain.handle('protect:nouveautes', () => nouveautesEnAttente);
 
+/* La page annonce ce qu'elle montre ; mesure.js filtre ce qu'elle a le droit d'en dire. */
+ipcMain.handle('protect:contexteMesure', (_event, contexte) => {
+  mesure?.contexte(contexte);
+});
+
 ipcMain.handle('protect:nouveautesVues', () => {
   if (!nouveautesEnAttente) return;
   store.marquerPresentee(nouveautesEnAttente.a);
@@ -2032,4 +2058,11 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-app.on('before-quit', () => { enFermeture = true; flux?.arreter(); relay?.stop(); });
+app.on('before-quit', () => {
+  enFermeture = true;
+  // Le dernier intervalle compte autant que les autres : on l'ecrit avant de partir.
+  mesure?.consigner();
+  mesure?.arreter();
+  flux?.arreter();
+  relay?.stop();
+});

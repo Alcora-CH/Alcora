@@ -284,6 +284,8 @@ export interface ProtectBridge {
   nouveautes(): Promise<Nouveautes | null>;
   /** L'utilisateur les a vues : ne plus les presenter. */
   nouveautesVues(): Promise<void>;
+  /** Ce que la fenetre montre, pour la mesure de charge du journal (mesure.js). */
+  contexteMesure(contexte: ContexteMesure): Promise<void>;
   /** Force une verification immediate. */
   majVerifier(): Promise<void>;
   /** Applique la version prete : l'application se ferme et se relance a jour. */
@@ -456,4 +458,12 @@ export interface ResultatRecherche {
   tronque: boolean;
   recensement: Recensement;
   fenetre: { debut: number; fin: number };
+}
+
+/** Le contexte d'une mesure de charge : l'ecran, ses tuiles, l'etat du ciel. */
+export interface ContexteMesure {
+  espace: string;
+  /** Tuiles affichees — sur le direct seulement. */
+  tuiles: number | null;
+  ciel: 'anime' | 'fixe' | 'aucun';
 }

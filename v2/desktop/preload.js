@@ -119,6 +119,7 @@ contextBridge.exposeInMainWorld('protect', {
   // Nouveautes d'une mise a jour : lues apres l'intro, acquittees une fois vues.
   nouveautes: () => ipcRenderer.invoke('protect:nouveautes'),
   nouveautesVues: () => ipcRenderer.invoke('protect:nouveautesVues'),
+  contexteMesure: (contexte) => ipcRenderer.invoke('protect:contexteMesure', contexte),
   // Mises a jour automatiques : l'etat descend, deux ordres remontent.
   majVerifier: () => ipcRenderer.invoke('protect:majVerifier'),
   majRedemarrer: () => ipcRenderer.invoke('protect:majRedemarrer'),

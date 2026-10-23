@@ -164,6 +164,17 @@ const suites = [
   },
   {
     /*
+     * Ajoutee le 23.10.2026 avec le chantier UX : chaque gain de performance annonce sera
+     * un avant/apres lu dans les lignes « metrics » du journal. Un role mal compte ou des
+     * kilo-octets pris pour des mega-octets fausseraient toutes les comparaisons.
+     */
+    nom: 'Mesure de charge (rôles, unités, intervalles)',
+    commande: 'node',
+    args: ['test-mesure.js'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * « tsc -b --force », et surtout PAS « tsc --noEmit ».
      *
      * Le tsconfig.json de v2/web est un fichier de references : « files: [] » puis deux

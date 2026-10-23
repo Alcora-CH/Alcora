@@ -364,6 +364,7 @@ const mock: ProtectBridge = {
       : null;
   },
   async nouveautesVues() { /* simule */ },
+  async contexteMesure() { /* la demo ne mesure rien */ },
   async majVerifier() { /* simule */ },
   async majRedemarrer() { return false; },
 };
