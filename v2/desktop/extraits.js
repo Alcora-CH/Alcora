@@ -107,6 +107,16 @@ class Extraits {
     this.onProgres = onProgres || (() => {});
     /** Telechargements en vol, par jeton : deux clics sur la meme detection n'en font qu'un. */
     this.enVol = new Map();
+    /**
+     * La file unique des demandes au controleur.
+     *
+     * La relecture de plusieurs cameras (2.35.0) demande les morceaux de chacune ; en
+     * parallele, quatre cameras feraient huit exports a la fois, et des campagnes d'export ont
+     * deja fait redemarrer des UDM Pro. Ici, une demande attend la fin de la precedente.
+     * Mesure du 23.10.2026 sur le poste de reference : 2 cameras x 100 s de video en 8,2 s,
+     * l'une apres l'autre — la file occupe le controleur ~7 % du temps de lecture.
+     */
+    this.file = Promise.resolve();
     fs.mkdirSync(dossier, { recursive: true });
   }
 
@@ -234,10 +244,25 @@ class Extraits {
     const dejaEnVol = this.enVol.get(jeton);
     if (dejaEnVol) return dejaEnVol;
 
-    const travail = this.telecharger({ jeton, cameraId, debut, fin })
+    // Ce qui est deja sur le disque ne fait pas la queue : seules les demandes au controleur
+    // attendent leur tour.
+    const travail = (this.present(jeton) ? this.telecharger({ jeton, cameraId, debut, fin })
+      : this.enFile(() => this.telecharger({ jeton, cameraId, debut, fin })))
       .finally(() => this.enVol.delete(jeton));
     this.enVol.set(jeton, travail);
     return travail;
+  }
+
+  /** L'extrait est-il deja entier sur le disque ? */
+  present(jeton) {
+    try { return fs.statSync(this.chemin(jeton)).size > 0; } catch { return false; }
+  }
+
+  /** Met une tache dans la file : elle part a la fin de la precedente, reussie ou non. */
+  enFile(tache) {
+    const suite = this.file.then(tache, tache);
+    this.file = suite.catch(() => {});
+    return suite;
   }
 
   async telecharger({ jeton, cameraId, debut, fin }) {

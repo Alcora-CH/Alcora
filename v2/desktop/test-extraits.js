@@ -37,6 +37,56 @@ const journal = { info() {}, erreur() {}, alerte() {} };
 const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'alcora-extraits-'));
 const extraits = new Extraits({ dossier, client: () => null, journal });
 
+/*
+ * La file unique (2.35.0) : des demandes simultanees au controleur partent l'une apres
+ * l'autre ; un extrait deja sur le disque ne fait pas la queue ; une demande qui echoue ne
+ * bloque pas la suivante. `telecharger` est remplace : seule la file est en cause ici.
+ */
+async function verifierFile() {
+  console.log('\n=== Une seule demande au controleur a la fois ===');
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'alcora-file-'));
+  const x = new Extraits({ dossier: d, client: () => null, journal });
+  let enVol = 0;
+  let max = 0;
+  const ordre = [];
+  x.telecharger = async ({ jeton }) => {
+    enVol += 1; max = Math.max(max, enVol); ordre.push(`debut ${jeton}`);
+    await new Promise((r) => setTimeout(r, 15));
+    enVol -= 1; ordre.push(`fin ${jeton}`);
+    if (jeton.startsWith('panne')) throw new Error('panne');
+    return { jeton, octets: 1 };
+  };
+  const r = await Promise.all([
+    x.obtenir({ cameraId: 'a', debut: 0, fin: 10 }),
+    x.obtenir({ cameraId: 'b', debut: 0, fin: 10 }),
+    x.obtenir({ cameraId: 'c', debut: 0, fin: 10 }),
+  ]);
+  check('trois demandes simultanees : jamais plus d une en vol', 1, max);
+  check('et dans l ordre de leur arrivee', 'debut a-0-10,fin a-0-10,debut b-0-10,fin b-0-10,debut c-0-10,fin c-0-10', ordre.join(','));
+  check('chacune rend son extrait', 'a-0-10,b-0-10,c-0-10', r.map((e) => e.jeton).join(','));
+
+  ordre.length = 0;
+  const [p, q] = await Promise.allSettled([
+    x.obtenir({ cameraId: 'panne', debut: 0, fin: 10 }),
+    x.obtenir({ cameraId: 'apres', debut: 0, fin: 10 }),
+  ]);
+  check('une demande qui echoue ne bloque pas la suivante', 'rejected,fulfilled', `${p.status},${q.status}`);
+
+  fs.writeFileSync(path.join(d, 'deja-0-10.mp4'), 'x');
+  let pendant = null;
+  x.telecharger = async ({ jeton }) => {
+    if (jeton === 'lent-0-10') { await new Promise((ok) => setTimeout(ok, 60)); return { jeton, octets: 1 }; }
+    return { jeton, octets: 1 };
+  };
+  const lent = x.obtenir({ cameraId: 'lent', debut: 0, fin: 10 });
+  const t0 = Date.now();
+  await x.obtenir({ cameraId: 'deja', debut: 0, fin: 10 });
+  pendant = Date.now() - t0;
+  await lent;
+  checkBool('un extrait deja sur le disque ne fait pas la queue derriere un export lent', pendant < 40);
+  fs.rmSync(d, { recursive: true, force: true });
+}
+
 // Un contenu dont chaque octet est identifiable : une plage mal calculee se voit.
 const TAILLE = 1000;
 const contenu = Buffer.alloc(TAILLE);
@@ -398,6 +448,8 @@ async function main() {
     checkBool('l\'extrait le plus recent survit meme au-dela du budget', fs.existsSync(p));
     fs.rmSync(bac, { recursive: true, force: true });
   }
+
+  await verifierFile();
 
   fs.rmSync(dossier, { recursive: true, force: true });
 
