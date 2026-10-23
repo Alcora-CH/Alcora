@@ -23,6 +23,15 @@ Décisions de Thomas (23.10.2026) :
   Surveillance démonté (barre d'état + feuille Système + menu Caméras + colonne Activité
   propre au Direct), commandes vidéo hors de l'image partout, or d'Alcor réservé à ce qui
   est observé.
+- **Structure, complétée le 23.10.2026** (`docs/maquette-ux-a.html`) : page **Système**
+  (contrôleur, enregistrements, versions, tableau par caméra) dans le rail, réordonné
+  Direct, Relecture, Détections, Alertes, puis Système et Réglages ; **liens** d'une
+  détection vers la relecture à cet instant ; **raccourcis** (touche ?) ; Réglages
+  **Aide** et **À propos** ; **états dégradés** dessinés. Écarté : la barre de titre
+  intégrée.
+- **Fonctions nouvelles, APRÈS la refonte, chacune dans sa propre version** : exporter une
+  plage depuis la relecture, historique des alertes, relecture synchronisée de plusieurs
+  caméras, dispositions enregistrées du mur.
 
 ## Règles qui ne bougent pas
 

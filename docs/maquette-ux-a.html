@@ -124,6 +124,8 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-bandeau .canal { color: var(--texte2); font-size: 12.5px; white-space: nowrap; }
 .A-bandeau .direct { display: inline-flex; align-items: center; gap: 6px; color: var(--vert); font-size: 12.5px; }
 .A-bandeau .direct::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.A-bandeau .hors { display: inline-flex; align-items: center; gap: 6px; color: var(--texte3); font-size: 12.5px; white-space: nowrap; }
+.A-bandeau .hors::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .A-bandeau .cmds { margin-left: auto; display: flex; gap: 4px; }
 .A-bandeau .cmds .A-btn { background: transparent; border-color: transparent; color: var(--texte2); }
 .A-bandeau .cmds .A-btn:hover { background: var(--graphite); color: var(--lumiere); }
@@ -158,6 +160,9 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-recentes .vig { width: 72px; height: 40px; flex: none; border-radius: 6px; background: #000 center/cover; }
 .A-recentes .ou { font-size: 12px; color: var(--texte2); }
 .A-recentes .quand { margin-left: auto; color: var(--texte3); font-size: 12px; white-space: nowrap; }
+.A-recentes .aller { opacity: 0; margin-left: 4px; }
+.A-recentes li:hover .aller, .A-recentes li.survole .aller { opacity: 1; }
+.A-recentes li.survole { background: var(--graphite); }
 .A-lien { display: block; margin: 4px 20px 16px; color: var(--alcor); font-size: 13px; }
 .A-etat { grid-row: 2; grid-column: 1 / -1; display: flex; align-items: center; padding: 0 8px 0 14px; background: var(--instrument); border-top: 1px solid var(--ligne); font-size: 12.5px; color: var(--texte2); }
 .A-etat > span { display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; height: 18px; border-right: 1px solid var(--ligne2); white-space: nowrap; }
@@ -253,6 +258,9 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-objet .ech { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); }
 .A-objet .score { font-size: 12.5px; color: var(--texte2); font-variant-numeric: tabular-nums; text-align: right; }
 .A-objet .score.haut { color: var(--vert); }
+.A-objet { position: relative; }
+.A-objet .aller { position: absolute; top: 8px; left: 8px; opacity: 0; background: rgba(12,15,20,.85); border-color: var(--ligne2); }
+.A-objet:hover .aller, .A-objet.survole .aller { opacity: 1; }
 .A-objet .ou { font-size: 12px; color: var(--texte3); grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
 
 /* ---------------------------------------------------------------- Alertes */
@@ -304,6 +312,60 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .A-histoire li + li { margin-top: 5px; }
 .A-chemin { font-family: var(--mono); font-size: 12.5px; color: var(--texte2); word-break: break-all; }
 .A-avert { display: flex; gap: 10px; padding: 12px 14px; border-radius: 9px; background: rgba(227,115,95,.09); color: #f0a898; font-size: 13px; line-height: 1.5; }
+
+/* ---------------------------------------------------------------- Système */
+.A-sys { max-width: 1240px; margin: 0 auto; padding: 22px 24px 40px; }
+.A-sys-haut { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.A-sys-bloc { padding: 16px 18px 18px; }
+.A-sys-bloc h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+.A-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.A-table th { text-align: left; font-weight: 500; color: var(--texte3); font-size: 12.5px; padding: 8px 18px; border-top: 1px solid var(--ligne); border-bottom: 1px solid var(--ligne); }
+.A-table td { padding: 12px 18px; vertical-align: top; border-bottom: 1px solid var(--ligne); }
+.A-table tr:last-child td { border-bottom: 0; }
+.A-table .nom { font-weight: 600; }
+.A-table .sec { color: var(--texte3); font-size: 12.5px; margin-top: 2px; }
+.A-table .pt { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--texte3); margin-right: 8px; }
+.A-table .pt.ok { background: var(--vert); }
+.A-table .flux { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.A-table .flux + .flux { margin-top: 3px; }
+.A-table .flux b { font-weight: 500; display: inline-block; width: 72px; }
+.A-table .flux span { color: var(--texte3); margin-left: 8px; }
+
+/* ---------------------------------------------------------------- Raccourcis */
+.A-raccourcis { width: min(880px, 94vw); max-height: 82vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px -30px rgba(0,0,0,.9); }
+.A-raccourcis .tete { display: flex; align-items: center; gap: 12px; padding: 16px 16px 14px 20px; border-bottom: 1px solid var(--ligne); }
+.A-raccourcis .tete .titre { font-size: 15px; font-weight: 600; }
+.A-raccourcis .tete .A-btn { margin-left: auto; }
+.A-raccourcis .corps { overflow-y: auto; padding: 18px 20px 22px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 28px; }
+.A-raccourcis h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+.A-raccourcis dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: baseline; font-size: 13px; }
+.A-raccourcis dt { white-space: nowrap; }
+.A-raccourcis dd { margin: 0; color: var(--texte2); }
+
+/* ---------------------------------------------------------------- planche des états */
+.appA.A-planche { display: block; overflow: auto; }
+.A-planche-page { max-width: 1400px; margin: 0 auto; padding: 24px 28px 50px; }
+.A-planche h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; }
+.A-planche .intro { color: var(--texte2); margin-bottom: 20px; max-width: 820px; }
+.A-etats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.A-etat-carte { display: flex; flex-direction: column; overflow: hidden; }
+.A-etat-carte > .leg { padding: 12px 16px; border-bottom: 1px solid var(--ligne); }
+.A-etat-carte > .leg b { font-weight: 600; }
+.A-etat-carte > .leg p { margin-top: 3px; color: var(--texte3); font-size: 12.5px; }
+.A-etat-carte .scene { position: relative; height: 260px; background: var(--nuit); overflow: hidden; }
+.A-etat-carte .barre-etat { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; display: flex; align-items: center; gap: 14px; padding: 0 14px; background: var(--instrument); border-top: 1px solid var(--ligne); font-size: 12.5px; color: var(--texte2); }
+.A-pastille { display: inline-flex; align-items: center; gap: 7px; }
+.A-pastille::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.A-panne { position: absolute; inset: 0 0 30px 0; display: grid; place-items: center; text-align: center; padding: 20px; }
+.A-panne .boite { max-width: 440px; }
+.A-panne .titre { font-size: 15px; font-weight: 600; }
+.A-panne .remede { margin-top: 8px; color: #e9c27f; line-height: 1.5; }
+.A-panne .remede.grave { color: #f0a898; }
+.A-panne .prochaine { margin-top: 8px; color: var(--texte3); font-size: 12.5px; }
+.A-panne .boutons { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+.A-bandeau-rouge { padding: 10px 12px; border-radius: 9px; background: rgba(227,115,95,.12); color: #f0a898; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+
+.ajout-a { display: inline-block; font-size: 11.5px; padding: 0 6px; border-radius: 4px; background: rgba(220,169,92,.16); color: var(--alcor); }
 
 /* ---------------------------------------------------------------- Connexion */
 .A-cnx { grid-row: 1; grid-column: 1; position: relative; overflow: hidden; }
@@ -417,6 +479,10 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
   <symbol id="i-telecharger" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
   <symbol id="i-livre" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
   <symbol id="i-reprise" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-systeme" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></symbol>
+  <symbol id="i-clavier" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+  <symbol id="i-externe" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-relancer" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></symbol>
   <symbol id="i-alerte" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"/></symbol>
 </svg>
 
@@ -429,9 +495,12 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
     <button data-vue="relecture">Relecture</button>
     <button data-vue="detections">Détections</button>
     <button data-vue="alertes">Alertes</button>
+    <button data-vue="systeme">Système</button>
     <button data-vue="reglages">Réglages</button>
     <button data-vue="connexion">Connexion</button>
     <button data-vue="nouveautes">Nouveautés</button>
+    <button data-vue="raccourcis">Raccourcis</button>
+    <button data-vue="etats">États dégradés</button>
     <button data-vue="carte">Où va chaque élément</button>
   </div>
   <span class="note">Données et images fictives</span>
@@ -443,16 +512,17 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
   <nav class="A-rail" data-hors="connexion" aria-label="Espaces">
     <div class="marque" title="Alcora"><svg><use href="#marque"/></svg></div>
     <button class="esp" data-esp="direct"><svg class="i"><use href="#i-direct"/></svg>Direct</button>
-    <button class="esp" data-esp="detections"><svg class="i"><use href="#i-detections"/></svg>Détections</button>
     <button class="esp" data-esp="relecture"><svg class="i"><use href="#i-relecture"/></svg>Relecture</button>
+    <button class="esp" data-esp="detections"><svg class="i"><use href="#i-detections"/></svg>Détections</button>
     <button class="esp" data-esp="alertes"><svg class="i"><use href="#i-alertes"/></svg>Alertes</button>
-    <button class="esp bas" data-esp="reglages"><svg class="i"><use href="#i-reglages"/></svg>Réglages</button>
+    <button class="esp bas" data-esp="systeme"><svg class="i"><use href="#i-systeme"/></svg>Système</button>
+    <button class="esp" data-esp="reglages"><svg class="i"><use href="#i-reglages"/></svg>Réglages</button>
   </nav>
 
   <div class="A-main" data-hors="connexion">
 
     <!-- ============================================================ DIRECT -->
-    <header class="A-tete" data-vues="direct ouvert extrait nouveautes">
+    <header class="A-tete" data-vues="direct ouvert extrait nouveautes raccourcis">
       <h1>Direct</h1>
       <span class="sous">2 caméras sur 3 affichées</span>
       <div class="actions">
@@ -460,7 +530,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
         <button class="A-btn"><svg class="i"><use href="#i-plein"/></svg>Plein écran <span class="A-kbd">F11</span></button>
       </div>
     </header>
-    <div class="A-mur" data-vues="direct ouvert extrait nouveautes">
+    <div class="A-mur" data-vues="direct ouvert extrait nouveautes raccourcis">
       <div class="A-ciel ciel"></div>
       <div class="A-grille" id="grilleA">
         <article class="A-tuile active">
@@ -498,7 +568,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
     <div class="A-cams A-carte-p" data-vues="ouvert" role="dialog" aria-label="Caméras">
       <div class="cam"><span class="pt"></span><div><div>Allée</div><div class="def num">3840 × 2160</div></div><button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></div>
       <div class="cam"><span class="pt"></span><div><div>Bureaux</div><div class="def num">2688 × 1512</div></div><button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></div>
-      <div class="cam" style="opacity:.6"><span class="pt non"></span><div><div>Portail</div><div class="def rtsp">RTSP désactivé</div></div><button class="A-btn petit" disabled title="Aucun flux à afficher"><svg class="i"><use href="#i-oeil-barre"/></svg>Masquée</button></div>
+      <div class="cam" style="opacity:.6"><span class="pt"></span><div><div>Portail</div><div class="def rtsp">RTSP désactivé</div></div><button class="A-btn petit" disabled title="Aucun flux à afficher"><svg class="i"><use href="#i-oeil-barre"/></svg>Masquée</button></div>
       <p class="remede">Cette caméra ne diffuse pas : active le RTSP dans Protect, sur la caméra, section Avancé. Alcora la reprendra toute seule.<br><a href="#">Voir le guide, étape par étape</a></p>
     </div>
     <div class="A-maj A-carte-p" data-vues="ouvert">Version 2.31.0 prête. <button class="A-btn petit primaire">Redémarrer maintenant</button><button class="A-btn petit fantome">Plus tard</button></div>
@@ -672,7 +742,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
       <div class="A-reg">
         <nav class="A-sommaire" aria-label="Sections">
           <a href="#r-version" aria-current="true">Version</a><a href="#r-langue">Langue</a><a href="#r-apparence">Apparence</a><a href="#r-demarrage">Démarrage</a>
-          <a href="#r-captures">Captures et son</a><a href="#r-connexion">Connexion</a><a href="#r-probleme">En cas de problème</a><a href="#r-historique">Ce qui a changé</a>
+          <a href="#r-captures">Captures et son</a><a href="#r-connexion">Connexion</a><a href="#r-probleme">En cas de problème</a><a href="#r-aide">Aide</a><a href="#r-apropos">À propos</a><a href="#r-historique">Ce qui a changé</a>
         </nav>
         <div>
           <section class="A-section" id="r-version"><h2>Version</h2>
@@ -738,15 +808,119 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
               <button class="A-btn"><svg class="i"><use href="#i-dossier"/></svg>Ouvrir le dossier</button>
             </div></div>
           </section>
+          <section class="A-section" id="r-aide"><h2>Aide</h2>
+            <div class="A-carte-p">
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Raccourcis clavier</div><p class="expl">Tous les gestes du clavier et de la souris, écran par écran. La touche <span class="A-kbd">?</span> les montre partout.</p></div>
+                <button class="A-btn" data-aller="raccourcis"><svg class="i"><use href="#i-clavier"/></svg>Voir les raccourcis</button>
+              </div>
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Activer le RTSP sur la console</div><p class="expl">Le guide étape par étape, le même que sur l'écran de connexion.</p></div>
+                <button class="A-btn"><svg class="i"><use href="#i-livre"/></svg>Ouvrir le guide</button>
+              </div>
+            </div>
+          </section>
+          <section class="A-section" id="r-apropos"><h2>À propos</h2>
+            <div class="A-carte-p">
+              <div class="A-rangee"><div class="txt"><div class="titre">Alcora</div><p class="expl">Client de bureau pour UniFi Protect, entièrement local. Non affilié à Ubiquiti.</p></div><span class="mono">2.30.0</span></div>
+              <div class="A-rangee"><div class="txt"><div class="titre">Moteur</div></div><span class="mono">Electron 44.9.3</span></div>
+              <div class="A-rangee"><div class="txt"><div class="titre">Relais vidéo</div></div><span class="mono">MediaMTX v1.21.2</span></div>
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Licence</div><p class="expl">GPL-3.0 — © Thomas. Le code source est public ; toute œuvre dérivée doit le rester.</p></div>
+                <button class="A-btn fantome"><svg class="i"><use href="#i-externe"/></svg>Code source</button>
+              </div>
+              <div class="A-rangee">
+                <div class="txt"><div class="titre">Composants de tiers</div><p class="expl">Les licences de chaque bibliothèque embarquée.</p></div>
+                <button class="A-btn fantome">Voir les licences</button>
+              </div>
+              <div class="A-rangee"><div class="txt"><div class="titre">Site</div></div><button class="A-btn fantome"><svg class="i"><use href="#i-externe"/></svg>alcora.ch</button></div>
+            </div>
+          </section>
           <section class="A-section" id="r-historique"><h2>Ce qui a changé</h2>
             <div class="A-carte-p" id="historique"></div>
           </section>
         </div>
       </div>
     </div>
+
+    <!-- ============================================================ SYSTÈME -->
+    <header class="A-tete" data-vues="systeme">
+      <h1>Système</h1>
+      <span class="sous">Le contrôleur, ses enregistrements et chaque caméra, vus d'Alcora</span>
+      <div class="actions"><button class="A-btn fantome" data-aller="reglages"><svg class="i"><use href="#i-dossier"/></svg>Journal de l'application</button></div>
+    </header>
+    <div class="A-corps" data-vues="systeme">
+      <div class="A-sys">
+        <div class="A-sys-haut">
+          <section class="A-carte-p A-sys-bloc">
+            <h2>Contrôleur</h2>
+            <div class="A-etatrelais">Flux vidéo prêt.</div>
+            <div class="A-ligne"><span class="k">Nom</span><span class="v ok">UDM-PRO</span></div>
+            <div class="A-ligne"><span class="k">Heure</span><span class="v horloge">23:55:03</span></div>
+            <div class="A-ligne"><span class="k">Protect</span><span class="v">désarmé</span></div>
+            <div class="A-ligne"><span class="k">Caméras</span><span class="v">3, toutes en ligne</span></div>
+            <div class="A-defs"><span>HD ×0</span><span class="on">2K ×1</span><span class="on">4K ×1</span></div>
+            <div class="A-prive"><svg class="i"><use href="#i-bouclier"/></svg>Aucune image ne quitte votre réseau.</div>
+          </section>
+          <section class="A-carte-p A-sys-bloc">
+            <h2>Enregistrements</h2>
+            <div class="A-ligne"><span class="k">Le plus ancien</span><span class="v">14.05.26</span></div>
+            <div class="A-ligne"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
+            <div class="A-ligne"><span class="k">Pleine définition</span><span class="v alerte">29 j</span></div>
+            <div class="A-ligne"><span class="k">Rétention annoncée</span><span class="v alerte">393 j</span></div>
+            <div class="A-ligne"><span class="k">État du disque</span><span class="v">non homologué</span></div>
+            <p class="A-note" style="margin-top:0">Le disque ne figure pas sur la liste d'Ubiquiti. Il enregistre normalement ; seul leur support s'en réserve le droit de refus.</p>
+            <div class="A-ligne"><span class="k">Écrit par jour</span><span class="v">129 Go</span></div>
+            <div class="A-disque"><i></i></div>
+            <div class="A-ligne"><span class="k">Disque</span><span class="v">5,85 To / 5,94 To</span></div>
+            <p class="A-note">Rotation automatique. Un disque plein est normal.</p>
+          </section>
+          <section class="A-carte-p A-sys-bloc">
+            <h2>Versions</h2>
+            <div class="A-ligne"><span class="k">Alcora</span><span class="v ok">2.30.0</span></div>
+            <div class="A-ligne"><span class="k">Protect</span><span class="v">6.1.79</span></div>
+            <div class="A-ligne"><span class="k">UniFi OS</span><span class="v">4.3.6</span></div>
+            <div class="A-ligne"><span class="k">Disponible</span><span class="v alerte">6.2.17</span></div>
+            <div class="A-ligne"><span class="k">Allumé depuis</span><span class="v">24 j</span></div>
+          </section>
+        </div>
+        <section class="A-carte-p" style="margin-top:18px">
+          <h2 style="margin:0;padding:16px 18px 12px;font-size:15px;font-weight:600">Caméras</h2>
+          <table class="A-table">
+            <thead><tr><th>Caméra</th><th>État</th><th>Flux</th><th>Archive</th><th>Dernière détection</th><th>Mosaïque</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="nom">Allée</div><div class="sec">G6 Bullet</div></td>
+                <td><span class="pt ok"></span>En ligne</td>
+                <td><div class="flux"><b>Haute</b> 3840 × 2160 <span>30 i/s</span> <span>16 Mbit/s</span></div><div class="flux"><b>Moyenne</b> 1280 × 720 <span>30 i/s</span> <span>2 Mbit/s</span></div><div class="flux"><b>Basse</b> 640 × 360 <span>15 i/s</span> <span>0,3 Mbit/s</span></div></td>
+                <td>depuis le 14.05.26<div class="sec">pleine définition 29 j</div></td>
+                <td>Personne<div class="sec">il y a 12 s</div></td>
+                <td><button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></td>
+              </tr>
+              <tr>
+                <td><div class="nom">Bureaux</div><div class="sec">G5 Turret Ultra</div></td>
+                <td><span class="pt ok"></span>En ligne</td>
+                <td><div class="flux"><b>Haute</b> 2688 × 1512 <span>30 i/s</span> <span>8 Mbit/s</span></div><div class="flux"><b>Moyenne</b> 1280 × 720 <span>30 i/s</span> <span>2 Mbit/s</span></div><div class="flux"><b>Basse</b> 640 × 360 <span>15 i/s</span> <span>0,3 Mbit/s</span></div></td>
+                <td>depuis le 14.05.26<div class="sec">pleine définition 31 j</div></td>
+                <td>Mouvement<div class="sec">il y a 6 min</div></td>
+                <td><button class="A-btn petit"><svg class="i"><use href="#i-oeil"/></svg>Affichée</button></td>
+              </tr>
+              <tr>
+                <td><div class="nom">Portail</div><div class="sec">G4 Instant</div></td>
+                <td><span class="pt ok"></span>En ligne</td>
+                <td><span style="color:var(--orange)">RTSP désactivé</span><div class="sec">Active le RTSP dans Protect, sur la caméra, section Avancé. <a href="#" style="color:var(--alcor)">Voir le guide</a></div></td>
+                <td>depuis le 02.09.26<div class="sec">pleine définition 29 j</div></td>
+                <td>—</td>
+                <td><button class="A-btn petit" disabled><svg class="i"><use href="#i-oeil-barre"/></svg>Masquée</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
   </div>
 
-  <aside class="A-activite" data-vues="direct ouvert extrait nouveautes" aria-label="Activité">
+  <aside class="A-activite" data-vues="direct ouvert extrait nouveautes raccourcis" aria-label="Activité">
     <div class="tete"><h2>Activité</h2><button class="A-btn icone fantome" title="Masquer l'activité"><svg class="i"><use href="#i-panneau"/></svg></button></div>
     <div class="A-bloc">
       <h3>Aujourd'hui <span class="val num" id="totalJour"></span></h3>
@@ -766,41 +940,10 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
     <span>Disque <span class="barre"><i></i></span><b>98 %</b></span>
     <span class="prive"><svg class="i"><use href="#i-bouclier"/></svg>Aucune image ne quitte votre réseau</span>
     <span class="heure mono horloge">23:55:03</span>
-    <button class="A-btn petit fantome">Système<svg class="i"><use href="#i-haut"/></svg></button>
+    <button class="A-btn petit fantome" data-aller="raccourcis" title="Raccourcis clavier (?)">Raccourcis <span class="A-kbd">?</span></button>
+    <button class="A-btn petit fantome" data-aller="systeme">Système<svg class="i"><use href="#i-d"/></svg></button>
   </footer>
 
-  <section class="A-systeme A-carte-p" data-vues="ouvert" aria-label="Système">
-    <div class="groupe">
-      <h3>Contrôleur</h3>
-      <div class="A-etatrelais">Flux vidéo prêt.</div>
-      <div class="A-ligne"><span class="k">Nom</span><span class="v ok">UDM-PRO</span></div>
-      <div class="A-ligne"><span class="k">Heure</span><span class="v horloge">23:55:03</span></div>
-      <div class="A-ligne"><span class="k">Protect</span><span class="v">désarmé</span></div>
-      <div class="A-defs"><span>HD ×0</span><span class="on">2K ×1</span><span class="on">4K ×1</span></div>
-      <div class="A-prive"><svg class="i"><use href="#i-bouclier"/></svg>Aucune image ne quitte votre réseau.</div>
-    </div>
-    <div class="groupe">
-      <h3>Enregistrements</h3>
-      <div class="A-ligne"><span class="k">Le plus ancien</span><span class="v">14.05.26</span></div>
-      <div class="A-ligne"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
-      <div class="A-ligne"><span class="k">Pleine définition</span><span class="v alerte">29 j</span></div>
-      <div class="A-ligne"><span class="k">Rétention annoncée</span><span class="v alerte">393 j</span></div>
-      <div class="A-ligne"><span class="k">État du disque</span><span class="v">non homologué</span></div>
-      <p class="A-note" style="margin-top:0">Le disque ne figure pas sur la liste d'Ubiquiti. Il enregistre normalement ; seul leur support s'en réserve le droit de refus.</p>
-      <div class="A-ligne"><span class="k">Écrit par jour</span><span class="v">129 Go</span></div>
-      <div class="A-disque"><i></i></div>
-      <div class="A-ligne"><span class="k">Disque</span><span class="v">5,85 To / 5,94 To</span></div>
-      <p class="A-note">Rotation automatique. Un disque plein est normal.</p>
-    </div>
-    <div class="groupe">
-      <h3>Versions</h3>
-      <div class="A-ligne"><span class="k">Alcora</span><span class="v ok">2.30.0</span></div>
-      <div class="A-ligne"><span class="k">Protect</span><span class="v">6.1.79</span></div>
-      <div class="A-ligne"><span class="k">UniFi OS</span><span class="v">4.3.6</span></div>
-      <div class="A-ligne"><span class="k">Disponible</span><span class="v alerte">6.2.17</span></div>
-      <div class="A-ligne"><span class="k">Allumé depuis</span><span class="v">24 j</span></div>
-    </div>
-  </section>
 
   <!-- ============================================================ CONNEXION -->
   <div class="A-cnx" data-vues="connexion">
@@ -873,7 +1016,7 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
   <section class="A-extrait A-carte-p" data-vues="extrait" role="dialog" aria-label="Séquence de la détection">
     <div class="tete">
       <div><div class="titre">Personne</div><div class="sous num">Allée, 23.10.2026 23:55:03</div></div>
-      <div class="actions"><button class="A-btn"><svg class="i"><use href="#i-telecharger"/></svg>Enregistrer l'extrait</button><button class="A-btn icone fantome" title="Fermer (Échap)"><svg class="i"><use href="#i-x"/></svg></button></div>
+      <div class="actions"><button class="A-btn" data-aller="relecture"><svg class="i"><use href="#i-relecture"/></svg>Voir dans la relecture</button><button class="A-btn"><svg class="i"><use href="#i-telecharger"/></svg>Enregistrer l'extrait</button><button class="A-btn icone fantome" title="Fermer (Échap)"><svg class="i"><use href="#i-x"/></svg></button></div>
     </div>
     <div class="A-bandeau" style="border-bottom:1px solid var(--ligne)">
       <span class="canal">Séquence de 24 s autour de la détection</span>
@@ -892,6 +1035,46 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
     </div>
     <div class="pied">Enregistré : <span class="A-chemin">C:\Users\Exemple\Videos\Alcora\Allée 2026-10-23 23-55-03.mp4</span></div>
   </section>
+  <div class="A-voile" data-vues="raccourcis">
+    <section class="A-raccourcis A-carte-p" role="dialog" aria-label="Raccourcis clavier">
+      <div class="tete"><svg class="i" style="color:var(--alcor);width:20px;height:20px"><use href="#i-clavier"/></svg><div class="titre">Raccourcis clavier</div><button class="A-btn icone fantome" title="Fermer (Échap)"><svg class="i"><use href="#i-x"/></svg></button></div>
+      <div class="corps">
+        <div>
+          <h3>Direct</h3>
+          <dl>
+            <dt><span class="A-kbd">1</span> à <span class="A-kbd">9</span></dt><dd>Isoler la caméra correspondante</dd>
+            <dt><span class="A-kbd">0</span></dt><dd>Revenir à la mosaïque</dd>
+            <dt>Double-clic</dt><dd>Isoler une image, ou revenir</dd>
+            <dt>Glisser</dt><dd>Réorganiser la mosaïque</dd>
+            <dt>Molette</dt><dd>Zoomer dans l'image</dd>
+            <dt><span class="A-kbd">F11</span></dt><dd>Plein écran</dd>
+            <dt><span class="A-kbd">Échap</span></dt><dd>Quitter le plein écran</dd>
+          </dl>
+        </div>
+        <div>
+          <h3>Relecture</h3>
+          <dl>
+            <dt><span class="A-kbd">Espace</span></dt><dd>Lecture ou pause</dd>
+            <dt><span class="A-kbd">←</span> <span class="A-kbd">→</span></dt><dd>Reculer ou avancer de 10 s</dd>
+            <dt><span class="A-kbd">+</span> <span class="A-kbd">−</span></dt><dd>Zoomer ou dézoomer</dd>
+            <dt>Clic sur la frise</dt><dd>Aller à cet instant</dd>
+            <dt>Molette sur la frise</dt><dd>Resserrer la journée, jusqu'à la minute</dd>
+          </dl>
+        </div>
+        <div>
+          <h3>Séquence d'une détection</h3>
+          <dl>
+            <dt><span class="A-kbd">Espace</span></dt><dd>Lecture ou pause</dd>
+            <dt><span class="A-kbd">←</span> <span class="A-kbd">→</span></dt><dd>Image par image</dd>
+            <dt><span class="A-kbd">+</span> <span class="A-kbd">−</span></dt><dd>Zoomer ou dézoomer</dd>
+            <dt><span class="A-kbd">Échap</span></dt><dd>Fermer</dd>
+          </dl>
+          <h3 style="margin-top:20px">Partout</h3>
+          <dl><dt><span class="A-kbd">?</span></dt><dd>Afficher ces raccourcis</dd></dl>
+        </div>
+      </div>
+    </section>
+  </div>
   <div class="A-voile" data-vues="nouveautes" style="background:transparent">
     <section class="A-nouv A-carte-p" role="dialog" aria-label="Ce qui a changé">
       <div class="tete"><svg class="m"><use href="#marque"/></svg><div><div class="titre">Alcora s'est mise à jour</div><div class="sous num">Ce qui a changé depuis la version 2.29.3</div></div><button class="A-btn icone fantome" title="Fermer (Échap)"><svg class="i"><use href="#i-x"/></svg></button></div>
@@ -900,6 +1083,94 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
     </section>
   </div>
 </div>
+
+<!-- ============================================================ ÉTATS DÉGRADÉS -->
+<section class="appA A-planche" data-vues="etats">
+  <div class="A-planche-page">
+    <h1>États dégradés</h1>
+    <p class="intro">Ce que l'application montre quand quelque chose ne va pas. Chaque message et chaque remède sont ceux de l'application aujourd'hui ; seuls changent l'emplacement et la forme, sauf les deux ajouts marqués.</p>
+    <div class="A-etats">
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Contrôleur injoignable</b><p>Reprise automatique : aucun bouton, l'application réessaie seule.</p></div>
+        <div class="scene">
+          <div class="A-ciel ciel" style="position:absolute;inset:0;opacity:.5"></div>
+          <div class="A-panne"><div class="boite">
+            <div class="titre">Le contrôleur est injoignable.</div>
+            <p class="remede">Vérifie l'adresse saisie et que ce PC est bien sur le même réseau.</p>
+            <p class="prochaine">Nouvelle tentative dans 8 secondes.</p>
+          </div></div>
+          <div class="barre-etat"><span class="A-pastille" style="color:var(--orange)">Connexion au contrôleur impossible.</span><span style="margin-left:auto" class="mono horloge">23:55:03</span></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Identité du contrôleur changée</b><p>Arrêt volontaire : c'est une sécurité. « Réessayer » n'apparaît que lorsque réessayer seul ne servirait à rien.</p></div>
+        <div class="scene">
+          <div class="A-ciel ciel" style="position:absolute;inset:0;opacity:.5"></div>
+          <div class="A-panne"><div class="boite">
+            <div class="titre">L'identité du contrôleur a changé depuis la première connexion.</div>
+            <p class="remede grave">Si tu viens de réinstaller ou mettre à jour le contrôleur, réassocie-le dans les réglages. Sinon, ne poursuis pas.</p>
+            <div class="boutons"><button class="A-btn"><svg class="i"><use href="#i-relancer"/></svg>Réessayer</button><button class="A-btn fantome">Ouvrir les réglages</button></div>
+          </div></div>
+          <div class="barre-etat"><span class="A-pastille" style="color:var(--rouge)">Connexion arrêtée : identité du contrôleur changée</span></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Une caméra hors ligne</b><p>Les autres continuent. La tuile garde sa place et le dit dans son bandeau. <span class="ajout-a">ajout : la prochaine tentative est annoncée</span></p></div>
+        <div class="scene" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 14px 44px">
+          <article class="A-tuile"><div class="A-bandeau"><span class="nom">Allée</span><span class="direct">Direct</span></div><div class="A-image" style="background-image:url('../site/assets/allee.jpg')"></div></article>
+          <article class="A-tuile"><div class="A-bandeau"><span class="nom">Bureaux</span><span class="hors">Hors ligne</span></div>
+            <div class="A-image" style="background:#07090c;display:grid;place-items:center;text-align:center"><div><div style="color:var(--texte2)">Flux indisponible</div><div style="color:var(--texte3);font-size:12px;margin-top:4px">Reprise automatique dans 4 s</div></div></div></article>
+          <div class="barre-etat"><span class="A-pastille" style="color:var(--vert)">Flux vidéo prêt</span><span>1 caméra hors ligne</span></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Enregistrement suspendu</b><p>Passe avant tout le reste : sans lui, cinq mois d'archive et un disque à moitié plein auraient l'air de fonctionner.</p></div>
+        <div class="scene" style="padding:16px 16px 44px">
+          <div class="A-carte-p" style="padding:14px 16px;max-width:420px">
+            <div style="font-weight:600;margin-bottom:10px">Enregistrements</div>
+            <div class="A-bandeau-rouge">Enregistrement suspendu sur le contrôleur. Rien de nouveau n'est conservé.</div>
+            <div class="A-ligne"><span class="k">Le plus ancien</span><span class="v">14.05.26</span></div>
+            <div class="A-ligne"><span class="k">Profondeur</span><span class="v">5 mois 12 j</span></div>
+          </div>
+          <div class="barre-etat"><span class="A-pastille" style="color:var(--vert)">Flux vidéo prêt</span><span class="A-pastille" style="color:var(--rouge)">Enregistrement suspendu</span></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Mise à jour refusée</b><p>Aujourd'hui, un message générique. <span class="ajout-a">ajout : la raison, et la certitude que la version installée reste en service</span></p></div>
+        <div class="scene" style="padding:16px">
+          <div class="A-carte-p"><div class="A-rangee">
+            <div class="txt A-version"><svg><use href="#marque"/></svg><div><div class="v num">Alcora 2.30.0</div>
+              <p class="expl" style="color:#f0a898">La version 2.31.0 a été refusée : elle ne porte pas la signature d'Alcora. La version installée reste en service.</p></div></div>
+            <button class="A-btn">Vérifier maintenant</button>
+          </div></div>
+          <div class="A-carte-p" style="margin-top:12px"><div class="A-rangee">
+            <div class="txt A-version"><svg><use href="#marque"/></svg><div><div class="v num">Alcora 2.30.0</div>
+              <p class="expl" style="color:var(--orange)">La vérification des mises à jour n'a pas abouti. Elle réessaiera d'elle-même.</p></div></div>
+            <button class="A-btn">Vérifier maintenant</button>
+          </div></div>
+        </div>
+      </article>
+
+      <article class="A-carte-p A-etat-carte">
+        <div class="leg"><b>Rien à montrer, ou lecture impossible</b><p>Un écran vide dit pourquoi et quoi tenter. <span class="ajout-a">ajout : un bouton qui retire le filtre fautif</span></p></div>
+        <div class="scene" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="A-carte-p" style="display:grid;place-items:center;text-align:center;padding:18px">
+            <div><div style="font-weight:600">Rien ne correspond.</div><p class="A-aide">La confiance minimale est peut-être trop haute.</p><button class="A-btn petit" style="margin-top:10px">Retirer la confiance minimale</button></div>
+          </div>
+          <div class="A-carte-p" style="display:grid;place-items:center;text-align:center;padding:18px">
+            <div><svg class="i" style="color:var(--orange);width:20px;height:20px"><use href="#i-alerte"/></svg><div style="margin-top:6px">Les veilles n'ont pas pu être lues.</div><p class="A-aide">Le contrôleur n'a pas répondu.</p></div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
 
 <!-- ============================================================ CARTE -->
 <section class="carte" data-vues="carte">
@@ -912,6 +1183,14 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
       <tr><td>Panneau Surveillance</td><td>À gauche de chaque écran</td><td>Retiré de ces écrans : barre d'état en bas, détail dans Système</td></tr>
       <tr><td>Titre d'écran</td><td>Réglages seulement</td><td>En-tête commun à tous les écrans : titre, précision, actions à droite <span class="ajout">ajout</span></td></tr>
       <tr><td>Intitulés de section</td><td>Petites capitales espacées</td><td>Casse ordinaire, 13 ou 15 px</td></tr>
+      <tr class="groupe"><td colspan="3">Structure (décidé le 23.10.2026)</td></tr>
+      <tr><td>Ordre du rail</td><td>Direct, Détections, Relecture, Alertes ; Réglages</td><td>Direct, Relecture, Détections, Alertes ; Système, Réglages — l'ordre du temps : maintenant, avant, chercher, prévenir</td></tr>
+      <tr><td>Contrôleur, enregistrements, versions</td><td>Panneau Surveillance</td><td>Page Système (et l'essentiel dans la barre d'état, qui y mène) <span class="ajout">ajout : page</span></td></tr>
+      <tr><td>État de chaque caméra</td><td>Pastille + définition maximale</td><td>Tableau Système : modèle, en ligne, chaque flux (définition, images/s, débit), RTSP + remède, archive, dernière détection, masquage <span class="ajout">ajout : flux, archive et dernière détection par caméra</span></td></tr>
+      <tr><td>D'une détection à la relecture</td><td>Impossible : il faut aller dans Relecture et chercher l'heure</td><td>« Revoir à cet instant » sur l'Activité et les cartes de Détections, « Voir dans la relecture » dans la séquence <span class="ajout">ajout</span></td></tr>
+      <tr><td>Raccourcis clavier et gestes</td><td>Nulle part (quelques infobulles)</td><td>Fenêtre « Raccourcis » : touche <b>?</b>, barre d'état, Réglages <span class="ajout">ajout</span></td></tr>
+      <tr><td>Versions du moteur et du relais, licence, sources, licences des composants, site</td><td>Fichier NOTICES-TIERS.txt à côté de l'exécutable</td><td>Réglages, section À propos <span class="ajout">ajout</span></td></tr>
+      <tr><td>États dégradés</td><td>Messages et remèdes, chacun à sa place</td><td>Mêmes textes, mis en forme (planche « États dégradés ») ; mise à jour refusée : raison dite <span class="ajout">ajout</span> ; caméra hors ligne : prochaine tentative annoncée <span class="ajout">ajout</span></td></tr>
       <tr class="groupe"><td colspan="3">Détections</td></tr>
       <tr><td>Chercher + note « recherche tolérante » (O / 0, derniers chiffres)</td><td>Îlot de filtres, en tête</td><td>Colonne de filtres, en tête</td></tr>
       <tr><td>Sujet, avec compte réel</td><td>Puces</td><td>Puces, compte en gris</td></tr>
@@ -959,10 +1238,10 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 <script>
 /* ---------------------------------------------------------------- vues */
 const app = document.getElementById('appA');
-const ESPACE = { direct: 'direct', ouvert: 'direct', extrait: 'direct', nouveautes: 'direct', relecture: 'relecture', detections: 'detections', alertes: 'alertes', reglages: 'reglages' };
+const ESPACE = { direct: 'direct', ouvert: 'direct', extrait: 'direct', nouveautes: 'direct', raccourcis: 'direct', relecture: 'relecture', detections: 'detections', alertes: 'alertes', systeme: 'systeme', reglages: 'reglages' };
 function afficher(vue) {
   app.dataset.vue = vue;
-  app.hidden = vue === 'carte';
+  app.hidden = vue === 'carte' || vue === 'etats';
   for (const el of document.querySelectorAll('[data-vues]')) el.hidden = !el.dataset.vues.split(' ').includes(vue);
   for (const el of document.querySelectorAll('[data-hors]')) el.hidden = el.dataset.hors.split(' ').includes(vue);
   for (const b of document.querySelectorAll('.A-rail .esp')) b.setAttribute('aria-current', String(b.dataset.esp === ESPACE[vue]));
@@ -975,6 +1254,15 @@ choix.addEventListener('click', (e) => {
   afficher(b.dataset.vue);
 });
 for (const b of document.querySelectorAll('.A-rail .esp')) b.addEventListener('click', () => choix.querySelector(`[data-vue="${b.dataset.esp}"]`).click());
+/* Les liens entre écrans : « Revoir à cet instant », « Système », « Raccourcis »… */
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-aller]'); if (!a) return;
+  e.stopPropagation(); choix.querySelector(`[data-vue="${a.dataset.aller}"]`).click();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === '?') choix.querySelector('[data-vue="raccourcis"]').click();
+  else if (e.key === 'Escape' && ['raccourcis', 'extrait', 'nouveautes'].includes(app.dataset.vue)) choix.querySelector('[data-vue="direct"]').click();
+});
 
 /* ---------------------------------------------------------------- horloge */
 function horloge() { const h = new Date().toLocaleTimeString('fr-CH'); for (const n of document.querySelectorAll('.horloge')) n.textContent = h; }
@@ -1046,7 +1334,7 @@ const vig = (d) => `background-image:url('${IMG[d.cam]}');background-size:${d.zo
   document.getElementById('totalJour').textContent = `≥ ${det.length} détections`;
   const rec = [['Personne', 0, '12 s', 1], ['Véhicule, Plaque', 0, '54 s', 2], ['Aboiement', 0, '1 min', 3], ['Personne', 1, '3 min', 4], ['Mouvement', 1, '6 min', 5]];
   document.getElementById('recentesA').innerHTML = rec.map(([g, c, il, k]) =>
-    `<li><span class="vig" style="${vig({ ...det[det.length - k], cam: c })}"></span><div><div>${g}</div><div class="ou">${CAM[c]}</div></div><span class="quand">il y a ${il}</span></li>`).join('');
+    `<li class="${k === 1 ? 'survole' : ''}"><span class="vig" style="${vig({ ...det[det.length - k], cam: c })}"></span><div><div>${g}</div><div class="ou">${CAM[c]}</div></div><span class="quand">il y a ${il}</span><button class="A-btn petit icone fantome aller" data-aller="relecture" title="Revoir à cet instant"><svg class="i"><use href="#i-relecture"/></svg></button></li>`).join('');
 })();
 
 /* Pellicule de la relecture. */
@@ -1082,9 +1370,9 @@ document.getElementById('cartesA').innerHTML = [...det].reverse().slice(0, 30).m
   for (let i = 0; i < 48; i++) {
     const d = det[(i * 7) % det.length], c = COUL[Math.floor(alea() * (alea() < .8 ? 3 : 5))], s = 60 + Math.round(alea() * 37);
     const jour = 23 - Math.floor(i / 9);
-    out.push(`<button class="A-objet"><div class="vig" style="${vig(d)}">${i % 11 === 3 ? '<span class="ident" title="Une plaque ou un nom a été reconnu"><svg class="i" style="width:14px;height:14px"><use href="#i-bouclier"/></svg></span>' : ''}</div>
+    out.push(`<div class="A-objet ${i === 1 ? 'survole' : ''}" role="button" tabindex="0"><div class="vig" style="${vig(d)}">${i % 11 === 3 ? '<span class="ident" title="Une plaque ou un nom a été reconnu"><svg class="i" style="width:14px;height:14px"><use href="#i-bouclier"/></svg></span>' : ''}</div>
       <div class="infos"><span class="quoi">SUV <span class="ech" style="background:${c[1]}"></span>${c[0]}</span><span class="score ${s >= 80 ? 'haut' : ''}">${s} %</span>
-      <span class="ou">${jour}.10, ${hm(d.t)}, ${CAM[d.cam]}</span></div></button>`);
+      <span class="ou">${jour}.10, ${hm(d.t)}, ${CAM[d.cam]}</span></div><button class="A-btn petit aller" data-aller="relecture" title="Revoir à cet instant"><svg class="i"><use href="#i-relecture"/></svg>Revoir</button></div>`);
   }
   document.getElementById('grilleDet').innerHTML = out.join('');
 })();
