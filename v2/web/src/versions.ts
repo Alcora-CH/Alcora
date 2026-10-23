@@ -39,6 +39,34 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.33.0',
+    date: '23.10.2026',
+    fr: [
+      'Exporter une plage depuis la relecture : « Début » et « Fin » (touches I et O) posent les '
+      + 'bornes à l’instant lu, deux poignées les ajustent sur la frise, et « Exporter… » enregistre '
+      + 'la vidéo, son compris, là où on le choisit. Avant de commencer, la ligne sous la frise dit '
+      + 'la durée, le poids estimé et la définition.',
+      'Une plage de plus d’une heure part en plusieurs fichiers d’une heure au plus, l’un après '
+      + 'l’autre — jamais deux demandes à la fois au contrôleur. L’export continue si l’on change '
+      + 'd’écran, et la barre d’état le suit ; un fichier interrompu ou annulé ne reste jamais à '
+      + 'moitié écrit.',
+      'Un extrait enregistré garde les accents de son nom (« Allée » ne devient plus « All_e »), '
+      + 'et quelques derniers messages restés en français se traduisent.',
+    ],
+    en: [
+      'Export a range from the replay: “Start” and “End” (keys I and O) set the bounds at the '
+      + 'moment being played, two handles adjust them on the timeline, and “Export…” saves the '
+      + 'video, sound included, wherever you choose. Before starting, the line under the timeline '
+      + 'gives the duration, the estimated size and the definition.',
+      'A range longer than an hour leaves as several files of an hour at most, one after the '
+      + 'other — never two requests to the controller at once. The export carries on when '
+      + 'switching screens, and the status bar follows it; an interrupted or cancelled file is '
+      + 'never left half written.',
+      'A saved clip keeps the accents in its name (“Allée” no longer becomes “All_e”), and a few '
+      + 'last messages left in French are now translated.',
+    ],
+  },
+  {
     version: '2.32.0',
     date: '23.10.2026',
     fr: [
