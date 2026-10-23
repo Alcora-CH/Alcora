@@ -36,13 +36,13 @@ export function demanderCache(question) {
   });
 }
 
-/** Attend la touche Entree. */
+/** Attend la touche Entree ; rend ce qui a ete tape avant, sans les espaces autour. */
 export function attendreEntree(question) {
   return new Promise((resoudre) => {
     process.stdout.write(question);
     process.stdin.setEncoding('utf8');
     process.stdin.resume();
-    process.stdin.once('data', () => { process.stdin.pause(); resoudre(); });
+    process.stdin.once('data', (ligne) => { process.stdin.pause(); resoudre(String(ligne).trim()); });
   });
 }
 

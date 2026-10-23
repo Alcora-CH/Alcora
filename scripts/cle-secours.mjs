@@ -56,19 +56,29 @@ if (!crypto.verify(null, essai, publicKey, Buffer.from(signerAvecLeSecours(relue
 }
 
 copier(note);
-console.log('\nLa clé chiffrée est dans le presse-papiers (une ligne, hors de l\'historique de Windows).');
-console.log('Dans Proton Pass : nouvelle note sécurisée « Alcora — clé de secours », colle, enregistre.');
-await attendreEntree('Puis appuie sur Entrée… ');
+console.log('\nÉtape 1 — RANGER. La clé chiffrée est dans le presse-papiers : une longue ligne qui commence par');
+console.log('« alcora-secours-1: » (hors de l\'historique de Windows). Dans Proton Pass, crée une nouvelle note');
+console.log('sécurisée « Alcora — clé de secours », colle-la (Ctrl + V) dans le contenu, enregistre.');
+await attendreEntree('Une fois la note enregistrée, appuie sur Entrée… ');
 viderPressePapiers();
 
 let rangee = false;
-for (let tour = 0; tour < 3 && !rangee; tour++) {
-  console.log('\nMaintenant, depuis Proton Pass, COPIE le contenu de cette note.');
-  await attendreEntree('Puis Entrée… ');
+for (let tour = 0; tour < 5 && !rangee; tour++) {
+  console.log('\nÉtape 2 — RELIRE. Ouvre la note « Alcora — clé de secours » dans Proton Pass, copie tout son');
+  console.log('contenu (Ctrl + A puis Ctrl + C), et reviens ici appuyer sur Entrée sans attendre (Proton Pass');
+  console.log('peut vider le presse-papiers après quelques secondes).');
+  await attendreEntree('Entrée… ');
   const copiee = lirePressePapiers();
   viderPressePapiers();
   if (copiee !== note) {
     console.log(copiee ? '  Ce n\'est pas la même ligne — la note est-elle complète ?' : '  Le presse-papiers est vide.');
+    const choix = await attendreEntree('  Entrée pour réessayer, ou R puis Entrée pour remettre la clé dans le presse-papiers (note pas encore créée)… ');
+    if (/^r$/i.test(choix)) {
+      copier(note);
+      console.log('  La clé est de nouveau dans le presse-papiers : refais l\'étape 1 (colle-la dans la note, enregistre).');
+      await attendreEntree('  Une fois la note enregistrée, Entrée… ');
+      viderPressePapiers();
+    }
     continue;
   }
   try {
