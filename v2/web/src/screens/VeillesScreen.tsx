@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Bell, BellOff, Check, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
+import { messageLisible } from '../lib/erreurs';
 import { t, useLangue } from '../i18n';
 import { Carte, EnTete } from '../ui/Cadre';
 import { Interrupteur } from '../ui/Interrupteur';
@@ -85,7 +86,7 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
     let vivant = true;
     bridge.veilles()
       .then((c) => { if (vivant) { setConfig(c); setEtat('prete'); } })
-      .catch((e) => { if (vivant) { setEtat('erreur'); setMessage(String(e?.message ?? e)); } });
+      .catch((e) => { if (vivant) { setEtat('erreur'); setMessage(messageLisible(e)); } });
     bridge.volumes().then((v) => { if (vivant) setVolumes(v); }).catch(() => {});
     return () => { vivant = false; };
   }, []);
@@ -101,7 +102,7 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
       setTimeout(() => setEtat((e) => (e === 'enregistre' ? 'prete' : e)), 1600);
     } catch (e) {
       setEtat('erreur');
-      setMessage(e instanceof Error ? e.message : String(e));
+      setMessage(messageLisible(e));
     }
   }, []);
 
@@ -150,11 +151,11 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
                 <Check className="h-4 w-4" aria-hidden /> {t('veilles.enregistre')}
               </span>
             )}
-            {etat === 'erreur' && <span className="max-w-xs truncate text-meta text-warn">{message}</span>}
             {/* L'interrupteur d'Alcora, en tête : c'est le geste du soir et du matin. */}
             <div className="flex items-center gap-3 rounded-[10px] border border-line2 bg-card2 py-1.5 pl-2.5 pr-3.5">
               <Interrupteur ton="vert" allume={config.armee}
-                            etiquette={config.armee ? t('veilles.desactiver') : t('veilles.activer')}
+                            /* Le NOM du réglage, stable : l'état, c'est aria-checked qui le dit. */
+                            etiquette={t('veilles.interrupteur')}
                             onChange={(v) => { void enregistrer({ ...config, armee: v }); }} />
               <div className="leading-tight">
                 <div className="font-medium">{config.armee ? t('veilles.active') : t('veilles.desactivee')}</div>
@@ -169,6 +170,14 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
         <div className="mx-auto max-w-[1100px] px-6 pb-10 pt-[22px]">
           {/* Deux interrupteurs sur le même mur : le dire plutôt que de laisser deviner. */}
           <p className="mb-[18px] max-w-[760px] leading-relaxed text-muted">{t('veilles.independant')}</p>
+
+          {/* L'échec d'un enregistrement se lit EN ENTIER : sa cause est la seule chose utile. */}
+          {etat === 'erreur' && (
+            <p role="alert" className="mb-[18px] flex gap-2.5 rounded-[9px] bg-warn-soft px-3 py-2.5 text-warn">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <span>{message}</span>
+            </p>
+          )}
 
           {/* ---- les veilles : une liste, alignée en colonnes ---- */}
           <Carte className="@container m-cascade overflow-hidden">

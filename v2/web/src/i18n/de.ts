@@ -345,8 +345,6 @@ export const de: Record<Cle, string> = {
   'veilles.presqueJamais': 'fast nie',
   'veilles.parJour': '~{n} pro Tag',
   'veilles.lectureEchouee': 'Die Wachen konnten nicht gelesen werden.',
-  'veilles.activer': 'Wache einschalten',
-  'veilles.desactiver': 'Wache ausschalten',
   'veilles.active': 'Wache aktiv',
   'veilles.desactivee': 'Wache ausgeschaltet',
   'veilles.profil': 'Profil {nom}',
@@ -541,7 +539,7 @@ export const de: Record<Cle, string> = {
   'reglages.aide.ouvrirGuide': 'Anleitung öffnen',
   'reglages.apropos.titre': 'Über Alcora',
   'reglages.apropos.alcora': 'Desktop-Client für UniFi Protect, vollständig lokal. Nicht mit Ubiquiti verbunden.',
-  'reglages.apropos.moteur': 'Engine',
+  'reglages.apropos.moteur': 'Laufzeitumgebung',
   'reglages.apropos.relais': 'Video-Relais',
   'reglages.apropos.licence': 'Lizenz',
   'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Der Quellcode ist öffentlich; jedes abgeleitete Werk muss es bleiben.',
@@ -554,4 +552,7 @@ export const de: Record<Cle, string> = {
 
   // Sequence d'une detection (direction Observatoire, 23.10.2026)
   'extrait.duree': 'Sequenz von {n} s rund um die Erkennung',
+
+  // Revue des groupes 2 a 7 (23.10.2026)
+  'veilles.interrupteur': 'Wache von Alcora',
 };

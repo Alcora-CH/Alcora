@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Keyboard, X } from 'lucide-react';
 import { t, useLangue } from '../i18n';
 import { useFermetureAnimee } from '../lib/fermeture';
+import { usePiegeFocus } from '../lib/piegeFocus';
 import { Bouton } from '../ui/Bouton';
 import { Touche } from '../ui/Cadre';
 
@@ -40,24 +41,14 @@ export function Raccourcis({ onFermer }: { onFermer: () => void }) {
   useLangue();
   const { part, fermer, ref: voile } = useFermetureAnimee(onFermer);
   const boite = useRef<HTMLElement>(null);
-
-  /*
-   * Le focus entre dans la fenêtre et en ressort là où il était. Déclarée modale, elle
-   * cache le reste aux lecteurs d'écran : y laisser le focus derrière, c'était le poser sur
-   * ce qu'ils annoncent indisponible. Elle n'a qu'une commande (Fermer) : Tab y reste.
-   */
-  useEffect(() => {
-    const avant = document.activeElement as HTMLElement | null;
-    boite.current?.querySelector<HTMLElement>('button')?.focus();
-    return () => { avant?.focus?.(); };
-  }, []);
+  /* Le focus entre dans la fenêtre, y reste, et en ressort là où il était (lib/piegeFocus). */
+  usePiegeFocus(boite, () => boite.current?.querySelector<HTMLElement>('button') ?? null);
 
   /* En capture : l'écouteur général de l'application traite aussi « Échap » — il ferait
      sortir du plein écran en même temps que la fenêtre se referme. */
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === '?') { e.stopPropagation(); e.preventDefault(); fermer(); }
-      else if (e.key === 'Tab') { e.preventDefault(); boite.current?.querySelector<HTMLElement>('button')?.focus(); }
     };
     window.addEventListener('keydown', auClavier, true);
     return () => window.removeEventListener('keydown', auClavier, true);

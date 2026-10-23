@@ -68,14 +68,15 @@ function GuideRtsp() {
 
   return (
     <Carte className="px-5 py-[18px]">
-      <h2 className="flex items-center gap-2.5 text-titre font-semibold">
+      {/* Le bouton à CÔTÉ du titre, pas dedans : un titre ne contient pas de commande. */}
+      <div className="flex items-center gap-2.5">
         <BookOpen className="h-4 w-4 shrink-0 text-accent" aria-hidden />
-        {t('setup.prealable.titre')}
+        <h2 className="text-titre font-semibold">{t('setup.prealable.titre')}</h2>
         <Bouton taille="petit" icone={grand ? Minimize2 : Maximize2} aria-expanded={grand}
                 onClick={() => setGrand((v) => !v)} className="ml-auto">
           {grand ? t('setup.guide.reduire') : t('setup.guide.agrandir')}
         </Bouton>
-      </h2>
+      </div>
 
       <p className="mt-1.5 text-meta leading-normal text-muted">{t('setup.prealable.rtsp')}</p>
 

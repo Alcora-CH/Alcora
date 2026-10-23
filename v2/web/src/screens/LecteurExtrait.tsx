@@ -9,6 +9,7 @@ import { Segment } from '../ui/Segment';
 import { imageDeLaVideo, useSonVideo } from '../video/outils';
 import { useZoomVideo } from '../video/useZoomVideo';
 import { useFermetureAnimee } from '../lib/fermeture';
+import { usePiegeFocus } from '../lib/piegeFocus';
 import { localeDates, nombre, t, useLangue } from '../i18n';
 import { nomSujet } from '../i18n/sujets';
 import type { Detection } from '../types/protect';
@@ -50,6 +51,10 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
   /* Le lecteur se referme EN PARTANT : « onFermer » n'est appele qu'une fois
      l'animation de sortie terminee. */
   const { part, fermer, ref: cadre } = useFermetureAnimee(onFermer);
+  /* Le focus sur la fenêtre elle-même : Espace, les flèches et + − la visent — et non la
+     carte cliquée derrière, qui gardait le focus et se re-cliquait (revue du 23.10.2026). */
+  const fenetre = useRef<HTMLElement>(null);
+  usePiegeFocus(fenetre);
   const video = useRef<HTMLVideoElement>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [pourcent, setPourcent] = useState(0);
@@ -160,8 +165,8 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
     <div ref={cadre}
          className={`m-voile absolute inset-0 z-40${part ? ' m-part' : ''}`}
          style={{ background: 'rgba(8,11,16,.72)' }}>
-      <section role="dialog" aria-modal="true" aria-label={titre}
-               className={`@container m-boite absolute inset-x-10 bottom-[30px] top-16 flex flex-col overflow-hidden rounded-xl border border-line2 bg-card shadow-[0_40px_100px_-30px_rgba(0,0,0,.9)]${part ? ' m-part' : ''}`}>
+      <section ref={fenetre} tabIndex={-1} role="dialog" aria-modal="true" aria-label={titre}
+               className={`@container outline-none m-boite absolute inset-x-10 bottom-[30px] top-16 flex flex-col overflow-hidden rounded-xl border border-line2 bg-card shadow-[0_40px_100px_-30px_rgba(0,0,0,.9)]${part ? ' m-part' : ''}`}>
         {/* ---- en-tête ---- */}
         <div className="flex items-center gap-3.5 border-b border-line py-3.5 pl-5 pr-4">
           <div className="min-w-0 flex-1">

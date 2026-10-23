@@ -368,8 +368,6 @@ export const fr = {
   'veilles.presqueJamais': 'presque jamais',
   'veilles.parJour': '~{n} par jour',
   'veilles.lectureEchouee': 'Les veilles n’ont pas pu être lues.',
-  'veilles.activer': 'Activer la veille',
-  'veilles.desactiver': 'Désactiver la veille',
   'veilles.active': 'Veille active',
   'veilles.desactivee': 'Veille désactivée',
   'veilles.profil': 'profil {nom}',
@@ -581,6 +579,9 @@ export const fr = {
 
   // Sequence d'une detection (direction Observatoire, 23.10.2026)
   'extrait.duree': 'Séquence de {n} s autour de la détection',
+
+  // Revue des groupes 2 a 7 (23.10.2026)
+  'veilles.interrupteur': 'Veille d’Alcora',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

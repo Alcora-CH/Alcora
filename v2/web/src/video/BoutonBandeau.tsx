@@ -57,7 +57,8 @@ export function BoutonBandeau({ titre, court, icone, onClick, actif, desactive }
       */}
       <span
         className="pointer-events-none absolute right-0 top-full z-30 mt-1 hidden whitespace-nowrap
-                   rounded-md border border-line2 px-2.5 py-1 text-meta group-hover/bt:block"
+                   rounded-md border border-line2 px-2.5 py-1 text-meta group-hover/bt:block
+                   group-has-[:focus-visible]/bt:block"
         style={{ background: 'rgba(14,17,22,.96)', color: '#eae5db', boxShadow: '0 4px 14px rgba(0,0,0,.55)' }}
       >
         {titre}

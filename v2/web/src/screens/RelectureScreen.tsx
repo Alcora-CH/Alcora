@@ -55,8 +55,12 @@ const VITESSES = [0.25, 0.5, 1, 2] as const;
 /** Fenetre la plus serree de la frise : au-dela, viser devient un exercice d'orfevre. */
 const ZOOM_MIN_MS = 60_000;
 
-const jourLong = (d: Date) => new Intl.DateTimeFormat(
-  localeDates(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
+/* L'année se dit dès qu'elle n'est plus la nôtre : l'archive remonte assez loin pour qu'un
+   « jeudi 31 décembre » soit ambigu en janvier. */
+const jourLong = (d: Date) => new Intl.DateTimeFormat(localeDates(), {
+  weekday: 'long', day: 'numeric', month: 'long',
+  ...(d.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' as const } : {}),
+}).format(d);
 const heureMin = (d: Date) => new Intl.DateTimeFormat(
   localeDates(), { hour: '2-digit', minute: '2-digit' }).format(d);
 
@@ -132,7 +136,10 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   instantInitial?: { t: number } | null;
 }) {
   useLangue();
-  const [cameraId, setCameraId] = useState<string>(() => cameraInitiale ?? cameras[0]?.id ?? '');
+  /* Une caméra visée mais inconnue (retirée du contrôleur) : on part de la première, sans
+     garder un identifiant qu'aucune puce ne montrerait. */
+  const [cameraId, setCameraId] = useState<string>(() => (cameraInitiale && cameras.some((c) => c.id === cameraInitiale)
+    ? cameraInitiale : cameras[0]?.id ?? ''));
   const camera = cameras.find((c) => c.id === cameraId) ?? cameras[0];
   const archive: Archive | null = camera?.archive ?? null;
 
@@ -228,6 +235,24 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   const champDate = useRef<HTMLInputElement>(null);
   /** Instant d'ouverture : les miniatures des caméras ne se rechargent pas à chaque rendu. */
   const [montage] = useState(() => Date.now());
+  /**
+   * Les puces des caméras : la molette les fait défiler de côté quand elles débordent. Sans
+   * cela, une souris ne pouvait atteindre une quatrième caméra hors de vue (revue du
+   * 23.10.2026) — Chromium ne change pas la molette verticale en défilement horizontal.
+   */
+  const puces = useRef<HTMLDivElement>(null);
+  const aUneCamera = Boolean(camera);
+  useEffect(() => {
+    const el = puces.current;
+    if (!el) return;
+    const roue = (e: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener('wheel', roue, { passive: false });
+    return () => el.removeEventListener('wheel', roue);
+  }, [aUneCamera]);
 
   /*
    * Viser un instant APRES une remise a zero (autre camera, autre jour).
@@ -237,8 +262,15 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
    * attend donc dans `enAttente`, la remise a zero le confie a `aViser`, et la visee se fait
    * au rendu suivant, case 0 en place.
    */
-  const enAttente = useRef<number | null>(null);
-  const [aViser, setAViser] = useState<{ t: number } | null>(null);
+  const enAttente = useRef<{ t: number; lecture: boolean } | null>(null);
+  const [aViser, setAViser] = useState<{ t: number; lecture: boolean } | null>(null);
+  /**
+   * Génération des chargements : chaque remise à zéro la change, et un morceau demandé avant
+   * est jeté à son retour. Sans elle, le préchargement de l'ANCIENNE caméra, plus lent,
+   * pouvait se poser dans la case d'attente — et la relève jouait trente secondes de
+   * l'ancienne caméra sous le nom de la nouvelle (revue du 23.10.2026).
+   */
+  const generation = useRef(0);
 
   const courant = morceaux[actif];
 
@@ -282,11 +314,13 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     i: number, cible: number, viser: number | null, valide?: () => boolean,
   ) => {
     if (!camera) return null;
+    const g = generation.current;
     // `viser` non nul = un clic, donc la grille et un morceau court. Nul = un enchainement,
     // donc la suite exacte du precedent et un morceau long.
     const s = viser !== null
       ? await bridge.sequence({ camera: camera.id, instant: cible, duree: PAS_MS })
       : await bridge.sequence({ camera: camera.id, depuis: cible, duree: PAS_SUITE_MS });
+    if (g !== generation.current) return null;      // une remise a zero est passee entre-temps
     if (valide && !valide()) return null;
     cibles.current[i] = viser;
     setMorceaux((m) => {
@@ -351,6 +385,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
 
   /* ---- changer de jour ou de camera repart de zero ---- */
   useEffect(() => {
+    generation.current += 1;
     setMorceaux([null, null]);
     setActif(0);
     cibles.current = [null, null];
@@ -358,33 +393,36 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     setDefinition(null);
     setErreur(null);
     setEnLecture(false);
-    if (enAttente.current !== null) { setAViser({ t: enAttente.current }); enAttente.current = null; }
+    if (enAttente.current !== null) { setAViser(enAttente.current); enAttente.current = null; }
   }, [jour, cameraId]);
 
   useEffect(() => {
     if (!aViser) return;
     setAViser(null);
-    void allerA(aViser.t);
+    void allerA(aViser.t, { lecture: aViser.lecture });
   }, [aViser, allerA]);
 
   /* « Revoir a cet instant » : la bonne camera, le bon jour, puis l'instant. */
   useEffect(() => {
     if (!instantInitial) return;
-    const cam = cameraInitiale && cameras.some((c) => c.id === cameraInitiale) ? cameraInitiale : cameraId;
+    // Une caméra inconnue — retirée du contrôleur, ou que la détection ne nomme pas : on ne
+    // vise rien. Montrer à cette heure les images d'une AUTRE caméra serait pire que rien.
+    if (!cameraInitiale || !cameras.some((c) => c.id === cameraInitiale)) return;
+    const cam = cameraInitiale;
     const j = minuit(instantInitial.t);
     if (cam !== cameraId || j !== jour) {
-      enAttente.current = instantInitial.t;
+      enAttente.current = { t: instantInitial.t, lecture: true };
       setCameraId(cam);
       setJour(j);
-    } else setAViser({ t: instantInitial.t });
+    } else setAViser({ t: instantInitial.t, lecture: true });
     // Seule la demande compte : la camera et le jour courants ne doivent pas la rejouer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instantInitial]);
 
-  /** Changer de camera GARDE l'instant regarde : c'est ce qu'on veut comparer. */
+  /** Changer de camera GARDE l'instant regarde, et la pause : c'est ce qu'on veut comparer. */
   const changerCamera = (id: string) => {
     if (id === cameraId) return;
-    enAttente.current = instant;
+    enAttente.current = instant !== null ? { t: instant, lecture: enLecture } : null;
     setCameraId(id);
   };
 
@@ -409,6 +447,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   }, [instant, enLecture, allerA]);
 
   const revenirAuDirect = useCallback(() => {
+    generation.current += 1;
     setMorceaux([null, null]);
     setActif(0);
     setInstant(null);
@@ -491,8 +530,8 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
       >
         {/* Changer de caméra GARDE l'instant : c'est ce qu'on vient comparer. */}
         {/* Sur une fenêtre étroite, les miniatures cèdent la place aux noms. */}
-        <div role="group" aria-label={t('systeme.cameras')}
-             className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:none]">
+        <div ref={puces} role="group" aria-label={t('systeme.cameras')}
+             className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:thin]">
           {cameras.map((c) => (
             <button key={c.id} type="button" onClick={() => changerCamera(c.id)}
                     aria-pressed={c.id === cameraId}
@@ -520,11 +559,12 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
               <span className="whitespace-nowrap font-mono text-titre tabular-nums">
                 {new Date(instant).toLocaleDateString(localeDates())}&nbsp;&nbsp;{hms(instant)}
               </span>
-            ) : (
+            ) : relais ? (
+              /* « Direct » seulement s'il y a un direct : sans relais, l'image est noire. */
               <span className="inline-flex items-center gap-1.5 text-meta text-ok">
                 <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-current" />{t('espace.direct')}
               </span>
-            )}
+            ) : null}
             {/* La définition est LUE dans le flux, pas déduite : c'est la seule mesure honnête. */}
             {definition && courant && (
               <span className="whitespace-nowrap text-meta tabular-nums text-muted">
@@ -776,6 +816,17 @@ function Frise({ jour, archive, instant, detections, onViser }: {
   const [survol, setSurvol] = useState<{ t: number; x: number; d: Detection | null } | null>(null);
 
   useEffect(() => { setVue({ debut: jour, duree: JOUR_MS }); }, [jour]);
+
+  /* La molette sur la frise zoome, et ne fait RIEN d'autre : la page peut défiler dans une
+     fenêtre basse, et la frise filerait sous le curseur au milieu du geste. L'écouteur de
+     React est passif ; celui-ci ne l'est pas. */
+  useEffect(() => {
+    const el = barre.current;
+    if (!el) return;
+    const bloquer = (e: WheelEvent) => e.preventDefault();
+    el.addEventListener('wheel', bloquer, { passive: false });
+    return () => el.removeEventListener('wheel', bloquer);
+  }, []);
 
   const fin = vue.debut + vue.duree;
   const enFraction = (t: number) => (t - vue.debut) / vue.duree;

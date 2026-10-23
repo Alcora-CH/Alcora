@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { BookOpen, X } from 'lucide-react';
 import { t, useLangue } from '../i18n';
 import { useFermetureAnimee } from '../lib/fermeture';
+import { usePiegeFocus } from '../lib/piegeFocus';
 import { Bouton } from '../ui/Bouton';
 
 /**
@@ -18,16 +19,16 @@ export function FenetreGuide({ onFermer }: { onFermer: () => void }) {
   useLangue();
   const { part, fermer, ref: voile } = useFermetureAnimee(onFermer);
   const boite = useRef<HTMLElement>(null);
+  const fermerBtn = () => boite.current?.querySelector<HTMLElement>('button') ?? null;
+  usePiegeFocus(boite, fermerBtn);
 
   useEffect(() => {
-    const avant = document.activeElement as HTMLElement | null;
-    boite.current?.querySelector<HTMLElement>('button')?.focus();
     // En capture : « Échap » ne doit fermer qu'elle, pas aussi le plein écran.
     const clavier = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.stopPropagation(); fermer(); }
     };
     window.addEventListener('keydown', clavier, true);
-    return () => { window.removeEventListener('keydown', clavier, true); avant?.focus?.(); };
+    return () => window.removeEventListener('keydown', clavier, true);
   }, [fermer]);
 
   return (
@@ -47,6 +48,10 @@ export function FenetreGuide({ onFermer }: { onFermer: () => void }) {
         </div>
         <iframe src="guide-rtsp.html?integre=1" title={t('camera.guide')} sandbox="allow-scripts"
                 className="min-h-0 w-full flex-1" style={{ border: 0, background: 'rgba(10,12,16,.35)' }} />
+        {/* Sortie du cadre par Tab : ses touches ne remontent pas jusqu'ici, alors ce relais
+            ramène le focus au bouton « Fermer » au lieu de le laisser filer sous la fenêtre.
+            Échap, lui, ne marche qu'hors du cadre — le guide est isolé, c'est voulu. */}
+        <span tabIndex={0} aria-hidden className="sr-only" onFocus={() => fermerBtn()?.focus()} />
       </section>
     </div>
   );

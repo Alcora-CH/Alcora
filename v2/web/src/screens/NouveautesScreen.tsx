@@ -1,7 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { X } from 'lucide-react';
 import { changementsDe, VERSIONS } from '../versions';
 import { useFermetureAnimee } from '../lib/fermeture';
+import { usePiegeFocus } from '../lib/piegeFocus';
 import { useLangue } from '../i18n';
 import { Marque } from '../Marque';
 import { Bouton } from '../ui/Bouton';
@@ -36,6 +37,8 @@ export function NouveautesScreen({ nouveautes, onFermer }: {
   const t = useLangue();
   /* Elle s'ouvre et se referme animee : « onFermer » n'est appele qu'a la fin. */
   const { part, fermer, ref: voile } = useFermetureAnimee(onFermer);
+  const fenetre = useRef<HTMLElement>(null);
+  usePiegeFocus(fenetre, () => fenetre.current?.querySelector<HTMLElement>('[data-initial]') ?? null);
 
   /* Les versions arrivees depuis la derniere vue, la plus recente en premier. */
   const entrees = useMemo(
@@ -62,7 +65,7 @@ export function NouveautesScreen({ nouveautes, onFermer }: {
          style={{ background: 'rgba(8,11,16,.72)' }}>
       {/* Une boîte pleine sur un voile sombre : plus de flou dessous (direction
           « Observatoire ») — la lisibilité n'en dépendait pas, le processus graphique si. */}
-      <section role="dialog" aria-modal="true" aria-label={t('nouveautes.titre')}
+      <section ref={fenetre} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t('nouveautes.titre')}
                className={`m-boite flex max-h-[78vh] w-[min(580px,92vw)] flex-col overflow-hidden rounded-xl border border-line2 bg-card shadow-[0_40px_100px_-30px_rgba(0,0,0,.9)]${part ? ' m-part' : ''}`}>
 
         <div className="flex items-center gap-3 border-b border-line pb-3.5 pl-5 pr-4 pt-4">
@@ -94,7 +97,7 @@ export function NouveautesScreen({ nouveautes, onFermer }: {
         </div>
 
         <div className="flex justify-end border-t border-line px-5 py-3.5">
-          <Bouton variante="primaire" onClick={fermer}>{t('nouveautes.compris')}</Bouton>
+          <Bouton variante="primaire" data-initial onClick={fermer}>{t('nouveautes.compris')}</Bouton>
         </div>
       </section>
     </div>

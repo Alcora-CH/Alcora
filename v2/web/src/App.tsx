@@ -220,7 +220,8 @@ export default function App() {
   }, []);
   /** « Revoir à cet instant » : une détection mène à la relecture, sur sa caméra, à son heure. */
   const revoirA = useCallback((camera: string | null, t: number) => {
-    setCameraCible(camera);
+    // Une détection sans caméra rend parfois « » : c'est « aucune », pas un identifiant.
+    setCameraCible(camera || null);
     setInstantCible({ t });
     setEspace('relecture');
   }, []);
@@ -431,7 +432,7 @@ export default function App() {
       // Jamais sous ce qui couvre l'ecran (introduction, sequence, nouveautes), ni avant la
       // configuration : elle s'ouvrirait invisible, et le prochain Echap fermerait les deux.
       else if (e.key === '?' && !saisie && configured && !introVisible && !sequence
-               && !(introFinie && nouveautes)) { e.preventDefault(); setRaccourcis(true); }
+               && !(introFinie && nouveautes) && !guide) { e.preventDefault(); setRaccourcis(true); }
       else if (e.key === 'Escape') {
         if (isolee) setIsolee(null);
         else if (pleinEcran) basculerPleinEcran();

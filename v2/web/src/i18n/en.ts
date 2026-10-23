@@ -343,8 +343,6 @@ export const en: Record<Cle, string> = {
   'veilles.presqueJamais': 'almost never',
   'veilles.parJour': '~{n} per day',
   'veilles.lectureEchouee': 'The watches could not be read.',
-  'veilles.activer': 'Enable the watch',
-  'veilles.desactiver': 'Disable the watch',
   'veilles.active': 'Watch active',
   'veilles.desactivee': 'Watch disabled',
   'veilles.profil': 'profile {nom}',
@@ -501,7 +499,7 @@ export const en: Record<Cle, string> = {
   'systeme.seuleHorsLigne': '1, offline',
 
   // Liens d'une detection vers la relecture (23.10.2026)
-  'activite.revoir': 'Replay at this moment',
+  'activite.revoir': 'Replay this moment',
   'extrait.voirRelecture': 'See in replay',
 
   // Relecture (direction Observatoire, 23.10.2026)
@@ -551,4 +549,7 @@ export const en: Record<Cle, string> = {
 
   // Sequence d'une detection (direction Observatoire, 23.10.2026)
   'extrait.duree': '{n} s clip around the detection',
+
+  // Revue des groupes 2 a 7 (23.10.2026)
+  'veilles.interrupteur': 'Alcora watch',
 };

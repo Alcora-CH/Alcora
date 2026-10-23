@@ -221,7 +221,9 @@ mire vidéo (lecture, zoom, son, capture, jours, 900 × 600 à 1600 × 960).
 - [x] « Revenir au direct » (vert, si une séquence est lue) : en-tête (icône seule sous
       1100 px).
 - [x] Jour précédent / date bornée / nom du jour / jour suivant : en-tête ; la date est un
-      bouton qui ouvre le calendrier du système, « Aujourd'hui » / « Hier » à côté.
+      bouton qui ouvre le calendrier du système, « Aujourd'hui » / « Hier » à côté (sous
+      1000 px de large, ce mot cède la place ; la date reste). L'année s'ajoute dès que le jour
+      n'est pas dans l'année en cours.
 - [x] Avant tout clic, le direct + invite ; sans relais, l'autre invite ; deux lecteurs qui
       se relaient ; « Extraction… » ; erreur + « Revenir au direct » : dans l'image.
 - [x] Horodatage, définition lue (+ « définition réduite » en orange) : bandeau du lecteur,

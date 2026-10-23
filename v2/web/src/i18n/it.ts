@@ -345,8 +345,6 @@ export const it: Record<Cle, string> = {
   'veilles.presqueJamais': 'quasi mai',
   'veilles.parJour': '~{n} al giorno',
   'veilles.lectureEchouee': 'Le guardie non hanno potuto essere lette.',
-  'veilles.activer': 'Attiva la guardia',
-  'veilles.desactiver': 'Disattiva la guardia',
   'veilles.active': 'Guardia attiva',
   'veilles.desactivee': 'Guardia disattivata',
   'veilles.profil': 'profilo {nom}',
@@ -503,7 +501,7 @@ export const it: Record<Cle, string> = {
   'systeme.seuleHorsLigne': '1, offline',
 
   // Liens d'une detection vers la relecture (23.10.2026)
-  'activite.revoir': 'Rivedi in questo istante',
+  'activite.revoir': 'Rivedi questo momento',
   'extrait.voirRelecture': 'Vedi nella riproduzione',
 
   // Relecture (direction Observatoire, 23.10.2026)
@@ -541,7 +539,7 @@ export const it: Record<Cle, string> = {
   'reglages.apropos.titre': 'Informazioni',
   'reglages.apropos.alcora': 'Client desktop per UniFi Protect, interamente locale. Non affiliato a Ubiquiti.',
   'reglages.apropos.moteur': 'Motore',
-  'reglages.apropos.relais': 'Relè video',
+  'reglages.apropos.relais': 'Inoltro video',
   'reglages.apropos.licence': 'Licenza',
   'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Il codice sorgente è pubblico; ogni opera derivata deve restarlo.',
   'reglages.apropos.source': 'Codice sorgente',
@@ -553,4 +551,7 @@ export const it: Record<Cle, string> = {
 
   // Sequence d'une detection (direction Observatoire, 23.10.2026)
   'extrait.duree': 'Sequenza di {n} s attorno al rilevamento',
+
+  // Revue des groupes 2 a 7 (23.10.2026)
+  'veilles.interrupteur': 'Guardia di Alcora',
 };

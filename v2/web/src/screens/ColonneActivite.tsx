@@ -125,7 +125,8 @@ export function ColonneActivite({ onOuvrir, onRevoir, onToutes, onMasquer }: {
                     <span className="block truncate">{ceQuiAEteVu(d)}</span>
                     <span className="block truncate text-meta text-muted">{d.cameraNom ?? ''}</span>
                   </span>
-                  <span className="shrink-0 text-meta tabular-nums text-soft group-focus-within/rec:invisible group-hover/rec:invisible">
+                  {/* En opacité, pas en visibilité : le « il y a » reste dans le nom lu. */}
+                  <span className="shrink-0 text-meta tabular-nums text-soft group-focus-within/rec:opacity-0 group-hover/rec:opacity-0">
                     {d.debut ? ilYa(d.debut) : ''}
                   </span>
                 </button>
@@ -135,7 +136,7 @@ export function ColonneActivite({ onOuvrir, onRevoir, onToutes, onMasquer }: {
                 {d.debut !== null && (
                   <Bouton variante="fantome" taille="petit" icone={History} titre={t('activite.revoir')}
                           onClick={() => onRevoir(d.camera, d.debut as number)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 focus-visible:opacity-100 group-hover/rec:opacity-100" />
+                          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-focus-within/rec:opacity-100 group-hover/rec:opacity-100" />
                 )}
               </li>
             );
