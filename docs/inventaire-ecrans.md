@@ -315,3 +315,20 @@ Cinquième groupe, même branche, vérifié dans la démo.
 **Reporté, à faire dans une étape à part** : l'état « mise à jour refusée » qui dit sa
 raison (planche des états dégradés). Il touche la chaîne de mise à jour (`maj.js`) et doit
 passer par ses tests (`test-maj.js`) — pas un chantier d'affichage.
+
+## 10. Où est passé chaque élément — Connexion (23.10.2026)
+
+Sixième groupe, même branche, vérifié dans la démo (saisie, test complet, 900 et 1600 px).
+
+- [x] Titre, sous-titre, mode démonstration : en-tête avec la marque.
+- [x] Reprise d'une connexion conservée (hôte, « Reprise… », échec) : carte dorée en tête du
+      formulaire.
+- [x] Guide de la console (cadre animé, agrandir / réduire) + RTSP + compte dédié : colonne
+      de droite, toujours visible pendant la saisie ; AVANT le formulaire sous 1100 px.
+- [x] Adresse, identifiant, mot de passe, clé 2FA (afficher / masquer), « Où trouver cette
+      clé ? » : cartes Contrôleur et Compte, champs communs, libellés en casse ordinaire.
+- [x] Vérification : cinq étapes (état, message, remède, détail technique), « plus long que
+      prévu », caméras trouvées : carte, pastilles rondes (coche verte, croix rouge).
+- [x] Rester connecté : deux paragraphes + case : carte.
+- [x] Tester / Enregistrer et démarrer (rouet pendant l'opération), erreur d'enregistrement :
+      barre collante en bas.
