@@ -197,6 +197,17 @@ const suites = [
   },
   {
     /*
+     * Ajoutee le 23.10.2026 avec les dispositions du mur. Elle lit le TypeScript de la page
+     * lui-meme (Node 22 retire les types a la volee) : une disposition montre exactement ce
+     * qu'on a enregistre, « modifiee » dit vrai. Onze defauts reinjectes, tous vus.
+     */
+    nom: 'Dispositions du mur (appliquer, modifiée, stockage)',
+    commande: 'node',
+    args: ['test-dispositions.mjs'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * « tsc -b --force », et surtout PAS « tsc --noEmit ».
      *
      * Le tsconfig.json de v2/web est un fichier de references : « files: [] » puis deux

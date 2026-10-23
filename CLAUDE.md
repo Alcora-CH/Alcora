@@ -18,7 +18,7 @@ Non affilié à Ubiquiti.
 ## Commandes — toujours depuis la RACINE du dépôt
 
 ```
-npm test          # tsc -b --force + oxlint (bloquant, main process compris) + 19 suites hors ligne
+npm test          # tsc -b --force + oxlint (bloquant, main process compris) + 20 suites hors ligne
 npm run build     # vite build + vpk pack + signature (certificat requis)
 npm run publier   # publie sur alcora-ch/Alcora-releases
 npm run web       # démo navigateur (mode simulation, sans caméra ni contrôleur)

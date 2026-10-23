@@ -16,6 +16,11 @@ import { Raccourcis } from './cadre/Raccourcis';
 import { FenetreGuide } from './cadre/FenetreGuide';
 import { Rail, type Espace } from './cadre/Rail';
 import { MenuCameras } from './cadre/MenuCameras';
+import { MenuDispositions } from './cadre/MenuDispositions';
+import {
+  appliquer, decritLeMur, enregistrer, lireDispositions, mettreAJour, renommer, supprimer,
+  type Disposition, type Dispositions,
+} from './lib/dispositions';
 import { Bouton } from './ui/Bouton';
 import { EnTete, Touche } from './ui/Cadre';
 import { Planetarium } from './Planetarium';
@@ -59,6 +64,8 @@ const CLE_ORDRE = 'protectviewer.ordre';
 /** Cameras masquees de la mosaique. On cache une IMAGE, pas une camera : les veilles et
  *  les detections continuent, et la relecture reste accessible. */
 const CLE_MASQUEES = 'protectviewer.masquees';
+/** Les dispositions du mur (lib/dispositions.ts) : à côté de l'ordre et des masquées, sur ce PC. */
+const CLE_DISPOSITIONS = 'alcora.dispositions';
 
 /**
  * Duree au-dela de laquelle un halo d'activite s'eteint de lui-meme.
@@ -355,6 +362,14 @@ export default function App() {
   const { ref: zoneRef, taille } = useTaille<HTMLDivElement>();
   const grilleRef = useRef<HTMLDivElement>(null);
   const ordonneesRef = useRef<DiscoveredCamera[]>([]);
+  /** Les dispositions du mur, et la façon d'en appliquer une par son rang (Ctrl + chiffre). */
+  const [dispositions, setDispositions] = useState<Dispositions>(
+    () => lireDispositions(localStorage.getItem(CLE_DISPOSITIONS)),
+  );
+  useEffect(() => {
+    localStorage.setItem(CLE_DISPOSITIONS, JSON.stringify(dispositions));
+  }, [dispositions]);
+  const appliquerRang = useRef<(rang: number) => void>(() => {});
   const geometrieRef = useRef<{ colonnes: number; rangees: number; largeur: number; hauteur: number } | null>(null);
   /** Instant de fin du dernier glissement : un double-clic juste apres ne doit pas isoler. */
   const finGlisse = useRef(0);
@@ -436,7 +451,13 @@ export default function App() {
       else if (e.key === 'Escape') {
         if (isolee) setIsolee(null);
         else if (pleinEcran) basculerPleinEcran();
-      } else if (espace === 'direct' && /^[0-9]$/.test(e.key)
+      } else if (espace === 'direct' && e.ctrlKey && !e.altKey && !e.metaKey && /^(Digit|Numpad)[1-9]$/.test(e.code)
+                 && !saisie) {
+        // Ctrl + chiffre : une disposition. Pas Maj — sur un clavier suisse, Maj + 1 donne
+        // « + », la touche de zoom de la caméra isolée.
+        e.preventDefault();
+        appliquerRang.current(Number(e.code.slice(-1)));
+      } else if (espace === 'direct' && /^[0-9]$/.test(e.key) && !e.ctrlKey
                  && !(e.target instanceof HTMLInputElement)
                  && !(e.target instanceof HTMLTextAreaElement)) {
         if (e.key === '0') { setIsolee(null); return; }
@@ -554,6 +575,27 @@ export default function App() {
   );
   ordonneesRef.current = ordonnees;
 
+  /* ---- les dispositions du mur ---- */
+  const connues = cameras.map((c) => c.id);
+  const visiblesMur = ordonnees.map((c) => c.id);
+  const dispoActive = dispositions.liste.find((d) => d.id === dispositions.active) ?? null;
+  const dispoModifiee = dispoActive !== null && !decritLeMur(dispoActive, visiblesMur, connues);
+  /** Le mur prend la disposition : ses caméras, dans son ordre ; les autres masquées. */
+  const appliquerDisposition = (d: Disposition) => {
+    const r = appliquer(d, connues, ordre);
+    // Aucune de ses caméras n'est sur le contrôleur : on ne vide pas le mur.
+    if (r.masquees.length === connues.length) return;
+    setOrdre(r.ordre);
+    setMasquees(r.masquees);
+    localStorage.setItem(CLE_MASQUEES, JSON.stringify(r.masquees));
+    setIsolee(null);
+    setDispositions((s) => ({ ...s, active: d.id }));
+  };
+  appliquerRang.current = (rang) => {
+    const d = dispositions.liste[rang - 1];
+    if (d) appliquerDisposition(d);
+  };
+
   // Une caméra isolée occupe seule toute la zone ; sinon, la mosaïque complète.
   const affichees = isolee ? ordonnees.filter((c) => c.id === isolee) : ordonnees;
   const grille = meilleureGrille(taille.w, taille.h, affichees.length, 16 / 9, espacement, H_ETIQUETTE);
@@ -622,11 +664,14 @@ export default function App() {
 
   /* La précision de l'en-tête du direct : combien d'images, ou laquelle est seule. */
   const nomIsolee = isolee ? cameras.find((c) => c.id === isolee)?.name : null;
-  const precisionDirect = nomIsolee ? t('direct.isolee', { nom: nomIsolee })
+  const precisionMur = nomIsolee ? t('direct.isolee', { nom: nomIsolee })
     : ordonnees.length === cameras.length
       ? (cameras.length === 1 ? t('direct.une') : t('direct.toutes', { n: cameras.length }))
       : ordonnees.length === 1 ? t('direct.uneSur', { total: cameras.length })
         : t('direct.surTotal', { n: ordonnees.length, total: cameras.length });
+  /* La disposition en cours se lit d'abord : c'est le nom de ce qu'on regarde. */
+  const precisionDirect = !dispoActive ? precisionMur
+    : t(dispoModifiee ? 'dispositions.precisionModifiee' : 'dispositions.precision', { nom: dispoActive.nom, reste: precisionMur });
 
   /* Le guide de la console s'ouvre sur place. Il ne vivait que dans l'écran de connexion,
      où l'on n'arrivait qu'en effaçant le mot de passe (« Modifier la connexion »). */
@@ -636,6 +681,16 @@ export default function App() {
   const menuCameras = (sombre?: boolean) => relais !== null && (
     <MenuCameras cameras={cameras} masquees={masquees} onBasculer={basculerMasquee}
                  onGuide={versLeGuide} sombre={sombre} onOuvert={sombre ? setMenuOuvert : undefined} />
+  );
+
+  const menuDispositions = (sombre?: boolean) => relais !== null && cameras.length > 0 && (
+    <MenuDispositions dispositions={dispositions} cameras={cameras} visibles={visiblesMur} modifiee={dispoModifiee}
+                      onAppliquer={appliquerDisposition}
+                      onEnregistrer={(nom) => setDispositions((s) => enregistrer(s, crypto.randomUUID(), nom, visiblesMur))}
+                      onMettreAJour={(id) => setDispositions((s) => mettreAJour(s, id, visiblesMur))}
+                      onRenommer={(id, nom) => setDispositions((s) => renommer(s, id, nom))}
+                      onSupprimer={(id) => setDispositions((s) => supprimer(s, id))}
+                      sombre={sombre} onOuvert={sombre ? setMenuOuvert : undefined} />
   );
 
   const commandesVisibles = commandes || menuOuvert;
@@ -795,6 +850,7 @@ export default function App() {
                         pointerEvents: commandesVisibles ? undefined : 'none',
                         transition: 'opacity var(--ample) var(--douce)' }}>
             {espace === 'direct' && menuCameras(true)}
+            {espace === 'direct' && menuDispositions(true)}
             <Bouton icone={Minimize2} titre={t('app.quitterPleinEcranEchap')} onClick={basculerPleinEcran}
                     className="veil" style={{ color: 'var(--on-1)' }}>
               {t('app.quitter')}
@@ -847,6 +903,7 @@ export default function App() {
                 actions={(
                   <>
                     {menuCameras()}
+                    {menuDispositions()}
                     {!activiteVisible && (
                       <Bouton variante="fantome" icone={PanelRightOpen} titre={t('activite.afficher')}
                               onClick={() => setActiviteVisible(true)} />

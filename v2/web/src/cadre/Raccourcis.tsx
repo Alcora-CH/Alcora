@@ -73,6 +73,7 @@ export function Raccourcis({ onFermer }: { onFermer: () => void }) {
           <Groupe titre={t('espace.direct')}>
             <Ligne geste={<><Touche>1</Touche> {t('raccourcis.a')} <Touche>9</Touche></>}>{t('raccourcis.isoler')}</Ligne>
             <Ligne geste={<Touche>0</Touche>}>{t('raccourcis.mosaique')}</Ligne>
+            <Ligne geste={<><Touche>Ctrl</Touche> + <Touche>1</Touche> {t('raccourcis.a')} <Touche>9</Touche></>}>{t('raccourcis.disposition')}</Ligne>
             <Ligne geste={t('raccourcis.doubleClic')}>{t('raccourcis.doubleClicFait')}</Ligne>
             <Ligne geste={t('raccourcis.glisser')}>{t('raccourcis.glisserFait')}</Ligne>
             <Ligne geste={t('raccourcis.molette')}>{t('raccourcis.moletteFait')}</Ligne>
