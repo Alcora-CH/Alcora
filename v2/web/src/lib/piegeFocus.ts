@@ -27,7 +27,9 @@ export function usePiegeFocus(fenetre: RefObject<HTMLElement | null>, initial?: 
 
     const clavier = (e: KeyboardEvent) => {
       if (e.key !== 'Tab' || !el) return;
-      const liste = [...el.querySelectorAll<HTMLElement>(FOCALISABLES)].filter((x) => x.offsetParent !== null);
+      // Les relais (« data-relais ») ne comptent pas : ils ne servent qu'à sortir d'un cadre.
+      const liste = [...el.querySelectorAll<HTMLElement>(FOCALISABLES)]
+        .filter((x) => x.offsetParent !== null && !x.hasAttribute('data-relais'));
       if (!liste.length) { e.preventDefault(); el.focus(); return; }
       const premier = liste[0];
       const dernier = liste[liste.length - 1];

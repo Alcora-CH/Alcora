@@ -107,6 +107,9 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.stopPropagation(); fermer(); return; }
+      // « ? » ne doit pas ouvrir les raccourcis SOUS le lecteur : ouvert depuis les
+      // Détections, il n'est pas connu de l'application, qui ne peut donc pas s'en garder.
+      if (e.key === '?') { e.stopPropagation(); return; }
 
       // Un contrôle a le focus : espace l'actionne, les flèches déplacent le curseur de
       // la barre. Lui voler ces touches rendrait le lecteur inutilisable au clavier.

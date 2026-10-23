@@ -51,7 +51,7 @@ export function FenetreGuide({ onFermer }: { onFermer: () => void }) {
         {/* Sortie du cadre par Tab : ses touches ne remontent pas jusqu'ici, alors ce relais
             ramène le focus au bouton « Fermer » au lieu de le laisser filer sous la fenêtre.
             Échap, lui, ne marche qu'hors du cadre — le guide est isolé, c'est voulu. */}
-        <span tabIndex={0} aria-hidden className="sr-only" onFocus={() => fermerBtn()?.focus()} />
+        <span tabIndex={0} aria-hidden data-relais className="sr-only" onFocus={() => fermerBtn()?.focus()} />
       </section>
     </div>
   );
