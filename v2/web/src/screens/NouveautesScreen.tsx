@@ -1,8 +1,10 @@
 import { useEffect, useMemo } from 'react';
-import { Sparkles, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { changementsDe, VERSIONS } from '../versions';
 import { useFermetureAnimee } from '../lib/fermeture';
 import { useLangue } from '../i18n';
+import { Marque } from '../Marque';
+import { Bouton } from '../ui/Bouton';
 import type { Nouveautes } from '../types/protect';
 
 /**
@@ -58,38 +60,31 @@ export function NouveautesScreen({ nouveautes, onFermer }: {
     <div ref={voile}
          className={`m-voile absolute inset-0 z-50 grid place-items-center${part ? ' m-part' : ''}`}
          style={{ background: 'rgba(8,11,16,.72)' }}>
-      {/* La boite est un ilot de verre : le voile sombre en dessous garantit la
-          lisibilite quelle que soit la scene. */}
-      <div className={`m-boite ilot flex max-h-[78vh] w-[min(560px,92vw)] flex-col overflow-hidden${part ? ' m-part' : ''}`}>
+      {/* Une boîte pleine sur un voile sombre : plus de flou dessous (direction
+          « Observatoire ») — la lisibilité n'en dépendait pas, le processus graphique si. */}
+      <section role="dialog" aria-modal="true" aria-label={t('nouveautes.titre')}
+               className={`m-boite flex max-h-[78vh] w-[min(580px,92vw)] flex-col overflow-hidden rounded-xl border border-line2 bg-card shadow-[0_40px_100px_-30px_rgba(0,0,0,.9)]${part ? ' m-part' : ''}`}>
 
-        <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
-          <Sparkles className="h-4 w-4 shrink-0" style={{ color: 'var(--accent-d)' }} />
+        <div className="flex items-center gap-3 border-b border-line pb-3.5 pl-5 pr-4 pt-4">
+          <Marque taille={28} />
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-semibold leading-tight">{t('nouveautes.titre')}</p>
-            <p className="text-[11.5px] text-soft">
-              {t('nouveautes.depuis', { version: nouveautes.de })}
-            </p>
+            <p className="text-titre font-semibold leading-tight">{t('nouveautes.titre')}</p>
+            <p className="text-meta text-muted">{t('nouveautes.depuis', { version: nouveautes.de })}</p>
           </div>
-          <button onClick={fermer} aria-label={t('commun.fermerEchap')} title={t('commun.fermerEchap')}
-                  className="grid h-7 w-7 place-items-center rounded-md text-soft transition-colors hover:text-ink">
-            <X className="h-4 w-4" />
-          </button>
+          <Bouton variante="fantome" icone={X} titre={t('commun.fermerEchap')} onClick={fermer} />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {entrees.map((v) => (
             <div key={v.version} className="mb-4 last:mb-1">
-              <div className="mb-1.5 flex items-baseline gap-2">
-                <span className="font-mono text-[12.5px]" style={{ color: 'var(--accent-d)' }}>
-                  {v.version}
-                </span>
-                <span className="text-[11px] text-soft">{v.date}</span>
-              </div>
+              <h3 className="mb-2 flex items-baseline gap-2.5 font-semibold">
+                <span className="font-mono text-accent-d">{v.version}</span>
+                <span className="text-meta font-normal tabular-nums text-soft">{v.date}</span>
+              </h3>
               <ul className="flex flex-col gap-1.5">
                 {changementsDe(v).map((c, i) => (
-                  <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-muted">
-                    <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full"
-                          style={{ background: 'var(--accent)' }} />
+                  <li key={i} className="flex gap-2 leading-relaxed text-muted">
+                    <span aria-hidden className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-accent" />
                     <span>{c}</span>
                   </li>
                 ))}
@@ -98,14 +93,10 @@ export function NouveautesScreen({ nouveautes, onFermer }: {
           ))}
         </div>
 
-        <div className="border-t border-line px-4 py-3">
-          <button onClick={fermer}
-                  className="m-pression w-full rounded-lg py-2 text-[13px] font-semibold transition-opacity hover:opacity-90"
-                  style={{ background: 'var(--accent)', color: '#1b1e23' }}>
-            {t('nouveautes.compris')}
-          </button>
+        <div className="flex justify-end border-t border-line px-5 py-3.5">
+          <Bouton variante="primaire" onClick={fermer}>{t('nouveautes.compris')}</Bouton>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

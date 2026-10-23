@@ -28,7 +28,6 @@ export const de: Record<Cle, string> = {
   'video.pasDeSon': 'Dieser Stream führt keinen Ton',
   'video.capturer': 'Standbild speichern',
   'video.pleinEcran': 'Vollbild',
-  'video.quitterPleinEcran': 'Vollbild verlassen',
   'video.interpole': 'interpoliert',
   'video.pause': 'Pause',
   'video.lecture': 'Wiedergabe',
@@ -552,4 +551,7 @@ export const de: Record<Cle, string> = {
   'reglages.apropos.voirLicences': 'Lizenzen anzeigen',
   'reglages.apropos.licencesAbsentes': 'Die Lizenzdatei ist in dieser Installation nicht zu finden.',
   'reglages.apropos.site': 'Website',
+
+  // Sequence d'une detection (direction Observatoire, 23.10.2026)
+  'extrait.duree': 'Sequenz von {n} s rund um die Erkennung',
 };

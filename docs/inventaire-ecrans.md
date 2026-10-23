@@ -332,3 +332,23 @@ Sixième groupe, même branche, vérifié dans la démo (saisie, test complet, 9
 - [x] Rester connecté : deux paragraphes + case : carte.
 - [x] Tester / Enregistrer et démarrer (rouet pendant l'opération), erreur d'enregistrement :
       barre collante en bas.
+
+## 11. Où est passé chaque élément — surimpressions (23.10.2026)
+
+Septième groupe, même branche, vérifié dans la démo sur la mire.
+
+- [x] Séquence d'une détection : sujet, caméra et heure, « Voir dans la relecture »
+      (ajout), « Enregistrer », fermer (Échap) — en-tête d'une carte posée sur un voile
+      sombre, plus un plein écran.
+- [x] Zoom (« Image entière »), son, capture : bandeau au-dessus de l'image, avec leur nom,
+      comme au direct et en relecture (ils étaient SUR l'image) ; durée de la séquence dite
+      à gauche du bandeau.
+- [x] Extraction (pourcentage), séquence illisible, format non décodable + enregistrer :
+      au centre de l'image, inchangés.
+- [x] Transport : lecture, image par image, position (mm:ss / curseur / durée), vitesses ;
+      « Enregistré : chemin » : en bas.
+- [x] Pas de fermeture au clic à côté : un glisser dans l'image agrandie, relâché hors de la
+      carte, la refermerait par erreur.
+- [x] « Ce qui a changé » : marque, titre, depuis quelle version, notes par version,
+      « Compris », fermer : boîte pleine sur voile sombre, sans flou.
+- [x] L'introduction (la Grande Ourse qui devient la marque) : inchangée, comme décidé.

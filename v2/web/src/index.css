@@ -231,7 +231,9 @@
  * flou d'arrière-plan oblige le processus graphique à recomposer ce qu'il y a dessous à
  * chaque image — pendant que les flux 4K décodent. Mesure du 23.10.2026 sur le poste de
  * référence, deux caméras affichées : processus graphique 29 % d'un cœur et 914 Mo.
- * Les classes (.theme-verre, .ilot, .veil) gardent leur nom : aucun composant à toucher.
+ * « .theme-verre » et « .veil » gardent leur nom ; les îlots de verre et leurs cartes
+ * flottantes, eux, sont partis avec la refonte écran par écran : chaque écran pose désormais
+ * ses cartes avec le composant commun (ui/Cadre.tsx).
  */
 .theme-verre {
   --on-veil: rgba(12, 15, 20, 0.78);
@@ -360,47 +362,6 @@
   44% { opacity: .9; transform: translate3d(108vw, -30vh, 0); }
   45%, 100% { opacity: 0; transform: translate3d(108vw, -30vh, 0); } }
 @keyframes plan-clignote { 50% { opacity: .25; } }
-
-/* Les tuiles FLOTTENT sur le ciel (quand elles ont un cadre) : ombre profonde à
-   deux distances, bord de verre clair — sans cela, des rectangles à bord dur
-   semblaient posés SUR le fond. */
-.tuile-flottante {
-  border-color: var(--line2) !important;
-  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .7);
-}
-
-/* ------------------------------------------------- Les écrans en îlots de verre
-
-   Grammaire validée sur maquette le 04.08.2026 (docs/maquette-verre-ecrans.html) :
-   plus de pages aux fonds pleins — des îlots qui flottent sur le ciel, avec de
-   l'AIR entre eux. Le verre est celui du panneau (validé, intouché), l'ombre
-   celle des tuiles du direct.
-
-   À l'intérieur d'un îlot, les jetons de séparation et de fond passent en
-   translucide : grâce à « @theme inline », les classes border-line / bg-line /
-   bg-card2 des composants suivent d'elles-mêmes — aucun composant à retoucher,
-   et un écran sorti de son îlot retrouverait ses tons pleins. */
-/* L'îlot devient une carte pleine de l'instrument (direction « Observatoire ») : les jetons
-   globaux suffisent à l'intérieur, plus besoin de les passer en translucide. */
-.ilot {
-  background: var(--card);
-  border: 1px solid var(--line2);
-  border-radius: 12px;
-  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
-}
-
-/* Les cartes-vignettes (résultats, pellicule, caméras de la relecture). */
-.carte-flottante {
-  background: var(--card);
-  border: 1px solid var(--line2);
-  box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.6);
-}
-
-/* Champ posé directement sur le ciel, hors îlot (la date de la relecture). */
-.champ-ciel {
-  background: var(--card2);
-  border-color: var(--line2);
-}
 
 @media (prefers-reduced-motion: reduce) {
   .planetarium * { animation: none !important; }

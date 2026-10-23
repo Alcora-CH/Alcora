@@ -35,7 +35,6 @@ export const fr = {
   'video.pasDeSon': 'Ce flux ne porte pas de son',
   'video.capturer': 'Enregistrer une image',
   'video.pleinEcran': 'Plein écran',
-  'video.quitterPleinEcran': 'Quitter le plein écran',
   'video.interpole': 'interpolé',
   'video.pause': 'Pause',
   'video.lecture': 'Lecture',
@@ -579,6 +578,9 @@ export const fr = {
   'reglages.apropos.voirLicences': 'Voir les licences',
   'reglages.apropos.licencesAbsentes': 'Le fichier des licences est introuvable dans cette installation.',
   'reglages.apropos.site': 'Site',
+
+  // Sequence d'une detection (direction Observatoire, 23.10.2026)
+  'extrait.duree': 'Séquence de {n} s autour de la détection',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

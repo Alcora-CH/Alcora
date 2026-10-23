@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, Download, History, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
+import {
+  AlertCircle, Camera, Download, History, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, X, ZoomOut,
+} from 'lucide-react';
 import { bridge } from '../lib/bridge';
-import { CommandesVideo } from '../video/CommandesVideo';
+import { BoutonBandeau } from '../video/BoutonBandeau';
+import { Bouton } from '../ui/Bouton';
+import { Segment } from '../ui/Segment';
 import { imageDeLaVideo, useSonVideo } from '../video/outils';
 import { useZoomVideo } from '../video/useZoomVideo';
 import { useFermetureAnimee } from '../lib/fermeture';
@@ -147,181 +151,173 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
   };
 
   return (
+    /*
+     * Une carte posée sur un voile sombre (maquette A), plus un plein écran : on garde sous
+     * les yeux d'où l'on vient. Pas de fermeture au clic à côté : un glisser pour se
+     * déplacer dans l'image agrandie, relâché hors de la carte, la refermerait par erreur.
+     * Échap et le bouton suffisent.
+     */
     <div ref={cadre}
-         className={`m-boite absolute inset-0 z-40 flex flex-col${part ? ' m-part' : ''}`}
-         style={{ background: 'rgba(15,17,21,.93)' }}>
-      {/* ---- en-tête ---- */}
-      <div className="flex items-center gap-3 border-b border-line px-5 py-3">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[14px]">{titre}</p>
-          <p className="truncate font-mono text-[11px] text-soft">
-            {detection.cameraNom ?? t('extrait.cameraInconnue')}
-            {detection.debut ? ` · ${horloge(new Date(detection.debut))}` : ''}
-          </p>
+         className={`m-voile absolute inset-0 z-40${part ? ' m-part' : ''}`}
+         style={{ background: 'rgba(8,11,16,.72)' }}>
+      <section role="dialog" aria-modal="true" aria-label={titre}
+               className={`@container m-boite absolute inset-x-10 bottom-[30px] top-16 flex flex-col overflow-hidden rounded-xl border border-line2 bg-card shadow-[0_40px_100px_-30px_rgba(0,0,0,.9)]${part ? ' m-part' : ''}`}>
+        {/* ---- en-tête ---- */}
+        <div className="flex items-center gap-3.5 border-b border-line py-3.5 pl-5 pr-4">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-titre font-semibold">{titre}</p>
+            <p className="truncate text-meta tabular-nums text-muted">
+              {detection.cameraNom ?? t('extrait.cameraInconnue')}
+              {detection.debut ? `, ${horloge(new Date(detection.debut))}` : ''}
+            </p>
+          </div>
+          {/* De la séquence à la relecture, à cet instant : pour voir ce qui précède et ce qui
+              suit, au-delà des quelques secondes de l'extrait. */}
+          {onRelecture && (
+            <Bouton icone={History} onClick={() => { onRelecture(); fermer(); }}>{t('extrait.voirRelecture')}</Bouton>
+          )}
+          {url && !illisible && (
+            <Bouton icone={Download} titre={t('extrait.enregistrerExtrait')} onClick={() => { void enregistrer(); }}>
+              {t('extrait.enregistrer')}
+            </Bouton>
+          )}
+          <Bouton variante="fantome" icone={X} titre={t('commun.fermerEchap')} onClick={fermer} />
         </div>
-        {/* De la séquence à la relecture, à cet instant : pour voir ce qui précède et ce qui
-            suit, au-delà des quelques secondes de l'extrait. */}
-        {onRelecture && (
-          <button onClick={() => { onRelecture(); fermer(); }}
-                  className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted transition-colors hover:border-line2 hover:text-ink">
-            <History className="h-3.5 w-3.5" /> {t('extrait.voirRelecture')}
-          </button>
-        )}
+
+        {/* ---- le bandeau : hors de l'image, comme au direct et en relecture ---- */}
         {url && !illisible && (
-          <button onClick={() => { void enregistrer(); }} title={t('extrait.enregistrerExtrait')}
-                  className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted transition-colors hover:border-line2 hover:text-ink">
-            <Download className="h-3.5 w-3.5" /> {t('extrait.enregistrer')}
-          </button>
-        )}
-        <button onClick={fermer} aria-label={t('commun.fermer')} title={t('commun.fermerEchap')}
-                className="grid h-8 w-8 place-items-center rounded-md text-soft transition-colors hover:text-ink">
-          <X className="h-4.5 w-4.5" />
-        </button>
-      </div>
-
-      {/* ---- image ---- */}
-      {/* « select-none » n'est pas cosmetique : sans lui, un glisser cree une SELECTION
-          invisible, et le glisser suivant par-dessus demarre un glisser-depose natif qui
-          tue le panoramique par pointercancel. Mesure sur le poste le 02.08.2026. */}
-      <div
-        className="relative min-h-0 flex-1 select-none overflow-hidden bg-black"
-        ref={(el) => { if (el) setLargeurVue(el.clientWidth); }}
-        style={{ cursor: vue.agrandi ? 'grab' : 'default' }}
-        {...vue.gestes}
-      >
-        {url && (
-          <video
-            ref={video}
-            src={url}
-            autoPlay
-            className="h-full w-full"
-            style={{ objectFit: 'contain' }}
-            onPlay={() => setEnLecture(true)}
-            onPause={() => setEnLecture(false)}
-            onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
-            onDurationChange={(e) => setDuree(e.currentTarget.duration || 0)}
-            /* Le seul signal d'un codec que ce PC ne sait pas décoder. Sans lui,
-               l'utilisateur ne verrait qu'un rectangle noir. */
-            onError={() => setIllisible(true)}
-          />
-        )}
-
-        {/* Le canevas recadre dans les pixels de la SOURCE : il prend la main dès qu'on
-            agrandit, et laisse l'élément vidéo afficher directement sinon. */}
-        <canvas ref={vue.canvasRef}
-                className="absolute inset-0 h-full w-full object-contain"
-                style={{ display: vue.agrandi ? 'block' : 'none' }} />
-
-        {url && (
-          <CommandesVideo
-            zoom={vue.zoom}
-            onReinitialiserZoom={vue.reinitialiser}
-            aDuSon={son.aDuSon}
-            sonActif={son.sonActif}
-            onSon={son.basculer}
-            onCapture={() => { void capturer(); }}
-          />
-        )}
-
-        {vue.agrandi && (
-          <div className="veil pointer-events-none absolute bottom-3 left-3 rounded-lg px-2.5 py-1">
-            <span className="font-mono text-[11px]"
-                  style={{ color: vue.interpole ? 'var(--bad)' : 'var(--on-1)' }}>
-              {nombre(vue.zoom, 2)}×{vue.interpole ? ` · ${t('video.interpole')}` : ''}
-            </span>
+          <div className="flex h-11 shrink-0 items-center gap-2.5 border-b border-line pl-5 pr-2">
+            {duree > 0 && (
+              <span className="text-meta text-muted">{t('extrait.duree', { n: Math.round(duree) })}</span>
+            )}
+            <div className="ml-auto flex shrink-0 items-center gap-1">
+              {vue.agrandi && (
+                <BoutonBandeau titre={t('video.revenirImage', { zoom: nombre(vue.zoom, 2) })}
+                               court={t('video.imageEntiere')} icone={ZoomOut} actif onClick={vue.reinitialiser} />
+              )}
+              <BoutonBandeau
+                titre={son.aDuSon === false ? t('video.pasDeSon')
+                  : son.sonActif ? t('video.couperSon') : t('video.activerSon')}
+                court={t('tuile.sonCourt')} icone={son.sonActif ? Volume2 : VolumeX}
+                desactive={son.aDuSon === false} actif={son.sonActif} onClick={son.basculer} />
+              <BoutonBandeau titre={t('video.capturer')} court={t('tuile.imageCourt')} icone={Camera}
+                             onClick={() => { void capturer(); }} />
+            </div>
           </div>
         )}
 
-        {!url && !erreur && (
-          <div className="absolute inset-0 grid place-items-center">
-            <div className="w-[min(320px,70vw)] text-center">
-              <p className="text-[13px] text-muted">{t('extrait.extraction')}</p>
-              <div className="mt-3 h-[3px] overflow-hidden rounded-full"
-                   style={{ background: 'rgba(255,255,255,.09)' }}>
-                <div className="h-full rounded-full"
-                     style={{ width: `${pourcent}%`, background: 'var(--accent)',
-                              transition: 'width .2s linear' }} />
+        {/* ---- image ---- */}
+        {/* « select-none » n'est pas cosmetique : sans lui, un glisser cree une SELECTION
+            invisible, et le glisser suivant par-dessus demarre un glisser-depose natif qui
+            tue le panoramique par pointercancel. Mesure sur le poste le 02.08.2026. */}
+        <div
+          className="relative min-h-0 flex-1 select-none overflow-hidden bg-black"
+          ref={(el) => { if (el) setLargeurVue(el.clientWidth); }}
+          style={{ cursor: vue.agrandi ? 'grab' : 'default' }}
+          {...vue.gestes}
+        >
+          {url && (
+            <video
+              ref={video}
+              src={url}
+              autoPlay
+              className="h-full w-full"
+              style={{ objectFit: 'contain' }}
+              onPlay={() => setEnLecture(true)}
+              onPause={() => setEnLecture(false)}
+              onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
+              onDurationChange={(e) => setDuree(e.currentTarget.duration || 0)}
+              /* Le seul signal d'un codec que ce PC ne sait pas décoder. Sans lui,
+                 l'utilisateur ne verrait qu'un rectangle noir. */
+              onError={() => setIllisible(true)}
+            />
+          )}
+
+          {/* Le canevas recadre dans les pixels de la SOURCE : il prend la main dès qu'on
+              agrandit, et laisse l'élément vidéo afficher directement sinon. */}
+          <canvas ref={vue.canvasRef}
+                  className="absolute inset-0 h-full w-full object-contain"
+                  style={{ display: vue.agrandi ? 'block' : 'none' }} />
+
+          {vue.agrandi && (
+            <div className="veil pointer-events-none absolute bottom-2.5 left-2.5 flex h-6 items-center gap-1.5 rounded-md px-2.5 text-meta tabular-nums"
+                 style={{ color: 'var(--on-1)' }}>
+              {nombre(vue.zoom, 2)}×
+              {vue.interpole && <span className="text-bad">{t('video.interpole')}</span>}
+            </div>
+          )}
+
+          {!url && !erreur && (
+            <div className="absolute inset-0 grid place-items-center">
+              <div className="w-[min(320px,70vw)] text-center">
+                <p className="text-muted">{t('extrait.extraction')}</p>
+                <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/[.09]">
+                  <div className="h-full rounded-full bg-accent"
+                       style={{ width: `${pourcent}%`, transition: 'width .2s linear' }} />
+                </div>
+                <p className="mt-2 text-meta tabular-nums text-soft">{pourcent} %</p>
               </div>
-              <p className="mt-2 font-mono text-[11px] text-soft">{pourcent} %</p>
             </div>
-          </div>
-        )}
+          )}
 
-        {(erreur || illisible) && (
-          <div className="absolute inset-0 grid place-items-center p-8">
-            <div className="max-w-md text-center">
-              <AlertCircle className="mx-auto mb-3 h-6 w-6" style={{ color: 'var(--warn)' }} />
-              <p className="text-[14px]">
-                {illisible ? t('video.sequenceIllisible') : erreur}
-              </p>
-              {illisible && (
-                <p className="mt-2 text-[12.5px] text-soft">
-                  {t('extrait.formatIndecodable')}
-                </p>
-              )}
-              {illisible && jeton && (
-                <button onClick={() => { void enregistrer(); }}
-                        className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-[13px] text-muted transition-colors hover:border-line2 hover:text-ink">
-                  <Download className="h-3.5 w-3.5" /> {t('extrait.enregistrerExtrait')}
-                </button>
-              )}
+          {(erreur || illisible) && (
+            <div className="absolute inset-0 grid place-items-center p-8">
+              <div className="max-w-md text-center">
+                <AlertCircle className="mx-auto mb-3 h-6 w-6 text-warn" aria-hidden />
+                <p className="text-titre">{illisible ? t('video.sequenceIllisible') : erreur}</p>
+                {illisible && <p className="mt-2 text-meta text-soft">{t('extrait.formatIndecodable')}</p>}
+                {illisible && jeton && (
+                  <Bouton icone={Download} className="mt-4" onClick={() => { void enregistrer(); }}>
+                    {t('extrait.enregistrerExtrait')}
+                  </Bouton>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* ---- transport ---- */}
-      {url && !illisible && (
-        <div className="flex items-center gap-3 border-t border-line px-5 py-3">
-          <button onClick={basculer} aria-label={enLecture ? t('video.pause') : t('video.lecture')}
-                  className="grid h-9 w-9 place-items-center rounded-md"
-                  style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
-            {enLecture ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </button>
-          <button onClick={() => pas(-1)} title={`${t('video.imagePrecedente')} (←)`}
-                  className="grid h-8 w-8 place-items-center rounded-md text-soft transition-colors hover:text-ink">
-            <SkipBack className="h-4 w-4" />
-          </button>
-          <button onClick={() => pas(1)} title={`${t('video.imageSuivante')} (→)`}
-                  className="grid h-8 w-8 place-items-center rounded-md text-soft transition-colors hover:text-ink">
-            <SkipForward className="h-4 w-4" />
-          </button>
+        {/* ---- transport ---- */}
+        {url && !illisible && (
+          <div className="flex items-center gap-2.5 border-t border-line px-[18px] py-3">
+            <button type="button" onClick={basculer}
+                    aria-label={enLecture ? t('video.pause') : t('video.lecture')}
+                    title={enLecture ? t('video.pause') : t('video.lecture')}
+                    className="m-pression grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-accent text-sur-accent transition hover:brightness-110">
+              {enLecture ? <Pause className="h-[17px] w-[17px] fill-current" aria-hidden />
+                : <Play className="h-[17px] w-[17px] fill-current" aria-hidden />}
+            </button>
+            <Bouton variante="fantome" taille="petit" icone={SkipBack} titre={`${t('video.imagePrecedente')} (←)`}
+                    onClick={() => pas(-1)} />
+            <Bouton variante="fantome" taille="petit" icone={SkipForward} titre={`${t('video.imageSuivante')} (→)`}
+                    onClick={() => pas(1)} />
 
-          <span className="font-mono text-[11.5px] tabular-nums text-soft">{mmss(position)}</span>
-          <input
-            type="range" min={0} max={duree || 0} step={0.02} value={position}
-            onChange={(e) => {
-              const v = video.current;
-              if (v) { v.currentTime = Number(e.target.value); setPosition(Number(e.target.value)); }
-            }}
-            aria-label={t('extrait.position')}
-            className="min-w-0 flex-1" style={{ accentColor: 'var(--accent)' }}
-          />
-          <span className="font-mono text-[11.5px] tabular-nums text-soft">{mmss(duree)}</span>
-
-          <div className="flex items-center gap-1">
-            {VITESSES.map((v) => (
-              <button key={v} onClick={() => {
-                setVitesse(v);
-                if (video.current) video.current.playbackRate = v;
+            <span className="font-mono tabular-nums text-muted">{mmss(position)}</span>
+            <input
+              type="range" min={0} max={duree || 0} step={0.02} value={position}
+              onChange={(e) => {
+                const v = video.current;
+                if (v) { v.currentTime = Number(e.target.value); setPosition(Number(e.target.value)); }
               }}
-                      aria-pressed={vitesse === v}
-                      className="rounded px-2 py-1 font-mono text-[11.5px] transition-colors"
-                      style={vitesse === v
-                        ? { background: 'var(--accent-soft)', color: 'var(--accent)' }
-                        : { color: 'var(--soft)' }}>
-                {v}×
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+              aria-label={t('extrait.position')}
+              className="min-w-0 flex-1 accent-[var(--accent)]"
+            />
+            <span className="font-mono tabular-nums text-muted">{mmss(duree)}</span>
 
-      {enregistre && (
-        <div className="border-t border-line px-5 py-2 text-[12.5px]" style={{ color: 'var(--ok)' }}>
-          {t('extrait.enregistre')} <span className="font-mono text-[11.5px]">{enregistre}</span>
-        </div>
-      )}
+            <Segment etiquette={t('relecture.vitesse')} valeur={vitesse}
+                     options={VITESSES.map((v) => ({ valeur: v, libelle: `${nombre(v, v === 0.25 ? 2 : v === 0.5 ? 1 : 0)}×` }))}
+                     onChange={(v) => {
+                       setVitesse(v);
+                       if (video.current) video.current.playbackRate = v;
+                     }} />
+          </div>
+        )}
+
+        {enregistre && (
+          <div className="border-t border-line px-5 py-2.5 text-meta text-ok">
+            {t('extrait.enregistre')} <span className="break-all font-mono">{enregistre}</span>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
