@@ -1,4 +1,13 @@
 import { createRoot } from 'react-dom/client'
+/*
+ * Les polices voyagent AVEC l'application : Inter n'etait embarquee nulle part, et chaque
+ * poste affichait donc celle qu'il avait — Inter si elle etait installee, Segoe UI sinon.
+ * Atkinson Hyperlegible a ete dessinee pour les malvoyants : c'est la police de l'acuite,
+ * celle d'une application nommee d'apres le plus vieux test de la vue (maquette A,
+ * 23.10.2026). Fichiers woff2 servis par l'application elle-meme : aucun appel reseau.
+ */
+import '@fontsource-variable/atkinson-hyperlegible-next'
+import '@fontsource-variable/atkinson-hyperlegible-mono'
 import './index.css'
 import App from './App.tsx'
 

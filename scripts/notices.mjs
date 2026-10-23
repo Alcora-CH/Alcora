@@ -72,7 +72,10 @@ SOFTWARE.`,
  * Paquets dont le code ou la production se retrouve dans l'interface livree.
  * Tailwind y figure : le CSS engendre est distribue avec l'application.
  */
-const EMBARQUES = ['react', 'react-dom', 'lucide-react', 'scheduler', 'tailwindcss'];
+const EMBARQUES = ['react', 'react-dom', 'lucide-react', 'scheduler', 'tailwindcss',
+  // Les polices sont embarquees dans l'interface (fichiers woff2) : licence SIL OFL 1.1,
+  // dont le texte doit les accompagner.
+  '@fontsource-variable/atkinson-hyperlegible-next', '@fontsource-variable/atkinson-hyperlegible-mono'];
 
 const NOMS_LICENCE = ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'license', 'LICENSE-MIT'];
 

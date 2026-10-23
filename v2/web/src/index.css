@@ -36,8 +36,9 @@
   --color-on-2: var(--on-2);
   --color-on-3: var(--on-3);
 
-  --font-sans: "Inter Variable", "Inter", system-ui, "Segoe UI", sans-serif;
-  --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+  --font-sans: "Atkinson Hyperlegible Next Variable", system-ui, "Segoe UI", sans-serif;
+  /* La chasse fixe ne sert plus qu'aux horodatages et aux valeurs techniques. */
+  --font-mono: "Atkinson Hyperlegible Mono Variable", "Cascadia Mono", Consolas, ui-monospace, monospace;
 }
 
 :root {
