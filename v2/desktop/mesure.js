@@ -8,7 +8,7 @@
  * (Get-Process sur le poste de reference) : page 28 % d'un coeur, processus graphique 29 %
  * et 914 Mo. Elle ne disait pas ce que montrait la fenetre, ni si elle etait visible — deux
  * conditions qui changent tout, puisque Chromium ralentit une page cachee. Ces lignes le
- * disent, et deux journaux se comparent alors ligne a ligne, chez Thomas comme sur un PC
+ * disent, et deux journaux se comparent alors ligne a ligne, sur le poste de reference comme sur un PC
  * plus faible.
  *
  * Une ligne couvre un INTERVALLE : la periode reguliere, ou ce qui precede un changement de

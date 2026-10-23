@@ -2,7 +2,7 @@
 
 Base de toute maquette et de tout ré-habillage du chantier UX (`docs/plan-ux.md`) : **rien
 de ce qui est listé ici ne disparaît**. Un élément peut changer de place, de forme ou de
-moment d'apparition ; il ne peut pas cesser d'exister sans une décision écrite de Thomas.
+moment d'apparition ; il ne peut pas cesser d'exister sans une décision écrite du mainteneur.
 
 Relevé sur le source (2.30.0) et sur la démo en 1600 × 960. Les noms entre `« »` sont les
 libellés français (clé i18n entre parenthèses quand elle aide à retrouver le code).
@@ -80,7 +80,7 @@ tuiles change et le flux se renégocie)
 - Mosaïque calculée (colonnes, taille) pour remplir la zone, centrée ; espacement réglable
   (Réglages, « aucun » = images jointives sans cadre).
 - **Tuile** (`CameraTile.tsx`) :
-  - Bandeau HORS image (décision de Thomas, après deux refus de boutons posés sur
+  - Bandeau HORS image (décision du mainteneur, après deux refus de boutons posés sur
     l'image) : nom ; qualité du canal `HAUTE 2160p` (accent si haute) ; état (`…` /
     « hors ligne ») ; 4 commandes toujours visibles avec étiquette maison au survol :
     « Revoir cette caméra », « Ses détections », « Enregistrer une image »,

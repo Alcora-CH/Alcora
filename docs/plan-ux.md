@@ -2,21 +2,20 @@
 
 ## Pourquoi
 
-Thomas, le 23.10.2026 : « La barre latérale, l'emplacement des boutons, les autres pages.
-Tout semble brouillon, tout semble avoir été mis ici sans avoir été réfléchi et sans
-sembler définitif. L'application semble être un jouet visuellement plutôt qu'une
-application sérieuse et professionnelle. » Gênes retenues : **lisibilité** et
-**cohérence**, en plus de la disposition.
+Le constat du mainteneur, le 23.10.2026 : la barre latérale, l'emplacement des boutons et
+les autres écrans semblaient posés là sans avoir été pensés ni arrêtés — l'application avait
+l'air d'un jouet plutôt que d'un outil sérieux et professionnel. Gênes retenues :
+**lisibilité** et **cohérence**, en plus de la disposition.
 
 Ce n'est donc pas un habillage à retoucher : c'est l'**organisation** de chaque écran
 (où vit la navigation, où vivent les actions, ce qui est prioritaire) et un **système de
 composants** commun qui manquent.
 
-Décisions de Thomas (23.10.2026) :
+Décisions du mainteneur (23.10.2026) :
 - **Deux maquettes contrastées**, à contenu identique, avant de trancher : l'identité
   actuelle (ciel, verre, Alcor) poussée vers le professionnel, et une version sobre où la
   vidéo passe d'abord.
-- **Cible de performance : un PC modeste** (celui de son père), mesuré avant/après.
+- **Cible de performance : un PC modeste**, mesuré avant/après.
 - **Electron 45 d'abord, dans une version à part**, avant tout changement visuel.
 - **Direction retenue : A « Observatoire »** (23.10.2026, sur `docs/maquette-ux.html`) : ciel
   fixe autour des images seulement, police Atkinson Hyperlegible, rail nommé, panneau
@@ -49,7 +48,7 @@ Décisions de Thomas (23.10.2026) :
 
 ## Point de départ mesuré
 
-23.10.2026, 2.30.0 sur le poste de Thomas (Electron 44.9.3, 2 caméras affichées, 10 s) :
+23.10.2026, 2.30.0 sur le poste de référence (Electron 44.9.3, 2 caméras affichées, 10 s) :
 page (rendu) **28 % d'un cœur**, processus graphique **29 % d'un cœur et 914 Mo**,
 principal 0,2 %, relais 2,7 %. Conditions non contrôlées (fenêtre, écran affiché) — d'où
 l'étape 1.
@@ -63,7 +62,7 @@ Chaque étape finit par une vérification ; rien ne passe à la suivante sans el
    - Le journal note, à intervalle régulier et à chaque changement d'écran, la charge par
      processus (`app.getAppMetrics()`) AVEC son contexte : écran, nombre de tuiles,
      fenêtre visible ou non, fond animé, flou. C'est ce qui rend les avant/après comparables,
-     chez Thomas comme chez son père.
+     sur le poste de référence comme sur un PC plus faible.
    - Terminé quand : `npm test`, construction, installation sur le poste, journal lu.
 
 2. **Inventaire iso-contenu** (`docs/inventaire-ecrans.md`).
@@ -79,7 +78,7 @@ Chaque étape finit par une vérification ; rien ne passe à la suivante sans el
    - A « Alcor abouti » et B « sobre, vidéo d'abord », mêmes données fictives, même
      contenu ; la disposition (navigation, panneau, actions globales et par tuile) est
      repensée dans les deux.
-   - Thomas tranche sur pièces ; puis la direction retenue est étendue aux autres écrans,
+   - Le mainteneur tranche sur pièces ; puis la direction retenue est étendue aux autres écrans,
      validée à son tour.
 
 4. **Système de design en code**.
@@ -92,14 +91,14 @@ Chaque étape finit par une vérification ; rien ne passe à la suivante sans el
 5. **Écran par écran**, une version par groupe : mur + panneau + rail, puis relecture,
    détections, alertes, réglages, connexion et nouveautés.
    - Pour chacun : liste de l'inventaire cochée, captures avant/après, mesures avant/après,
-     `npm test`, essai de Thomas sur son poste.
+     `npm test`, essai sur le poste de référence.
 
 6. **Performances sur PC modeste**.
    - Qualité adaptative mesurée : ciel figé ou ralenti, flou réduit quand la machine peine
      ou que la fenêtre est cachée, rendus React inutiles supprimés.
-   - Cibles chiffrées fixées après la mesure de l'étape 1 sur le PC de son père.
+   - Cibles chiffrées fixées après la mesure de l'étape 1 sur un PC plus faible.
 
 ## Ce qui n'est pas dans ce chantier
 
 Migration de la clé de signature vers la puce TPM (prévue avec une version proche, sur
-demande de Thomas), cloud, Android Auto.
+demande du mainteneur), cloud, Android Auto.
