@@ -1724,13 +1724,13 @@ taille(tailleGardee);
       affichées et leur ordre ; elle ne touche ni aux veilles, ni à la relecture, ni à l'espacement (Réglages).</p>
     <table><thead><tr><th>Élément</th><th>Variante 1 — menu « Disposition »</th><th>Variante 2 — barre sous l'en-tête</th></tr></thead><tbody>
       <tr><td>Accès</td><td>Un bouton à côté de « Caméras », qui porte le nom de la disposition en cours</td><td>Une barre de 44 px sous l'en-tête : une puce par disposition, toujours visible</td></tr>
-      <tr><td>Passer de l'une à l'autre</td><td colspan="2">Un clic, ou <b>Maj + 1 à 9</b> (les chiffres seuls isolent déjà une caméra) <span class="ajout">ajout</span></td></tr>
+      <tr><td>Passer de l'une à l'autre</td><td colspan="2">Un clic, ou <b>Ctrl + 1 à 9</b> (les chiffres seuls isolent déjà une caméra ; pas Maj : sur un clavier suisse, Maj + 1 donne « + », la touche de zoom) <span class="ajout">ajout</span></td></tr>
       <tr><td>Enregistrer</td><td colspan="2">« Enregistrer la disposition actuelle… » : un nom, et ce qu'elle gardera est dit en clair (« Allée, Bureaux — dans cet ordre »). Pendant qu'on nomme, un clic à côté ne ferme rien ; Entrée enregistre, Échap annule</td></tr>
       <tr><td>Modifiée</td><td colspan="2">Une caméra déplacée, masquée ou réaffichée après coup : la disposition se dit « modifiée », avec « Mettre à jour » et « Revenir »</td></tr>
       <tr><td>Renommer, supprimer</td><td>Au survol de chaque ligne du menu ; supprimer demande confirmation</td><td>Par « Gérer… », qui ouvre le même panneau</td></tr>
       <tr><td>Caméra absente</td><td colspan="2">Retirée du contrôleur : la disposition s'applique sans elle, et le menu le dit</td></tr>
       <tr><td>Nouvelle caméra</td><td colspan="2">Elle n'entre dans aucune disposition existante : on l'ajoute par « Caméras », puis « Mettre à jour »</td></tr>
-      <tr><td>Plein écran</td><td colspan="2">Le menu suit les commandes du plein écran, comme « Caméras » ; Maj + chiffre marche partout</td></tr>
+      <tr><td>Plein écran</td><td colspan="2">Le menu suit les commandes du plein écran, comme « Caméras » ; Ctrl + chiffre marche partout</td></tr>
       <tr><td>Où c'est gardé</td><td colspan="2">Sur ce PC, avec l'ordre et les caméras masquées d'aujourd'hui ; au plus neuf dispositions</td></tr>
     </tbody></table>`;
   document.getElementById('scene').appendChild(notes);
@@ -1742,13 +1742,13 @@ taille(tailleGardee);
     return `<div class="D-ligne ${i === 0 ? 'active' : ''}" role="button">
       <span class="coche">${i === 0 ? ic('i-ok') : ''}</span>
       <div style="min-width:0"><div class="nom">${d.nom}${i === 0 && etat.etat === 'modifiee' ? ' <span style="color:var(--alcor);font-weight:500;font-size:12px">· modifiée</span>' : ''}</div><div class="quoi">${quoi}</div></div>
-      <span class="A-kbd">Maj ${i + 1}</span>
+      <span class="A-kbd">Ctrl ${i + 1}</span>
       <span class="gestes"><button class="A-btn petit fantome" title="Renommer « ${d.nom} »">${ic('i-crayon')}</button><button class="A-btn petit fantome" title="Supprimer « ${d.nom} »">${ic('i-corbeille')}</button></span>
     </div>`;
   };
   function panneau() {
     if (etat.etat === 'aucune') {
-      return `<h3>Dispositions</h3><p class="D-vide">Une disposition garde les caméras affichées et leur ordre. Enregistre celle-ci pour y revenir d'un clic — ou de Maj + chiffre.</p>
+      return `<h3>Dispositions</h3><p class="D-vide">Une disposition garde les caméras affichées et leur ordre. Enregistre celle-ci pour y revenir d'un clic — ou de Ctrl + chiffre.</p>
         <div class="D-sep"></div><button class="D-action">${ic('i-plus')}Enregistrer la disposition actuelle…</button>`;
     }
     let h = `<h3>Dispositions</h3>${DISPOS.map(ligne).join('')}`;
@@ -1763,7 +1763,7 @@ taille(tailleGardee);
     if (etat.etat === 'nommer') {
       h += `<div class="D-nommer"><span class="A-etiq">Nom de la nouvelle disposition</span>
         <div class="A-champ"><input value="Soirée" aria-label="Nom de la nouvelle disposition"></div>
-        <p class="aide">Ce que tu vois maintenant : <b style="color:var(--lumiere)">Allée, Bureaux</b> — dans cet ordre. Elle prendra Maj 4.</p>
+        <p class="aide">Ce que tu vois maintenant : <b style="color:var(--lumiere)">Allée, Bureaux</b> — dans cet ordre. Elle prendra Ctrl 4.</p>
         <p class="aide">Entrée enregistre, Échap annule ; un clic à côté ne ferme rien tant que tu nommes.</p>
         <div class="boutons"><button class="A-btn petit">Annuler</button><button class="A-btn petit primaire">Enregistrer</button></div></div>`;
     } else h += `<button class="D-action">${ic('i-plus')}Enregistrer la disposition actuelle…</button>`;
@@ -1777,7 +1777,7 @@ taille(tailleGardee);
     const a = active();
     const modif = etat.etat === 'modifiee';
     document.getElementById('dispoBouton').innerHTML = v1
-      ? `<button class="A-btn ${etat.etat !== 'aucune' ? '' : ''}" title="Dispositions du mur (Maj + 1 à 9)">${ic('i-dispo')}${a ? `${a.nom}${modif ? ' <span style="color:var(--alcor);font-size:12px">· modifiée</span>' : ''}` : 'Disposition'}${ic('i-bas')}</button>`
+      ? `<button class="A-btn ${etat.etat !== 'aucune' ? '' : ''}" title="Dispositions du mur (Ctrl + 1 à 9)">${ic('i-dispo')}${a ? `${a.nom}${modif ? ' <span style="color:var(--alcor);font-size:12px">· modifiée</span>' : ''}` : 'Disposition'}${ic('i-bas')}</button>`
       : '';
     const barre = document.getElementById('dispoBarre');
     barre.className = v1 ? '' : 'D-barre';
@@ -1785,7 +1785,7 @@ taille(tailleGardee);
       + (etat.etat === 'aucune' ? '' : DISPOS.map((d, i) => `<button class="A-puce" aria-pressed="${i === 0}">${i === 0 ? ic('i-ok') : ''}${d.nom}${i === 0 && modif ? '<span class="modif">· modifiée</span>' : ''}</button>`).join(''))
       + (modif ? '<button class="A-btn petit primaire">Mettre à jour « Tout »</button><button class="A-btn petit">Revenir</button>' : '')
       + `<button class="A-btn petit fantome">${ic('i-plus')}Enregistrer…</button>`
-      + `<span class="droite">Maj + 1 à 9<button class="A-btn petit fantome">Gérer…</button></span>`;
+      + `<span class="droite">Ctrl + 1 à 9<button class="A-btn petit fantome">Gérer…</button></span>`;
     const menu = document.getElementById('dispoMenu');
     menu.hidden = !(v1 || etat.etat === 'nommer');
     menu.innerHTML = panneau();
