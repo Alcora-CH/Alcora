@@ -42,25 +42,31 @@
 }
 
 :root {
-  --bg: #1b1e23;
-  --card: #23272e;
-  --card2: #2a2f37;
-  --line: #353b44;
-  --line2: #434a55;
-  --ink: #dad5cb;
-  --muted: #9a958b;
-  --soft: #75716a;
-  --accent: #d2a263;
-  --accent-soft: #322a1d;
-  --accent-d: #e6b877;
-  --ok: #8fae5a;
-  --ok-soft: #232a18;
-  --info: #78a6e0;
-  --info-soft: #1a2636;
-  --warn: #d0a215;
-  --warn-soft: #2e2811;
-  --bad: #d8685a;
-  --bad-soft: #2e1c19;
+  /*
+   * Palette « Observatoire » (maquette A, validée le 23.10.2026, docs/maquette-ux-a.html).
+   * La nuit bleutée du fond, l'instrument des surfaces, l'or d'Alcor réservé à ce qui est
+   * observé : le direct, la sélection, la tête de lecture. Les NOMS restent ceux d'avant :
+   * chaque classe Tailwind (bg-card, text-muted…) suit sans qu'un composant change.
+   */
+  --bg: #0e131b;                              /* nuit */
+  --card: #151b25;                            /* instrument : rail, panneaux, cartes */
+  --card2: #1e2633;                           /* graphite : contrôles, champs */
+  --line: rgba(206, 214, 229, 0.09);
+  --line2: rgba(206, 214, 229, 0.17);
+  --ink: #ece8df;                             /* lumière */
+  --muted: #a9b0bc;
+  --soft: #737d8b;
+  --accent: #dca95c;                          /* Alcor */
+  --accent-soft: rgba(220, 169, 92, 0.14);
+  --accent-d: #e8bd78;
+  --ok: #74c494;
+  --ok-soft: rgba(116, 196, 148, 0.12);
+  --info: #86afcf;
+  --info-soft: rgba(134, 175, 207, 0.12);
+  --warn: #e0a23c;
+  --warn-soft: rgba(224, 162, 60, 0.12);
+  --bad: #e3735f;
+  --bad-soft: rgba(227, 115, 95, 0.12);
 
   /* rampe neutre, au-dessus de la vidéo uniquement */
   --on-veil: rgba(16, 16, 16, 0.72);
