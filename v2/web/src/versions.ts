@@ -39,6 +39,26 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.36.0',
+    date: '23.10.2026',
+    fr: [
+      'Les dispositions du mur : le bouton « Disposition », à côté de « Caméras », garde les caméras '
+      + 'affichées et leur ordre sous un nom, et y revient d’un clic — ou de Ctrl + 1 à 9, jusqu’à '
+      + 'neuf dispositions. Le direct dit laquelle est en cours.',
+      'Une caméra déplacée, masquée ou réaffichée après coup, et la disposition se dit « modifiée », '
+      + 'avec « Mettre à jour » et « Revenir ». Une caméra arrivée depuis sur le contrôleur n’y entre '
+      + 'pas d’elle-même ; une caméra retirée est sautée, et le menu le dit.',
+    ],
+    en: [
+      'Wall layouts: the “Layout” button, next to “Cameras”, keeps the cameras shown and their order '
+      + 'under a name, and brings them back with a click — or Ctrl + 1 to 9, up to nine layouts. The '
+      + 'live view says which one is current.',
+      'Move, hide or show a camera afterwards and the layout says “modified”, with “Update” and '
+      + '“Back to”. A camera added to the controller since does not join it on its own; a removed '
+      + 'camera is skipped, and the menu says so.',
+    ],
+  },
+  {
     version: '2.35.0',
     date: '23.10.2026',
     fr: [
