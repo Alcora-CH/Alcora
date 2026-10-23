@@ -57,7 +57,7 @@ export function NouveautesScreen({ nouveautes, onFermer }: {
   return (
     <div ref={voile}
          className={`m-voile absolute inset-0 z-50 grid place-items-center${part ? ' m-part' : ''}`}
-         style={{ background: 'rgba(12,14,18,.72)', backdropFilter: 'blur(3px)' }}>
+         style={{ background: 'rgba(8,11,16,.72)' }}>
       {/* La boite est un ilot de verre : le voile sombre en dessous garantit la
           lisibilite quelle que soit la scene. */}
       <div className={`m-boite ilot flex max-h-[78vh] w-[min(560px,92vw)] flex-col overflow-hidden${part ? ' m-part' : ''}`}>

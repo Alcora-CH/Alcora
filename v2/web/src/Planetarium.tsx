@@ -41,9 +41,14 @@ const FILANTES: Array<[string, string, string, string, string, string]> = [
   ['24%', '15s', '11s', '26deg', '52vw', '26vw'],
 ];
 
-export function Planetarium() {
+/**
+ * `anime` faux : le ciel reste, IMMOBILE — c'est le reglage par defaut depuis la direction
+ * « Observatoire » (23.10.2026). Rien n'est demonte : les memes etoiles, figees, ne coutent
+ * plus rien au compositeur une fois peintes.
+ */
+export function Planetarium({ anime = false }: { anime?: boolean }) {
   return (
-    <div className="planetarium" aria-hidden="true">
+    <div className={anime ? 'planetarium' : 'planetarium fige'} aria-hidden="true">
       <div className="plan-ciel">
         <div className="plan-voie plan-p3" />
         <div className="plan-voie plan-p2" />

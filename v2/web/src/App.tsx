@@ -33,8 +33,15 @@ const ESPACES = [
 
 /** Le repli du panneau survit au redemarrage : le replier chaque fois userait. */
 const CLE_PANNEAU = 'protectviewer.panneau';
-/** Le fond anime (Planetarium) : un choix d'apparence, actif par defaut. */
-const CLE_FOND = 'protectviewer.fond';
+/**
+ * Le fond anime (Planetarium) : un choix d'apparence, ETEINT par defaut depuis la direction
+ * « Observatoire » (23.10.2026) — le ciel reste, mais fixe.
+ *
+ * Nouvelle cle, et c'est voulu : l'ancienne (« protectviewer.fond ») etait ecrite des le
+ * premier lancement, choix ou pas. Tous les postes la portaient donc a « anime » sans que
+ * personne l'ait decide, et changer seulement la valeur par defaut n'aurait touche personne.
+ */
+const CLE_FOND = 'alcora.fond';
 /**
  * Hauteur du bandeau pose AU-DESSUS de chaque vue, hors de l'image.
  *
@@ -168,9 +175,8 @@ export default function App() {
     // Zero par defaut : les images se touchent, un seul mur.
     return brut !== null && Number.isFinite(n) ? Math.min(24, Math.max(0, n)) : 0;
   });
-  /* Le Planetarium, actif par defaut : le verre a besoin d'un ciel a refracter. */
   const [fondAnime, setFondAnime] = useState(
-    () => localStorage.getItem(CLE_FOND) !== 'fige',
+    () => localStorage.getItem(CLE_FOND) === 'anime',
   );
   useEffect(() => {
     localStorage.setItem(CLE_FOND, fondAnime ? 'anime' : 'fige');
@@ -539,7 +545,7 @@ export default function App() {
   if (!configured) {
     return (
       <div className="app-scene isolate relative h-full">
-        {fondAnime && <Planetarium />}
+        <Planetarium anime={fondAnime} />
         <SetupScreen onDone={() => { setConfigured(true); setIntroFinie(true); }} />
       </div>
     );
@@ -821,7 +827,7 @@ export default function App() {
         {/* Le ciel vit SOUS tout le contenu de la scene (z negatif, scene isolee) :
             derriere les tuiles, derriere le texte des ecrans, sous le verre du
             panneau qui le floute. Le demonter est un reglage d'apparence. */}
-        {fondAnime && <Planetarium />}
+        <Planetarium anime={fondAnime} />
         {/* Ces deux boutons agissent sur l'IMAGE : replier le panneau pour la dégager,
             l'étendre à toute la dalle. Hors du direct ils n'ont pas d'objet, et ils se
             posaient sur la barre de filtres des Détections, masquant le premier d'entre

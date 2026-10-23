@@ -129,8 +129,9 @@ export const fr = {
     'À « aucun », les images se touchent, sans cadre — un seul mur d’images.',
   'reglages.apparence.fond': 'Fond animé',
   'reglages.apparence.fondDetail':
-    'Le planétarium derrière les images : étoiles, filantes, nébuleuses. Il se fige ' +
-    'de lui-même si Windows demande de réduire les animations.',
+    'Fait vivre le ciel derrière les images : il tourne, des étoiles filent, les nébuleuses ' +
+    'dérivent. Éteint, le ciel reste, immobile. Il se fige aussi de lui-même si Windows ' +
+    'demande de réduire les animations.',
 
   'reglages.demarrage.titre': 'Démarrage',
   'reglages.demarrage.ouvrir': 'Ouvrir Alcora avec Windows',

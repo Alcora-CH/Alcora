@@ -199,10 +199,20 @@
    c'est assumé, et c'est pourquoi il se coupe d'un clic.
    ---------------------------------------------------------------------------------------- */
 
+/*
+ * DIRECTION « OBSERVATOIRE » (23.10.2026) : PLUS DE FLOU NULLE PART.
+ *
+ * Le verre est remplacé par des surfaces pleines, à la teinte de l'instrument. Deux
+ * raisons, l'une de dessin, l'autre de mesure : la maquette A validée n'en a pas, et chaque
+ * flou d'arrière-plan oblige le processus graphique à recomposer ce qu'il y a dessous à
+ * chaque image — pendant que les flux 4K décodent. Mesure du 23.10.2026 sur le poste de
+ * référence, deux caméras affichées : processus graphique 29 % d'un cœur et 914 Mo.
+ * Les classes (.theme-verre, .ilot, .veil) gardent leur nom : aucun composant à toucher.
+ */
 .theme-verre {
-  --on-veil: rgba(255, 255, 255, 0.10);
-  --on-brd: rgba(255, 255, 255, 0.16);
-  --on-blur: blur(14px) saturate(140%);
+  --on-veil: rgba(12, 15, 20, 0.78);
+  --on-brd: rgba(255, 255, 255, 0.12);
+  --on-blur: none;
 }
 
 /* Toute surface flottante partage cette matière. */
@@ -213,72 +223,33 @@
   backdrop-filter: var(--on-blur);
 }
 
-/* La bande d'icônes et le panneau flottent au-dessus de la vidéo.
-   Jetons revus le 03.08.2026 avec le Planétarium : le flou de 20 px ÉTALAIT les
-   étoiles ponctuelles jusqu'à les effacer — c'est lui qui rendait le verre opaque.
-   8 px adoucit sans anéantir, et le voile tombe à presque rien : le ciel EST le
-   fond du panneau, le verre n'est que sa texture. */
+/* La bande d'icônes et le panneau flottent toujours au-dessus de la vidéo — c'est leur
+   disposition, que l'étape « écran par écran » reprendra. Leur matière, elle, devient
+   pleine : la surface de l'instrument, sans flou ni reflet. Sur une surface pleine, les
+   tons du thème restent lisibles tels quels : la rampe lumineuse et l'ombre de texte que
+   le verre exigeait (2.23.1) n'ont plus d'objet. */
 .theme-verre .app-rail,
 .theme-verre .app-panel {
   position: absolute;
   top: 0;
   bottom: 0;
   z-index: 20;
-  background: rgba(28, 31, 37, 0.22);
-  border-color: rgba(255, 255, 255, 0.18);
-  -webkit-backdrop-filter: blur(8px) saturate(160%);
-  backdrop-filter: blur(8px) saturate(160%);
+  background: var(--card);
+  border-color: var(--line);
 }
 .theme-verre .app-rail { left: 0; }
 .theme-verre .app-panel {
   left: 56px;                          /* largeur de la bande d'icônes */
-  border-radius: 0 18px 18px 0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),   /* arête douce, non criarde */
-    24px 0 44px rgba(0, 0, 0, 0.34);
-}
-/* Lueur d'angle diffuse — le seul reflet, sans trait spéculaire net. */
-.theme-verre .app-panel::before {
-  content: "";
-  position: absolute; inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(130% 90% at 8% -8%, rgba(255, 255, 255, 0.10), transparent 50%);
-  pointer-events: none;
+  box-shadow: 18px 0 40px -18px rgba(0, 0, 0, 0.6);
 }
 
-/*
- * Sur le verre, la palette du panneau passe à la rampe LUMINEUSE.
- *
- * Les tons du thème (soft, muted) étaient calibrés pour des cartes opaques ;
- * posés sur une vidéo claire à travers le verre, ils se noyaient — capture du
- * 03.08.2026 : « Rotation automatique » et les titres de sections illisibles
- * sur le jardin. Grâce à `@theme inline`, redéfinir les variables ICI remappe
- * toutes les classes de texte du panneau, sans toucher un composant.
- *
- * L'ombre de texte fine fait le reste : elle détache les lettres des zones
- * brillantes. Le verre, lui, ne change pas — il est validé tel quel.
- */
-.theme-verre .app-panel,
-.theme-verre .app-rail {
-  --ink: #f4f3f0;
-  --muted: #dedcd7;
-  --soft: #c2c0bb;
-}
-.theme-verre .app-panel {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 0 12px rgba(0, 0, 0, 0.35);
-}
-
-/*
- * Le fond de la scène. Sans lui, la zone autour des images restait le charbon plat du
- * thème de base : le verre n'avait rien à diffuser hors de la vidéo, et l'ensemble se
- * voyait « à moitié fait ». Un dégradé sombre et lent donne au verre de la matière
- * partout, pour un coût nul — c'est un fond statique, composé une fois.
- */
+/* Le fond de la scène : la nuit, éclairée d'un voile bleu en haut et d'un reflet d'or en
+   bas — un fond statique, composé une fois, comme le ciel de la maquette A. */
 .theme-verre .app-scene {
   background:
-    radial-gradient(55% 45% at 18% 0%, rgba(210, 162, 99, 0.06), transparent 70%),
-    radial-gradient(50% 55% at 88% 100%, rgba(120, 166, 224, 0.05), transparent 70%),
-    linear-gradient(160deg, #232830, #14161a);
+    radial-gradient(60% 50% at 18% 0%, rgba(42, 53, 80, 0.35), transparent 70%),
+    radial-gradient(45% 45% at 88% 100%, rgba(58, 47, 34, 0.25), transparent 70%),
+    var(--bg);
 }
 
 /*
@@ -292,9 +263,19 @@
    compris le texte des écrans non positionnés. */
 .planetarium {
   position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
-  background: radial-gradient(120% 90% at 78% 12%, #181d26 0%, #12161c 55%, #0e1116 100%);
+  background: radial-gradient(120% 90% at 78% 12%, #141b27 0%, #0f141c 55%, #0b0f15 100%);
 }
 .planetarium * { will-change: transform, opacity; }
+
+/*
+ * Le ciel FIXE — le défaut de la direction « Observatoire ». Les mêmes étoiles, immobiles.
+ * « will-change » est retiré aussi : il réserve un calque au processus graphique pour
+ * CHAQUE élément, qu'il bouge ou non — une soixantaine de calques pour un fond qui ne
+ * bouge plus. Filante et satellite n'ont pas de sens à l'arrêt : ils disparaissent.
+ */
+.planetarium.fige * { animation: none !important; will-change: auto; }
+.planetarium.fige .plan-filante,
+.planetarium.fige .plan-satellite { display: none; }
 
 /* 1+2 · le ciel qui tourne (un tour par HEURE), trois profondeurs d'étoiles. */
 .plan-ciel { position: absolute; inset: -42%; transform-origin: 76% 22%;
@@ -380,9 +361,8 @@
    deux distances, bord de verre clair — sans cela, des rectangles à bord dur
    semblaient posés SUR le fond. */
 .tuile-flottante {
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .60), 0 4px 14px rgba(0, 0, 0, .45),
-              0 0 0 1px rgba(0, 0, 0, .35);
+  border-color: var(--line2) !important;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .7);
 }
 
 /* ------------------------------------------------- Les écrans en îlots de verre
@@ -396,42 +376,26 @@
    translucide : grâce à « @theme inline », les classes border-line / bg-line /
    bg-card2 des composants suivent d'elles-mêmes — aucun composant à retoucher,
    et un écran sorti de son îlot retrouverait ses tons pleins. */
+/* L'îlot devient une carte pleine de l'instrument (direction « Observatoire ») : les jetons
+   globaux suffisent à l'intérieur, plus besoin de les passer en translucide. */
 .ilot {
-  --line: rgba(255, 255, 255, 0.12);
-  --line2: rgba(255, 255, 255, 0.28);
-  --card: rgba(255, 255, 255, 0.05);
-  --card2: rgba(255, 255, 255, 0.08);
-  background: rgba(28, 31, 37, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.60), 0 4px 14px rgba(0, 0, 0, 0.45);
-  -webkit-backdrop-filter: blur(8px) saturate(160%);
-  backdrop-filter: blur(8px) saturate(160%);
+  background: var(--card);
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
 }
 
-/* Les cartes-vignettes (résultats, pellicule, caméras de la relecture) :
-   flottantes mais SANS flou d'arrière-plan — l'image les couvre presque en
-   entier, et en flouter des dizaines coûterait du GPU pour rien. */
+/* Les cartes-vignettes (résultats, pellicule, caméras de la relecture). */
 .carte-flottante {
-  background: rgba(10, 12, 16, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.50), 0 3px 10px rgba(0, 0, 0, 0.40);
+  background: var(--card);
+  border: 1px solid var(--line2);
+  box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.6);
 }
 
 /* Champ posé directement sur le ciel, hors îlot (la date de la relecture). */
 .champ-ciel {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-/* La rampe lumineuse s'étend à toute la scène — même remède que le panneau
-   (2.23.1) : les tons calibrés pour des cartes opaques se noyaient sur le
-   verre. Les surimpressions vidéo, elles, restent sur la rampe neutre --on-*. */
-.theme-verre .app-scene {
-  --ink: #f4f3f0;
-  --muted: #dedcd7;
-  --soft: #c2c0bb;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 0 12px rgba(0, 0, 0, 0.35);
+  background: var(--card2);
+  border-color: var(--line2);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -112,8 +112,9 @@ export const it: Record<Cle, string> = {
     'Con «nessuno», le immagini si toccano, senza cornice — un solo muro di immagini.',
   'reglages.apparence.fond': 'Sfondo animato',
   'reglages.apparence.fondDetail':
-    'Il planetario dietro le immagini: stelle, stelle cadenti, nebulose. Si ferma da ' +
-    'solo se Windows chiede di ridurre le animazioni.',
+    'Dà vita al cielo dietro le immagini: ruota, passano stelle cadenti, le nebulose ' +
+    'si spostano. Spento, il cielo resta, immobile. Si ferma anche da solo se Windows ' +
+    'chiede di ridurre le animazioni.',
 
   'reglages.demarrage.titre': 'Avvio',
   'reglages.demarrage.ouvrir': 'Apri Alcora con Windows',

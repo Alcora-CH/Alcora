@@ -113,8 +113,9 @@ export const de: Record<Cle, string> = {
     'Bei «keiner» berühren sich die Bilder rahmenlos — eine einzige Bildwand.',
   'reglages.apparence.fond': 'Animierter Hintergrund',
   'reglages.apparence.fondDetail':
-    'Das Planetarium hinter den Bildern: Sterne, Sternschnuppen, Nebel. Es steht von ' +
-    'selbst still, wenn Windows weniger Animationen verlangt.',
+    'Belebt den Himmel hinter den Bildern: Er dreht sich, Sternschnuppen ziehen vorbei, ' +
+    'Nebel treiben. Ausgeschaltet bleibt der Himmel, unbewegt. Er steht auch von selbst ' +
+    'still, wenn Windows weniger Animationen verlangt.',
 
   'reglages.demarrage.titre': 'Start',
   'reglages.demarrage.ouvrir': 'Alcora mit Windows öffnen',
