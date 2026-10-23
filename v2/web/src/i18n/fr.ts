@@ -582,6 +582,9 @@ export const fr = {
 
   // Revue des groupes 2 a 7 (23.10.2026)
   'veilles.interrupteur': 'Veille d’Alcora',
+
+  // Mise a jour refusee, raison dite (23.10.2026)
+  'reglages.version.refusee': 'La version {version} a été refusée : elle ne porte pas la signature d’Alcora. La version installée reste en service.',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

@@ -177,6 +177,10 @@ export function ReglagesScreen({
                       : maj?.etat === 'telechargement' ? t('reglages.version.telechargement',
                           { version: maj.version ?? '', pourcent: maj.pourcent ?? 0 })
                       : maj?.etat === 'prete' ? t('reglages.version.prete', { version: maj.version ?? '' })
+                      /* Un refus se dit, et en rouge : une version non authentique a été écartée,
+                         et celle qui tourne reste en service (planche des états dégradés). */
+                      : maj?.etat === 'erreur' && maj.refusee
+                        ? <span className="text-bad">{t('reglages.version.refusee', { version: maj.refusee })}</span>
                       : maj?.etat === 'erreur' ? t('reglages.version.erreur')
                       : maj?.etat === 'manuelle' ? t('reglages.version.manuelle')
                       : t('reglages.version.repos')}>

@@ -198,7 +198,14 @@ class GestionnaireMaj {
 
     if (!verdict.ok) {
       this.journal.erreur('update', `version ${cible.Version} REFUSED, not authentic: ${verdict.raison}`);
-      throw new Error(`version ${cible.Version} not authentic`);
+      /*
+       * Un REFUS n'est pas une panne, et l'interface doit pouvoir le dire : la version
+       * refusee voyage avec l'erreur (« refusee »). Le message, lui, ne change pas — le
+       * journal et test-maj.js le connaissent.
+       */
+      const refus = new Error(`version ${cible.Version} not authentic`);
+      refus.refusee = cible.Version;
+      throw refus;
     }
     this.journal.info('update', `version ${cible.Version} signed by ${verdict.cle}`);
   }
@@ -377,7 +384,7 @@ class GestionnaireMaj {
     } catch (e) {
       // Un poste hors ligne n'est pas une panne : on le note, on reessaiera seul.
       this.journal.alerte('update', `check impossible: ${e.message}`);
-      this.emettre({ etat: 'erreur', message: e.message });
+      this.emettre({ etat: 'erreur', message: e.message, ...(e.refusee ? { refusee: e.refusee } : {}) });
     } finally {
       this.enCours = false;
     }

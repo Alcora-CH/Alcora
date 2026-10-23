@@ -314,9 +314,13 @@ Cinquième groupe, même branche, vérifié dans la démo.
 - [x] Ce qui a changé : toutes les versions dans une seule carte, la version installée
       marquée ; en dernier.
 
-**Reporté, à faire dans une étape à part** : l'état « mise à jour refusée » qui dit sa
-raison (planche des états dégradés). Il touche la chaîne de mise à jour (`maj.js`) et doit
-passer par ses tests (`test-maj.js`) — pas un chantier d'affichage.
+- [x] **Mise à jour refusée, raison dite** (planche des états dégradés, fait le même jour dans
+      une étape à part) : le refus d'une version non authentique porte sa version
+      (`maj.js`, « refusee »), la surveillance la transmet, et la rangée Version dit en rouge
+      « La version X a été refusée : elle ne porte pas la signature d'Alcora. La version
+      installée reste en service. » Au lancement, un refus ne passe plus pour « à jour » ;
+      une panne de réseau, si. Trois vérifications ajoutées à `test-maj.js`, chacune vue
+      rouge en retirant ce qu'elle surveille. Non vu à l'œil : la démo ne simule pas de refus.
 
 ## 10. Où est passé chaque élément — Connexion (23.10.2026)
 

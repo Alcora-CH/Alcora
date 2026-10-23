@@ -1629,7 +1629,9 @@ async function majAuDemarrage() {
     // L'application demarre : le relais doit pouvoir repartir.
     majImminente = false;
     maj.demarrage = false;
-    pushMajState({ etat: 'aucune' });
+    // Un REFUS se dit : faire passer une version non authentique pour « à jour » la cachait
+    // (limite connue de la 2.30.0). Une panne de réseau au lancement, elle, n'alarme pas.
+    pushMajState(e.refusee ? { etat: 'erreur', message: e.message, refusee: e.refusee } : { etat: 'aucune' });
     // La decouverte a pu etre suspendue par le verrou : on la relance.
     demarrage = startFromStoredCredentials();
   } finally {

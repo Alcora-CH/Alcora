@@ -554,4 +554,7 @@ export const it: Record<Cle, string> = {
 
   // Revue des groupes 2 a 7 (23.10.2026)
   'veilles.interrupteur': 'Guardia di Alcora',
+
+  // Mise a jour refusee, raison dite (23.10.2026)
+  'reglages.version.refusee': 'La versione {version} è stata rifiutata: non porta la firma di Alcora. La versione installata resta in servizio.',
 };

@@ -109,9 +109,15 @@ Chaque étape finit par une vérification ; rien ne passe à la suivante sans el
   900 à 1600 px) : rail nommé, barre d'état, page Système, fenêtre des raccourcis, en-tête
   du direct, menu Caméras, colonne Activité, bandeau des tuiles ; panneau « Surveillance »
   retiré, chacun de ses éléments relogé (`docs/inventaire-ecrans.md`, section 5).
-  **Reste pour ce groupe** : les captures et mesures avant/après sur le poste (la démo n'a
-  pas de flux vidéo, et la mesure arrive avec la version Electron 45), puis l'essai de
-  Thomas. Rien n'est publié : la branche attend la version Electron 45.
+- **Étape 5, tous les autres groupes — codés le 23.10.2026** sur la même branche : Relecture,
+  Détections, Alertes, Réglages (sommaire, Aide, À propos), Connexion, surimpressions, et les
+  liens d'une détection vers la relecture à cet instant ; chaque groupe relu contre son
+  inventaire (`docs/inventaire-ecrans.md`, sections 6 à 11). Deux revues indépendantes (39
+  remarques fondées, toutes corrigées, correctifs relus). L'état « mise à jour refusée »
+  qui dit sa raison est fait aussi, avec ses tests.
+- **Reste** : les captures et mesures avant/après sur le poste (la démo n'a pas de flux
+  vidéo, et la mesure arrive avec la version Electron 45), puis l'essai de Thomas. Rien
+  n'est publié : la branche attend la version Electron 45, qui part seule d'abord.
 
 ## Ce qui n'est pas dans ce chantier
 

@@ -302,6 +302,8 @@ export interface MajState {
   version?: string;
   pourcent?: number;
   message?: string;
+  /** La version REFUSEE (non authentique), quand l'erreur est un refus et non une panne. */
+  refusee?: string;
   /** Vrai tant que la sequence de lancement occupe l'ecran. */
   demarrage?: boolean;
 }

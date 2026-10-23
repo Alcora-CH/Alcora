@@ -508,6 +508,39 @@ function gestionnaire({ contenu, journal, version = '1.0.0', declaration = decla
     checkBool('rien n’accuse la version', !journal.contient('REFUSED'));
   }
 
+  console.log('\n=== Un refus se NOMME, une panne non ===');
+  {
+    /*
+     * Ajoute le 23.10.2026 : l'interface dit desormais « la version X a ete refusee : elle
+     * ne porte pas la signature d'Alcora ». Elle ne peut le dire que si l'erreur porte la
+     * version refusee — et elle ne doit JAMAIS le dire d'une simple coupure de reseau.
+     */
+    const refus = gestionnaire({
+      contenu: PAQUET, journal: journalDeTest(),
+      declaration: () => ({ ok: false, status: 404, json: async () => ({}) }),
+    }).g;
+    let e1 = null;
+    await refus.telechargerEtVerifier(cibleDe(PAQUET)).catch((e) => { e1 = e; });
+    check('le refus porte sa version', '2.0.0', e1?.refusee);
+
+    const coupure = gestionnaire({
+      contenu: PAQUET, journal: journalDeTest(),
+      declaration: () => { throw new TypeError('fetch failed'); },
+    }).g;
+    let e2 = null;
+    await coupure.telechargerEtVerifier(cibleDe(PAQUET)).catch((e) => { e2 = e; });
+    check('une coupure ne porte aucune version refusee', undefined, e2?.refusee);
+
+    // La surveillance de fond transmet la version refusee a la page.
+    const etats = [];
+    refus.onEtat = (etat) => etats.push(etat);
+    refus.chercher = async () => cibleDe(PAQUET);
+    await refus.verifier();
+    const dernier = etats[etats.length - 1];
+    check('l’etat emis dit le refus', { etat: 'erreur', refusee: '2.0.0' },
+      { etat: dernier?.etat, refusee: dernier?.refusee });
+  }
+
   console.log('\n=== Le manifeste : une entree hors forme n’est jamais suivie ===');
   {
     /*

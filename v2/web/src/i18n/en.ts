@@ -552,4 +552,7 @@ export const en: Record<Cle, string> = {
 
   // Revue des groupes 2 a 7 (23.10.2026)
   'veilles.interrupteur': 'Alcora watch',
+
+  // Mise a jour refusee, raison dite (23.10.2026)
+  'reglages.version.refusee': 'Version {version} was refused: it does not carry Alcora’s signature. The installed version stays in service.',
 };
