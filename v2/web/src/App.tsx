@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Activity, Bell, Clapperboard, Eye, EyeOff, Maximize2, Minimize2, PanelLeftClose, PanelLeftOpen, RotateCw,
-  Search, Settings, Video,
-} from 'lucide-react';
+import { Maximize2, Minimize2, PanelRightOpen, RotateCw } from 'lucide-react';
 import { CameraTile } from './video/CameraTile';
 import { SetupScreen } from './screens/SetupScreen';
 import { ReglagesScreen } from './screens/ReglagesScreen';
@@ -11,14 +8,16 @@ import { RelectureScreen } from './screens/RelectureScreen';
 import { LecteurExtrait } from './screens/LecteurExtrait';
 import { NouveautesScreen } from './screens/NouveautesScreen';
 import { CielScreen } from './screens/CielScreen';
-import { ColonneEtat } from './screens/ColonneEtat';
+import { ColonneActivite } from './screens/ColonneActivite';
 import { VeillesScreen } from './screens/VeillesScreen';
 import { SystemeScreen } from './screens/SystemeScreen';
 import { BarreEtat } from './cadre/BarreEtat';
 import { Raccourcis } from './cadre/Raccourcis';
-import { Marque } from './Marque';
+import { Rail, type Espace } from './cadre/Rail';
+import { MenuCameras } from './cadre/MenuCameras';
+import { Bouton } from './ui/Bouton';
+import { EnTete, Touche } from './ui/Cadre';
 import { Planetarium } from './Planetarium';
-import { bestChannel } from './video/channel';
 import { meilleureGrille } from './video/grille';
 import { bridge, pontDisponible } from './lib/bridge';
 import { FournisseurActivite } from './lib/FournisseurActivite';
@@ -29,16 +28,8 @@ import type { RelaisAcces,
   SystemeEtat,
 } from './types/protect';
 
-const ESPACES = [
-  { id: 'direct', cle: 'espace.direct', Icon: Video },
-  { id: 'detections', cle: 'espace.detections', Icon: Search },
-  { id: 'relecture', cle: 'espace.relecture', Icon: Clapperboard },
-  { id: 'alertes', cle: 'espace.alertes', Icon: Bell },
-  { id: 'systeme', cle: 'espace.systeme', Icon: Activity },
-] as const;
-
-/** Le repli du panneau survit au redemarrage : le replier chaque fois userait. */
-const CLE_PANNEAU = 'protectviewer.panneau';
+/** Le retrait de la colonne Activite survit au redemarrage : la retirer chaque fois userait. */
+const CLE_ACTIVITE = 'alcora.activite';
 /**
  * Le fond anime (Planetarium) : un choix d'apparence, ETEINT par defaut depuis la direction
  * « Observatoire » (23.10.2026) — le ciel reste, mais fixe.
@@ -82,10 +73,6 @@ function libelleSujets(sujets: string[], type: string): string {
   if (nommes.length) return nommes.join(', ');
   return type === 'smartAudioDetect' ? t('sujet.sonDetecte') : t('sujet.motion');
 }
-
-/** Largeurs de la bande d'icones et du panneau — celles des classes w-14 et w-[292px]. */
-const L_RAIL = 56;
-const L_PANNEAU = 292;
 
 /**
  * Ecran de dernier recours.
@@ -153,8 +140,9 @@ export default function App() {
   const [systeme, setSysteme] = useState<SystemeEtat | null>(null);
   const [relay, setRelay] = useState<RelayState>({ running: false, message: 'Démarrage…' });
   const [espace, setEspace] = useState('direct');
-  const [panneauOuvert, setPanneauOuvert] = useState(
-    () => localStorage.getItem(CLE_PANNEAU) !== 'reduit',
+  /** La colonne Activite du direct, a droite du mur. */
+  const [activiteVisible, setActiviteVisible] = useState(
+    () => localStorage.getItem(CLE_ACTIVITE) !== 'masquee',
   );
   const [pleinEcran, setPleinEcran] = useState(false);
   /** Caméra isolée : une seule image, sur toute la zone. */
@@ -203,18 +191,6 @@ export default function App() {
   });
   /** Identifiant de la camera en cours de deplacement, pour le retour visuel. */
   const [glisse, setGlisse] = useState<string | null>(null);
-  /** Panneau revele au survol du bord. Etat passager : jamais conserve. */
-  const [survole, setSurvole] = useState(false);
-  /**
-   * Le repere du rail, qui SUIT l'espace choisi au lieu de sauter.
-   *
-   * C'est ce detail qui relie deux ecrans : sans lui, le basculement reste une
-   * coupure, si douce soit la page qui arrive. On mesure le bouton vise et l'on
-   * ne deplace que la transformee du trait — animer « top » recalculerait la
-   * mise en page a chaque image.
-   */
-  const boutonsRail = useRef(new Map<string, HTMLButtonElement>());
-  const [repere, setRepere] = useState<number | null>(null);
   /** Version installee, pour la colonne d'etat. Tiree une fois : elle ne change pas. */
   const [infosVersion, setInfosVersion] = useState<string | null>(null);
   /**
@@ -329,23 +305,6 @@ export default function App() {
    */
 
   /*
-   * Revelation du bord, avec un delai a la fermeture.
-   *
-   * La bande d'icones et le panneau sont deux elements voisins : passer de l'une a l'autre
-   * declenche une « sortie » suivie d'une « entree », et sans ce delai le panneau
-   * clignotait dans l'intervalle.
-   */
-  const fermeture = useRef<number | null>(null);
-  const revelerBord = useCallback(() => {
-    if (fermeture.current) clearTimeout(fermeture.current);
-    setSurvole(true);
-  }, []);
-  const masquerBord = useCallback(() => {
-    if (fermeture.current) clearTimeout(fermeture.current);
-    fermeture.current = window.setTimeout(() => setSurvole(false), 180);
-  }, []);
-
-  /*
    * Commandes du plein ecran : elles reviennent au moindre mouvement, puis s'effacent.
    *
    * Sans elles, « Echap » etait la SEULE sortie et rien ne le disait passe les premieres
@@ -374,28 +333,8 @@ export default function App() {
   const finGlisse = useRef(0);
 
   useEffect(() => {
-    localStorage.setItem(CLE_PANNEAU, panneauOuvert ? 'ouvert' : 'reduit');
-  }, [panneauOuvert]);
-
-  /*
-   * Le repere se replace quand l'espace change — et SEULEMENT alors.
-   *
-   * Les references sont attachees avant que les effets ne s'executent : au premier
-   * rendu la mesure est deja possible. La disposition du rail, elle, ne bouge
-   * jamais (le plein ecran le fait glisser par transformation, ce qui ne change
-   * aucun « offsetTop »), donc rien d'autre ne peut invalider la mesure.
-   *
-   * Surtout : PAS d'effet sans liste de dependances ici. Un effet qui pose un etat
-   * a chaque rendu est le defaut qui a produit un ecran noir en 2.10.0, et la regle
-   * « react-hooks/exhaustive-deps » le refuse maintenant — a juste titre.
-   */
-  useEffect(() => {
-    const cible = boutonsRail.current.get(espace);
-    setRepere(cible ? cible.offsetTop : null);
-    // « configured » compte autant que l'espace : au tout premier rendu le rail
-    // n'existe pas encore — l'ecran de connexion occupe seul la fenetre — et sans
-    // cette dependance le repere resterait absent pour toute la session.
-  }, [espace, configured]);
+    localStorage.setItem(CLE_ACTIVITE, activiteVisible ? 'visible' : 'masquee');
+  }, [activiteVisible]);
 
   // L'effet verre est desormais l'apparence de l'application, non plus une option.
   useEffect(() => {
@@ -638,278 +577,149 @@ export default function App() {
     window.addEventListener('pointerup', fin);
   };
 
-  // En plein écran, plus aucun ornement POSÉ : ni bande d'icônes, ni panneau, ni marge.
-  // Mais « effacé » ne doit pas vouloir dire « inatteignable » — voir la lisière plus bas.
+  // En plein écran, plus aucun ornement POSÉ : ni rail, ni en-tête, ni colonne, ni barre.
   const habille = !pleinEcran;
+  /* La ligne des gestes : dès qu'il y a quelque chose à réorganiser ou à isoler. */
+  const indiceGestes = habille && pret && (isolee !== null || affichees.length > 1);
+
+  /* La précision de l'en-tête du direct : combien d'images, ou laquelle est seule. */
+  const nomIsolee = isolee ? cameras.find((c) => c.id === isolee)?.name : null;
+  const precisionDirect = nomIsolee ? t('direct.isolee', { nom: nomIsolee })
+    : ordonnees.length === cameras.length
+      ? (cameras.length === 1 ? t('direct.une') : t('direct.toutes', { n: cameras.length }))
+      : ordonnees.length === 1 ? t('direct.uneSur', { total: cameras.length })
+        : t('direct.surTotal', { n: ordonnees.length, total: cameras.length });
+
+  /* Le guide de la console vit dans l'écran de connexion, atteint par « Modifier la
+     connexion » des réglages : on y renvoie plutôt que d'ouvrir une seconde page. */
+  const versLeGuide = () => { setCameraCible(null); setEspace('reglages'); };
+
+  const menuCameras = (sombre?: boolean) => (
+    <MenuCameras cameras={cameras} masquees={masquees} onBasculer={basculerMasquee}
+                 onGuide={versLeGuide} sombre={sombre} />
+  );
 
   /*
-   * La bande d'icones et le panneau FLOTTENT au-dessus de la video : le contenu de
-   * « main » doit s'ecarter de lui-meme, sinon boutons et mosaique passent dessous.
+   * Le mur : le ciel autour des images, les images, et la ligne qui dit les gestes.
    *
-   * Le decalage ne suit QUE l'etat epingle, jamais le survol : un panneau revele se pose
-   * PAR-DESSUS l'image sans la deplacer. S'il la repoussait, chaque passage de souris
-   * changerait la largeur des tuiles, donc la qualite demandee au controleur, donc une
-   * renegociation complete du flux — l'image se figerait a chaque survol.
+   * Le ciel ne vit plus que LÀ (direction « Observatoire ») : derrière les autres écrans,
+   * il ne faisait que concurrencer leur texte.
    */
-  const panneauVisible = survole || (habille && panneauOuvert);
-  /* En plein écran la bande revient AVEC le panneau : la révéler seule ne servirait à rien,
-     puisque c'est l'état et les caméras qu'on vient y chercher. */
-  const railVisible = habille || survole;
-  const decalVerre = habille ? L_RAIL + (panneauOuvert ? L_PANNEAU : 0) : 0;
+  const mur = (
+    <div className="app-scene isolate relative flex min-h-0 flex-1 flex-col">
+      <Planetarium anime={fondAnime} />
+      {!pret ? (
+        /*
+         * L'état et son remède AU CENTRE du mur.
+         *
+         * Le panneau n'est plus là pour les dire, et c'est exactement quand une panne
+         * empêche les images que le mur est vide : c'est donc là qu'on regarde.
+         */
+        <div className="grid flex-1 place-items-center p-8">
+          <div className="max-w-md text-center">
+            <p className="text-titre">{relay.message}</p>
+            {relay.remedy && <p className="mt-2 text-warn">{relay.remedy}</p>}
+            {!relay.running && relay.permanent && (
+              <Bouton icone={RotateCw} className="mt-4" onClick={() => { void bridge.retry(); }}>
+                {t('app.reessayer')}
+              </Bouton>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* La marge est portée par le parent : l'élément mesuré ne doit en avoir aucune,
+              car « clientHeight » l'inclurait et la grille déborderait d'autant.
+              En plein écran elle disparaît : « intégralement » veut dire jusqu'au bord. */}
+          <div className={habille ? `min-h-0 flex-1 px-5 pt-5${indiceGestes ? '' : ' pb-5'}` : 'min-h-0 flex-1'}>
+            <div ref={zoneRef} className="h-full w-full overflow-hidden">
+              {grille && (
+                /* Centrée sur les deux axes : le vide se répartit autour des images plutôt
+                   que de s'accumuler sous elles. */
+                <div
+                  ref={grilleRef}
+                  className="grid h-full w-full"
+                  style={{
+                    gridTemplateColumns: `repeat(${grille.colonnes}, ${grille.largeur}px)`,
+                    gridAutoRows: `${grille.hauteur + H_ETIQUETTE}px`,
+                    gap: `${espacement}px`,
+                    justifyContent: 'center',
+                    alignContent: 'center',
+                  }}
+                >
+                  {affichees.map((c) => (
+                    <div key={c.id} data-id={c.id} className="h-full w-full"
+                         onPointerDown={(e) => commencerGeste(e, c.id)}
+                         onDoubleClick={() => {
+                           // Un double-clic dans la foulée d'un déplacement est un accident.
+                           if (performance.now() - finGlisse.current < 500) return;
+                           setIsolee((v) => (v === c.id ? null : c.id));
+                         }}
+                         style={{
+                           cursor: !isolee && affichees.length > 1 ? 'grab' : undefined,
+                           opacity: glisse === c.id ? 0.6 : undefined,
+                           outline: glisse === c.id ? '2px solid var(--accent)' : undefined,
+                           outlineOffset: glisse === c.id ? -2 : undefined,
+                           transition: 'opacity .15s',
+                         }}>
+                      <CameraTile camera={c} relais={relais!} cadre={espacement > 0}
+                                  hauteurEtiquette={H_ETIQUETTE} actions={actionsTuile}
+                                  activite={activite[c.id]
+                                    ? { libelle: libelleSujets(activite[c.id].sujets, activite[c.id].type) }
+                                    : null}
+                                  zoomClavier={isolee === c.id} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Les gestes du mur n'étaient dits nulle part, sinon dans une infobulle qui
+              couvrait toute la tuile. Une ligne, sous les images, et la fenêtre des
+              raccourcis pour le reste. */}
+          {indiceGestes && (
+            <p className="flex h-[30px] shrink-0 items-center justify-center px-5 text-meta text-soft">
+              {isolee ? t('direct.indiceIsolee') : t('direct.indice')}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
 
   return (
     <FournisseurActivite>
-    {/* La colonne : les espaces au-dessus, la barre d'etat dessous. Les surfaces qui couvrent
-        tout (sequence, nouveautes, introduction) sont posees sur CE cadre, barre comprise. */}
+    {/* La colonne : les espaces au-dessus, la barre d'état dessous. Les surfaces qui couvrent
+        tout (séquence, nouveautés, introduction) sont posées sur CE cadre, barre comprise. */}
     <div className="relative flex h-full flex-col">
     <div className="relative flex min-h-0 flex-1">
-      {/* La bande d'icones ne se replie jamais : c'est le seul point d'ancrage qui reste
-          quand tout le reste est masque. Le plein ecran, lui, efface aussi celle-ci. */}
-      {/* La bande n'est plus DÉMONTÉE en plein écran, seulement glissée hors du cadre :
-          c'est ce qui lui permet de revenir en douceur au lieu de surgir. */}
-      <nav onPointerEnter={revelerBord} onPointerLeave={masquerBord}
-           className="app-rail flex w-14 shrink-0 flex-col items-center gap-1 border-r border-line py-3"
-           style={{
-             transform: railVisible ? 'none' : `translateX(-${L_RAIL}px)`,
-             opacity: railVisible ? 1 : 0,
-             pointerEvents: railVisible ? undefined : 'none',
-             transition: 'transform var(--ample) var(--pose), opacity var(--douceur) var(--douce)',
-           }}>
-        {/* La marque signe l'application, animee en permanence — elle manquait des que les
-            cameras s'affichaient. L'icone Windows, elle, reste figee : ici c'est l'ecran. */}
-        {/* Le trait qui suit l'espace choisi. Absent tant que rien n'est mesure :
-            mieux vaut pas de repere qu'un repere au mauvais endroit le temps d'une image. */}
-        {repere !== null && (
-          <span aria-hidden
-                className="pointer-events-none absolute left-0 h-10 w-[3px] rounded-r"
-                style={{ top: 0, background: 'var(--accent)',
-                         transform: `translateY(${repere}px)`,
-                         transition: 'transform var(--douceur) var(--pose)' }} />
-        )}
-        <div className="mb-2 grid h-10 w-10 place-items-center" title="Alcora">
-          <Marque taille={26} anime />
-        </div>
-        {ESPACES.map(({ id, cle, Icon }) => (
-          /* La bande d'icones OUBLIE la camera visee : elle ne vient d'aucune image en
-             particulier. Sans cela, une visite aux Detections restait filtree sur la derniere
-             camera dont on avait cliqué le bouton, sans que rien ne l'indique. */
-          <button key={id} title={t(cle)} onClick={() => { setCameraCible(null); setEspace(id); }}
-                  aria-current={espace === id}
-                  ref={(el) => { if (el) boutonsRail.current.set(id, el); else boutonsRail.current.delete(id); }}
-                  className="m-pression grid h-10 w-10 place-items-center rounded-md transition-colors"
-                  style={espace === id
-                    ? { background: 'var(--accent-soft)', color: 'var(--accent)' }
-                    : { color: 'var(--soft)' }}>
-            <Icon className="h-5 w-5" />
-          </button>
-        ))}
-        <div className="flex-1" />
-        {/* Reglages : version installee, et seule porte de sortie d'une configuration
-            fautive. Cette porte demande confirmation — ouvrir un ecran ne detruit rien. */}
-        <button title={t('espace.reglages')} onClick={() => setEspace('reglages')}
-                aria-current={espace === 'reglages'}
-                ref={(el) => { if (el) boutonsRail.current.set('reglages', el); else boutonsRail.current.delete('reglages'); }}
-                className="m-pression grid h-10 w-10 place-items-center rounded-md transition-colors"
-                style={espace === 'reglages'
-                  ? { background: 'var(--accent-soft)', color: 'var(--accent)' }
-                  : { color: 'var(--soft)' }}>
-          <Settings className="h-5 w-5" />
-        </button>
-      </nav>
-
-      {/* Lisière de révélation : invisible, au bord gauche. Elle n'existe que lorsque le
-          panneau est absent — sinon elle intercepterait des clics destinés à l'image.
-          En plein écran elle part du bord de la dalle, puisque la bande y est effacée :
-          c'est la seule façon de retrouver l'état et les caméras sans tout quitter. */}
-      {!panneauVisible && (
-        <div
-          onPointerEnter={revelerBord}
-          className="absolute top-0 bottom-0 z-30"
-          style={{ left: pleinEcran ? 0 : L_RAIL, width: pleinEcran ? 22 : 16 }}
-          aria-hidden
-        />
+      {/* Le rail OUBLIE la caméra visée : il ne vient d'aucune image en particulier. Sans
+          cela, une visite aux Détections restait filtrée sur la dernière caméra dont on
+          avait cliqué le bouton, sans que rien ne l'indique. */}
+      {habille && (
+        <Rail espace={espace} marqueAnimee={fondAnime}
+              onChoisir={(id: Espace) => { setCameraCible(null); setEspace(id); }} />
       )}
 
-      {(
-        <aside
-          onPointerEnter={revelerBord}
-          onPointerLeave={masquerBord}
-          aria-hidden={!panneauVisible}
-          className="app-panel relative w-[292px] shrink-0 overflow-y-auto border-r border-line bg-card p-4"
-          style={{
-            transform: panneauVisible ? 'none' : `translateX(-${L_RAIL + L_PANNEAU}px)`,
-            opacity: panneauVisible ? 1 : 0,
-            pointerEvents: panneauVisible ? undefined : 'none',
-            transition: 'transform var(--ample) var(--pose), opacity var(--douceur) var(--douce)',
-          }}>
-          <h1 className="mb-4 text-[15px] font-semibold">{t('app.titrePanneau')}</h1>
-
-          {/* L'état passe EN TÊTE : c'est la première chose qu'on veut savoir en ouvrant
-              l'application — est-ce que ça marche ? La liste des caméras vient après. */}
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-soft">{t('app.etat')}</p>
-          <div className="mb-4 flex items-start gap-2.5 px-2 text-[12.5px]">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
-                  style={{ background: relay.running ? 'var(--ok)' : 'var(--warn)' }} />
-            <div className="min-w-0">
-              <p className="text-muted">{relay.message}</p>
-              {/* Le remede etait calcule puis jete. C'est pourtant la seule partie qui dit
-                  quoi faire — le message seul laisse l'utilisateur sans prise. */}
-              {relay.remedy && (
-                <p className="mt-1 text-[12px]" style={{ color: 'var(--warn)' }}>{relay.remedy}</p>
-              )}
-              {/* La reprise est automatique : le bouton n'apparait que lorsque reessayer
-                  seul ne servirait a rien — mot de passe refuse, identite du controleur
-                  changee. Sinon, l'application se debrouille. */}
-              {!relay.running && relay.permanent && (
-                <button onClick={() => { void bridge.retry(); }}
-                        className="mt-2 flex items-center gap-1.5 rounded-md border border-line px-2 py-1 text-[12px] text-muted transition-colors hover:border-line2">
-                  <RotateCw className="h-3 w-3" /> {t('app.reessayer')}
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="my-3 h-px bg-line" />
-
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-soft">{t('app.cameras')}</p>
-          {cameras.length === 0 && (
-            <p className="text-[12.5px] text-soft">{t('app.aucuneCamera')}</p>
-          )}
-          {cameras.map((c) => {
-            const best = bestChannel(c);
-            const masquee = masquees.includes(c.id);
-            const derniere = !masquee && cameras.length - masquees.length <= 1;
-            return (
-              <div key={c.id} className="group/cam flex items-center gap-2.5 rounded-md px-2 py-1.5"
-                   style={masquee ? { opacity: 0.45 } : undefined}>
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full"
-                      style={{ background: c.online ? 'var(--ok)' : 'var(--soft)' }} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13px]">{c.name}</div>
-                  {/* Sans canal diffusable, la CAUSE plutot que le constat : « aucun
-                      flux » laissait croire a une panne alors qu'il manque un
-                      interrupteur sur la console. */}
-                  <div className="font-mono text-[10.5px]"
-                       style={{ color: best ? 'var(--soft)' : 'var(--warn)' }}>
-                    {best ? `${best.width} × ${best.height}` : t('camera.rtspDesactive')}
-                  </div>
-                </div>
-                {/* Le masquage retire l'image de la mosaique, RIEN d'autre : les veilles
-                    et les detections continuent — on cache une image, pas une camera. */}
-                <button
-                  onClick={() => basculerMasquee(c.id)}
-                  disabled={derniere}
-                  aria-label={masquee ? t('app.afficherCamera', { nom: c.name }) : t('app.masquerCamera', { nom: c.name })}
-                  title={derniere ? t('app.derniereCamera')
-                    : masquee ? t('app.reafficher') : t('app.masquerMosaique')}
-                  className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-soft opacity-0 transition-opacity hover:text-ink focus-visible:opacity-100 group-hover/cam:opacity-100 disabled:cursor-default disabled:hover:text-soft"
-                  style={masquee ? { opacity: 1 } : undefined}
-                >
-                  {masquee ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </button>
-              </div>
-            );
-          })}
-
-          {/* Le REMEDE, une seule fois pour toutes les cameras concernees.
-              Le repeter sous chacune noierait le panneau ; ne le dire nulle part —
-              ce qui etait le cas jusqu'a la 2.27.0 — laissait un nouvel utilisateur
-              devant des cameras muettes sans le moindre geste a tenter. Le message
-              existait pourtant deja, mais seul un script de developpement le lisait. */}
-          {cameras.some((c) => !bestChannel(c)) && (
-            <div className="mt-2 px-2">
-              <p className="text-[11.5px] leading-relaxed" style={{ color: 'var(--warn)' }}>
-                {t('camera.rtspRemede')}
-              </p>
-              {/* Le guide vit dans l'ecran de CONNEXION, ou l'on prepare la console —
-                  et cet ecran s'atteint par « Modifier la connexion » dans les reglages.
-                  On y renvoie plutot que d'ouvrir une seconde page : l'application n'en
-                  a qu'une. */}
-              <button onClick={() => { setCameraCible(null); setEspace('reglages'); }}
-                      className="m-pression mt-1.5 text-[11.5px] underline decoration-dotted
-                                 underline-offset-2"
-                      style={{ color: 'var(--accent-d)' }}>
-                {t('camera.guide')}
-              </button>
-            </div>
-          )}
-
-          {/* Détections en direct, stockage, rétention, activité du jour, versions. Sorti
-              dans son propre fichier : le panneau devenait trop long pour rester lisible ici. */}
-          <ColonneEtat versionAlcora={infosVersion} onOuvrir={ouvrirDetection} />
-
-        </aside>
-      )}
-      {/* Le panneau reste MONTÉ en permanence : c'est ce qui lui permet de glisser au lieu
-          d'apparaître d'un bloc, et cela évite de reconstruire son contenu à chaque survol. */}
-
-      <main className="app-scene isolate relative min-w-0 flex-1"
-            style={{ paddingLeft: decalVerre || undefined }}>
-        {/* Le ciel vit SOUS tout le contenu de la scene (z negatif, scene isolee) :
-            derriere les tuiles, derriere le texte des ecrans, sous le verre du
-            panneau qui le floute. Le demonter est un reglage d'apparence. */}
-        <Planetarium anime={fondAnime} />
-        {/* Ces deux boutons agissent sur l'IMAGE : replier le panneau pour la dégager,
-            l'étendre à toute la dalle. Hors du direct ils n'ont pas d'objet, et ils se
-            posaient sur la barre de filtres des Détections, masquant le premier d'entre
-            eux. La bande d'icônes reste, elle, toujours accessible. */}
-        {habille && espace === 'direct' && (
-          /* Position explicite : un enfant absolu ignore la marge interieure du parent,
-             il faut donc lui redonner le meme decalage qu'au contenu. */
-          /* Le décalage suit le panneau VISIBLE, survol compris : sinon le panneau révélé
-             se posait par-dessus ces deux boutons, et l'on ne pouvait plus l'épingler ni
-             passer en plein écran sans d'abord écarter la souris. Le contenu de la scène,
-             lui, continue de ne suivre que l'état épinglé — le déplacer au survol
-             changerait la largeur des tuiles, donc la qualité demandée au contrôleur. */
-          <div className="absolute top-2 z-30 flex gap-1.5"
-               style={{ left: L_RAIL + (panneauVisible ? L_PANNEAU : 0) + 8,
-                        transition: 'left var(--ample) var(--pose)' }}>
-            {/* Toujours visible, au-dessus de la video : c'est ce qui rend le repli
-                reversible sans rien deviner. Discret par defaut, car lorsque la mosaique
-                remplit exactement la zone il se pose sur le coin d'une tuile, la ou figure
-                deja son nom. */}
-            <button
-              onClick={() => { setPanneauOuvert((o) => !o); setSurvole(false); }}
-              title={panneauOuvert ? t('app.reduirePanneau') : t('app.epinglerPanneau')}
-              aria-label={panneauOuvert ? t('app.reduirePanneau') : t('app.epinglerPanneau')}
-              className="veil grid h-7 w-7 place-items-center rounded-md opacity-55 transition-opacity hover:opacity-100 focus-visible:opacity-100"
-              style={{ color: 'var(--on-2)' }}
-            >
-              {panneauOuvert ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-            </button>
-
-            <button
-              onClick={basculerPleinEcran}
-              title={t('app.pleinEcranF11')} aria-label={t('video.pleinEcran')}
-              className="veil grid h-7 w-7 place-items-center rounded-md opacity-55 transition-opacity hover:opacity-100 focus-visible:opacity-100"
-              style={{ color: 'var(--on-2)' }}
-            >
-              <Maximize2 className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Une nouvelle version est prete : on INVITE a redemarrer, on n'impose rien.
-            Le telechargement s'est fait en silence, appliquer attend le bon moment. */}
+      <main className="relative flex min-w-0 flex-1 flex-col bg-bg">
+        {/* Une nouvelle version est prête : on INVITE à redémarrer, on n'impose rien.
+            Le téléchargement s'est fait en silence, appliquer attend le bon moment. */}
         {maj?.etat === 'prete' && (
-          <div className="veil m-surgit absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-xl px-4 py-2 text-[13px]"
+          <div className="veil m-surgit absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-xl py-2 pl-4 pr-2"
                style={{ color: 'var(--on-1)' }}>
             <span>{t('app.versionPrete', { version: maj.version ?? '' })}</span>
-            <button onClick={() => { void bridge.majRedemarrer(); }}
-                    className="rounded-md px-2.5 py-1 text-[12.5px] font-semibold"
-                    style={{ background: 'var(--accent)', color: '#20242a' }}>
+            <Bouton variante="primaire" taille="petit" onClick={() => { void bridge.majRedemarrer(); }}>
               {t('app.redemarrerMaintenant')}
-            </button>
-            <button onClick={() => setMaj(null)} className="text-[12.5px]"
-                    style={{ color: 'var(--on-3)' }}>
+            </Bouton>
+            <Bouton variante="fantome" taille="petit" onClick={() => setMaj(null)}>
               {t('app.plusTard')}
-            </button>
+            </Bouton>
           </div>
         )}
 
         {/* Rappel fugace : en plein écran plus rien n'indique comment revenir. */}
         {indice && (
-          <div className="veil m-surgit pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-md px-3 py-1.5 text-[12.5px]"
+          <div className="veil m-surgit pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-md px-3 py-1.5"
                style={{ color: 'var(--on-2)' }}>
             {t('app.echapRevenir')}
           </div>
@@ -918,40 +728,30 @@ export default function App() {
         {/* Commandes du plein écran : elles reviennent au moindre mouvement de souris et
             s'effacent d'elles-mêmes. « Échap » restait la seule sortie, et rien ne le
             disait passé les premières secondes — une image sans commande ressemble à une
-            application bloquée. Placées à DROITE, loin de la lisière qui révèle le panneau
-            à gauche : sans quoi vouloir l'un déclencherait l'autre. */}
+            application bloquée. Le menu des caméras y est aussi : le panneau qu'on
+            révélait au bord de l'écran n'existe plus. */}
         {pleinEcran && (
           <div className="absolute right-3 top-3 z-30 flex gap-1.5"
                style={{ opacity: commandes ? 1 : 0,
                         pointerEvents: commandes ? undefined : 'none',
                         transition: 'opacity var(--ample) var(--douce)' }}>
-            <button
-              onClick={() => { setPanneauOuvert(true); revelerBord(); }}
-              title={t('app.afficherPanneau')} aria-label={t('app.afficherPanneau')}
-              className="veil grid h-8 w-8 place-items-center rounded-md transition-opacity"
-              style={{ color: 'var(--on-1)' }}>
-              <PanelLeftOpen className="h-4 w-4" />
-            </button>
-            <button
-              onClick={basculerPleinEcran}
-              title={t('app.quitterPleinEcranEchap')} aria-label={t('video.quitterPleinEcran')}
-              className="veil flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[12.5px]"
-              style={{ color: 'var(--on-1)' }}>
-              <Minimize2 className="h-4 w-4" />
+            {espace === 'direct' && pret && menuCameras(true)}
+            <Bouton icone={Minimize2} titre={t('app.quitterPleinEcranEchap')} onClick={basculerPleinEcran}
+                    className="veil" style={{ color: 'var(--on-1)' }}>
               {t('app.quitter')}
-            </button>
+            </Bouton>
           </div>
         )}
 
         {/*
-          * L'ecran qui arrive se pose au lieu de surgir.
+          * L'écran qui arrive se pose au lieu de surgir.
           *
-          * La cle porte le nom de l'espace : en changer remonte le nœud, et
-          * l'animation se rejoue d'elle-meme — sans etat, sans minuteur. Le
-          * remontage n'est pas un cout ajoute ici : chaque espace etait DEJA
-          * demonte en quittant, ces branches s'excluant l'une l'autre.
+          * La clé porte le nom de l'espace : en changer remonte le nœud, et
+          * l'animation se rejoue d'elle-même — sans état, sans minuteur. Le
+          * remontage n'est pas un coût ajouté ici : chaque espace était DÉJÀ
+          * démonté en quittant, ces branches s'excluant l'une l'autre.
           */}
-        <div key={espace} className="m-ecran h-full">
+        <div key={espace} className="m-ecran flex min-h-0 flex-1 flex-col">
         {espace === 'reglages' ? (
           <ReglagesScreen
             espacement={espacement}
@@ -971,88 +771,48 @@ export default function App() {
         ) : espace === 'systeme' ? (
           <SystemeScreen systeme={systeme} relay={relay} cameras={cameras} masquees={masquees}
                          onBasculerMasquee={basculerMasquee} versionAlcora={infosVersion}
-                         onGuide={() => { setCameraCible(null); setEspace('reglages'); }} />
+                         onGuide={versLeGuide} />
         ) : espace !== 'direct' ? (
-          <div className="grid h-full place-items-center text-[13px] text-soft">
+          <div className="grid h-full place-items-center text-soft">
             {t('espace.prochainLot')}
           </div>
-        ) : !pret ? (
-          /*
-           * L'etat et son remede AU CENTRE, hors du panneau.
-           *
-           * Ils n'existaient que dans l'aside : panneau replie ou plein ecran, il ne restait
-           * qu'une ligne de message nue, sans le remede qui dit quoi faire ni le bouton qui
-           * permet d'agir. C'est pourtant exactement dans ces deux etats qu'une panne se
-           * decouvre — la mosaique occupe alors tout l'ecran.
-           */
-          <div className="grid h-full place-items-center p-8">
-            <div className="max-w-md text-center">
-              <p className="text-[14px]">{relay.message}</p>
-              {relay.remedy && (
-                <p className="mt-2 text-[13px]" style={{ color: 'var(--warn)' }}>{relay.remedy}</p>
-              )}
-              {!relay.running && relay.permanent && (
-                <button onClick={() => { void bridge.retry(); }}
-                        className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-[13px] text-muted transition-colors hover:border-line2 hover:text-ink">
-                  <RotateCw className="h-3.5 w-3.5" /> {t('app.reessayer')}
-                </button>
-              )}
-            </div>
-          </div>
         ) : (
-          /* La marge est portee par le parent : l'element mesure ne doit en avoir aucune,
-             car « clientHeight » l'inclurait et la grille deborderait d'autant.
-             En plein ecran elle disparait : « intégralement » veut dire jusqu'au bord. */
-          <div className={habille ? 'h-full w-full p-2' : 'h-full w-full'}>
-           <div ref={zoneRef} className="h-full w-full overflow-hidden">
-            {grille && (
-              /* Centree sur les deux axes : le vide se repartit autour des images plutot
-                 que de s'accumuler sous elles. */
-              <div
-                ref={grilleRef}
-                className="grid h-full w-full"
-                style={{
-                  gridTemplateColumns: `repeat(${grille.colonnes}, ${grille.largeur}px)`,
-                  gridAutoRows: `${grille.hauteur + H_ETIQUETTE}px`,
-                  gap: `${espacement}px`,
-                  justifyContent: 'center',
-                  alignContent: 'center',
-                }}
-              >
-                {affichees.map((c) => (
-                  <div key={c.id} data-id={c.id} className="h-full w-full"
-                       onPointerDown={(e) => commencerGeste(e, c.id)}
-                       onDoubleClick={() => {
-                         // Un double-clic dans la foulee d'un deplacement est un accident.
-                         if (performance.now() - finGlisse.current < 500) return;
-                         setIsolee((v) => (v === c.id ? null : c.id));
-                       }}
-                       style={{
-                         cursor: !isolee && affichees.length > 1 ? 'grab' : undefined,
-                         opacity: glisse === c.id ? 0.6 : undefined,
-                         outline: glisse === c.id ? '2px solid var(--accent)' : undefined,
-                         outlineOffset: glisse === c.id ? -2 : undefined,
-                         transition: 'opacity .15s',
-                       }}
-                       title={isolee ? t('app.revenirMosaique') : t('app.glisserIsoler')}>
-                    <CameraTile camera={c} relais={relais!} cadre={espacement > 0}
-                                hauteurEtiquette={H_ETIQUETTE} actions={actionsTuile}
-                                activite={activite[c.id]
-                                  ? { libelle: libelleSujets(activite[c.id].sujets, activite[c.id].type) }
-                                  : null}
-                                zoomClavier={isolee === c.id} />
-                  </div>
-                ))}
-              </div>
+          <>
+            {habille && (
+              <EnTete
+                titre={t('espace.direct')}
+                precision={pret ? precisionDirect : undefined}
+                actions={(
+                  <>
+                    {pret && menuCameras()}
+                    {!activiteVisible && (
+                      <Bouton variante="fantome" icone={PanelRightOpen} titre={t('activite.afficher')}
+                              onClick={() => setActiviteVisible(true)} />
+                    )}
+                    <Bouton icone={Maximize2} titre={t('app.pleinEcranF11')} onClick={basculerPleinEcran}>
+                      {t('video.pleinEcran')} <Touche>F11</Touche>
+                    </Bouton>
+                  </>
+                )}
+              />
             )}
-           </div>
-          </div>
+            {mur}
+          </>
         )}
         </div>
       </main>
+
+      {/* L'activité ne vit que sur le direct : sur les autres écrans, elle ne faisait que
+          prendre de la place. La replier change la largeur des images — et donc la
+          qualité demandée au contrôleur : c'est un geste, jamais un survol. */}
+      {habille && espace === 'direct' && activiteVisible && (
+        <ColonneActivite onOuvrir={ouvrirDetection}
+                         onToutes={() => { setCameraCible(null); setEspace('detections'); }}
+                         onMasquer={() => setActiviteVisible(false)} />
+      )}
     </div>
 
-      {/* La barre d'etat, sur tous les ecrans — sauf en plein ecran, ou rien ne reste pose. */}
+      {/* La barre d'état, sur tous les écrans — sauf en plein écran, où rien ne reste posé. */}
       {!pleinEcran && (
         <BarreEtat relay={relay} systeme={systeme} cameras={cameras} espace={espace}
                    onSysteme={() => { setCameraCible(null); setEspace('systeme'); }}

@@ -247,7 +247,6 @@ export const fr = {
   'colonne.arme': 'armé',
   'colonne.desarme': 'désarmé',
   'colonne.alarmesInactives': 'alarmes inactives',
-  'colonne.detectionsRecentes': 'Détections récentes',
   'colonne.detection': 'Détection',
   'colonne.aujourdhui': 'Aujourd’hui',
   'colonne.nonLu': 'non lu',
@@ -273,28 +272,20 @@ export const fr = {
   'colonne.aucuneImage': 'Aucune image ne quitte votre réseau.',
 
   // ---- la coquille du direct : panneau lateral, plein ecran, mosaique
-  'app.titrePanneau': 'Surveillance',
-  'app.etat': 'État',
   'app.reessayer': 'Réessayer',
-  'app.cameras': 'Caméras',
   'app.aucuneCamera': 'Aucune caméra pour l’instant.',
   'app.afficherCamera': 'Afficher {nom}',
   'app.masquerCamera': 'Masquer {nom}',
   'app.derniereCamera': 'La dernière caméra visible ne se masque pas',
   'app.reafficher': 'Réafficher dans la mosaïque',
   'app.masquerMosaique': 'Masquer de la mosaïque',
-  'app.reduirePanneau': 'Réduire le panneau',
-  'app.epinglerPanneau': 'Épingler le panneau',
   'app.pleinEcranF11': 'Plein écran (F11)',
   'app.versionPrete': 'Version {version} prête.',
   'app.redemarrerMaintenant': 'Redémarrer maintenant',
   'app.plusTard': 'Plus tard',
   'app.echapRevenir': 'Échap pour revenir',
-  'app.afficherPanneau': 'Afficher le panneau',
   'app.quitterPleinEcranEchap': 'Quitter le plein écran (Échap)',
   'app.quitter': 'Quitter',
-  'app.revenirMosaique': 'Double-clic pour revenir à la mosaïque',
-  'app.glisserIsoler': 'Glisser pour réorganiser · double-clic pour isoler',
   'app.pontTitre': 'L’application n’a pas démarré correctement.',
   'app.pontDetail1':
     'La liaison interne ne s’est pas établie. Ferme puis rouvre l’application ; ' +
@@ -514,6 +505,22 @@ export const fr = {
   'raccourcis.afficher': 'Afficher ces raccourcis',
   'touche.espace': 'Espace',
   'touche.echap': 'Échap',
+
+  // Direct, rail et colonne Activite (direction Observatoire, 23.10.2026)
+  'rail.espaces': 'Espaces',
+  'direct.une': '1 caméra',
+  'direct.toutes': '{n} caméras',
+  'direct.uneSur': '1 caméra sur {total} affichée',
+  'direct.surTotal': '{n} caméras sur {total} affichées',
+  'direct.isolee': '{nom}, seule à l’écran',
+  'direct.indice': 'Glisser une image la déplace. Un double-clic, ou les touches 1 à 9, l’isolent.',
+  'direct.indiceIsolee': 'Un double-clic, 0 ou Échap ramènent la mosaïque.',
+  'activite.titre': 'Activité',
+  'activite.masquer': 'Masquer l’activité',
+  'activite.afficher': 'Afficher l’activité',
+  'activite.recentes': 'Récentes',
+  'activite.aucune': 'Aucune détection aujourd’hui.',
+  'activite.toutes': 'Toutes les détections',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

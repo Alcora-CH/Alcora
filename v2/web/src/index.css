@@ -247,26 +247,6 @@
   backdrop-filter: var(--on-blur);
 }
 
-/* La bande d'icônes et le panneau flottent toujours au-dessus de la vidéo — c'est leur
-   disposition, que l'étape « écran par écran » reprendra. Leur matière, elle, devient
-   pleine : la surface de l'instrument, sans flou ni reflet. Sur une surface pleine, les
-   tons du thème restent lisibles tels quels : la rampe lumineuse et l'ombre de texte que
-   le verre exigeait (2.23.1) n'ont plus d'objet. */
-.theme-verre .app-rail,
-.theme-verre .app-panel {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 20;
-  background: var(--card);
-  border-color: var(--line);
-}
-.theme-verre .app-rail { left: 0; }
-.theme-verre .app-panel {
-  left: 56px;                          /* largeur de la bande d'icônes */
-  box-shadow: 18px 0 40px -18px rgba(0, 0, 0, 0.6);
-}
-
 /* Le fond de la scène : la nuit, éclairée d'un voile bleu en haut et d'un reflet d'or en
    bas — un fond statique, composé une fois, comme le ciel de la maquette A. */
 .theme-verre .app-scene {
