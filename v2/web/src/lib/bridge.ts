@@ -1,6 +1,6 @@
 import { LANGUES, t, type CodeLangue } from '../i18n';
 import type {
-  Credentials, DiscoveredCamera, EtatExport, ProtectBridge, RelayState, StepResult, TestOutcome,
+  Credentials, DiscoveredCamera, EntreeAlerte, EtatExport, ProtectBridge, RelayState, StepResult, TestOutcome,
 } from '../types/protect';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -42,6 +42,37 @@ function pousserExportDemo(e: EtatExport) {
   for (const h of ecouteursExport) h(e);
 }
 const NOMS_DEMO: Record<string, string> = { g6: 'G6 Bullet', g5: 'G5 Turret Ultra' };
+
+/*
+ * L'historique des alertes, simule : quelques bulles des trois derniers jours, dont une sans
+ * image, une avec des retenues et une alerte d'urgence. Fictif, comme tout le simulateur.
+ */
+const ecouteursAlertes = new Set<(e: { nonVues: number }) => void>();
+let alertesDemo: EntreeAlerte[] | null = null;
+let vuDemo = 0;
+function alertesDeDemo(): EntreeAlerte[] {
+  if (alertesDemo) return alertesDemo;
+  const m = Date.now();
+  const une = (minutes: number, sujet: string, camera: 'g6' | 'g5', veille: [string, string], extra: Partial<EntreeAlerte> = {}): EntreeAlerte => ({
+    envoye: m - minutes * 60_000,
+    detection: { id: null, type: 'smartDetectZone', camera, debut: m - minutes * 60_000 - 2000, fin: m - minutes * 60_000 + 15_000,
+      sujets: [sujet], score: 81 },
+    cameraNom: NOMS_DEMO[camera], veilleId: veille[0], veilleNom: veille[1], sujet, image: true, son: true, retenues: 0, ...extra,
+  });
+  const personne: [string, string] = ['personne', 'Une personne est détectée'];
+  const urgence: [string, string] = ['urgence', 'Bris de verre, fumée, sirène, monoxyde'];
+  alertesDemo = [
+    une(14, 'person', 'g6', personne, { retenues: 3 }),
+    une(100, 'person', 'g5', personne, { image: false }),
+    une(16 * 60, 'person', 'g6', personne),
+    une(26 * 60, 'verre', 'g5', urgence),
+    une(50 * 60, 'person', 'g6', personne, { son: false, retenues: 1 }),
+  ];
+  vuDemo = m - 60 * 60_000;
+  return alertesDemo;
+}
+const nonVuesDemo = () => alertesDeDemo().filter((e) => e.envoye > vuDemo).length;
+const pousserAlertesDemo = () => { for (const h of ecouteursAlertes) h({ nonVues: nonVuesDemo() }); };
 
 /**
  * Client simule, pour developper l'interface hors d'Electron.
@@ -391,6 +422,13 @@ const mock: ProtectBridge = {
     return true;
   },
   async exportEtat() { return etatExportDemo; },
+  async alertes() { return { entrees: [...alertesDeDemo()], nonVues: nonVuesDemo() }; },
+  async alertesVues() { vuDemo = Date.now(); pousserAlertesDemo(); },
+  async alertesEffacer() { alertesDemo = []; pousserAlertesDemo(); },
+  onAlertes(handler: (e: { nonVues: number }) => void) {
+    ecouteursAlertes.add(handler);
+    return () => { ecouteursAlertes.delete(handler); };
+  },
   async exportMontrer() { return false; },
   onExportEtat(handler: (e: EtatExport) => void) {
     ecouteursExport.add(handler);

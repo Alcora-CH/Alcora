@@ -44,8 +44,10 @@ class Veilleur {
    * @param {object} o.journal
    * @param {(d: object) => void} [o.onDetection]  pour la page : liste vivante
    * @param {(d: object) => void} [o.onOuvrir]     l'utilisateur a clique la bulle
+   * @param {object} [o.historique]  historique-alertes.js : chaque bulle partie, chaque retenue
+   * @param {typeof Notification} [o.Bulle]  les tests en fournissent une fausse
    */
-  constructor({ config, client, nomCamera, dossier, journal, onDetection, onOuvrir }) {
+  constructor({ config, client, nomCamera, dossier, journal, onDetection, onOuvrir, historique, Bulle = Notification }) {
     this.config = config;
     this.client = client;
     this.nomCamera = nomCamera;
@@ -53,6 +55,8 @@ class Veilleur {
     this.journal = journal;
     this.onDetection = onDetection || (() => {});
     this.onOuvrir = onOuvrir || (() => {});
+    this.historique = historique ?? null;
+    this.Bulle = Bulle;
     this.retenue = new Retenue();
     /** Ecart mesure entre le debut d'une detection et son arrivee ici. */
     this.latences = [];
@@ -63,6 +67,8 @@ class Veilleur {
   async recevoir(detection) {
     // La page reçoit TOUT, veille ou pas : sa liste doit vivre meme desarmee.
     this.onDetection(detection);
+    // La fin d'une detection deja signalee rend sa vignette et sa sequence exactes.
+    if (!detection.commence) this.historique?.terminer(detection);
 
     /*
      * Latence reelle, consignee ici faute d'avoir su la mesurer par sonde.
@@ -94,13 +100,17 @@ class Veilleur {
 
     for (const veille of declenchees) {
       const delai = Number.isFinite(veille.retenueMs) ? veille.retenueMs : 300_000;
-      if (!this.retenue.autorise(veille.id, sujet, delai, Date.now())) continue;
+      if (!this.retenue.autorise(veille.id, sujet, delai, Date.now())) {
+        // Tue, mais pas oublie : l'historique dit combien la retenue en a fait taire.
+        this.historique?.retenir({ veilleId: veille.id, sujet });
+        continue;
+      }
       await this.prevenir(detection, veille, sujet);
     }
   }
 
   async prevenir(detection, veille, sujet) {
-    if (!Notification.isSupported()) {
+    if (!this.Bulle.isSupported()) {
       this.journal?.alerte('watch', 'notifications unavailable on this system');
       return;
     }
@@ -112,7 +122,7 @@ class Veilleur {
 
     const icone = await this.image(detection);
 
-    const bulle = new Notification({
+    const bulle = new this.Bulle({
       title: camera ? `${titre} — ${camera}` : titre,
       body: `${heure} · ${t('veilleur.cliquerVoir')}`,
       icon: icone ?? undefined,
@@ -120,6 +130,7 @@ class Veilleur {
     });
     bulle.on('click', () => this.onOuvrir(detection));
     bulle.show();
+    this.historique?.ajouter({ detection, cameraNom: camera, veille, sujet, image: Boolean(icone), son: veille.son !== false });
 
     this.journal?.info('watch',
       `${titre}${camera ? ` on ${camera}` : ''} — bubble shown${icone ? ' with image' : ''}`);

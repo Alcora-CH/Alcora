@@ -826,7 +826,7 @@ export default function App() {
           <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible}
                            instantInitial={instantCible} />
         ) : espace === 'alertes' ? (
-          <VeillesScreen cameras={cameras} />
+          <VeillesScreen cameras={cameras} onOuvrir={ouvrirDetection} onRevoir={revoirA} />
         ) : espace === 'systeme' ? (
           <SystemeScreen systeme={systeme} relay={relay} cameras={cameras} masquees={masquees}
                          onBasculerMasquee={basculerMasquee} versionAlcora={infosVersion}

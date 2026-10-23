@@ -92,6 +92,15 @@ contextBridge.exposeInMainWorld('protect', {
   extraire: (params) => ipcRenderer.invoke('protect:extraire', params),
   sequence: (params) => ipcRenderer.invoke('protect:sequence', params),
   enregistrerExtrait: (params) => ipcRenderer.invoke('protect:enregistrerExtrait', params),
+  // L'historique des alertes envoyees, et le compte des non vues pousse a chaque changement.
+  alertes: () => ipcRenderer.invoke('protect:alertes'),
+  alertesVues: () => ipcRenderer.invoke('protect:alertesVues'),
+  alertesEffacer: () => ipcRenderer.invoke('protect:alertesEffacer'),
+  onAlertes: (handler) => {
+    const listener = (_event, e) => handler(e);
+    ipcRenderer.on('protect:alertes', listener);
+    return () => ipcRenderer.removeListener('protect:alertes', listener);
+  },
   // Export d'une plage : la page ne donne que la camera et les bornes, jamais un chemin.
   exporterPlage: (params) => ipcRenderer.invoke('protect:exporterPlage', params),
   exportAnnuler: () => ipcRenderer.invoke('protect:exportAnnuler'),

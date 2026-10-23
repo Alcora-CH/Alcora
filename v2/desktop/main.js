@@ -43,6 +43,7 @@ const { chargerFenetre, enregistrerFenetre, positionSure } = require('./fenetre'
 const { Extraits } = require('./extraits');
 const { ExportPlage, nomParDefaut, nomPropre, ouvrirDepuisClient } = require('./export-plage');
 const { Veilleur } = require('./veilleur');
+const { HistoriqueAlertes } = require('./historique-alertes');
 const { veillesParDefaut, sujetsDe } = require('./veilles');
 const { objetsDe, textesDe, filtrer, recenser, correspond } = require('./recherche');
 const { FluxChangements } = require('./protect/updates');
@@ -350,6 +351,8 @@ let systeme = null;
 /** Liaison temps reel et veilleur : crees a la premiere session ouverte. */
 let flux = null;
 let veilleur = null;
+/** Les alertes envoyees, gardees 90 jours sur ce PC (historique-alertes.js). */
+let historique = null;
 
 /**
  * Client authentifie de la session en cours, ou null tant qu'aucune n'est ouverte.
@@ -1571,6 +1574,17 @@ ipcMain.handle('protect:exportMontrer', () => {
   return true;
 });
 
+/*
+ * L'historique des alertes (historique-alertes.js) : la liste, la visite qui efface les
+ * « non vues », l'effacement. Rien n'y vient de la page que ces trois gestes.
+ */
+ipcMain.handle('protect:alertes', () => ({
+  entrees: historique?.liste() ?? [],
+  nonVues: historique?.nonVues() ?? 0,
+}));
+ipcMain.handle('protect:alertesVues', () => { historique?.marquerVu(); });
+ipcMain.handle('protect:alertesEffacer', () => { historique?.effacer(); });
+
 /** Ouvre le dossier des donnees dans l'explorateur, journal compris. */
 ipcMain.handle('protect:ouvrirJournal', () => {
   shell.showItemInFolder(journal.chemin());
@@ -1900,6 +1914,7 @@ function demarrerVeille() {
     nomCamera: (id) => cameras.find((c) => c.id === id)?.name ?? 'camera',
     dossier: path.join(app.getPath('userData'), 'bulles'),
     journal,
+    historique,
     onDetection: (d) => envoyerPage('protect:detectionVive', {
       ...d, cameraNom: d.camera ? (cameras.find((c) => c.id === d.camera)?.name ?? null) : null,
     }),
@@ -2037,6 +2052,11 @@ if (!app.requestSingleInstanceLock()) {
       });
       // Les extraits d'hier n'interessent plus personne, et pesent.
       extraits.balayer();
+      historique = new HistoriqueAlertes({
+        fichier: path.join(app.getPath('userData'), 'alertes.json'),
+        journal,
+        onChange: (e) => envoyerPage('protect:alertes', e),
+      });
       exportPlage = new ExportPlage({
         ouvrir: ouvrirDepuisClient(() => clientActif),
         journal,
@@ -2145,5 +2165,7 @@ app.on('before-quit', () => {
   flux?.arreter();
   // Un export en cours s'arrete avec l'application, sans laisser de fichier partiel.
   exportPlage?.abandonner();
+  // L'historique attend deux secondes avant d'ecrire : la derniere alerte ne doit pas s'y perdre.
+  historique?.ecrire();
   relay?.stop();
 });

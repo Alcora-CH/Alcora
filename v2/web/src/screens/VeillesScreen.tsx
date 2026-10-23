@@ -4,12 +4,14 @@ import { bridge } from '../lib/bridge';
 import { messageLisible } from '../lib/erreurs';
 import { t, useLangue } from '../i18n';
 import { Carte, EnTete } from '../ui/Cadre';
+import { useAlertes } from '../lib/alertes';
+import { HistoriqueAlertes } from './HistoriqueAlertes';
 import { Interrupteur } from '../ui/Interrupteur';
 import { Puce } from '../ui/Puce';
 import { Segment } from '../ui/Segment';
 import { cx } from '../ui/cx';
 import type { Cle } from '../i18n/fr';
-import type { ConfigVeilles, DiscoveredCamera, PlageHoraire, Veille } from '../types/protect';
+import type { ConfigVeilles, DetectionVive, DiscoveredCamera, PlageHoraire, Veille } from '../types/protect';
 
 /**
  * Les veilles : ce qui merite qu'on previenne, et quand.
@@ -43,6 +45,8 @@ const SUJETS: { id: string; cle: Cle; urgence?: boolean }[] = [
 
 const CLE_SUJET = new Map(SUJETS.map((s) => [s.id, s.cle]));
 const libelleSujet = (id: string) => { const c = CLE_SUJET.get(id); return c ? t(c) : id; };
+const URGENCES = new Set(SUJETS.filter((s) => s.urgence).map((s) => s.id));
+const estUrgence = (id: string) => URGENCES.has(id);
 const jours = () => t('veilles.jours').split(' ');
 
 const QUAND: { id: Veille['quand']; cle: Cle; aideCle: Cle }[] = [
@@ -74,8 +78,17 @@ const RETENUES = [
   { ms: 3_600_000, libelle: '1 h' },
 ];
 
-export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
+export function VeillesScreen({ cameras, onOuvrir, onRevoir }: {
+  cameras: DiscoveredCamera[];
+  /** Ouvrir la séquence d'une alerte de l'historique. */
+  onOuvrir: (d: DetectionVive) => void;
+  /** La relecture à l'instant d'une alerte. */
+  onRevoir: (camera: string | null, t: number) => void;
+}) {
   useLangue();
+  /* Des alertes non vues : on arrive sur l'historique, c'est ce qu'on vient voir. */
+  const { nonVues } = useAlertes();
+  const [onglet, setOnglet] = useState<'veilles' | 'historique'>(() => (nonVues > 0 ? 'historique' : 'veilles'));
   const [config, setConfig] = useState<ConfigVeilles | null>(null);
   const [volumes, setVolumes] = useState<Record<string, number> | null>(null);
   const [ouverte, setOuverte] = useState<string | null>(null);
@@ -143,7 +156,7 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
     <div className="flex h-full flex-col">
       <EnTete
         titre={t('espace.alertes')}
-        precision={t('veilles.precision')}
+        precision={onglet === 'veilles' ? t('veilles.precision') : t('historique.precision')}
         actions={(
           <>
             {etat === 'enregistre' && (
@@ -164,8 +177,29 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
             </div>
           </>
         )}
-      />
+      >
+        {/* Deux usages, deux vues : on RÈGLE les veilles, on CONSULTE l'historique. */}
+        <Segment
+          etiquette={t('historique.onglets')} valeur={onglet} onChange={setOnglet}
+          options={[
+            { valeur: 'veilles', libelle: t('historique.ongletVeilles') },
+            { valeur: 'historique', libelle: (
+              <>
+                {t('historique.onglet')}
+                {nonVues > 0 && <span className="ml-1.5 rounded-full bg-accent px-1.5 text-[10.5px] font-bold text-sur-accent">{nonVues}</span>}
+              </>
+            ) },
+          ]}
+        />
+      </EnTete>
 
+      {onglet === 'historique' ? (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-[1100px] px-6 pb-10 pt-[22px]">
+            <HistoriqueAlertes libelleSujet={libelleSujet} estUrgence={estUrgence} onOuvrir={onOuvrir} onRevoir={onRevoir} />
+          </div>
+        </div>
+      ) : (
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-[1100px] px-6 pb-10 pt-[22px]">
           {/* Deux interrupteurs sur le même mur : le dire plutôt que de laisser deviner. */}
@@ -236,6 +270,7 @@ export function VeillesScreen({ cameras }: { cameras: DiscoveredCamera[] }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

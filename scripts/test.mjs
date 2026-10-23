@@ -186,6 +186,17 @@ const suites = [
   },
   {
     /*
+     * Ajoutee le 23.10.2026 avec l'historique des alertes : chaque bulle laisse une ligne, la
+     * retenue se compte sur la bonne, 90 jours et pas un de plus, un fichier abime ne bloque
+     * rien. Treize defauts reinjectes, tous vus.
+     */
+    nom: 'Historique des alertes (lignes, retenues, conservation)',
+    commande: 'node',
+    args: ['test-historique-alertes.js'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * « tsc -b --force », et surtout PAS « tsc --noEmit ».
      *
      * Le tsconfig.json de v2/web est un fichier de references : « files: [] » puis deux

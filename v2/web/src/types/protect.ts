@@ -165,6 +165,26 @@ export interface ExtraitProgres {
   pourcent: number;
 }
 
+/** Une alerte envoyee, telle que l'historique la garde (historique-alertes.js). */
+export interface EntreeAlerte {
+  /** Quand la bulle est partie. */
+  envoye: number;
+  detection: {
+    id: string | null; type: string | null; camera: string | null;
+    debut: number | null; fin: number | null; sujets: string[]; score: number | null;
+  };
+  cameraNom: string | null;
+  veilleId: string | null;
+  veilleNom: string | null;
+  /** Le sujet qui a declenche : person, vehicle, verre… (veilles.js). */
+  sujet: string;
+  /** Faux : l'instantane n'est pas arrive a temps, la bulle est partie sans image. */
+  image: boolean;
+  son: boolean;
+  /** Les alertes suivantes que la retenue a tues. */
+  retenues: number;
+}
+
 /** Pourquoi un export de plage n'a pas abouti — la page en tire le texte et le remede. */
 export type RaisonExport =
   | 'occupe' | 'plage' | 'session' | 'place' | 'existe' | 'vide' | 'refuse' | 'interrompu' | 'ecriture';
@@ -305,6 +325,13 @@ export interface ProtectBridge {
   /** Montre dans l'explorateur le premier fichier que cet export a ecrit. */
   exportMontrer(): Promise<boolean>;
   onExportEtat(handler: (e: EtatExport) => void): () => void;
+  /** L'historique des alertes envoyees, la plus recente d'abord, et le compte des non vues. */
+  alertes(): Promise<{ entrees: EntreeAlerte[]; nonVues: number }>;
+  /** La visite de l'historique : les alertes deja la ne sont plus « non vues ». */
+  alertesVues(): Promise<void>;
+  alertesEffacer(): Promise<void>;
+  /** Pousse a chaque alerte envoyee, retenue, terminee, ou a l'effacement. */
+  onAlertes(handler: (e: { nonVues: number }) => void): () => void;
   /** Demarrage avec Windows. `disponible` est faux hors application installee. */
   autoDemarrage(): Promise<{ actif: boolean; disponible: boolean }>;
   autoDemarrageChanger(actif: boolean): Promise<{ actif: boolean; disponible: boolean }>;

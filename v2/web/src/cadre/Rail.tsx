@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { Activity, Bell, History, ScanSearch, Settings, Video, type LucideIcon } from 'lucide-react';
 import { Marque } from '../Marque';
 import { useLangue } from '../i18n';
+import { useAlertes } from '../lib/alertes';
 import { cx } from '../ui/cx';
 import type { Cle } from '../i18n/fr';
 
@@ -39,6 +40,9 @@ export function Rail({ espace, onChoisir, marqueAnimee }: {
   marqueAnimee: boolean;
 }) {
   const t = useLangue();
+  /* Les alertes arrivées depuis la dernière visite de l'historique : une bulle de Windows
+     manquée (absent, écran verrouillé) se voit quand même en revenant. */
+  const { nonVues } = useAlertes();
   const boutons = useRef(new Map<string, HTMLButtonElement>());
   const rail = useRef<HTMLElement>(null);
 
@@ -69,11 +73,20 @@ export function Rail({ espace, onChoisir, marqueAnimee }: {
               aria-current={actif ? 'page' : undefined}
               ref={(el) => { if (el) boutons.current.set(id, el); else boutons.current.delete(id); }}
               className={cx(
-                'm-pression flex flex-col items-center gap-[5px] whitespace-nowrap rounded-[10px] px-1.5 pb-2 pt-2.5 text-meta transition-colors',
+                'm-pression relative flex flex-col items-center gap-[5px] whitespace-nowrap rounded-[10px] px-1.5 pb-2 pt-2.5 text-meta transition-colors',
                 actif ? 'bg-card2 text-ink' : 'text-muted hover:bg-card2 hover:text-ink',
               )}>
         <Icone className={cx('h-5 w-5', actif && 'text-accent')} aria-hidden />
         {t(cle)}
+        {id === 'alertes' && nonVues > 0 && (
+          <>
+            <span aria-hidden
+                  className="absolute right-3 top-1 min-w-[17px] rounded-full bg-accent px-1 text-center text-[10.5px] font-bold leading-[17px] text-sur-accent">
+              {nonVues > 99 ? '99+' : nonVues}
+            </span>
+            <span className="sr-only">{nonVues === 1 ? t('historique.uneNonVue') : t('historique.nonVues', { n: nonVues })}</span>
+          </>
+        )}
       </button>
     );
   };
