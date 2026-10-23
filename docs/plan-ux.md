@@ -29,6 +29,9 @@ Décisions de Thomas (23.10.2026) :
   détection vers la relecture à cet instant ; **raccourcis** (touche ?) ; Réglages
   **Aide** et **À propos** ; **états dégradés** dessinés. Écarté : la barre de titre
   intégrée.
+- **Maquette validée le 23.10.2026, tailles A** (texte 13 px, boutons 32 et 28 px, en-têtes
+  64 px). La variante B « densité Linear » de la maquette a été jugée plus professionnelle
+  mais trop petite pour certains yeux : **A, sans option de densité dans l'application**.
 - **Fonctions nouvelles, APRÈS la refonte, chacune dans sa propre version** : exporter une
   plage depuis la relecture, historique des alertes, relecture synchronisée de plusieurs
   caméras, dispositions enregistrées du mur.
