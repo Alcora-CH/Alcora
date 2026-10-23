@@ -255,8 +255,6 @@ export const de: Record<Cle, string> = {
 
   'app.reessayer': 'Erneut versuchen',
   'app.aucuneCamera': 'Noch keine Kameras.',
-  'app.afficherCamera': '{nom} anzeigen',
-  'app.masquerCamera': '{nom} ausblenden',
   'app.derniereCamera': 'Die letzte sichtbare Kamera lässt sich nicht ausblenden',
   'app.reafficher': 'Wieder im Mosaik anzeigen',
   'app.masquerMosaique': 'Aus dem Mosaik ausblenden',

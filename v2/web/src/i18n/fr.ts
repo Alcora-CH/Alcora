@@ -274,8 +274,6 @@ export const fr = {
   // ---- la coquille du direct : panneau lateral, plein ecran, mosaique
   'app.reessayer': 'Réessayer',
   'app.aucuneCamera': 'Aucune caméra pour l’instant.',
-  'app.afficherCamera': 'Afficher {nom}',
-  'app.masquerCamera': 'Masquer {nom}',
   'app.derniereCamera': 'La dernière caméra visible ne se masque pas',
   'app.reafficher': 'Réafficher dans la mosaïque',
   'app.masquerMosaique': 'Masquer de la mosaïque',

@@ -579,7 +579,9 @@ export function CameraTile({
           /* La CAUSE plutôt que le silence : il manque un interrupteur sur la console. */
           <span className="shrink-0 whitespace-nowrap text-meta text-warn">{t('camera.rtspDesactive')}</span>
         ) : (
-          <span className="shrink-0 text-meta text-soft" aria-label={t('tuile.connexion')}>…</span>
+          <span className="shrink-0 text-meta text-soft">
+            <span aria-hidden>…</span><span className="sr-only">{t('tuile.connexion')}</span>
+          </span>
         )}
 
         {/* Les commandes vivent ICI, dans le bandeau, et non sur l'image. Visibles en

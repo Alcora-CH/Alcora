@@ -255,8 +255,6 @@ export const it: Record<Cle, string> = {
 
   'app.reessayer': 'Riprova',
   'app.aucuneCamera': 'Ancora nessuna telecamera.',
-  'app.afficherCamera': 'Mostra {nom}',
-  'app.masquerCamera': 'Nascondi {nom}',
   'app.derniereCamera': 'L’ultima telecamera visibile non si può nascondere',
   'app.reafficher': 'Mostra di nuovo nel mosaico',
   'app.masquerMosaique': 'Nascondi dal mosaico',

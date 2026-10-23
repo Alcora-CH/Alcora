@@ -253,8 +253,6 @@ export const en: Record<Cle, string> = {
 
   'app.reessayer': 'Retry',
   'app.aucuneCamera': 'No cameras yet.',
-  'app.afficherCamera': 'Show {nom}',
-  'app.masquerCamera': 'Hide {nom}',
   'app.derniereCamera': 'The last visible camera cannot be hidden',
   'app.reafficher': 'Show in the mosaic again',
   'app.masquerMosaique': 'Hide from the mosaic',
