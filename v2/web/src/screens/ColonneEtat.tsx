@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { bridge } from '../lib/bridge';
-import { localeDates, nombre, t, useLangue } from '../i18n';
-import { nomSujet } from '../i18n/sujets';
-import type { Cle } from '../i18n/fr';
-import type { Detection, DetectionVive, SystemeEtat } from '../types/protect';
+import { localeDates, t, useLangue } from '../i18n';
+import { parHeure, useActivite } from '../lib/activiteJour';
+import {
+  JOUR_MS, armementLisible, ceQuiAEteVu, dateCourte, duree, etatDisqueLisible, go, ilYa, to,
+} from '../lib/lisible';
+import type { DetectionVive, SystemeEtat } from '../types/protect';
 
 /**
  * Colonne d'etat.
@@ -16,115 +18,6 @@ import type { Detection, DetectionVive, SystemeEtat } from '../types/protect';
  * Les noms de champs viennent du journal du poste (30.07.2026), pas d'une supposition.
  * Ce qui manque disparait : jamais un zero a la place d'une valeur inconnue.
  */
-
-const JOUR_MS = 86_400_000;
-
-// « h », « min » et « s » s'ecrivent pareil dans les deux langues ; jour, mois et
-// octets, non — ils passent par le dictionnaire.
-const to = (n: number) => `${nombre(n / 1e12, 2)} ${t('unite.to')}`;
-const go = (n: number) => `${Math.round(n / 1e9)} ${t('unite.go')}`;
-
-function duree(ms: number): string {
-  const j = Math.floor(ms / JOUR_MS);
-  if (j < 1) return `${Math.round(ms / 3_600_000)} h`;
-  if (j < 60) return `${j} ${t('unite.j')}`;
-  return `${Math.floor(j / 30)} ${t('unite.mois')} ${j % 30} ${t('unite.j')}`;
-}
-
-function ilYa(ms: number): string {
-  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
-  if (s < 60) return `${s} s`;
-  if (s < 3600) return `${Math.floor(s / 60)} min`;
-  if (s < JOUR_MS / 1000) return `${Math.floor(s / 3600)} h`;
-  return `${Math.floor(s / 86_400)} ${t('unite.j')}`;
-}
-
-const dateCourte = (d: Date) => new Intl.DateTimeFormat(
-  localeDates(), { day: '2-digit', month: '2-digit', year: '2-digit' }).format(d);
-
-const ARMEMENT: Record<string, { cle: Cle; ton: string }> = {
-  armed: { cle: 'colonne.arme', ton: 'var(--ok)' },
-  disarmed: { cle: 'colonne.desarme', ton: 'var(--soft)' },
-  // Releve sur le poste : les alarmes de Protect ne sont pas configurees du tout, ce qui
-  // n'est ni « arme » ni « desarme ». Alcora a ses propres veilles, elles ne dependent
-  // pas de celles-ci.
-  disabled: { cle: 'colonne.alarmesInactives', ton: 'var(--soft)' },
-};
-
-/**
- * L'etat du disque du controleur, dit sans alarmer a tort.
- *
- * Seules les valeurs REELLEMENT observees sont traduites — celle du poste de reference, le
- * 31.07.2026, et le cas nominal. Les autres passent brutes : inventer une traduction pour
- * un etat qu'on n'a jamais vu, c'est risquer de rassurer sur une panne ou d'affoler sur
- * rien. Ubiquiti ne publie pas cette liste.
- *
- * `hddNotCompatible` merite son explication : le disque n'est pas sur la liste d'Ubiquiti,
- * ce qui ne l'empeche pas de fonctionner. Sur ce poste il porte 162 jours d'archive.
- * L'afficher en rouge sans un mot ferait croire a une panne imminente.
- */
-// « ok » vaut null : le cas normal ne se dit pas, une colonne dense ne le repete pas.
-const DISQUE: Record<string, { cle: Cle; ton: string; detailCle?: Cle } | null> = {
-  ok: null,
-  hddnotcompatible: {
-    cle: 'colonne.disqueNonHomologue',
-    ton: 'var(--muted)',
-    detailCle: 'colonne.disqueNonHomologueDetail',
-  },
-};
-
-function etatDisqueLisible(brut: string): { texte: string; ton: string; detail?: string } | null {
-  const connu = DISQUE[brut.toLowerCase()];
-  if (connu !== undefined) {
-    return connu && {
-      texte: t(connu.cle), ton: connu.ton,
-      detail: connu.detailCle ? t(connu.detailCle) : undefined,
-    };
-  }
-  return { texte: brut, ton: 'var(--warn)' };
-}
-
-/**
- * L'armement de Protect, tel qu'on ose l'ecrire.
- *
- * Une valeur inconnue se montre TELLE QUELLE plutot que de faire disparaitre la ligne.
- * Ne rien afficher se confond avec « le controleur n'a rien dit », et laisse croire que la
- * fonction n'existe pas ; montrer le mot brut dit au moins qu'il y a quelque chose a
- * traduire. Protect ne documente pas la liste de ces valeurs.
- */
-function armementLisible(brut: string): { texte: string; ton: string } {
-  const connu = ARMEMENT[brut];
-  return connu ? { texte: t(connu.cle), ton: connu.ton } : { texte: brut, ton: 'var(--muted)' };
-}
-
-/**
- * Combien de détections, heure par heure.
- *
- * Le contrôleur rend les plus RÉCENTES en premier et s'arrête à la limite demandée. Si elle
- * est atteinte, les premières heures du jour manquent — et un histogramme vide au petit
- * matin serait un mensonge de la même famille que ceux qu'on chasse ailleurs. On rend donc
- * aussi la première heure réellement couverte, pour que le dessin s'arrête là où il sait.
- */
-function parHeure(liste: Detection[], partiel: boolean) {
-  const h = new Array(24).fill(0) as number[];
-  let plusAncien = Infinity;
-  for (const d of liste) {
-    if (!d.debut) continue;
-    h[new Date(d.debut).getHours()] += 1;
-    plusAncien = Math.min(plusAncien, d.debut);
-  }
-  /*
-   * L'heure qui CONTIENT la plus ancienne détection lue est elle-même incomplète : on la
-   * grise aussi. Une barre à moitié vraie serait pire qu'une barre qui se dit inconnue.
-   */
-  const depuis = partiel && Number.isFinite(plusAncien)
-    ? Math.min(24, new Date(plusAncien).getHours() + 1) : 0;
-  return { heures: h, depuis };
-}
-
-/** Combien de détections le contrôleur veut bien rendre d'un coup. Cinq fois le volume
- *  observé sur ce matériel (~205 par jour) : la troncature reste théorique. */
-const LIMITE_JOUR = 1000;
 
 const Titre = ({ children }: { children: React.ReactNode }) => (
   <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-soft">{children}</p>
@@ -148,11 +41,8 @@ export function ColonneEtat({ versionAlcora, onOuvrir }: {
      unites, sujets et etats compris. Le rendu du t() module reste ainsi a jour. */
   useLangue();
   const [systeme, setSysteme] = useState<SystemeEtat | null>(null);
-  const [dujour, setDujour] = useState<Detection[] | null>(null);
-  const [partiel, setPartiel] = useState(false);
-  const [vives, setVives] = useState<DetectionVive[]>([]);
   const [horloge, setHorloge] = useState(() => new Date());
-  const dernieres = useRef<DetectionVive[]>([]);
+  const { dujour, partiel, vives } = useActivite();
 
   useEffect(() => {
     let vivant = true;
@@ -164,53 +54,6 @@ export function ColonneEtat({ versionAlcora, onOuvrir }: {
     const id = setInterval(() => setHorloge(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
-
-  /* Les détections du jour, pour l'histogramme. Sans hâte : cette colonne informe. */
-  useEffect(() => {
-    let vivant = true;
-    const lire = () => {
-      const minuit = new Date(); minuit.setHours(0, 0, 0, 0);
-      bridge.evenements({ avant: Date.now(), jours: 1, limite: LIMITE_JOUR })
-        .then((l) => {
-          if (!vivant) return;
-          const dujour = l.filter((d) => (d.debut ?? 0) >= minuit.getTime());
-          /*
-           * Partiel, et non « tronqué » : atteindre la limite ne veut rien dire en soi.
-           * Ce qui compte est de savoir si la journée est couverte JUSQU'À minuit. Si la
-           * plus ancienne détection rendue est postérieure, alors il en manque avant elle.
-           */
-          const plusAncien = Math.min(...dujour.map((d) => d.debut ?? Infinity));
-          // Une heure entière : c'est la granularité de l'histogramme, donc le seuil en
-          // dessous duquel il n'y a rien à signaler.
-          setPartiel(l.length >= LIMITE_JOUR && plusAncien - minuit.getTime() >= 3_600_000);
-          setDujour(dujour);
-        })
-        .catch(() => { if (vivant) setDujour([]); });
-    };
-    lire();
-    const id = setInterval(lire, 120_000);
-    return () => { vivant = false; clearInterval(id); };
-  }, []);
-
-  /*
-   * Les détections récentes arrivent EN DIRECT — même liaison que les veilles.
-   *
-   * Les deux bouts sont utiles, et pour des raisons différentes. Le commencement fait
-   * apparaître la ligne tout de suite ; la fin apporte la durée ET rend enfin disponible
-   * la vignette de l'événement, que le contrôleur ne fabrique qu'à ce moment-là.
-   */
-  useEffect(() => bridge.onDetectionVive((d) => {
-    const sans = dernieres.current.filter((x) => x.id !== d.id);
-    if (d.commence) dernieres.current = [d, ...sans].slice(0, 5);
-    else if (sans.length !== dernieres.current.length) {
-      // Fin d'une détection déjà listée : on la remplace sur place, l'ordre ne bouge pas.
-      dernieres.current = dernieres.current.map((x) => (x.id === d.id ? { ...x, ...d } : x));
-    } else return;
-    // Trié sur l'HEURE, pas sur l'ordre d'arrivée : une reprise de liaison peut livrer
-    // d'un coup des détections dans le désordre, et la plus récente doit rester en tête.
-    dernieres.current.sort((a, b) => (b.debut ?? 0) - (a.debut ?? 0));
-    setVives([...dernieres.current]);
-  }), []);
 
   const { heures, depuis } = useMemo(() => parHeure(dujour ?? [], partiel), [dujour, partiel]);
   const maxi = Math.max(1, ...heures);
@@ -304,12 +147,7 @@ export function ColonneEtat({ versionAlcora, onOuvrir }: {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[12px]">
-                  {/* nomSujet rend le mot brut quand il ne connait pas : ici, un type
-                      inconnu redevient un sobre « Détection » plutot qu'un mot d'API. */}
-                  {d.sujets.map(nomSujet).join(', ')
-                    || (nomSujet(d.type) !== d.type ? nomSujet(d.type) : t('colonne.detection'))}
-                </div>
+                <div className="truncate text-[12px]">{ceQuiAEteVu(d)}</div>
                 <div className="truncate font-mono text-[10px] text-soft">{d.cameraNom ?? ''}</div>
               </div>
               <span className="shrink-0 font-mono text-[10.5px] text-soft">

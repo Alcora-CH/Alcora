@@ -18,6 +18,7 @@ import { Planetarium } from './Planetarium';
 import { bestChannel } from './video/channel';
 import { meilleureGrille } from './video/grille';
 import { bridge, pontDisponible } from './lib/bridge';
+import { FournisseurActivite } from './lib/FournisseurActivite';
 import { definirLangue, t, useLangue } from './i18n';
 import { nomSujet } from './i18n/sujets';
 import type { RelaisAcces,
@@ -512,7 +513,7 @@ export default function App() {
     void bridge.contexteMesure({
       espace: configured ? espace : 'connexion',
       tuiles: configured && espace === 'direct' ? tuilesAffichees : null,
-      ciel: fondAnime ? 'anime' : 'aucun',
+      ciel: fondAnime ? 'anime' : 'fixe',
     }).catch(() => {});
   }, [configured, espace, tuilesAffichees, fondAnime]);
 
@@ -641,6 +642,7 @@ export default function App() {
   const decalVerre = habille ? L_RAIL + (panneauOuvert ? L_PANNEAU : 0) : 0;
 
   return (
+    <FournisseurActivite>
     <div className="relative flex h-full">
       {/* La bande d'icones ne se replie jamais : c'est le seul point d'ancrage qui reste
           quand tout le reste est masque. Le plein ecran, lui, efface aussi celle-ci. */}
@@ -1044,5 +1046,6 @@ export default function App() {
 
       {intro}
     </div>
+    </FournisseurActivite>
   );
 }
