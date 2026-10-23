@@ -50,6 +50,9 @@ export const VERSIONS: Version[] = [
       + 'l’export d’une plage écrit un fichier par caméra, l’un après l’autre.',
       'Les morceaux de vidéo de toutes les caméras se demandent au contrôleur dans une seule '
       + 'file, jamais deux à la fois : deux caméras relues ensemble l’occupent environ 7 % du temps.',
+      'La relecture affiche l’heure juste. Le contrôleur commence chaque morceau à l’image-clé '
+      + 'qui précède : l’heure lue avançait de 3 à 4 s sur celle incrustée par la caméra, et ces '
+      + 'secondes se rejouaient à chaque enchaînement de morceaux. Les deux sont corrigés.',
     ],
     en: [
       'Replay several cameras at the same moment, up to four: a camera’s gold “+”, in the replay, '
@@ -60,6 +63,9 @@ export const VERSIONS: Version[] = [
       + 'export writes one file per camera, one after the other.',
       'The video chunks of every camera are requested from the controller in a single queue, '
       + 'never two at once: two cameras replayed together keep it busy about 7 % of the time.',
+      'The replay shows the right time. The controller starts each chunk at the preceding '
+      + 'keyframe: the time read was 3 to 4 s ahead of the one the camera burns in, and those '
+      + 'seconds played again at every chunk change. Both are fixed.',
     ],
   },
   {

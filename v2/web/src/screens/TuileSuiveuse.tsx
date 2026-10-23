@@ -5,6 +5,7 @@ import { messageLisible } from '../lib/erreurs';
 import { BoutonBandeau } from '../video/BoutonBandeau';
 import { CameraTile } from '../video/CameraTile';
 import { imageDeLaVideo } from '../video/outils';
+import { debutReel } from '../lib/debutReel';
 import { localeDates, t, useLangue } from '../i18n';
 import { Carte } from '../ui/Cadre';
 import type { DiscoveredCamera, RelaisAcces } from '../types/protect';
@@ -65,6 +66,9 @@ export function TuileSuiveuse({ camera, relais, frontiere, saut, instant, enLect
   const generation = useRef(0);
   /** Le dernier instant qu'un chargement a échoué à couvrir : on ne réessaie pas en boucle. */
   const echec = useRef<number | null>(null);
+  /** Le vrai début de chaque morceau, lu à son chargement : comme la tuile active (lib/debutReel). */
+  const debutsReels = useRef(new Map<string, number>());
+  const reel = (m: Morceau) => debutsReels.current.get(m.url) ?? m.debut;
   const etat = useRef({ morceaux, actif, chargement, instant, enLecture, vitesse, sonActif });
   etat.current = { morceaux, actif, chargement, instant, enLecture, vitesse, sonActif };
 
@@ -126,20 +130,20 @@ export function TuileSuiveuse({ camera, relais, frontiere, saut, instant, enLect
       if (echec.current === null || Math.abs(instant - echec.current) > PAS_MS) void charger(instant);
       return;
     }
-    if (instant < ici.debut - 500 || instant > ici.fin + 500) {
+    if (instant < reel(ici) - 500 || instant > ici.fin + 500) {
       const la = m[1 - a];
-      if (la && instant >= la.debut && instant < la.fin) {
+      if (la && instant >= reel(la) && instant < la.fin) {
         cibles.current[1 - a] = instant;
         setActif(1 - a);
         const w = lecteurs[1 - a].current;
-        if (w) { w.currentTime = (instant - la.debut) / 1000; if (etat.current.enLecture) void w.play().catch(() => {}); }
+        if (w) { w.currentTime = (instant - reel(la)) / 1000; if (etat.current.enLecture) void w.play().catch(() => {}); }
         void precharger(a, la.fin, generation.current);
       } else void charger(instant);
       return;
     }
-    const propre = ici.debut + v.currentTime * 1000;
+    const propre = reel(ici) + v.currentTime * 1000;
     const tolere = etat.current.enLecture ? ECART_MAX_MS : ECART_PAUSE_MS;
-    if (Math.abs(propre - instant) > tolere) v.currentTime = Math.max(0, (instant - ici.debut) / 1000);
+    if (Math.abs(propre - instant) > tolere) v.currentTime = Math.max(0, (instant - reel(ici)) / 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instant]);
 
@@ -210,8 +214,10 @@ export function TuileSuiveuse({ camera, relais, frontiere, saut, instant, enLect
                    const v = e.currentTarget;
                    const m = etat.current.morceaux[i];
                    if (!m) return;
+                   const d = debutReel(m, v.duration);
+                   debutsReels.current.set(m.url, d);
                    const cible = cibles.current[i] ?? (i === etat.current.actif ? etat.current.instant : null);
-                   v.currentTime = cible === null ? 0 : Math.max(0, Math.min((m.fin - m.debut) / 1000, (cible - m.debut) / 1000));
+                   v.currentTime = cible === null ? 0 : Math.max(0, Math.min((m.fin - d) / 1000, (cible - d) / 1000));
                    v.playbackRate = etat.current.vitesse;
                    v.muted = !etat.current.sonActif;
                    if (i === etat.current.actif) {
@@ -232,7 +238,7 @@ export function TuileSuiveuse({ camera, relais, frontiere, saut, instant, enLect
                    if (la && ici && la.debut === ici.fin) {
                      setActif(1 - i);
                      const w = lecteurs[1 - i].current;
-                     if (w) { w.currentTime = 0; w.playbackRate = etat.current.vitesse; if (etat.current.enLecture) void w.play().catch(() => {}); }
+                     if (w) { w.currentTime = Math.max(0, (ici.fin - reel(la)) / 1000); w.playbackRate = etat.current.vitesse; if (etat.current.enLecture) void w.play().catch(() => {}); }
                      void precharger(i, la.fin, generation.current);
                    } else if (ici) void charger(etat.current.instant ?? ici.fin);
                  }}

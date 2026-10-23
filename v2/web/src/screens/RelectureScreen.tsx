@@ -13,6 +13,7 @@ import { Bouton } from '../ui/Bouton';
 import { Carte, EnTete, Touche } from '../ui/Cadre';
 import { acquitterExport, poserPlage, useEtatExport, usePlage, type Plage } from '../lib/exportPlage';
 import { LignePlage } from './LignePlage';
+import { debutReel } from '../lib/debutReel';
 import { TuileSuiveuse } from './TuileSuiveuse';
 import { Puce } from '../ui/Puce';
 import { Segment } from '../ui/Segment';
@@ -235,6 +236,13 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   const lectureVoulue = useRef(true);
   const morceauxRef = useRef(morceaux);
   morceauxRef.current = morceaux;
+  /**
+   * Le vrai début de chaque morceau, lu à son chargement (lib/debutReel) : le contrôleur
+   * commence à l'image-clé d'avant, 3 à 4 s plus tôt que demandé. Toute heure se compte
+   * depuis lui — l'heure lue, la position visée, le relais.
+   */
+  const debutsReels = useRef(new Map<string, number>());
+  const reel = (m: Morceau) => debutsReels.current.get(m.url) ?? m.debut;
   /*
    * La reference suit le lecteur a l'antenne — dans un EFFET, jamais pendant le rendu.
    *
@@ -362,7 +370,8 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     const m = morceauxRef.current[i];
     if (!v || !m) return;
     const t = cibles.current[i];
-    v.currentTime = t === null ? 0 : Math.max(0, Math.min((m.fin - m.debut) / 1000, (t - m.debut) / 1000));
+    const d = debutsReels.current.get(m.url) ?? m.debut;
+    v.currentTime = t === null ? 0 : Math.max(0, Math.min((m.fin - d) / 1000, (t - d) / 1000));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -431,10 +440,12 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     if (la && la.debut === ici.fin) {
       setActif(j);
       const v = lecteurs[j].current;
-      if (v) { v.currentTime = 0; v.playbackRate = vitesse; void v.play().catch(() => {}); }
+      // Le morceau suivant commence AVANT la fin de celui-ci (image-clé d'avant) : on saute
+      // ces secondes déjà vues, sans quoi chaque relais les rejouait.
+      if (v) { v.currentTime = Math.max(0, (ici.fin - reel(la)) / 1000); v.playbackRate = vitesse; void v.play().catch(() => {}); }
       // La case qu'on vient de quitter va chercher la suite.
       void charger(i, la.fin, null).catch(() => {});
-      setInstant(la.debut);
+      setInstant(ici.fin);
       return;
     }
     // Le voisin n'a pas suivi : on reprend le chemin ordinaire.
@@ -845,6 +856,8 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                 style={{ objectFit: 'contain', opacity: actif === i ? 1 : 0,
                          pointerEvents: actif === i ? undefined : 'none' }}
                 onLoadedMetadata={(e) => {
+                  const lu = morceaux[i];
+                  if (lu) debutsReels.current.set(lu.url, debutReel(lu, e.currentTarget.duration));
                   poser(i);
                   if (actif === i) {
                     setDefinition(`${e.currentTarget.videoWidth} × ${e.currentTarget.videoHeight}`);
@@ -870,7 +883,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                 onEnded={() => { if (actif === i) relayer(); }}
                 onTimeUpdate={(e) => {
                   const m = morceaux[i];
-                  if (actif === i && m) setInstant(m.debut + e.currentTarget.currentTime * 1000);
+                  if (actif === i && m) setInstant(reel(m) + e.currentTarget.currentTime * 1000);
                 }}
                 onError={() => { if (actif === i) setErreur(t('video.sequenceIllisible')); }}
               />
