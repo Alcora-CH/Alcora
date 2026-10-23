@@ -80,6 +80,7 @@ contextBridge.exposeInMainWorld('protect', {
   journalPath: () => ipcRenderer.invoke('protect:journalPath'),
   infos: () => ipcRenderer.invoke('protect:infos'),
   ouvrirJournal: () => ipcRenderer.invoke('protect:ouvrirJournal'),
+  ouvrirLicences: () => ipcRenderer.invoke('protect:ouvrirLicences'),
   etats: () => ipcRenderer.invoke('protect:etats'),
 
   // Journal des detections. Les vignettes ne passent PAS par ici : elles sont servies en

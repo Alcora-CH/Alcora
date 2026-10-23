@@ -13,6 +13,7 @@ import { VeillesScreen } from './screens/VeillesScreen';
 import { SystemeScreen } from './screens/SystemeScreen';
 import { BarreEtat } from './cadre/BarreEtat';
 import { Raccourcis } from './cadre/Raccourcis';
+import { FenetreGuide } from './cadre/FenetreGuide';
 import { Rail, type Espace } from './cadre/Rail';
 import { MenuCameras } from './cadre/MenuCameras';
 import { Bouton } from './ui/Bouton';
@@ -170,6 +171,8 @@ export default function App() {
   const [indice, setIndice] = useState(false);
   /** La fenetre des raccourcis clavier (touche « ? », barre d'etat). */
   const [raccourcis, setRaccourcis] = useState(false);
+  /** Le guide d'activation du RTSP, ouvert hors de l'écran de connexion. */
+  const [guide, setGuide] = useState(false);
   const [espacement, setEspacement] = useState(() => {
     const brut = localStorage.getItem(CLE_ESPACE);
     const n = Number(brut);
@@ -621,9 +624,9 @@ export default function App() {
       : ordonnees.length === 1 ? t('direct.uneSur', { total: cameras.length })
         : t('direct.surTotal', { n: ordonnees.length, total: cameras.length });
 
-  /* Le guide de la console vit dans l'écran de connexion, atteint par « Modifier la
-     connexion » des réglages : on y renvoie plutôt que d'ouvrir une seconde page. */
-  const versLeGuide = () => allerVers('reglages');
+  /* Le guide de la console s'ouvre sur place. Il ne vivait que dans l'écran de connexion,
+     où l'on n'arrivait qu'en effaçant le mot de passe (« Modifier la connexion »). */
+  const versLeGuide = () => setGuide(true);
 
   /* Dès que l'inventaire est lu, même vide : c'est le menu qui dit « Aucune caméra ». */
   const menuCameras = (sombre?: boolean) => relais !== null && (
@@ -812,6 +815,8 @@ export default function App() {
             onReconfigurer={() => {
               void bridge.reconfigure().then(() => { setEspace('direct'); setConfigured(false); });
             }}
+            onRaccourcis={() => setRaccourcis(true)}
+            onGuide={versLeGuide}
           />
         ) : espace === 'detections' ? (
           <RechercheScreen cameras={cameras} cameraInitiale={cameraCible} onRevoir={revoirA} />
@@ -876,6 +881,7 @@ export default function App() {
       )}
 
       {raccourcis && <Raccourcis onFermer={() => setRaccourcis(false)} />}
+      {guide && <FenetreGuide onFermer={() => setGuide(false)} />}
 
       {/* Par-dessus tout : une bulle cliquée doit montrer sa séquence sans rien déranger. */}
       {sequence && (

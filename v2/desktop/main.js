@@ -50,6 +50,7 @@ const { ProtectClient } = require('./protect/client');
 const { essaiUtilisable } = require('./protect/essai');
 const surveillance = require('./surveillance');
 const { Mesure } = require('./mesure');
+const { VERSION_RELAIS } = require('./relais-config');
 const { Session } = require('./protect/session');
 const {
   fromBootstrap, relayPaths, etatPourInterface, camerasPourInterface,
@@ -1381,6 +1382,9 @@ ipcMain.handle('protect:infos', () => {
     username: config.username ?? null,
     // On expose l'existence de l'empreinte, jamais sa valeur.
     appaire: Boolean(config.pins?.length),
+    // Pour « À propos » : ce qui fait tourner l'application, cité tel quel.
+    electron: process.versions.electron,
+    relais: VERSION_RELAIS,
   };
 });
 
@@ -1514,6 +1518,17 @@ ipcMain.handle('protect:enregistrerExtrait', async (_event, { jeton, nom }) => {
 /** Ouvre le dossier des donnees dans l'explorateur, journal compris. */
 ipcMain.handle('protect:ouvrirJournal', () => {
   shell.showItemInFolder(journal.chemin());
+});
+
+/*
+ * Les licences des composants de tiers : le fichier que la construction pose À CÔTÉ de
+ * l'exécutable (scripts/build.mjs, build-linux.mjs). Un chemin fixe, jamais fourni par la
+ * page — elle ne peut rien faire ouvrir d'autre. Absent (développement), on le dit.
+ */
+ipcMain.handle('protect:ouvrirLicences', async () => {
+  const fichier = path.join(path.dirname(process.execPath), 'NOTICES-TIERS.txt');
+  if (!fs.existsSync(fichier)) return false;
+  return (await shell.openPath(fichier)) === '';
 });
 
 /* ------------------------------------------------------------------------- langue */

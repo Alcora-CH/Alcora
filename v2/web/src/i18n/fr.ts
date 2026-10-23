@@ -558,6 +558,27 @@ export const fr = {
 
   // Alertes (direction Observatoire, 23.10.2026)
   'veilles.precision': 'Ce qui mérite qu’Alcora te prévienne sur ce PC, et quand',
+
+  // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
+  'reglages.sommaire': 'Sections',
+  'reglages.aide.titre': 'Aide',
+  'reglages.aide.raccourcisDetail': 'Tous les gestes du clavier et de la souris, écran par écran. La touche « ? » les montre partout.',
+  'reglages.aide.voirRaccourcis': 'Voir les raccourcis',
+  'reglages.aide.guide': 'Activer le RTSP sur la console',
+  'reglages.aide.guideDetail': 'Le guide étape par étape, le même que sur l’écran de connexion.',
+  'reglages.aide.ouvrirGuide': 'Ouvrir le guide',
+  'reglages.apropos.titre': 'À propos',
+  'reglages.apropos.alcora': 'Client de bureau pour UniFi Protect, entièrement local. Non affilié à Ubiquiti.',
+  'reglages.apropos.moteur': 'Moteur',
+  'reglages.apropos.relais': 'Relais vidéo',
+  'reglages.apropos.licence': 'Licence',
+  'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Le code source est public ; toute œuvre dérivée doit le rester.',
+  'reglages.apropos.source': 'Code source',
+  'reglages.apropos.tiers': 'Composants de tiers',
+  'reglages.apropos.tiersDetail': 'Les licences de chaque bibliothèque embarquée.',
+  'reglages.apropos.voirLicences': 'Voir les licences',
+  'reglages.apropos.licencesAbsentes': 'Le fichier des licences est introuvable dans cette installation.',
+  'reglages.apropos.site': 'Site',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

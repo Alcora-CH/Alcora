@@ -531,4 +531,25 @@ export const de: Record<Cle, string> = {
 
   // Alertes (direction Observatoire, 23.10.2026)
   'veilles.precision': 'Was eine Warnung von Alcora auf diesem PC verdient, und wann',
+
+  // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
+  'reglages.sommaire': 'Abschnitte',
+  'reglages.aide.titre': 'Hilfe',
+  'reglages.aide.raccourcisDetail': 'Alle Tastatur- und Mausgesten, Bildschirm für Bildschirm. Die Taste «?» zeigt sie überall.',
+  'reglages.aide.voirRaccourcis': 'Tastenkürzel anzeigen',
+  'reglages.aide.guide': 'RTSP auf der Konsole aktivieren',
+  'reglages.aide.guideDetail': 'Die Schritt-für-Schritt-Anleitung, dieselbe wie auf dem Verbindungsbildschirm.',
+  'reglages.aide.ouvrirGuide': 'Anleitung öffnen',
+  'reglages.apropos.titre': 'Über Alcora',
+  'reglages.apropos.alcora': 'Desktop-Client für UniFi Protect, vollständig lokal. Nicht mit Ubiquiti verbunden.',
+  'reglages.apropos.moteur': 'Engine',
+  'reglages.apropos.relais': 'Video-Relais',
+  'reglages.apropos.licence': 'Lizenz',
+  'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Der Quellcode ist öffentlich; jedes abgeleitete Werk muss es bleiben.',
+  'reglages.apropos.source': 'Quellcode',
+  'reglages.apropos.tiers': 'Komponenten von Drittanbietern',
+  'reglages.apropos.tiersDetail': 'Die Lizenzen jeder mitgelieferten Bibliothek.',
+  'reglages.apropos.voirLicences': 'Lizenzen anzeigen',
+  'reglages.apropos.licencesAbsentes': 'Die Lizenzdatei ist in dieser Installation nicht zu finden.',
+  'reglages.apropos.site': 'Website',
 };

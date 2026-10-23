@@ -1,25 +1,83 @@
-import { useEffect, useState } from 'react';
-import { AlertTriangle, FolderOpen } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, BookOpen, ExternalLink, FolderOpen, Keyboard } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { Marque } from '../Marque';
 import { changementsDe, VERSIONS } from '../versions';
 import { CODES_LANGUE, definirLangue, LANGUES, useLangue, type CodeLangue } from '../i18n';
+import { Bouton } from '../ui/Bouton';
+import { Carte, EnTete, Rangee } from '../ui/Cadre';
+import { Interrupteur } from '../ui/Interrupteur';
+import { Segment } from '../ui/Segment';
+import { cx } from '../ui/cx';
+import type { Cle } from '../i18n/fr';
 import type { Confort, Infos, MajState } from '../types/protect';
 
 /**
- * Reglages.
+ * Reglages — direction « Observatoire », maquette A du 23.10.2026.
  *
  * Deux besoins qui se rejoignent : savoir quelle version tourne pour pouvoir la citer, et
  * disposer d'une porte de sortie quand la configuration est fautive. Cette porte etait
  * auparavant un simple bouton qui effacait tout au premier clic — sans confirmation, une
  * main qui derape deconnectait l'application.
+ *
+ * Une colonne de 640 px empilait huit sections ; un sommaire les montre toutes d'un coup
+ * et mene a chacune. Toutes les rangees se ressemblent (ui/Cadre.tsx, « Rangee ») : ce que
+ * c'est et ce que ca fait a gauche, la commande a droite. Deux sections s'ajoutent : Aide
+ * (les raccourcis, le guide de la console) et A propos (ce qui fait tourner l'application,
+ * sa licence, ses sources). « Ce qui a change » passe en dernier : c'est la plus longue.
  */
-export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFondAnimeChange, onReconfigurer }: {
+
+const SECTIONS: { id: string; cle: Cle }[] = [
+  { id: 'version', cle: 'reglages.version.titre' },
+  { id: 'langue', cle: 'reglages.langue.titre' },
+  { id: 'apparence', cle: 'reglages.apparence.titre' },
+  { id: 'demarrage', cle: 'reglages.demarrage.titre' },
+  { id: 'confort', cle: 'reglages.confort.titre' },
+  { id: 'connexion', cle: 'reglages.connexion.titre' },
+  { id: 'probleme', cle: 'reglages.probleme.titre' },
+  { id: 'aide', cle: 'reglages.aide.titre' },
+  { id: 'apropos', cle: 'reglages.apropos.titre' },
+  { id: 'historique', cle: 'reglages.historique.titre' },
+];
+
+/** Les adresses publiques du projet : le depot du code et le site. */
+const DEPOT = 'https://github.com/Alcora-CH/Alcora';
+const SITE = 'https://alcora.ch';
+
+function Bloc({ id, titre, children }: { id: string; titre: string; children: React.ReactNode }) {
+  return (
+    <section id={`reglages-${id}`} className="scroll-mt-6">
+      <h2 className="mb-2.5 text-titre font-semibold">{titre}</h2>
+      {children}
+    </section>
+  );
+}
+
+/** Une valeur technique a droite d'une rangee : un nom d'hote, une version. */
+function Valeur({ children, ton }: { children: React.ReactNode; ton?: string }) {
+  return <span className="shrink-0 font-mono tabular-nums" style={ton ? { color: ton } : undefined}>{children}</span>;
+}
+
+/** Un lien externe : la fenetre le confie au navigateur (https seulement, main.js). */
+function LienExterne({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer"
+       className="m-pression inline-flex h-8 shrink-0 items-center gap-[7px] whitespace-nowrap rounded-lg border border-transparent px-3 text-muted transition-colors hover:bg-card2 hover:text-ink">
+      <ExternalLink className="h-4 w-4" aria-hidden />{children}
+    </a>
+  );
+}
+
+export function ReglagesScreen({
+  espacement, onEspacementChange, fondAnime, onFondAnimeChange, onReconfigurer, onRaccourcis, onGuide,
+}: {
   espacement: number;
   onEspacementChange: (n: number) => void;
   fondAnime: boolean;
   onFondAnimeChange: (actif: boolean) => void;
   onReconfigurer: () => void;
+  onRaccourcis: () => void;
+  onGuide: () => void;
 }) {
   const [infos, setInfos] = useState<Infos | null>(null);
   const [confirme, setConfirme] = useState(false);
@@ -27,6 +85,9 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
   const [auto, setAuto] = useState<{ actif: boolean; disponible: boolean } | null>(null);
   const [confort, setConfort] = useState<Confort | null>(null);
   const [langueChoix, setLangueChoix] = useState<CodeLangue | 'auto'>('auto');
+  const [licencesAbsentes, setLicencesAbsentes] = useState(false);
+  const [courante, setCourante] = useState(SECTIONS[0].id);
+  const corps = useRef<HTMLDivElement>(null);
   const t = useLangue();
 
   useEffect(() => { bridge.langue().then((l) => setLangueChoix(l.choix)).catch(() => {}); }, []);
@@ -53,319 +114,273 @@ export function ReglagesScreen({ espacement, onEspacementChange, fondAnime, onFo
     return () => clearTimeout(t);
   }, [confirme]);
 
+  /* Le sommaire suit la lecture : la section dont le titre a passé le haut de la zone. */
+  useEffect(() => {
+    const el = corps.current;
+    if (!el) return;
+    const suivre = () => {
+      // La marge de défilement des sections est de 24 px : le seuil la dépasse un peu.
+      const haut = el.getBoundingClientRect().top + 48;
+      let id = SECTIONS[0].id;
+      for (const s of SECTIONS) {
+        const n = document.getElementById(`reglages-${s.id}`);
+        if (n && n.getBoundingClientRect().top <= haut) id = s.id;
+      }
+      // Tout en bas, la derniere section est la courante, meme courte.
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) id = SECTIONS[SECTIONS.length - 1].id;
+      setCourante(id);
+    };
+    el.addEventListener('scroll', suivre, { passive: true });
+    return () => el.removeEventListener('scroll', suivre);
+  }, []);
+
+  const aller = (id: string) => {
+    setCourante(id);
+    document.getElementById(`reglages-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
   const actuelle = infos?.version;
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="m-cascade mx-auto flex max-w-[640px] flex-col gap-8 px-6 py-9">
+    <div className="flex h-full flex-col">
+      <EnTete titre={t('reglages.titre')} precision={t('reglages.sousTitre')} />
 
-        <header>
-          <h1 className="text-[19px] font-semibold">{t('reglages.titre')}</h1>
-          <p className="mt-1 text-[13px] text-muted">
-            {t('reglages.sousTitre')}
-          </p>
-        </header>
+      <div ref={corps} className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto grid max-w-[1080px] grid-cols-[190px_minmax(0,1fr)] gap-9 px-6 pb-12 pt-[22px] max-[1000px]:grid-cols-1">
 
-        {/* ---- version ---- */}
-        <section>
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
-            {t('reglages.version.titre')}
-          </h2>
-          <div className="ilot p-5">
-            <div className="flex items-center gap-3">
-              <Marque taille={28} anime />
-              <p className="font-mono text-[17px]" style={{ color: 'var(--accent-d)' }}>
-                Alcora {actuelle ?? '…'}
-              </p>
-            </div>
-            <p className="mt-1 text-[12.5px] text-soft">
-              {maj?.etat === 'verification' ? t('reglages.version.verification')
-                : maj?.etat === 'telechargement' ? t('reglages.version.telechargement',
-                    { version: maj.version ?? '', pourcent: maj.pourcent ?? 0 })
-                : maj?.etat === 'prete' ? t('reglages.version.prete', { version: maj.version ?? '' })
-                : maj?.etat === 'erreur' ? t('reglages.version.erreur')
-                : maj?.etat === 'manuelle' ? t('reglages.version.manuelle')
-                : t('reglages.version.repos')}
-            </p>
-            {/* Sans chaine automatique, le bouton n'aurait rien a lancer : il disparait
-                plutot que de rester la sans effet. */}
-            {maj?.etat !== 'manuelle' && (
-            <button onClick={() => { void bridge.majVerifier(); }}
-                    disabled={maj?.etat === 'verification' || maj?.etat === 'telechargement'}
-                    className="mt-3 rounded-md border border-line px-3 py-1.5 text-[13px] text-muted transition-colors hover:border-line2 hover:text-ink disabled:opacity-40">
-              {t('reglages.version.verifier')}
-            </button>
-            )}
-          </div>
-        </section>
-
-        {/* ---- langue ---- */}
-        <section>
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
-            {t('reglages.langue.titre')}
-          </h2>
-          <div className="ilot p-5">
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-[12.5px] text-soft">{t('reglages.langue.detail')}</p>
-              {/* Les langues viennent du REGISTRE : en ajouter une n'exige rien ici.
-                  Chaque nom s'ecrit dans sa propre langue — c'est ainsi qu'on retrouve
-                  la sienne dans une interface qu'on ne comprend pas. */}
-              <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                {(['auto', ...CODES_LANGUE] as const).map((c) => (
-                  <button key={c} onClick={() => { void changerLangue(c); }}
-                          aria-pressed={langueChoix === c}
-                          className="rounded-md border px-3 py-1 text-[12.5px] transition-colors"
-                          style={langueChoix === c
-                            ? { borderColor: 'var(--accent)', color: 'var(--accent-d)', background: 'var(--accent-soft)' }
-                            : { borderColor: 'var(--line2)', color: 'var(--muted)' }}>
-                    {c === 'auto' ? t('reglages.langue.auto') : LANGUES[c].nom}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ---- apparence ---- */}
-        <section>
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
-            {t('reglages.apparence.titre')}
-          </h2>
-          <div className="ilot p-5">
-            <div>
-              <div className="flex items-baseline justify-between gap-4">
-                <span className="text-[14px]">{t('reglages.apparence.espacement')}</span>
-                <span className="font-mono text-[12px] text-soft">
-                  {espacement === 0 ? t('reglages.apparence.aucun') : `${espacement} px`}
-                </span>
-              </div>
-              <input type="range" min={0} max={24} step={1} value={espacement}
-                     onChange={(e) => onEspacementChange(Number(e.target.value))}
-                     className="mt-2 w-full" style={{ accentColor: 'var(--accent)' }}
-                     aria-label={t('reglages.apparence.espacement')} />
-              <p className="mt-1 text-[12.5px] text-soft">
-                {t('reglages.apparence.detail')}
-              </p>
-            </div>
-
-            <div className="my-3.5 h-px bg-line" />
-
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[14px]">{t('reglages.apparence.fond')}</p>
-                <p className="mt-1 text-[12.5px] text-soft">
-                  {t('reglages.apparence.fondDetail')}
-                </p>
-              </div>
-              <button
-                onClick={() => onFondAnimeChange(!fondAnime)}
-                role="switch" aria-checked={fondAnime}
-                aria-label={t('reglages.apparence.fond')}
-                className="relative h-6 w-11 shrink-0 rounded-full transition-colors"
-                style={{ background: fondAnime ? 'var(--accent)' : 'var(--line2)' }}
-              >
-                <span className="absolute top-0.5 h-5 w-5 rounded-full transition-all"
-                      style={{ left: fondAnime ? 22 : 2, background: '#20242a' }} />
+          {/* ---- le sommaire ---- */}
+          <nav aria-label={t('reglages.sommaire')} className="sticky top-[22px] flex flex-col self-start max-[1000px]:hidden">
+            {SECTIONS.map((s) => (
+              <button key={s.id} type="button" onClick={() => aller(s.id)}
+                      aria-current={courante === s.id ? 'true' : undefined}
+                      className={cx('rounded-lg px-3 py-[7px] text-left transition-colors',
+                        courante === s.id ? 'bg-card2 text-ink' : 'text-muted hover:text-ink')}>
+                {t(s.cle)}
               </button>
-            </div>
-          </div>
-        </section>
+            ))}
+          </nav>
 
-        {/* ---- démarrage ---- */}
-        <section>
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
-            {t('reglages.demarrage.titre')}
-          </h2>
-          <div className="ilot p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[14px]">{t('reglages.demarrage.ouvrir')}</p>
-                <p className="mt-1 text-[12.5px] text-soft">
-                  {auto?.disponible === false
-                    ? t('reglages.demarrage.indisponible')
-                    : t('reglages.demarrage.detail')}
-                </p>
-              </div>
-              {/* L'etat affiche vient du REGISTRE, relu apres chaque bascule : le bouton ne
-                  peut pas pretendre un demarrage automatique qui n'existe pas. */}
-              <button
-                onClick={() => {
-                  if (!auto?.disponible) return;
-                  void bridge.autoDemarrageChanger(!auto.actif).then(setAuto).catch(() => {});
-                }}
-                disabled={!auto?.disponible}
-                role="switch" aria-checked={Boolean(auto?.actif)}
-                aria-label={t('reglages.demarrage.ouvrir')}
-                className="relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-40"
-                style={{ background: auto?.actif ? 'var(--accent)' : 'var(--line2)' }}
-              >
-                <span className="absolute top-0.5 h-5 w-5 rounded-full transition-all"
-                      style={{ left: auto?.actif ? 22 : 2, background: '#20242a' }} />
-              </button>
-            </div>
-          </div>
-        </section>
+          <div className="m-cascade flex flex-col gap-[26px]">
 
-        {/* ---- confort ---- */}
-        <section>
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
-            {t('reglages.confort.titre')}
-          </h2>
-          <div className="ilot p-5">
-            <p className="text-[14px]">{t('reglages.confort.dossier')}</p>
-            {/* Le dossier des IMAGES de Windows, pas un recoin du dossier de donnees : une
-                capture se prend pour la montrer, elle doit se retrouver la ou l'on cherche. */}
-            <p className="mt-1 truncate font-mono text-[12px] text-soft" title={confort?.dossierCaptures}>
-              {confort?.dossierCaptures ?? '…'}
-            </p>
-            <div className="mt-2.5 flex gap-2">
-              <button onClick={() => { void bridge.choisirDossierCaptures().then(setConfort).catch(() => {}); }}
-                      className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted transition-colors hover:border-line2 hover:text-ink">
-                <FolderOpen className="h-3.5 w-3.5" /> {t('reglages.confort.changer')}
-              </button>
-              <button onClick={() => { void bridge.ouvrirCaptures(); }}
-                      className="rounded-md border border-line px-3 py-1.5 text-[12.5px] text-muted transition-colors hover:border-line2 hover:text-ink">
-                {t('commun.ouvrirDossier')}
-              </button>
-            </div>
-
-            <div className="my-3.5 h-px bg-line" />
-
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[14px]">{t('reglages.confort.son')}</p>
-                <p className="mt-1 text-[12.5px] text-soft">
-                  {t('reglages.confort.sonDetail')}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  if (!confort) return;
-                  void bridge.confortEnregistrer({ ...confort, sonParDefaut: !confort.sonParDefaut })
-                    .then(setConfort).catch(() => {});
-                }}
-                role="switch" aria-checked={Boolean(confort?.sonParDefaut)}
-                aria-label={t('reglages.confort.son')}
-                className="relative h-6 w-11 shrink-0 rounded-full transition-colors"
-                style={{ background: confort?.sonParDefaut ? 'var(--accent)' : 'var(--line2)' }}
-              >
-                <span className="absolute top-0.5 h-5 w-5 rounded-full transition-all"
-                      style={{ left: confort?.sonParDefaut ? 22 : 2, background: '#20242a' }} />
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* ---- historique ---- */}
-        <section>
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
-            {t('reglages.historique.titre')}
-          </h2>
-          <div className="flex flex-col gap-3">
-            {VERSIONS.map((v) => {
-              const enCours = v.version === actuelle;
-              return (
-                <article key={v.version}
-                         className="ilot p-5"
-                         style={enCours ? { borderColor: 'var(--accent)' } : undefined}>
-                  <div className="mb-2 flex items-baseline gap-2.5">
-                    <span className="font-mono text-[13.5px]"
-                          style={{ color: enCours ? 'var(--accent-d)' : 'var(--ink)' }}>
-                      {v.version}
+            {/* ---- version ---- */}
+            <Bloc id="version" titre={t('reglages.version.titre')}>
+              <Carte>
+                <Rangee
+                  titre={(
+                    <span className="flex items-center gap-2.5">
+                      <Marque taille={22} anime={fondAnime} />
+                      <span className="font-mono text-titre text-accent-d">Alcora {actuelle ?? '…'}</span>
                     </span>
-                    <span className="font-mono text-[11.5px] text-soft">{v.date}</span>
-                    {enCours && (
-                      <span className="rounded px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide"
-                            style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
-                        {t('reglages.historique.installee')}
-                      </span>
-                    )}
+                  )}
+                  explication={
+                    maj?.etat === 'verification' ? t('reglages.version.verification')
+                      : maj?.etat === 'telechargement' ? t('reglages.version.telechargement',
+                          { version: maj.version ?? '', pourcent: maj.pourcent ?? 0 })
+                      : maj?.etat === 'prete' ? t('reglages.version.prete', { version: maj.version ?? '' })
+                      : maj?.etat === 'erreur' ? t('reglages.version.erreur')
+                      : maj?.etat === 'manuelle' ? t('reglages.version.manuelle')
+                      : t('reglages.version.repos')}>
+                  {/* Sans chaine automatique, le bouton n'aurait rien a lancer : il disparait
+                      plutot que de rester la sans effet. */}
+                  {maj?.etat !== 'manuelle' && (
+                    <Bouton onClick={() => { void bridge.majVerifier(); }}
+                            disabled={maj?.etat === 'verification' || maj?.etat === 'telechargement'}>
+                      {t('reglages.version.verifier')}
+                    </Bouton>
+                  )}
+                </Rangee>
+              </Carte>
+            </Bloc>
+
+            {/* ---- langue ---- */}
+            <Bloc id="langue" titre={t('reglages.langue.titre')}>
+              <Carte>
+                <Rangee explication={t('reglages.langue.detail')}>
+                  {/* Les langues viennent du REGISTRE : en ajouter une n'exige rien ici.
+                      Chaque nom s'ecrit dans sa propre langue — c'est ainsi qu'on retrouve
+                      la sienne dans une interface qu'on ne comprend pas. */}
+                  <Segment etiquette={t('reglages.langue.titre')} valeur={langueChoix}
+                           onChange={(c) => { void changerLangue(c); }}
+                           options={(['auto', ...CODES_LANGUE] as const).map((c) => ({
+                             valeur: c, libelle: c === 'auto' ? t('reglages.langue.auto') : LANGUES[c].nom,
+                           }))} />
+                </Rangee>
+              </Carte>
+            </Bloc>
+
+            {/* ---- apparence ---- */}
+            <Bloc id="apparence" titre={t('reglages.apparence.titre')}>
+              <Carte>
+                <div className="px-[18px] py-4">
+                  <div className="flex items-baseline gap-6">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">{t('reglages.apparence.espacement')}</div>
+                      <p className="mt-[3px] text-meta leading-normal text-muted">{t('reglages.apparence.detail')}</p>
+                    </div>
+                    <Valeur>{espacement === 0 ? t('reglages.apparence.aucun') : `${espacement} px`}</Valeur>
                   </div>
-                  <ul className="flex flex-col gap-1.5">
-                    {changementsDe(v).map((c, i) => (
-                      <li key={i} className="flex gap-2 text-[13px] text-muted">
-                        <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full"
-                              style={{ background: 'var(--soft)' }} />
-                        <span>{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ---- connexion ---- */}
-        <section>
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
-            {t('reglages.connexion.titre')}
-          </h2>
-          <div className="ilot p-5">
-            <dl className="flex flex-col gap-2 text-[13px]">
-              <div className="flex justify-between gap-4">
-                <dt className="text-soft">{t('reglages.connexion.controleur')}</dt>
-                <dd className="font-mono">{infos?.host ?? '—'}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-soft">{t('reglages.connexion.compte')}</dt>
-                <dd className="truncate font-mono">{infos?.username || '—'}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-soft">{t('reglages.connexion.identite')}</dt>
-                <dd style={{ color: infos?.appaire ? 'var(--ok)' : 'var(--warn)' }}>
-                  {infos?.appaire ? t('reglages.connexion.oui') : t('reglages.connexion.non')}
-                </dd>
-              </div>
-            </dl>
-
-            <div className="my-4 h-px bg-line" />
-
-            {!confirme ? (
-              <button onClick={() => setConfirme(true)}
-                      className="rounded-md border border-line px-3 py-1.5 text-[13px] text-muted transition-colors hover:border-line2 hover:text-ink">
-                {t('reglages.connexion.modifier')}
-              </button>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <p className="flex gap-2 text-[13px]" style={{ color: 'var(--warn)' }}>
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{t('reglages.connexion.avertissement')}</span>
-                </p>
-                <div className="flex gap-2">
-                  <button onClick={onReconfigurer}
-                          className="rounded-md px-3 py-1.5 text-[13px] font-semibold"
-                          style={{ background: 'var(--bad)', color: '#20242a' }}>
-                    {t('reglages.connexion.effacer')}
-                  </button>
-                  <button onClick={() => setConfirme(false)}
-                          className="rounded-md border border-line px-3 py-1.5 text-[13px] text-muted transition-colors hover:border-line2">
-                    {t('reglages.connexion.annuler')}
-                  </button>
+                  <input type="range" min={0} max={24} step={1} value={espacement}
+                         onChange={(e) => onEspacementChange(Number(e.target.value))}
+                         className="mt-3 w-full accent-[var(--accent)]"
+                         aria-label={t('reglages.apparence.espacement')} />
                 </div>
-              </div>
-            )}
-          </div>
-        </section>
+                <div className="border-t border-line">
+                  <Rangee titre={t('reglages.apparence.fond')} explication={t('reglages.apparence.fondDetail')}>
+                    <Interrupteur allume={fondAnime} onChange={onFondAnimeChange} etiquette={t('reglages.apparence.fond')} />
+                  </Rangee>
+                </div>
+              </Carte>
+            </Bloc>
 
-        {/* ---- diagnostic ---- */}
-        <section>
-          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-soft">
-            {t('reglages.probleme.titre')}
-          </h2>
-          <div className="ilot p-5">
-            <p className="text-[13px] text-muted">
-              {t('reglages.probleme.detail')}
-            </p>
-            <p className="mt-2 break-all font-mono text-[11.5px] text-soft">
-              {infos?.journal ?? '…'}
-            </p>
-            <button onClick={() => { void bridge.ouvrirJournal(); }}
-                    className="mt-3 flex items-center gap-2 rounded-md border border-line px-3 py-1.5 text-[13px] text-muted transition-colors hover:border-line2 hover:text-ink">
-              <FolderOpen className="h-4 w-4" /> {t('commun.ouvrirDossier')}
-            </button>
+            {/* ---- démarrage ---- */}
+            <Bloc id="demarrage" titre={t('reglages.demarrage.titre')}>
+              <Carte>
+                <Rangee titre={t('reglages.demarrage.ouvrir')}
+                        explication={auto?.disponible === false
+                          ? t('reglages.demarrage.indisponible') : t('reglages.demarrage.detail')}>
+                  {/* L'etat affiche vient du REGISTRE, relu apres chaque bascule : le bouton ne
+                      peut pas pretendre un demarrage automatique qui n'existe pas. */}
+                  <Interrupteur allume={Boolean(auto?.actif)} desactive={!auto?.disponible}
+                                etiquette={t('reglages.demarrage.ouvrir')}
+                                onChange={(v) => {
+                                  if (!auto?.disponible) return;
+                                  void bridge.autoDemarrageChanger(v).then(setAuto).catch(() => {});
+                                }} />
+                </Rangee>
+              </Carte>
+            </Bloc>
+
+            {/* ---- captures et son ---- */}
+            <Bloc id="confort" titre={t('reglages.confort.titre')}>
+              <Carte>
+                {/* Le dossier des IMAGES de Windows, pas un recoin du dossier de donnees : une
+                    capture se prend pour la montrer, elle doit se retrouver la ou l'on cherche. */}
+                <Rangee titre={t('reglages.confort.dossier')}
+                        explication={<span className="block truncate font-mono" title={confort?.dossierCaptures}>{confort?.dossierCaptures ?? '…'}</span>}>
+                  <Bouton icone={FolderOpen} onClick={() => { void bridge.choisirDossierCaptures().then(setConfort).catch(() => {}); }}>
+                    {t('reglages.confort.changer')}
+                  </Bouton>
+                  <Bouton variante="fantome" onClick={() => { void bridge.ouvrirCaptures(); }}>{t('commun.ouvrirDossier')}</Bouton>
+                </Rangee>
+                <Rangee titre={t('reglages.confort.son')} explication={t('reglages.confort.sonDetail')}>
+                  <Interrupteur allume={Boolean(confort?.sonParDefaut)} etiquette={t('reglages.confort.son')}
+                                onChange={() => {
+                                  if (!confort) return;
+                                  void bridge.confortEnregistrer({ ...confort, sonParDefaut: !confort.sonParDefaut })
+                                    .then(setConfort).catch(() => {});
+                                }} />
+                </Rangee>
+              </Carte>
+            </Bloc>
+
+            {/* ---- connexion ---- */}
+            <Bloc id="connexion" titre={t('reglages.connexion.titre')}>
+              <Carte>
+                <Rangee titre={t('reglages.connexion.controleur')}><Valeur>{infos?.host ?? '—'}</Valeur></Rangee>
+                <Rangee titre={t('reglages.connexion.compte')}><Valeur>{infos?.username || '—'}</Valeur></Rangee>
+                <Rangee titre={t('reglages.connexion.identite')}>
+                  <span className={infos?.appaire ? 'text-ok' : 'text-warn'}>
+                    {infos?.appaire ? t('reglages.connexion.oui') : t('reglages.connexion.non')}
+                  </span>
+                </Rangee>
+                <div className="border-t border-line px-[18px] py-4">
+                  {!confirme ? (
+                    <Bouton onClick={() => setConfirme(true)}>{t('reglages.connexion.modifier')}</Bouton>
+                  ) : (
+                    <>
+                      <p className="flex gap-2.5 rounded-[9px] bg-bad-soft px-3 py-2.5 text-bad">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                        <span>{t('reglages.connexion.avertissement')}</span>
+                      </p>
+                      <div className="mt-3 flex gap-2">
+                        <Bouton variante="danger" onClick={onReconfigurer}>{t('reglages.connexion.effacer')}</Bouton>
+                        <Bouton variante="fantome" onClick={() => setConfirme(false)}>{t('reglages.connexion.annuler')}</Bouton>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </Carte>
+            </Bloc>
+
+            {/* ---- en cas de problème ---- */}
+            <Bloc id="probleme" titre={t('reglages.probleme.titre')}>
+              <Carte>
+                <Rangee explication={(
+                  <>
+                    <span className="block text-corps text-muted">{t('reglages.probleme.detail')}</span>
+                    <span className="mt-1.5 block break-all font-mono text-soft">{infos?.journal ?? '…'}</span>
+                  </>
+                )}>
+                  <Bouton icone={FolderOpen} onClick={() => { void bridge.ouvrirJournal(); }}>{t('commun.ouvrirDossier')}</Bouton>
+                </Rangee>
+              </Carte>
+            </Bloc>
+
+            {/* ---- aide ---- */}
+            <Bloc id="aide" titre={t('reglages.aide.titre')}>
+              <Carte>
+                <Rangee titre={t('raccourcis.titre')} explication={t('reglages.aide.raccourcisDetail')}>
+                  <Bouton icone={Keyboard} onClick={onRaccourcis}>{t('reglages.aide.voirRaccourcis')}</Bouton>
+                </Rangee>
+                <Rangee titre={t('reglages.aide.guide')} explication={t('reglages.aide.guideDetail')}>
+                  <Bouton icone={BookOpen} onClick={onGuide}>{t('reglages.aide.ouvrirGuide')}</Bouton>
+                </Rangee>
+              </Carte>
+            </Bloc>
+
+            {/* ---- à propos ---- */}
+            <Bloc id="apropos" titre={t('reglages.apropos.titre')}>
+              <Carte>
+                <Rangee titre="Alcora" explication={t('reglages.apropos.alcora')}><Valeur>{actuelle ?? '…'}</Valeur></Rangee>
+                <Rangee titre={t('reglages.apropos.moteur')}><Valeur>{infos ? `Electron ${infos.electron}` : '…'}</Valeur></Rangee>
+                <Rangee titre={t('reglages.apropos.relais')}><Valeur>{infos ? `MediaMTX ${infos.relais}` : '…'}</Valeur></Rangee>
+                <Rangee titre={t('reglages.apropos.licence')} explication={t('reglages.apropos.licenceDetail')}>
+                  <LienExterne href={DEPOT}>{t('reglages.apropos.source')}</LienExterne>
+                </Rangee>
+                <Rangee titre={t('reglages.apropos.tiers')}
+                        explication={licencesAbsentes ? t('reglages.apropos.licencesAbsentes') : t('reglages.apropos.tiersDetail')}>
+                  <Bouton variante="fantome"
+                          onClick={() => { void bridge.ouvrirLicences().then((ok) => setLicencesAbsentes(!ok)).catch(() => setLicencesAbsentes(true)); }}>
+                    {t('reglages.apropos.voirLicences')}
+                  </Bouton>
+                </Rangee>
+                <Rangee titre={t('reglages.apropos.site')}>
+                  <LienExterne href={SITE}>alcora.ch</LienExterne>
+                </Rangee>
+              </Carte>
+            </Bloc>
+
+            {/* ---- ce qui a changé ---- */}
+            <Bloc id="historique" titre={t('reglages.historique.titre')}>
+              <Carte>
+                {VERSIONS.map((v) => {
+                  const enCours = v.version === actuelle;
+                  return (
+                    <article key={v.version} className="px-[18px] py-4 [&+&]:border-t [&+&]:border-line">
+                      <div className="mb-2 flex items-baseline gap-2.5">
+                        <span className={cx('font-mono', enCours ? 'text-accent-d' : 'text-ink')}>{v.version}</span>
+                        <span className="text-meta tabular-nums text-soft">{v.date}</span>
+                        {enCours && (
+                          <span className="rounded-md bg-accent-soft px-2 py-0.5 text-micro font-semibold text-accent">
+                            {t('reglages.historique.installee')}
+                          </span>
+                        )}
+                      </div>
+                      <ul className="flex flex-col gap-1.5">
+                        {changementsDe(v).map((c, i) => (
+                          <li key={i} className="flex gap-2 text-muted">
+                            <span aria-hidden className="mt-[8px] h-1 w-1 shrink-0 rounded-full bg-soft" />
+                            <span>{c}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  );
+                })}
+              </Carte>
+            </Bloc>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

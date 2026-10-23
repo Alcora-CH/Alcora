@@ -530,4 +530,25 @@ export const it: Record<Cle, string> = {
 
   // Alertes (direction Observatoire, 23.10.2026)
   'veilles.precision': 'Ciò che merita un avviso di Alcora su questo PC, e quando',
+
+  // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
+  'reglages.sommaire': 'Sezioni',
+  'reglages.aide.titre': 'Aiuto',
+  'reglages.aide.raccourcisDetail': 'Tutti i gesti di tastiera e mouse, schermo per schermo. Il tasto «?» li mostra ovunque.',
+  'reglages.aide.voirRaccourcis': 'Vedi le scorciatoie',
+  'reglages.aide.guide': 'Attivare l’RTSP sulla console',
+  'reglages.aide.guideDetail': 'La guida passo per passo, la stessa dello schermo di connessione.',
+  'reglages.aide.ouvrirGuide': 'Apri la guida',
+  'reglages.apropos.titre': 'Informazioni',
+  'reglages.apropos.alcora': 'Client desktop per UniFi Protect, interamente locale. Non affiliato a Ubiquiti.',
+  'reglages.apropos.moteur': 'Motore',
+  'reglages.apropos.relais': 'Relè video',
+  'reglages.apropos.licence': 'Licenza',
+  'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Il codice sorgente è pubblico; ogni opera derivata deve restarlo.',
+  'reglages.apropos.source': 'Codice sorgente',
+  'reglages.apropos.tiers': 'Componenti di terze parti',
+  'reglages.apropos.tiersDetail': 'Le licenze di ogni libreria inclusa.',
+  'reglages.apropos.voirLicences': 'Vedi le licenze',
+  'reglages.apropos.licencesAbsentes': 'Il file delle licenze non si trova in questa installazione.',
+  'reglages.apropos.site': 'Sito',
 };

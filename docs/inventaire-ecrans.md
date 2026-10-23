@@ -284,3 +284,34 @@ Quatrième groupe, même branche, vérifié dans la démo.
       semaine dessinée à droite. Une seule colonne sur une liste étroite.
 - [x] Sujets d'urgence (verre, fumée, sirène, monoxyde) : **bord rougeâtre** (ajout).
 - [x] Volumes indisponibles, lecture échouée, chargement : inchangés.
+
+## 9. Où est passé chaque élément — Réglages (23.10.2026)
+
+Cinquième groupe, même branche, vérifié dans la démo.
+
+- [x] Titre et sous-titre : en-tête commun.
+- [x] **Sommaire** (ajout) : toutes les sections d'un coup, la section lue en surbrillance.
+- [x] Version : marque, numéro, état de la mise à jour (six états), « Vérifier maintenant »
+      (absent sans chaîne automatique) : une rangée, bouton à droite.
+- [x] Langue : Automatique + chaque langue dans sa propre langue : un sélecteur.
+- [x] Apparence : espacement (valeur, curseur, « aucun », explication) ; fond animé
+      (interrupteur commun, éteint par défaut).
+- [x] Démarrage : interrupteur, désactivé et expliqué quand le système ne le permet pas.
+- [x] Captures et son : dossier (chemin), « Changer », « Ouvrir le dossier » ; son dès
+      l'ouverture.
+- [x] Connexion : contrôleur, compte, identité vérifiée ; « Modifier la connexion » →
+      avertissement en rouge doux → « Effacer » rouge / « Annuler », retiré après six
+      secondes.
+- [x] En cas de problème : explication, chemin du journal, « Ouvrir le dossier ».
+- [x] **Aide** (ajout) : les raccourcis clavier ; le guide d'activation du RTSP, qui s'ouvre
+      désormais aussi depuis les liens « Voir le guide » (menu Caméras, page Système) au lieu
+      de renvoyer aux réglages.
+- [x] **À propos** (ajout) : Alcora et sa version, Electron, MediaMTX, licence GPL-3.0 et
+      lien vers le code source, licences des composants de tiers (le fichier posé à côté de
+      l'exécutable ; son absence se dit), site.
+- [x] Ce qui a changé : toutes les versions dans une seule carte, la version installée
+      marquée ; en dernier.
+
+**Reporté, à faire dans une étape à part** : l'état « mise à jour refusée » qui dit sa
+raison (planche des états dégradés). Il touche la chaîne de mise à jour (`maj.js`) et doit
+passer par ses tests (`test-maj.js`) — pas un chantier d'affichage.

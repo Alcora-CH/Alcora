@@ -266,9 +266,12 @@ const mock: ProtectBridge = {
     return {
       version: '0.0.0-démo', journal: 'C:\\…\\journal.txt', donnees: 'C:\\…\\Alcora',
       host: '10.0.0.1', username: 'demo@exemple.test', appaire: true,
+      electron: '0.0.0-démo', relais: 'v0.0.0-démo',
     };
   },
   async ouvrirJournal() { /* simule */ },
+  // La démo n'a pas d'installation : pas de fichier de licences à côté d'un exécutable.
+  async ouvrirLicences() { return false; },
   async etats() {
     return {
       relais: { running: true, message: t('relais.pret') },

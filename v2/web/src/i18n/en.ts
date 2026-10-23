@@ -528,4 +528,25 @@ export const en: Record<Cle, string> = {
 
   // Alertes (direction Observatoire, 23.10.2026)
   'veilles.precision': 'What deserves a warning from Alcora on this PC, and when',
+
+  // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
+  'reglages.sommaire': 'Sections',
+  'reglages.aide.titre': 'Help',
+  'reglages.aide.raccourcisDetail': 'Every keyboard and mouse gesture, screen by screen. The “?” key shows them everywhere.',
+  'reglages.aide.voirRaccourcis': 'See the shortcuts',
+  'reglages.aide.guide': 'Enable RTSP on the console',
+  'reglages.aide.guideDetail': 'The step-by-step guide, the same as on the connection screen.',
+  'reglages.aide.ouvrirGuide': 'Open the guide',
+  'reglages.apropos.titre': 'About',
+  'reglages.apropos.alcora': 'Desktop client for UniFi Protect, entirely local. Not affiliated with Ubiquiti.',
+  'reglages.apropos.moteur': 'Engine',
+  'reglages.apropos.relais': 'Video relay',
+  'reglages.apropos.licence': 'Licence',
+  'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. The source code is public; any derivative work must remain so.',
+  'reglages.apropos.source': 'Source code',
+  'reglages.apropos.tiers': 'Third-party components',
+  'reglages.apropos.tiersDetail': 'The licences of every bundled library.',
+  'reglages.apropos.voirLicences': 'See the licences',
+  'reglages.apropos.licencesAbsentes': 'The licence file cannot be found in this installation.',
+  'reglages.apropos.site': 'Website',
 };

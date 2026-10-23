@@ -228,6 +228,8 @@ export interface ProtectBridge {
   infos(): Promise<Infos>;
   /** Ouvre le dossier des donnees dans l'explorateur. */
   ouvrirJournal(): Promise<void>;
+  /** Ouvre les licences des composants de tiers. Faux si le fichier est absent. */
+  ouvrirLicences(): Promise<boolean>;
   /** Etat courant des sous-systemes, a tirer au montage de la page. */
   etats(): Promise<{
     relais: RelayState;
@@ -312,6 +314,9 @@ export interface Infos {
   username: string | null;
   /** Vrai si l'empreinte du controleur est memorisee. Sa valeur n'est jamais exposee. */
   appaire: boolean;
+  /** Version d'Electron, et celle du relais (MediaMTX) : la page « A propos ». */
+  electron: string;
+  relais: string;
 }
 
 declare global {
