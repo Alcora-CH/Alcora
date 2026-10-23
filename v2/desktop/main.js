@@ -608,9 +608,14 @@ function createWindow() {
 
   // La console de la page n'apparait nulle part sans outils de developpement : elle part
   // dans le journal commun. C'est ce qui rend une panne comprehensible a distance.
-  pages.on('console-message', (_e, niveau, message, ligne, source) => {
-    const court = String(source).split(/[\\/]/).pop();
-    journal.ecrire(niveau >= 2 ? 'erreur' : 'info', 'page', `${message}  (${court}:${ligne})`);
+  // Tout se lit sur l'evenement : les arguments separes (niveau en nombre, message, ligne,
+  // source) sont annonces au retrait par Electron 45 (avertissement vu le 23.10.2026).
+  // Avertissements et erreurs restent ensemble cote « erreur », comme le « niveau >= 2 »
+  // d'avant.
+  pages.on('console-message', (e) => {
+    const court = String(e.sourceId).split(/[\\/]/).pop();
+    const grave = e.level === 'warning' || e.level === 'error';
+    journal.ecrire(grave ? 'erreur' : 'info', 'page', `${e.message}  (${court}:${e.lineNumber})`);
   });
 
   /*
