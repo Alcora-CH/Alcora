@@ -179,6 +179,8 @@ class ExportPlage {
     this.etat = { etat: 'aucun' };
     /** Les fichiers ECRITS par le dernier export — seuls a pouvoir etre montres. */
     this.ecrits = [];
+    /** Le fichier partiel en cours d'ecriture, pour l'abandon a la fermeture. */
+    this.provisoire = null;
   }
 
   get occupe() { return this.travail !== null; }
@@ -241,6 +243,20 @@ class ExportPlage {
     return true;
   }
 
+  /**
+   * L'application se ferme : on renonce, et le fichier partiel part TOUT DE SUITE. La suite
+   * asynchrone de l'annulation n'aura peut-etre pas le temps de s'executer, et un « .part »
+   * resterait alors dans le dossier choisi. Windows l'efface meme encore ouvert : Node ouvre
+   * ses fichiers en partage de suppression, il disparait a la fermeture du descripteur.
+   */
+  abandonner() {
+    if (!this.controle) return;
+    this.controle.abort();
+    if (this.provisoire) {
+      try { fs.rmSync(this.provisoire, { force: true }); } catch { /* deja parti */ }
+    }
+  }
+
   async executer(tranches, fichiers, commun, cameraId, signal) {
     let recuAvant = 0;
     let vides = 0;
@@ -248,6 +264,7 @@ class ExportPlage {
     for (let i = 0; i < tranches.length; i++) {
       const cible = fichiers[i];
       const provisoire = `${cible}.part`;
+      this.provisoire = provisoire;
       try {
         const { total, flux } = await this.ouvrir({ cameraId, ...tranches[i], signal });
         let recu = 0;
@@ -263,11 +280,13 @@ class ExportPlage {
         await pipeline(flux, fs.createWriteStream(provisoire), { signal });
         if (recu === 0) throw new ErreurExport('vide', 'empty body');
         await fs.promises.rename(provisoire, cible);
+        this.provisoire = null;
         this.ecrits.push(cible);
         recuAvant += recu;
         this.journal.info('export', `part ${i + 1}/${tranches.length}: ${(recu / 1048576).toFixed(1)} MB`);
       } catch (brute) {
         await fs.promises.rm(provisoire, { force: true }).catch(() => {});
+        this.provisoire = null;
         const e = nommer(brute, signal);
         // Une heure sans enregistrement au milieu d'une nuit (camera hors ligne) ne
         // condamne pas les autres : on la saute, et on le dit a la fin.

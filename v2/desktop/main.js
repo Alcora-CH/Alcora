@@ -373,6 +373,8 @@ let essaiRecent = null;
 let extraits = null;
 /** L'export d'une plage de la relecture : un seul a la fois (export-plage.js). */
 let exportPlage = null;
+/** La boite « Enregistrer sous » de l'export est ouverte : un second clic n'en ouvre pas une autre. */
+let choixExport = false;
 
 /**
  * Identifiants du cycle courant, jamais ecrits sur le disque.
@@ -1534,17 +1536,19 @@ ipcMain.handle('protect:enregistrerExtrait', async (_event, { jeton, nom }) => {
 ipcMain.handle('protect:exporterPlage', async (_event, { camera, debut, fin, estimation } = {}) => {
   if (!exportPlage || !window) return { lance: false, raison: 'session' };
   if (exportPlage.occupe) return { lance: false, raison: 'occupe' };
+  if (choixExport) return { lance: false };
   const cam = cameras.find((c) => c.id === camera);
   const d = Number(debut);
   // Rien n'est encore enregistre apres l'instant present : la fin y est ramenee.
   const f = Math.min(Number(fin), Date.now());
   if (!cam || !Number.isFinite(d) || !Number.isFinite(f) || f - d < 1000) return { lance: false, raison: 'plage' };
 
+  choixExport = true;
   const { canceled, filePath } = await dialog.showSaveDialog(window, {
     title: i18n.t('main.exporterPlage'),
     defaultPath: path.join(app.getPath('videos'), `${nomParDefaut(cam.name, d, f, i18n.t)}.mp4`),
     filters: [{ name: i18n.t('main.videoMp4'), extensions: ['mp4'] }],
-  });
+  }).finally(() => { choixExport = false; });
   if (canceled || !filePath) return { lance: false };
   try {
     const r = await exportPlage.lancer({
@@ -2139,5 +2143,7 @@ app.on('before-quit', () => {
   mesure?.consigner();
   mesure?.arreter();
   flux?.arreter();
+  // Un export en cours s'arrete avec l'application, sans laisser de fichier partiel.
+  exportPlage?.abandonner();
   relay?.stop();
 });

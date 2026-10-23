@@ -210,6 +210,22 @@ const vide404 = () => new ErreurExport('vide', 'HTTP 404');
     check('plus rien a annuler ensuite', false, x.annuler());
   }
 
+  console.log('\n=== L application se ferme en plein export ===');
+  {
+    vider();
+    const c = controleur(() => ({ total: 30, flux: corps(['a', 'b', 'c', 'd', 'e', 'f'], { attente: 20 }) }));
+    const { x } = exporteur(c);
+    await x.lancer({ cameraId: 'cam1', camera: 'Allée', debut: T0, fin: T0 + 60_000, fichier: fichier('f.mp4') });
+    await new Promise((ok) => setTimeout(ok, 50));
+    const avant = restes();
+    x.abandonner();
+    // Tout de suite, sans attendre la suite asynchrone : c'est tout ce que la fermeture laisse.
+    const apres = restes();
+    await x.travail;
+    check('le partiel existait, il est parti AVANT toute attente', [['f.mp4.part'], []], [avant, apres]);
+    check('et rien n apparait ensuite', [], restes());
+  }
+
   console.log('\n=== Ce qui se refuse avant le premier octet ===');
   {
     vider();

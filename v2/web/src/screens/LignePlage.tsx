@@ -43,13 +43,19 @@ function Bornes({ debut, fin }: { debut: number; fin: number | null }) {
   );
 }
 
-function Cadre({ ton = 'neutre', children }: { ton?: 'neutre' | 'ok' | 'erreur' | 'avert'; children: React.ReactNode }) {
+/*
+ * Une issue (enregistree, refusee, annulee) s'annonce au lecteur d'ecran ; la progression,
+ * non : mise a jour quatre fois par seconde, elle parlerait sans arret.
+ */
+function Cadre({ ton = 'neutre', annonce = false, children }: {
+  ton?: 'neutre' | 'ok' | 'erreur' | 'avert'; annonce?: boolean; children: React.ReactNode;
+}) {
   return (
     <div className={cx('mt-2 flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-1 rounded-[9px] border py-1.5 pl-3 pr-2 text-corps',
       ton === 'ok' ? 'border-[rgba(116,196,148,.35)] bg-card2'
         : ton === 'erreur' ? 'border-[rgba(227,115,95,.45)] bg-bad-soft'
           : ton === 'avert' ? 'border-[rgba(224,162,60,.45)] bg-card2' : 'border-line2 bg-card2')}
-         role="status">
+         role={annonce ? 'status' : undefined}>
       {children}
     </div>
   );
@@ -119,7 +125,7 @@ export function LignePlage({
   /* ---- son issue, tant qu'on ne l'a pas écartée ---- */
   if (etat.etat === 'termine') {
     return (
-      <Cadre ton="ok">
+      <Cadre ton="ok" annonce>
         <Titre icone={CircleCheck} ton="text-ok">
           {etat.fichiers.length > 1 ? t('export.enregistrees', { n: etat.fichiers.length }) : t('export.enregistree')}
         </Titre>
@@ -142,7 +148,7 @@ export function LignePlage({
     const faits = etat.faits > 0
       ? ` ${etat.faits === 1 ? t('export.faitUn') : t('export.faitsPlusieurs', { n: etat.faits })}` : '';
     return (
-      <Cadre ton={erreur ? 'erreur' : 'neutre'}>
+      <Cadre ton={erreur ? 'erreur' : 'neutre'} annonce>
         <Titre icone={erreur ? AlertCircle : X} ton={erreur ? 'text-bad' : 'text-muted'}>
           {erreur ? t('export.export') : t('export.annuleTitre')}
         </Titre>
@@ -188,7 +194,7 @@ export function LignePlage({
     ...(aDuSon === null ? [] : [aDuSon ? t('export.sonCompris') : t('export.sansSon')]),
   ];
   return (
-    <Cadre ton={refus ? 'erreur' : parties > 1 || basse ? 'avert' : 'neutre'}>
+    <Cadre ton={refus ? 'erreur' : parties > 1 || basse ? 'avert' : 'neutre'} annonce={Boolean(refus)}>
       <Titre icone={refus ? AlertCircle : Download} ton={refus ? 'text-bad' : 'text-accent'}>{t('export.plage')}</Titre>
       <Bornes debut={plage.debut} fin={plage.fin} />
       <span className="whitespace-nowrap text-muted">
