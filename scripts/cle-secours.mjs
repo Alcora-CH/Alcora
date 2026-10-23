@@ -16,7 +16,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { attendreEntree, copier, demanderCache, lirePressePapiers, viderPressePapiers } from './saisie.mjs';
 import {
-  PHRASE_MIN, chiffrerCleDeSecours, dechiffrerCleDeSecours, empreintePublique, pemPublique, signerAvecLeSecours,
+  PHRASE_MIN, chiffrerCleDeSecours, dechiffrerCleDeSecours, ecartDeNote, empreintePublique, extraireNote, pemPublique,
+  signerAvecLeSecours,
 } from './secours.mjs';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -70,8 +71,9 @@ for (let tour = 0; tour < 5 && !rangee; tour++) {
   await attendreEntree('Entrée… ');
   const copiee = lirePressePapiers();
   viderPressePapiers();
-  if (copiee !== note) {
-    console.log(copiee ? '  Ce n\'est pas la même ligne — la note est-elle complète ?' : '  Le presse-papiers est vide.');
+  const ecart = ecartDeNote(copiee, note);
+  if (ecart) {
+    console.log(`  ${ecart}`);
     const choix = await attendreEntree('  Entrée pour réessayer, ou R puis Entrée pour remettre la clé dans le presse-papiers (note pas encore créée)… ');
     if (/^r$/i.test(choix)) {
       copier(note);
@@ -82,7 +84,7 @@ for (let tour = 0; tour < 5 && !rangee; tour++) {
     continue;
   }
   try {
-    dechiffrerCleDeSecours(copiee, await demanderCache('Et la phrase de passe, une dernière fois : '));
+    dechiffrerCleDeSecours(extraireNote(copiee), await demanderCache('Et la phrase de passe, une dernière fois : '));
     rangee = true;
   } catch (e) {
     console.log(`  ${e.message}.`);

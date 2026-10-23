@@ -271,6 +271,20 @@ const verdict = (d, attendu = CHAMPS, cles = CLES_TEST) => verifierDeclaration(d
     check('les espaces autour de la note collee sont sans effet', !refusee(`  ${note}\n`));
     check('la phrase en Unicode decompose est la meme phrase',
       !refusee(s.chiffrerCleDeSecours(SECOURS.privateKey, 'clé de café du matin'), 'clé de café du matin'));
+    // Ce que rend une copie depuis Proton Pass (contenus fictifs).
+    check('la note se retrouve dans une copie avec titre, retours a la ligne et texte apres',
+      s.extraireNote(`Alcora — clé de secours\r\n\r\n${note}\r\nModifiée le 24.10.2026\n`) === note);
+    check('… et dans une copie de la seule ligne', s.extraireNote(note) === note && s.ecartDeNote(` ${note}\n`, note) === null);
+    check('pas de note dans un autre texte', s.extraireNote('Alcora — PIN de la puce\n1234-5678') === null);
+    check('une note collee a du texte n est pas extraite a moitie', s.extraireNote(`Note:${note}`) === null);
+    const ecart = (copie) => s.ecartDeNote(copie, note) ?? '';
+    check('diagnostic : presse-papiers vide', /vide/.test(ecart('  \n')));
+    check('diagnostic : autre texte, sans le montrer',
+      /Rien de la clé/.test(ecart('mot-de-passe-fictif')) && !ecart('mot-de-passe-fictif').includes('fictif'));
+    check('diagnostic : ligne abimee', /tronquée ou abîmée/.test(ecart(note.replace(/:/g, ' : '))));
+    check('diagnostic : ligne coupee', /incomplète/.test(ecart(note.slice(0, -5))));
+    check('diagnostic : une autre cle de secours', /pas celle de ce lancement/.test(ecart(autre.join(':'))));
+
     let courte = false;
     try { s.chiffrerCleDeSecours(SECOURS.privateKey, 'x'.repeat(s.PHRASE_MIN - 1)); } catch { courte = true; }
     check(`une phrase de moins de ${s.PHRASE_MIN} caracteres : refusee`, courte);

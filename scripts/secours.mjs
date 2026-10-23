@@ -67,6 +67,39 @@ export function dechiffrerCleDeSecours(note, phrase) {
   return privee;
 }
 
+const MOTIF_NOTE = /^alcora-secours-\d+(?::[A-Za-z0-9_-]+){5}$/;
+
+/**
+ * La note dans ce qui a ete copie depuis Proton Pass : un titre, des retours a la ligne ou
+ * des espaces autour n'y changent rien — la note n'en contient aucun. null si elle n'y est
+ * pas. Constate le 24.10.2026 : exiger le texte copie a l'identique faisait echouer la
+ * relecture sans dire pourquoi.
+ */
+export function extraireNote(texte) {
+  return String(texte ?? '').split(/\s+/).find((morceau) => MOTIF_NOTE.test(morceau)) ?? null;
+}
+
+/**
+ * Pourquoi ce qui a ete copie n'est pas la note attendue — en francais, pour le terminal,
+ * sans rien montrer de ce qui a ete copie (ce pourrait etre un autre secret). null si c'est
+ * bien elle.
+ */
+export function ecartDeNote(copie, attendue) {
+  const texte = String(copie ?? '').trim();
+  if (!texte) return 'Le presse-papiers est vide : la copie depuis Proton Pass n\'a rien donné, ou Proton Pass l\'a déjà vidé.';
+  const trouvee = extraireNote(texte);
+  if (trouvee === attendue) return null;
+  const n = [...texte].length;
+  if (!trouvee) {
+    return texte.includes('alcora-secours')
+      ? `La ligne y est, mais tronquée ou abîmée (${n} caractères copiés ; la ligne seule en compte ${attendue.length}).`
+      : `Rien de la clé dans ce qui a été copié (${n} caractères, sans « alcora-secours- ») : est-ce bien la note « Alcora — clé de secours » ?`;
+  }
+  return attendue.startsWith(trouvee)
+    ? `Ligne incomplète : ${trouvee.length} caractères sur ${attendue.length}.`
+    : 'C\'est une clé de secours, mais pas celle de ce lancement — une note d\'un essai précédent ?';
+}
+
 /** @returns {string} signature en base64 — la forme de la declaration */
 export const signerAvecLeSecours = (privee, message) => crypto.sign(null, message, privee).toString('base64');
 
