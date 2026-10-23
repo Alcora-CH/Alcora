@@ -92,6 +92,16 @@ contextBridge.exposeInMainWorld('protect', {
   extraire: (params) => ipcRenderer.invoke('protect:extraire', params),
   sequence: (params) => ipcRenderer.invoke('protect:sequence', params),
   enregistrerExtrait: (params) => ipcRenderer.invoke('protect:enregistrerExtrait', params),
+  // Export d'une plage : la page ne donne que la camera et les bornes, jamais un chemin.
+  exporterPlage: (params) => ipcRenderer.invoke('protect:exporterPlage', params),
+  exportAnnuler: () => ipcRenderer.invoke('protect:exportAnnuler'),
+  exportEtat: () => ipcRenderer.invoke('protect:exportEtat'),
+  exportMontrer: () => ipcRenderer.invoke('protect:exportMontrer'),
+  onExportEtat: (handler) => {
+    const listener = (_event, e) => handler(e);
+    ipcRenderer.on('protect:exportEtat', listener);
+    return () => ipcRenderer.removeListener('protect:exportEtat', listener);
+  },
   onExtraitProgres: (handler) => {
     const listener = (_event, e) => handler(e);
     ipcRenderer.on('protect:extraitProgres', listener);

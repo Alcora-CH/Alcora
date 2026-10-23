@@ -165,6 +165,30 @@ export interface ExtraitProgres {
   pourcent: number;
 }
 
+/** Pourquoi un export de plage n'a pas abouti — la page en tire le texte et le remede. */
+export type RaisonExport =
+  | 'occupe' | 'plage' | 'session' | 'place' | 'existe' | 'vide' | 'refuse' | 'interrompu' | 'ecriture';
+
+/** Ce que tout etat d'un export rappelle : quoi, et en combien de fichiers. */
+interface ExportCommun {
+  /** Nom de la camera. */
+  camera: string;
+  debut: number;
+  fin: number;
+  /** Nombre de fichiers : une heure au plus par fichier. */
+  parties: number;
+  /** Octets attendus d'apres le debit observe ; 0 = inconnu. */
+  estimation: number;
+}
+
+/** Ou en est l'export d'une plage, pousse par le processus principal (export-plage.js). */
+export type EtatExport =
+  | { etat: 'aucun' }
+  | (ExportCommun & { etat: 'encours'; partie: number; recu: number; total: number; recuAvant: number; debit?: number })
+  | (ExportCommun & { etat: 'termine'; octets: number; vides: number; fichiers: string[]; dossier: string })
+  | (ExportCommun & { etat: 'erreur'; raison: RaisonExport; statut?: number; partie: number; faits: number })
+  | (ExportCommun & { etat: 'annule'; faits: number });
+
 export interface RelaisAcces {
   base: string;
   autorisation: string;
@@ -268,6 +292,19 @@ export interface ProtectBridge {
   /** Propose d'enregistrer l'extrait ailleurs. Faux si l'utilisateur renonce. */
   enregistrerExtrait(p: { jeton: string; nom: string }):
     Promise<{ enregistre: boolean; chemin?: string }>;
+  /**
+   * Exporter une plage : le processus principal ouvre la boite de Windows, puis lance.
+   * `lance` est faux si l'on renonce, ou si l'export est refuse avant le premier octet
+   * (`raison`) ; la suite arrive par `onExportEtat`.
+   */
+  exporterPlage(p: { camera: string; debut: number; fin: number; estimation: number }):
+    Promise<{ lance: boolean; raison?: RaisonExport; fichier?: string | null; fichiers?: string[] }>;
+  exportAnnuler(): Promise<boolean>;
+  /** L'etat courant, pour une page qui revient pendant un export. */
+  exportEtat(): Promise<EtatExport>;
+  /** Montre dans l'explorateur le premier fichier que cet export a ecrit. */
+  exportMontrer(): Promise<boolean>;
+  onExportEtat(handler: (e: EtatExport) => void): () => void;
   /** Demarrage avec Windows. `disponible` est faux hors application installee. */
   autoDemarrage(): Promise<{ actif: boolean; disponible: boolean }>;
   autoDemarrageChanger(actif: boolean): Promise<{ actif: boolean; disponible: boolean }>;

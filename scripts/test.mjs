@@ -175,6 +175,17 @@ const suites = [
   },
   {
     /*
+     * Ajoutee le 23.10.2026 avec l'export de plage : une heure au plus par demande et jamais
+     * deux a la fois (le controleur l'exige), jamais un fichier tronque sous le nom choisi,
+     * la place verifiee avant le premier octet. Douze defauts reinjectes, tous vus.
+     */
+    nom: 'Export de plage (tranches, fichiers, pannes nommées)',
+    commande: 'node',
+    args: ['test-export-plage.js'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * « tsc -b --force », et surtout PAS « tsc --noEmit ».
      *
      * Le tsconfig.json de v2/web est un fichier de references : « files: [] » puis deux

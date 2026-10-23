@@ -251,7 +251,7 @@ class Extraits {
     }
 
     const client = this.client();
-    if (!client) throw new Error('Aucune session ouverte pour le moment.');
+    if (!client) throw new Error(t('main.aucuneSession'));
 
     this.balayer();
     const provisoire = `${cible}.${process.pid}.part`;

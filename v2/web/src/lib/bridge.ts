@@ -1,6 +1,6 @@
 import { LANGUES, t, type CodeLangue } from '../i18n';
 import type {
-  Credentials, DiscoveredCamera, ProtectBridge, RelayState, StepResult, TestOutcome,
+  Credentials, DiscoveredCamera, EtatExport, ProtectBridge, RelayState, StepResult, TestOutcome,
 } from '../types/protect';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -28,6 +28,20 @@ const archiveDemo = () => {
   const fin = Date.now();
   return { debut: fin - 162 * JOUR, frontiere: fin - 29 * JOUR, fin };
 };
+
+/*
+ * L'export d'une plage, simule : la progression defile comme sur le poste — une heure par
+ * fichier, l'une apres l'autre —, sans rien ecrire nulle part. Le debit est ralenti pour
+ * qu'on ait le temps de voir chaque etat.
+ */
+const ecouteursExport = new Set<(e: EtatExport) => void>();
+let etatExportDemo: EtatExport = { etat: 'aucun' };
+let minuterieExport: number | null = null;
+function pousserExportDemo(e: EtatExport) {
+  etatExportDemo = e;
+  for (const h of ecouteursExport) h(e);
+}
+const NOMS_DEMO: Record<string, string> = { g6: 'G6 Bullet', g5: 'G5 Turret Ultra' };
 
 /**
  * Client simule, pour developper l'interface hors d'Electron.
@@ -340,6 +354,48 @@ const mock: ProtectBridge = {
     return { url: `/demo-extrait.mp4#${debut}`, debut, fin: debut + duree, octets: 219_596 };
   },
   async enregistrerExtrait() { return { enregistre: false }; },
+  async exporterPlage({ camera, debut, fin, estimation }) {
+    if (minuterieExport !== null) return { lance: false, raison: 'occupe' as const };
+    const f = Math.min(fin, Date.now());
+    if (!(f - debut >= 1000)) return { lance: false, raison: 'plage' as const };
+    const parties = Math.ceil((f - debut) / 3_600_000);
+    const commun = { camera: NOMS_DEMO[camera] ?? camera, debut, fin: f, parties, estimation };
+    // Le poids de la demo : celui de la mire, ou l'estimation de la page quand elle en a une.
+    const total = estimation > 0 ? estimation / parties : 4_000_000;
+    let partie = 1;
+    let recu = 0;
+    pousserExportDemo({ etat: 'encours', ...commun, partie, recu: 0, total: 0, recuAvant: 0 });
+    minuterieExport = window.setInterval(() => {
+      recu = Math.min(total, recu + total / 24);
+      const recuAvant = (partie - 1) * total;
+      if (recu < total) {
+        pousserExportDemo({ etat: 'encours', ...commun, partie, recu, total, recuAvant, debit: total / 6 });
+        return;
+      }
+      if (partie < parties) { partie += 1; recu = 0; return; }
+      window.clearInterval(minuterieExport!);
+      minuterieExport = null;
+      const fichiers = Array.from({ length: parties }, (_, i) =>
+        parties === 1 ? 'exemple.mp4' : `exemple (${i + 1}-${parties}).mp4`);
+      pousserExportDemo({ etat: 'termine', ...commun, octets: total * parties, vides: 0, fichiers,
+        dossier: 'C:\\Users\\exemple\\Videos' });
+    }, 250);
+    return { lance: true, fichiers: [] };
+  },
+  async exportAnnuler() {
+    if (minuterieExport === null || etatExportDemo.etat !== 'encours') return false;
+    window.clearInterval(minuterieExport);
+    minuterieExport = null;
+    const { camera, debut, fin, parties, estimation } = etatExportDemo;
+    pousserExportDemo({ etat: 'annule', camera, debut, fin, parties, estimation, faits: 0 });
+    return true;
+  },
+  async exportEtat() { return etatExportDemo; },
+  async exportMontrer() { return false; },
+  onExportEtat(handler: (e: EtatExport) => void) {
+    ecouteursExport.add(handler);
+    return () => { ecouteursExport.delete(handler); };
+  },
   async autoDemarrage() { return { actif: false, disponible: true }; },
   async autoDemarrageChanger(actif: boolean) { return { actif, disponible: true }; },
   onMajState() { return () => {}; },

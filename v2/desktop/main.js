@@ -41,6 +41,7 @@ const { GestionnaireMaj } = require('./maj');
 const { Store, reprendreDossier } = require('./store');
 const { chargerFenetre, enregistrerFenetre, positionSure } = require('./fenetre');
 const { Extraits } = require('./extraits');
+const { ExportPlage, nomParDefaut, nomPropre, ouvrirDepuisClient } = require('./export-plage');
 const { Veilleur } = require('./veilleur');
 const { veillesParDefaut, sujetsDe } = require('./veilles');
 const { objetsDe, textesDe, filtrer, recenser, correspond } = require('./recherche');
@@ -370,6 +371,8 @@ let essaiRecent = null;
 
 /** Obtention et service des extraits video. Cree au demarrage, une fois le store pret. */
 let extraits = null;
+/** L'export d'une plage de la relecture : un seul a la fois (export-plage.js). */
+let exportPlage = null;
 
 /**
  * Identifiants du cycle courant, jamais ecrits sur le disque.
@@ -1163,7 +1166,7 @@ ipcMain.handle('protect:choisirDossierCaptures', async () => {
  */
 ipcMain.handle('protect:capturer', async (_event, { nom, octets }) => {
   if (perimee) throw new Error(i18n.t('main.copiePerimee'));
-  if (!octets?.byteLength) throw new Error('Capture vide.');
+  if (!octets?.byteLength) throw new Error(i18n.t('main.captureVide'));
 
   const { dossierCaptures } = lireConfort();
   await fs.promises.mkdir(dossierCaptures, { recursive: true });
@@ -1264,7 +1267,7 @@ ipcMain.handle('protect:veilles', async () => { await demarrage; return lireVeil
 ipcMain.handle('protect:veillesEnregistrer', async (_event, veilles) => {
   if (perimee) throw new Error(i18n.t('main.copiePerimee'));
   if (!veilles || typeof veilles !== 'object' || !Array.isArray(veilles.veilles)) {
-    throw new Error('Configuration de veille invalide.');
+    throw new Error(i18n.t('main.veilleInvalide'));
   }
   const config = store.readConfig();
   store.writeConfig({ ...config, veilles });
@@ -1404,7 +1407,7 @@ ipcMain.handle('protect:infos', () => {
 const TYPES_DETECTION = ['motion', 'smartDetectZone', 'smartAudioDetect'];
 
 ipcMain.handle('protect:evenements', async (_event, { avant, jours = 7, limite = 60 } = {}) => {
-  if (!clientActif) throw new Error('Aucune session ouverte pour le moment.');
+  if (!clientActif) throw new Error(i18n.t('main.aucuneSession'));
 
   const fin = Number.isFinite(avant) ? avant : Date.now();
   const debut = fin - jours * 86_400_000;
@@ -1502,10 +1505,11 @@ ipcMain.handle('protect:enregistrerExtrait', async (_event, { jeton, nom }) => {
   const source = extraits.chemin(jeton);
   if (!fs.existsSync(source)) throw new Error(i18n.t('extraits.indisponible'));
 
-  // Un nom venu de l'interface ne doit jamais pouvoir designer un autre dossier.
-  const propre = String(nom ?? 'extrait').replace(/[^A-Za-z0-9 _.-]/g, '_').slice(0, 80);
+  // Un nom venu de l'interface ne doit jamais pouvoir designer un autre dossier. Les
+  // accents, eux, restent : « Allee » ne devient plus « All_e » (23.10.2026).
+  const propre = nomPropre(nom ?? 'extrait', 80);
   const { canceled, filePath } = await dialog.showSaveDialog(window, {
-    title: 'Enregistrer l’extrait',
+    title: i18n.t('main.enregistrerExtrait'),
     defaultPath: path.join(app.getPath('videos'), `${propre}.mp4`),
     filters: [{ name: i18n.t('main.videoMp4'), extensions: ['mp4'] }],
   });
@@ -1518,6 +1522,49 @@ ipcMain.handle('protect:enregistrerExtrait', async (_event, { jeton, nom }) => {
   await fs.promises.rename(provisoire, filePath);
   journal.info('clip', `saved: ${filePath}`);
   return { enregistre: true, chemin: filePath };
+});
+
+/*
+ * Exporter une plage de la relecture (export-plage.js).
+ *
+ * La page donne la camera, les bornes et une estimation de la taille ; tout le reste — la
+ * boite de Windows, le nom, le decoupage en heures, les octets — se decide ICI. Aucun chemin
+ * ne vient de la page, et seul un fichier que cet export a ecrit peut etre montre.
+ */
+ipcMain.handle('protect:exporterPlage', async (_event, { camera, debut, fin, estimation } = {}) => {
+  if (!exportPlage || !window) return { lance: false, raison: 'session' };
+  if (exportPlage.occupe) return { lance: false, raison: 'occupe' };
+  const cam = cameras.find((c) => c.id === camera);
+  const d = Number(debut);
+  // Rien n'est encore enregistre apres l'instant present : la fin y est ramenee.
+  const f = Math.min(Number(fin), Date.now());
+  if (!cam || !Number.isFinite(d) || !Number.isFinite(f) || f - d < 1000) return { lance: false, raison: 'plage' };
+
+  const { canceled, filePath } = await dialog.showSaveDialog(window, {
+    title: i18n.t('main.exporterPlage'),
+    defaultPath: path.join(app.getPath('videos'), `${nomParDefaut(cam.name, d, f, i18n.t)}.mp4`),
+    filters: [{ name: i18n.t('main.videoMp4'), extensions: ['mp4'] }],
+  });
+  if (canceled || !filePath) return { lance: false };
+  try {
+    const r = await exportPlage.lancer({
+      cameraId: cam.id, camera: cam.name, debut: d, fin: f, fichier: filePath,
+      estimation: Number(estimation) > 0 ? Number(estimation) : 0,
+    });
+    return { lance: true, fichiers: r.fichiers };
+  } catch (e) {
+    journal.alerte('export', `refused (${e.raison ?? 'unexpected'}): ${e.message}`);
+    return { lance: false, raison: e.raison ?? 'interrompu', fichier: e.fichier ?? null };
+  }
+});
+ipcMain.handle('protect:exportAnnuler', () => exportPlage?.annuler() ?? false);
+// La page qui revient (changement d'ecran, rechargement) redemande ou en est l'export.
+ipcMain.handle('protect:exportEtat', () => exportPlage?.etat ?? { etat: 'aucun' });
+ipcMain.handle('protect:exportMontrer', () => {
+  const fichier = exportPlage?.ecrits?.[0];
+  if (!fichier || !fs.existsSync(fichier)) return false;
+  shell.showItemInFolder(fichier);
+  return true;
 });
 
 /** Ouvre le dossier des donnees dans l'explorateur, journal compris. */
@@ -1986,6 +2033,12 @@ if (!app.requestSingleInstanceLock()) {
       });
       // Les extraits d'hier n'interessent plus personne, et pesent.
       extraits.balayer();
+      exportPlage = new ExportPlage({
+        ouvrir: ouvrirDepuisClient(() => clientActif),
+        journal,
+        onEtat: (e) => envoyerPage('protect:exportEtat', e),
+        gabaritTranche: (base, i, n) => i18n.t('main.exportTranche', { base, i, n }),
+      });
     } catch (e) {
       journal.erreur('startup', journal.deErreur(e));
       dialog.showErrorBox('Alcora',
