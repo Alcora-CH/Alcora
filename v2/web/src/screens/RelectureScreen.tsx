@@ -447,6 +447,9 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   useEffect(() => {
     generation.current += 1;
     setEpoque((e) => e + 1);
+    // Le dernier saut appartient à l'autre jour, ou à l'autre caméra : les suiveuses neuves
+    // ne doivent pas y retourner.
+    setSaut(null);
     setMorceaux([null, null]);
     setActif(0);
     cibles.current = [null, null];
@@ -619,6 +622,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   const revenirAuDirect = useCallback(() => {
     generation.current += 1;
     setEpoque((e) => e + 1);
+    setSaut(null);
     setMorceaux([null, null]);
     setActif(0);
     setInstant(null);
@@ -923,7 +927,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
           </div>
         </Carte>
         {suivantes.map((c) => (
-          <TuileSuiveuse key={`${c.id}-${epoque}`} camera={c} frontiere={c.archive?.frontiere ?? null}
+          <TuileSuiveuse key={`${c.id}-${epoque}`} camera={c} relais={relais} frontiere={c.archive?.frontiere ?? null}
                          saut={saut} instant={instant} enLecture={enLecture} vitesse={vitesse}
                          sonActif={sonSur === c.id}
                          onSon={() => setSonSur((s) => (s === c.id ? null : c.id))}

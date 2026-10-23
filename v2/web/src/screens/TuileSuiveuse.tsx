@@ -3,10 +3,11 @@ import { Camera, Volume2, VolumeX } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { messageLisible } from '../lib/erreurs';
 import { BoutonBandeau } from '../video/BoutonBandeau';
+import { CameraTile } from '../video/CameraTile';
 import { imageDeLaVideo } from '../video/outils';
 import { localeDates, t, useLangue } from '../i18n';
 import { Carte } from '../ui/Cadre';
-import type { DiscoveredCamera } from '../types/protect';
+import type { DiscoveredCamera, RelaisAcces } from '../types/protect';
 
 /**
  * Une caméra de plus dans la relecture — variante 2 de docs/maquette-relecture-multi.html,
@@ -25,11 +26,15 @@ import type { DiscoveredCamera } from '../types/protect';
 const PAS_MS = 10_000;
 const PAS_SUITE_MS = 30_000;
 const ECART_MAX_MS = 700;
+/** En pause, on compare des images : la suiveuse colle à la tuile active, image par image. */
+const ECART_PAUSE_MS = 40;
 
 type Morceau = { url: string; debut: number; fin: number };
 
-export function TuileSuiveuse({ camera, frontiere, saut, instant, enLecture, vitesse, sonActif, onSon, onChoisir, onMorceau }: {
+export function TuileSuiveuse({ camera, relais, frontiere, saut, instant, enLecture, vitesse, sonActif, onSon, onChoisir, onMorceau }: {
   camera: DiscoveredCamera;
+  /** Le direct, montré tant que rien n'est visé — comme la tuile active. */
+  relais: RelaisAcces | null;
   /** Avant cet instant, seule la basse définition subsiste. */
   frontiere: number | null;
   /** Un saut de la console (frise, ±10 s, une détection) : un objet neuf à chaque saut. */
@@ -133,7 +138,8 @@ export function TuileSuiveuse({ camera, frontiere, saut, instant, enLecture, vit
       return;
     }
     const propre = ici.debut + v.currentTime * 1000;
-    if (Math.abs(propre - instant) > ECART_MAX_MS) v.currentTime = Math.max(0, (instant - ici.debut) / 1000);
+    const tolere = etat.current.enLecture ? ECART_MAX_MS : ECART_PAUSE_MS;
+    if (Math.abs(propre - instant) > tolere) v.currentTime = Math.max(0, (instant - ici.debut) / 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instant]);
 
@@ -232,6 +238,13 @@ export function TuileSuiveuse({ camera, frontiere, saut, instant, enLecture, vit
                  }}
                  onError={() => { if (i === etat.current.actif) setErreur(t('video.sequenceIllisible')); }} />
         ))}
+
+        {/* Rien de visé : le direct, comme la tuile active. */}
+        {instant === null && !courant && !chargement && relais && (
+          <div className="absolute inset-0">
+            <CameraTile camera={camera} relais={relais} cadre={false} hauteurEtiquette={0} />
+          </div>
+        )}
 
         {/* Ce qui manque se dit sur l'image, au centre ; les autres tuiles continuent. */}
         {(chargement || erreur) && (
