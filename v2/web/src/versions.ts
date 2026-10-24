@@ -39,6 +39,27 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.38.0',
+    date: '24.10.2026',
+    fr: [
+      'En plein écran, un bandeau d’activité se pose dans la place libre autour des images : les '
+      + 'dernières détections, et d’un clic leur séquence. Ce qui est arrivé pendant ton absence '
+      + '— Alcora sans ton attention, ou deux minutes sans geste — s’y marque en or, jusqu’à ce que '
+      + 'tu le regardes.',
+      'Le bandeau ne réduit jamais les images : sans place dessous, il se met sur le côté, ou devient '
+      + 'une pastille au-dessus de la barre d’état.',
+      'Plusieurs défauts discrets corrigés dans le zoom, le mur, la recherche et le son.',
+    ],
+    en: [
+      'In full screen, an activity strip sits in the free space around the images: the latest '
+      + 'detections, and their sequence in one click. What happened while you were away — Alcora '
+      + 'without your attention, or two minutes without a gesture — is marked in gold until you look.',
+      'The strip never shrinks the images: with no room below, it moves to the side, or becomes a '
+      + 'pill above the status bar.',
+      'Several quiet defects fixed in zoom, the wall, search and sound.',
+    ],
+  },
+  {
     version: '2.37.0',
     date: '24.10.2026',
     fr: [
