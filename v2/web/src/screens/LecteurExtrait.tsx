@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  AlertCircle, Camera, Download, History, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, X, ZoomOut,
+  AlertCircle, Camera, ChevronLeft, Download, History, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, ZoomOut,
 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
+import { useFermetureAnimee } from '../lib/fermeture';
 import { BoutonBandeau } from '../video/BoutonBandeau';
 import { Bouton } from '../ui/Bouton';
 import { Segment } from '../ui/Segment';
 import { imageDeLaVideo, useSonVideo } from '../video/outils';
 import { useZoomVideo } from '../video/useZoomVideo';
-import { useFermetureAnimee } from '../lib/fermeture';
-import { usePiegeFocus } from '../lib/piegeFocus';
 import { localeDates, nombre, t, useLangue } from '../i18n';
 import { nomSujet } from '../i18n/sujets';
 import type { Detection } from '../types/protect';
@@ -41,20 +40,32 @@ function mmss(s: number): string {
   return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 }
 
-export function LecteurExtrait({ detection, onFermer, onRelecture }: {
+export function LecteurExtrait({ detection, retour, onFermer, onRelecture }: {
   detection: Detection;
+  /** L'écran d'où l'on vient, nommé sur le bouton de retour : « ← Direct ». */
+  retour: string;
   onFermer: () => void;
   /** « Voir dans la relecture » : la relecture de cette caméra, à l'heure de la détection. */
   onRelecture?: () => void;
 }) {
   useLangue();
-  /* Le lecteur se referme EN PARTANT : « onFermer » n'est appele qu'une fois
-     l'animation de sortie terminee. */
-  const { part, fermer, ref: cadre } = useFermetureAnimee(onFermer);
-  /* Le focus sur la fenêtre elle-même : Espace, les flèches et + − la visent — et non la
-     carte cliquée derrière, qui gardait le focus et se re-cliquait (revue du 23.10.2026). */
-  const fenetre = useRef<HTMLElement>(null);
-  usePiegeFocus(fenetre);
+  /* La séquence part EN FONDU : « onFermer » n'est appelé qu'une fois l'animation finie,
+     et l'écran resté dessous réapparaît à travers elle. */
+  const { part, fermer, ref: fenetre } = useFermetureAnimee<HTMLElement>(onFermer);
+  /* Le focus sur le lecteur lui-même : Espace, les flèches et + − le visent — et non la
+     carte cliquée ailleurs, qui gardait le focus et se re-cliquait (revue du 23.10.2026).
+     En partant, il revient à cette carte, restée montée sous la séquence — sauf si l'on est
+     parti par le rail : le focus est alors déjà ailleurs, on ne le reprend pas. */
+  useEffect(() => {
+    const avant = document.activeElement as HTMLElement | null;
+    const el = fenetre.current;
+    el?.focus({ preventScroll: true });
+    return () => {
+      const ici = document.activeElement;
+      const perdu = !ici || ici === document.body || !!el?.contains(ici);
+      if (perdu && avant && document.contains(avant)) avant.focus({ preventScroll: true });
+    };
+  }, [fenetre]);
   const video = useRef<HTMLVideoElement>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [pourcent, setPourcent] = useState(0);
@@ -164,18 +175,19 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
 
   return (
     /*
-     * Une carte posée sur un voile sombre (maquette A), plus un plein écran : on garde sous
-     * les yeux d'où l'on vient. Pas de fermeture au clic à côté : un glisser pour se
-     * déplacer dans l'image agrandie, relâché hors de la carte, la refermerait par erreur.
-     * Échap et le bouton suffisent.
+     * La séquence prend la place du contenu, dans le cadre — rail et barre d'état gardés :
+     * plus de fenêtre posée par-dessus l'application (décision de Thomas, 24.10.2026 : « une
+     * fenêtre unique tout-en-un »). « ← Direct » ou Échap ramènent d'où l'on vient.
+     *
+     * Opaque et posée SUR l'écran, qui reste monté et inerte dessous (l'appelant s'en charge) :
+     * démonté, le mur reconnectait toutes ses caméras au retour et la liste des détections
+     * revenait en haut (mesuré le 24.10.2026 : 1144 px → 0).
      */
-    <div ref={cadre}
-         className={`m-voile absolute inset-0 z-40${part ? ' m-part' : ''}`}
-         style={{ background: 'rgba(8,11,16,.72)' }}>
-      <section ref={fenetre} tabIndex={-1} role="dialog" aria-modal="true" aria-label={titre}
-               className={`@container outline-none m-boite absolute inset-x-10 bottom-[30px] top-16 flex flex-col overflow-hidden rounded-xl border border-line2 bg-card shadow-[0_40px_100px_-30px_rgba(0,0,0,.9)]${part ? ' m-part' : ''}`}>
+    <section ref={fenetre} tabIndex={-1} aria-label={titre}
+             className={`@container absolute inset-0 z-40 flex flex-col overflow-hidden bg-card outline-none ${part ? 'm-voile m-part' : 'm-ecran'}`}>
         {/* ---- en-tête ---- */}
-        <div className="flex items-center gap-3.5 border-b border-line py-3.5 pl-5 pr-4">
+        <div className="flex h-16 shrink-0 items-center gap-3.5 border-b border-line pl-3 pr-5">
+          <Bouton variante="fantome" icone={ChevronLeft} titre={t('commun.fermerEchap')} onClick={fermer}>{retour}</Bouton>
           <div className="min-w-0 flex-1">
             <p className="truncate text-titre font-semibold">{titre}</p>
             <p className="truncate text-meta tabular-nums text-muted">
@@ -193,7 +205,6 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
               {t('extrait.enregistrer')}
             </Bouton>
           )}
-          <Bouton variante="fantome" icone={X} titre={t('commun.fermerEchap')} onClick={fermer} />
         </div>
 
         {/* ---- le bandeau : hors de l'image, comme au direct et en relecture ---- */}
@@ -329,7 +340,6 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
             {t('extrait.enregistre')} <span className="break-all font-mono">{enregistre}</span>
           </div>
         )}
-      </section>
-    </div>
+    </section>
   );
 }

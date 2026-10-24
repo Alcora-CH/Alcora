@@ -30,6 +30,7 @@ import { useAbsence } from './lib/useAbsence';
 import { bridge, pontDisponible } from './lib/bridge';
 import { FournisseurActivite } from './lib/FournisseurActivite';
 import { definirLangue, t, useLangue } from './i18n';
+import type { Cle } from './i18n/fr';
 import { nomSujet } from './i18n/sujets';
 import type { RelaisAcces,
   Detection, DetectionVive, DiscoveredCamera, MajState, Nouveautes, Progression, RelayState,
@@ -225,11 +226,21 @@ export default function App() {
   /** L'instant visé par « Revoir à cet instant » : la relecture y arrive directement. */
   const [instantCible, setInstantCible] = useState<{ t: number } | null>(null);
   /**
+   * La séquence d'une détection, ouverte À LA PLACE du contenu de l'écran — rail et barre
+   * d'état gardés (24.10.2026 : « une fenêtre unique tout-en-un »).
+   *
+   * Tenue ICI, et non dans un écran, parce que ses origines n'ont pas d'écran commun : une
+   * bulle de Windows cliquée alors que l'application est sur le direct, une détection récente
+   * de la colonne d'activité ou du bandeau du plein écran.
+   */
+  const [sequence, setSequence] = useState<Detection | null>(null);
+  /**
    * Changer d'espace, éventuellement pour une caméra. Un seul chemin, qui OUBLIE l'instant
    * visé : sans cela, la relecture rouverte depuis le rail reviendrait à la dernière
    * détection revue, sans que rien ne le dise.
    */
   const allerVers = useCallback((id: string, camera: string | null = null) => {
+    setSequence(null);
     setCameraCible(camera);
     setInstantCible(null);
     setEspace(id);
@@ -237,20 +248,13 @@ export default function App() {
   /** « Revoir à cet instant » : une détection mène à la relecture, sur sa caméra, à son heure. */
   const revoirA = useCallback((camera: string | null, t: number) => {
     // Une détection sans caméra rend parfois « » : c'est « aucune », pas un identifiant.
+    setSequence(null);
     setCameraCible(camera || null);
     setInstantCible({ t });
     setEspace('relecture');
   }, []);
   /** Une seule camera parle a la fois : deux flux ensemble donnent une bouillie. */
   const [sonSur, setSonSur] = useState<string | null>(null);
-  /**
-   * Sequence ouverte par-dessus tout le reste.
-   *
-   * Tenue ICI, et non dans un ecran, parce que ses deux origines n'ont pas d'ecran commun :
-   * une bulle de Windows cliquee alors que l'application est sur le direct, et une detection
-   * recente de la colonne d'etat, qui est visible depuis n'importe quel espace.
-   */
-  const [sequence, setSequence] = useState<Detection | null>(null);
   /** Détections en cours, par identifiant de caméra. Alimente le halo des tuiles. */
   const [activite, setActivite] = useState<Record<string, { sujets: string[]; type: string }>>({});
   /** Nouveautés d'une mise à jour, à présenter une fois l'intro passée. */
@@ -864,6 +868,11 @@ export default function App() {
               onChoisir={(id: Espace) => allerVers(id)} />
       )}
 
+      {/* L'écran et sa colonne restent montés sous une séquence ouverte, inertes : démonter le
+          mur reconnectait toutes les caméras au retour, et replier la colonne changeait la
+          largeur des images — donc la qualité demandée au contrôleur (24.10.2026). */}
+      <div className="relative flex min-w-0 flex-1">
+      <div inert={sequence !== null} className="flex min-w-0 flex-1">
       <main className="relative flex min-w-0 flex-1 flex-col bg-bg">
         {/* Une nouvelle version est prête : on INVITE à redémarrer, on n'impose rien.
             Le téléchargement s'est fait en silence, appliquer attend le bon moment. */}
@@ -997,6 +1006,15 @@ export default function App() {
                          onToutes={() => allerVers('detections')}
                          onMasquer={() => setActiviteVisible(false)} />
       )}
+      </div>
+
+      {sequence && (
+        <LecteurExtrait key={sequence.id} detection={sequence} retour={t(`espace.${espace}` as Cle)}
+                        onFermer={() => setSequence(null)}
+                        onRelecture={sequence.debut !== null
+                          ? () => revoirA(sequence.camera, sequence.debut as number) : undefined} />
+      )}
+      </div>
     </div>
 
       {/* La barre d'état, sur tous les écrans. En plein écran, elle se pose sur l'image avec
@@ -1011,12 +1029,6 @@ export default function App() {
       )}
 
 
-      {/* Par-dessus tout : une bulle cliquée doit montrer sa séquence sans rien déranger. */}
-      {sequence && (
-        <LecteurExtrait detection={sequence} onFermer={() => setSequence(null)}
-                        onRelecture={sequence.debut !== null
-                          ? () => revoirA(sequence.camera, sequence.debut as number) : undefined} />
-      )}
 
 
       {intro}

@@ -139,6 +139,9 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
 
   return (
     <div className="relative flex h-full flex-col">
+      {/* La liste reste montée sous la séquence, inerte : au retour, la recherche, le
+          défilement et le focus sont là où on les avait laissés. */}
+      <div inert={ouvert !== null} className="flex min-h-0 flex-1 flex-col">
       <EnTete
         titre={t('espace.detections')}
         precision={precision}
@@ -331,9 +334,11 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
           </div>
         </div>
       </div>
+      </div>
 
       {ouvert && (
-        <LecteurExtrait key={ouvert.id} detection={ouvert} onFermer={() => setOuvert(null)}
+        <LecteurExtrait key={ouvert.id} detection={ouvert} retour={t('espace.detections')}
+                        onFermer={() => setOuvert(null)}
                         onRelecture={ouvert.debut !== null
                           ? () => onRevoir(ouvert.camera, ouvert.debut as number) : undefined} />
       )}
