@@ -460,9 +460,9 @@ export default function App() {
       const saisie = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
       if (e.key === 'F11') { e.preventDefault(); basculerPleinEcran(); }
       // « ? » partout, sauf dans un champ ou il s'ecrit. Le panneau ouvert le traite lui-meme.
-      // Jamais sous l'introduction, qui couvre l'ecran, ni pendant une sequence, qui a ses
-      // propres touches ; ni avant la configuration.
-      else if (e.key === '?' && !saisie && configured && !introVisible && !sequence) {
+      // Jamais sous l'introduction, qui couvre l'ecran, ni avant la configuration. Pendant une
+      // sequence, si : le panneau se range a cote d'elle.
+      else if (e.key === '?' && !saisie && configured && !introVisible) {
         e.preventDefault(); setRaccourcis(true);
       }
       else if (e.key === 'Escape') {
@@ -998,9 +998,6 @@ export default function App() {
       {/* L'activité ne vit que sur le direct : sur les autres écrans, elle ne faisait que
           prendre de la place. La replier change la largeur des images — et donc la
           qualité demandée au contrôleur : c'est un geste, jamais un survol. */}
-      {/* Les raccourcis : un panneau ancré, à la place de la colonne Activité tant qu'il est
-          ouvert — plus de fenêtre par-dessus (24.10.2026). */}
-      {raccourcis && <Raccourcis espace={espace} onFermer={fermerRaccourcis} />}
       {!raccourcis && habille && !enConnexion && espace === 'direct' && activiteVisible && (
         <ColonneActivite onOuvrir={ouvrirDetection} onRevoir={revoirA}
                          onToutes={() => allerVers('detections')}
@@ -1015,6 +1012,11 @@ export default function App() {
                           ? () => revoirA(sequence.camera, sequence.debut as number) : undefined} />
       )}
       </div>
+
+      {/* Les raccourcis : un panneau ancré, à la place de la colonne Activité tant qu'il est
+          ouvert — plus de fenêtre par-dessus (24.10.2026). Hors de ce que couvre une séquence :
+          ouvert pendant elle, il se range à côté, ses touches en tête. */}
+      {raccourcis && <Raccourcis espace={sequence ? 'sequence' : espace} onFermer={fermerRaccourcis} />}
     </div>
 
       {/* La barre d'état, sur tous les écrans. En plein écran, elle se pose sur l'image avec

@@ -36,11 +36,14 @@ function Ligne({ geste, children }: { geste: React.ReactNode; children: React.Re
   );
 }
 
+/** `espace` : l'écran courant, ou « sequence » quand une séquence est ouverte. */
 export function Raccourcis({ espace, onFermer }: { espace: string; onFermer: () => void }) {
   useLangue();
 
-  /* En capture : l'écouteur général de l'application traite aussi « Échap » — il ferait
-     sortir du plein écran en même temps que le panneau se referme. « ? » le referme aussi. */
+  /* En capture, sur la fenêtre : l'écouteur général de l'application traite aussi « Échap » —
+     il ferait sortir du plein écran en même temps que le panneau se referme. Et une séquence
+     ouverte écoute sur le document, APRÈS la fenêtre : le panneau, ouvert à côté d'elle, se
+     referme seul. « ? » le referme aussi. */
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
       const saisie = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
@@ -88,7 +91,8 @@ export function Raccourcis({ espace, onFermer }: { espace: string; onFermer: () 
     </Groupe>
   );
   /* Le groupe de l'écran courant d'abord : c'est celui qu'on vient chercher. */
-  const groupes = espace === 'relecture' ? [relecture, direct, sequence] : [direct, relecture, sequence];
+  const groupes = espace === 'sequence' ? [sequence, direct, relecture]
+    : espace === 'relecture' ? [relecture, direct, sequence] : [direct, relecture, sequence];
 
   return (
     <aside aria-label={t('raccourcis.titre')}

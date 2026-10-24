@@ -136,9 +136,6 @@ export function LecteurExtrait({ detection, retour, onFermer, onRelecture }: {
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.stopPropagation(); fermer(); return; }
-      // « ? » ne doit pas ouvrir les raccourcis SOUS le lecteur : ouvert depuis les
-      // Détections, il n'est pas connu de l'application, qui ne peut donc pas s'en garder.
-      if (e.key === '?') { e.stopPropagation(); return; }
 
       // Un contrôle a le focus : espace l'actionne, les flèches déplacent le curseur de
       // la barre. Lui voler ces touches rendrait le lecteur inutilisable au clavier.
@@ -153,9 +150,11 @@ export function LecteurExtrait({ detection, retour, onFermer, onRelecture }: {
       else if (e.key === '-') { e.preventDefault(); zoomer(1 / 1.25); }
     };
     // En capture : l'écouteur global de l'application traite aussi « Échap », et refermerait
-    // le plein écran par la même touche.
-    window.addEventListener('keydown', auClavier, true);
-    return () => window.removeEventListener('keydown', auClavier, true);
+    // le plein écran par la même touche. Sur le DOCUMENT, que la capture atteint après la
+    // fenêtre : le panneau des raccourcis, qui écoute sur la fenêtre, passe d'abord — ouvert à
+    // côté de la séquence, Échap le referme lui seul, pas les deux d'un coup.
+    document.addEventListener('keydown', auClavier, true);
+    return () => document.removeEventListener('keydown', auClavier, true);
   });
 
 
