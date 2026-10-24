@@ -50,23 +50,37 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
-    version: '2.38.0',
+    version: '2.39.0',
     date: '24.10.2026',
     fr: [
+      'Alcora tient dans une seule fenêtre. La connexion, le guide de la console, les raccourcis, '
+      + 'la séquence d’une détection et l’annonce d’une mise à jour s’ouvrent dans le cadre, rail et '
+      + 'barre d’état gardés : plus rien ne se pose par-dessus.',
+      'La séquence d’une détection prend la place de l’écran sans le défaire : au retour, le direct '
+      + 'n’a rien reconnecté, et la liste des détections est restée où tu l’avais laissée.',
       'En plein écran, un bandeau d’activité se pose dans la place libre autour des images : les '
       + 'dernières détections, et d’un clic leur séquence. Ce qui est arrivé pendant ton absence '
       + '— Alcora sans ton attention, ou deux minutes sans geste — s’y marque en or, jusqu’à ce que '
       + 'tu le regardes.',
       'Le bandeau ne réduit jamais les images : sans place dessous, il se met sur le côté, ou devient '
       + 'une pastille au-dessus de la barre d’état.',
+      'Les Réglages et la connexion montrent au lieu d’expliquer : l’état de la mise à jour en '
+      + 'pastille, un aperçu pour l’espacement et le ciel, des étapes numérotées qui se cochent.',
       'Plusieurs défauts discrets corrigés dans le zoom, le mur, la recherche et le son.',
     ],
     en: [
+      'Alcora fits in a single window. Sign-in, the console guide, shortcuts, a detection’s sequence '
+      + 'and the update notice open inside the frame, with the rail and status bar kept: nothing '
+      + 'sits on top any more.',
+      'A detection’s sequence takes the place of the screen without undoing it: on return, the live '
+      + 'view has reconnected nothing, and the detection list is where you left it.',
       'In full screen, an activity strip sits in the free space around the images: the latest '
       + 'detections, and their sequence in one click. What happened while you were away — Alcora '
       + 'without your attention, or two minutes without a gesture — is marked in gold until you look.',
       'The strip never shrinks the images: with no room below, it moves to the side, or becomes a '
       + 'pill above the status bar.',
+      'Settings and sign-in show instead of explaining: the update state as a badge, a preview for '
+      + 'spacing and the sky, numbered steps that tick themselves.',
       'Several quiet defects fixed in zoom, the wall, search and sound.',
     ],
   },
