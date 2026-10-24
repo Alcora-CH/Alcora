@@ -63,7 +63,8 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
 .sommaire button[aria-current="true"] { background: var(--card2); color: var(--ink); }
 .blocs { display: flex; flex-direction: column; gap: 26px; }
 .bloc h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
-.carte { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+/* Rien n'y est rogné : une infobulle doit pouvoir en sortir (relevé de Thomas, 24.10.2026). */
+.carte { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
 .rangee { display: flex; align-items: center; gap: 18px; padding: 14px 18px; }
 .rangee + .rangee { border-top: 1px solid var(--line); }
 .rangee .gauche { min-width: 0; flex: 1; }
@@ -120,8 +121,8 @@ svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
           font-family: var(--mono); font-size: 12px; color: var(--ink); background: var(--card2); }
 .info { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: var(--soft); cursor: help; position: relative; }
 .info:hover { color: var(--ink); }
-.info .bulle { position: absolute; bottom: 26px; right: -8px; width: 280px; padding: 9px 11px; border-radius: 9px; background: var(--card3); border: 1px solid var(--line2);
-               color: var(--ink); font-size: 12px; line-height: 1.5; box-shadow: 0 12px 30px rgba(0,0,0,.4); opacity: 0; transform: translate3d(0, 4px, 0); pointer-events: none;
+.info .bulle { position: absolute; top: 26px; right: -8px; width: 280px; padding: 9px 11px; border-radius: 9px; background: var(--card3); border: 1px solid var(--line2);
+               color: var(--ink); font-size: 12px; line-height: 1.5; box-shadow: 0 12px 30px rgba(0,0,0,.4); opacity: 0; transform: translate3d(0, -4px, 0); pointer-events: none;
                transition: opacity var(--douceur) var(--douce), transform var(--douceur) var(--pose); z-index: 10; }
 .info:hover .bulle { opacity: 1; transform: none; }
 .alerte { display: flex; gap: 10px; padding: 10px 12px; border-radius: 9px; background: var(--bad-soft); color: var(--bad); animation: arrive var(--douceur) var(--pose) both; }
