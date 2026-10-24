@@ -45,9 +45,6 @@ export const fr = {
   'video.imageEnregistree': 'Image enregistrée : {chemin}',
 
   // ---- « Ce qui a change »
-  'nouveautes.titre': 'Alcora s’est mise à jour',
-  'nouveautes.depuis': 'Ce qui a changé depuis la version {version}',
-  'nouveautes.compris': 'Compris',
 
   // ---- partage entre ecrans
   'commun.ouvrirDossier': 'Ouvrir le dossier',
@@ -698,6 +695,10 @@ export const fr = {
 
   // Connexion, passe de clarté (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
   'setup.rester.detail': 'Pour se reconnecter seule après un redémarrage, Alcora garde ton mot de passe et la clé à deux facteurs, chiffrés par Windows pour ton seul compte Windows. Quelqu’un qui ouvrirait ta session pourrait donc se connecter sans ton téléphone ; quelqu’un qui ne connaîtrait que ton mot de passe, non.',
+
+  // Une seule fenêtre : la mise à jour annoncée d'une ligne (24.10.2026)
+  'nouveautes.installee': 'Alcora {version} est installée',
+  'nouveautes.nouveau': 'Nouveau',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

@@ -33,6 +33,17 @@ export interface Version {
  *  L'historique n'existe qu'en francais et en anglais — les autres langues lisent
  *  l'anglais. Le traduire en quatre langues a chaque version serait le point exact
  *  ou la discipline lacherait. */
+/** « a » est-elle plus récente que « b » ? Même comparaison que le processus principal :
+ *  champ par champ, numérique. */
+export function plusRecente(a: string, b: string): boolean {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i += 1) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
+  }
+  return false;
+}
+
 export function changementsDe(v: Version): string[] {
   return langueCourante() === 'fr' ? v.fr : v.en;
 }

@@ -6,7 +6,7 @@ import { ReglagesScreen } from './screens/ReglagesScreen';
 import { RechercheScreen } from './screens/RechercheScreen';
 import { RelectureScreen } from './screens/RelectureScreen';
 import { LecteurExtrait } from './screens/LecteurExtrait';
-import { NouveautesScreen } from './screens/NouveautesScreen';
+import { AvisMiseAJour } from './screens/AvisMiseAJour';
 import { CielScreen } from './screens/CielScreen';
 import { ColonneActivite } from './screens/ColonneActivite';
 import { BandeauActivite } from './screens/BandeauActivite';
@@ -255,6 +255,8 @@ export default function App() {
   const [activite, setActivite] = useState<Record<string, { sujets: string[]; type: string }>>({});
   /** Nouveautés d'une mise à jour, à présenter une fois l'intro passée. */
   const [nouveautes, setNouveautes] = useState<Nouveautes | null>(null);
+  /** Les notes demandées depuis l'avis de mise à jour : les Réglages marquent ce qui est neuf. */
+  const [notesDepuis, setNotesDepuis] = useState<string | null>(null);
 
   useEffect(() => {
     bridge.nouveautes().then(setNouveautes).catch(() => {});
@@ -453,11 +455,12 @@ export default function App() {
     const auClavier = (e: KeyboardEvent) => {
       const saisie = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
       if (e.key === 'F11') { e.preventDefault(); basculerPleinEcran(); }
-      // « ? » partout, sauf dans un champ ou il s'ecrit. La fenetre ouverte le traite elle-meme.
-      // Jamais sous ce qui couvre l'ecran (introduction, sequence, nouveautes), ni avant la
-      // configuration : elle s'ouvrirait invisible, et le prochain Echap fermerait les deux.
-      else if (e.key === '?' && !saisie && configured && !introVisible && !sequence
-               && !(introFinie && nouveautes)) { e.preventDefault(); setRaccourcis(true); }
+      // « ? » partout, sauf dans un champ ou il s'ecrit. Le panneau ouvert le traite lui-meme.
+      // Jamais sous l'introduction, qui couvre l'ecran, ni pendant une sequence, qui a ses
+      // propres touches ; ni avant la configuration.
+      else if (e.key === '?' && !saisie && configured && !introVisible && !sequence) {
+        e.preventDefault(); setRaccourcis(true);
+      }
       else if (e.key === 'Escape') {
         if (isolee) setIsolee(null);
         else if (pleinEcran) basculerPleinEcran();
@@ -925,6 +928,8 @@ export default function App() {
             }}
             onRaccourcis={() => setRaccourcis(true)}
             guideDemande={guideDemande}
+            notesDepuis={notesDepuis}
+            onNotesVues={() => setNotesDepuis(null)}
             onGuideOuvert={() => setGuideDemande(false)}
           />
         ) : espace === 'detections' ? (
@@ -962,6 +967,18 @@ export default function App() {
                   </>
                 )}
               />
+            )}
+            {/* La mise à jour s'annonce d'une ligne, au-dessus du mur — plus de fenêtre au
+                lancement (24.10.2026). Les notes vivent dans les Réglages. */}
+            {habille && introFinie && nouveautes && (
+              <AvisMiseAJour version={nouveautes.a}
+                             onVoir={() => {
+                               setNotesDepuis(nouveautes.de);
+                               setNouveautes(null);
+                               void bridge.nouveautesVues();
+                               allerVers('reglages');
+                             }}
+                             onFermer={() => { setNouveautes(null); void bridge.nouveautesVues(); }} />
             )}
             {mur}
           </>
@@ -1001,16 +1018,6 @@ export default function App() {
                           ? () => revoirA(sequence.camera, sequence.debut as number) : undefined} />
       )}
 
-      {/* « Ce qui a changé » — après l'intro, jamais par-dessus elle, et une seule fois. */}
-      {introFinie && nouveautes && (
-        <NouveautesScreen
-          nouveautes={nouveautes}
-          onFermer={() => {
-            setNouveautes(null);
-            void bridge.nouveautesVues();
-          }}
-        />
-      )}
 
       {intro}
     </div>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, BookOpen, Check, ExternalLink, FileText, FolderOpen, Keyboard, Loader2, X } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { Marque } from '../Marque';
-import { changementsDe, VERSIONS } from '../versions';
+import { changementsDe, plusRecente, VERSIONS } from '../versions';
 import { CODES_LANGUE, definirLangue, LANGUES, t, useLangue, type CodeLangue } from '../i18n';
 import { Bouton } from '../ui/Bouton';
 import { Carte, EnTete, Rangee, Touche } from '../ui/Cadre';
@@ -151,7 +151,7 @@ function LienExterne({ href, children }: { href: string; children: React.ReactNo
 
 export function ReglagesScreen({
   espacement, onEspacementChange, fondAnime, onFondAnimeChange, onReconfigurer, onRaccourcis,
-  guideDemande, onGuideOuvert,
+  guideDemande, onGuideOuvert, notesDepuis, onNotesVues,
 }: {
   espacement: number;
   onEspacementChange: (n: number) => void;
@@ -163,6 +163,9 @@ export function ReglagesScreen({
   guideDemande: boolean;
   /** La demande est servie : l'application l'oublie. */
   onGuideOuvert: () => void;
+  /** Venu de l'avis de mise à jour : les versions plus récentes que celle-ci sont neuves. */
+  notesDepuis: string | null;
+  onNotesVues: () => void;
 }) {
   const [infos, setInfos] = useState<Infos | null>(null);
   const [confirme, setConfirme] = useState(false);
@@ -175,6 +178,15 @@ export function ReglagesScreen({
   const corps = useRef<HTMLDivElement>(null);
   /* Le guide se déplie DANS la carte Aide — plus de fenêtre par-dessus (24.10.2026). */
   const [guideOuvert, setGuideOuvert] = useState(guideDemande);
+  /* Ce qui est neuf depuis la dernière version vue : gardé pour toute cette visite. */
+  const [depuis] = useState(notesDepuis);
+  useEffect(() => {
+    if (!notesDepuis) return;
+    onNotesVues();
+    document.getElementById('reglages-historique')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // Une seule fois, à l'arrivée.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     if (!guideDemande) return;
     onGuideOuvert();
@@ -464,6 +476,11 @@ export function ReglagesScreen({
                         {enCours && (
                           <span className="rounded-md bg-accent-soft px-2 py-0.5 text-micro font-semibold text-accent">
                             {t('reglages.historique.installee')}
+                          </span>
+                        )}
+                        {depuis && plusRecente(v.version, depuis) && (
+                          <span className="m-surgit rounded-md border border-accent-ligne px-2 py-0.5 text-micro font-semibold text-accent">
+                            {t('nouveautes.nouveau')}
                           </span>
                         )}
                       </div>

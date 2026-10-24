@@ -37,9 +37,6 @@ export const de: Record<Cle, string> = {
   'video.imageIndisponible': 'Bild nicht verfügbar',
   'video.imageEnregistree': 'Bild gespeichert: {chemin}',
 
-  'nouveautes.titre': 'Alcora wurde aktualisiert',
-  'nouveautes.depuis': 'Was sich seit Version {version} geändert hat',
-  'nouveautes.compris': 'Verstanden',
 
   'commun.ouvrirDossier': 'Ordner öffnen',
   'commun.horsLigne': 'offline',
@@ -672,4 +669,8 @@ export const de: Record<Cle, string> = {
 
   // Connexion, passe de clarté (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
   'setup.rester.detail': 'Um sich nach einem Neustart selbst wieder anzumelden, behält Alcora dein Passwort und den Zwei-Faktor-Schlüssel, von Windows nur für dein Windows-Konto verschlüsselt. Wer deine Sitzung öffnet, könnte sich also ohne dein Telefon anmelden; wer nur dein Passwort kennt, nicht.',
+
+  // Une seule fenêtre : la mise à jour annoncée d'une ligne (24.10.2026)
+  'nouveautes.installee': 'Alcora {version} ist installiert',
+  'nouveautes.nouveau': 'Neu',
 };

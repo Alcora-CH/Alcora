@@ -36,9 +36,6 @@ export const it: Record<Cle, string> = {
   'video.imageIndisponible': 'Immagine non disponibile',
   'video.imageEnregistree': 'Immagine salvata: {chemin}',
 
-  'nouveautes.titre': 'Alcora si è aggiornata',
-  'nouveautes.depuis': 'Cosa è cambiato dalla versione {version}',
-  'nouveautes.compris': 'Capito',
 
   'commun.ouvrirDossier': 'Apri la cartella',
   'commun.horsLigne': 'offline',
@@ -670,4 +667,8 @@ export const it: Record<Cle, string> = {
 
   // Connexion, passe de clarté (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
   'setup.rester.detail': 'Per riconnettersi da sola dopo un riavvio, Alcora conserva la tua password e la chiave a due fattori, cifrate da Windows solo per il tuo account Windows. Chi aprisse la tua sessione potrebbe quindi connettersi senza il tuo telefono; chi conoscesse solo la tua password, no.',
+
+  // Une seule fenêtre : la mise à jour annoncée d'une ligne (24.10.2026)
+  'nouveautes.installee': 'Alcora {version} è installata',
+  'nouveautes.nouveau': 'Nuovo',
 };
