@@ -578,15 +578,15 @@ export default function App() {
   const affichees = isolee ? ordonnees.filter((c) => c.id === isolee) : ordonnees;
   const grille = meilleureGrille(taille.w, taille.h, affichees.length, 16 / 9, espacement, H_ETIQUETTE);
 
+  /* Ce que tu n'as pas vu : tenu dès le lancement, montré par le bandeau du plein écran. */
+  const { etat: absence, marquerVu } = useAbsence();
+
   /*
    * Ce que lisent le clavier et le glisser, montes hors du rendu : le mur tel qu'il est
    * AFFICHE. Ecrit apres chaque rendu valide, avant la peinture — jamais pendant le rendu,
    * qu'un rendu abandonne par React laisserait sinon dans les references (regle react/refs,
    * rallumee le 24.10.2026). Ici, avant les sorties anticipees, comme tout crochet.
    */
-  /* Ce que tu n'as pas vu : tenu dès le lancement, montré par le bandeau du plein écran. */
-  const { etat: absence, marquerVu } = useAbsence();
-
   useLayoutEffect(() => {
     ordonneesRef.current = ordonnees;
     geometrieRef.current = grille;
