@@ -676,4 +676,8 @@ export const de: Record<Cle, string> = {
 
   // Réglages, À propos : la licence lisible d'un coup d'œil (24.10.2026)
   'reglages.apropos.licenceTitre': 'GPL-3.0 · © Thomas',
+
+  // Relecture, clarté : les loupes de la frise (24.10.2026)
+  'relecture.elargir': 'Herauszoomen — Mausrad',
+  'relecture.resserrer': 'Hineinzoomen — Mausrad',
 };

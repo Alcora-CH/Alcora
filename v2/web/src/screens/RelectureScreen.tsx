@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, CalendarDays, Camera, ChevronLeft, ChevronRight, Pause, Play, Plus,
-  Radio, SkipBack, SkipForward, Volume2, VolumeX, X, ZoomOut,
+  Radio, SkipBack, SkipForward, Volume2, VolumeX, X, ZoomIn, ZoomOut,
 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { CameraTile } from '../video/CameraTile';
@@ -1096,7 +1096,7 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
   useLangue();
   const barre = useRef<HTMLDivElement>(null);
   const [vue, setVue] = useState({ debut: jour, duree: JOUR_MS });
-  const [survol, setSurvol] = useState<{ t: number; x: number; d: Detection | null } | null>(null);
+  const [survol, setSurvol] = useState<{ t: number; x: number; largeur: number; d: Detection | null } | null>(null);
   const [glisse, setGlisse] = useState<'debut' | 'fin' | null>(null);
   /* Le repère du direct avance avec l'heure ; à l'échelle d'une journée, dix secondes suffisent. */
   const maintenant = useMaintenant(10_000);
@@ -1152,7 +1152,7 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
   const auSurvol = (e: React.MouseEvent) => {
     const p = instantSous(e.clientX);
     if (!p) return;
-    setSurvol({ t: p.t, x: p.x, d: detectionSous(p.t, p.largeur) });
+    setSurvol({ t: p.t, x: p.x, largeur: p.largeur, d: detectionSous(p.t, p.largeur) });
   };
 
   const auClic = (e: React.MouseEvent) => {
@@ -1162,16 +1162,26 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
     onViser(d?.debut ?? p.t);
   };
 
+  /** Resserre ou élargit la fenêtre ; l'instant `t` reste à sa place. */
+  const zoomerAutour = (t: number, facteur: number) => {
+    const duree = Math.max(ZOOM_MIN_MS, Math.min(JOUR_MS, vue.duree * facteur));
+    // L'instant sous le curseur reste sous le curseur : c'est ce qui rend le zoom lisible.
+    const part = (t - vue.debut) / vue.duree;
+    const debut = Math.max(jour, Math.min(jour + JOUR_MS - duree, t - part * duree));
+    setVue({ debut, duree });
+  };
+
   /** Molette : on resserre autour du curseur, pas autour du centre. */
   const auZoom = (e: React.WheelEvent) => {
     const p = instantSous(e.clientX);
     if (!p) return;
-    const facteur = e.deltaY < 0 ? 0.72 : 1 / 0.72;
-    const duree = Math.max(ZOOM_MIN_MS, Math.min(JOUR_MS, vue.duree * facteur));
-    // L'instant sous le curseur reste sous le curseur : c'est ce qui rend le zoom lisible.
-    const part = (p.t - vue.debut) / vue.duree;
-    const debut = Math.max(jour, Math.min(jour + JOUR_MS - duree, p.t - part * duree));
-    setVue({ debut, duree });
+    zoomerAutour(p.t, e.deltaY < 0 ? 0.72 : 1 / 0.72);
+  };
+
+  /** Les loupes : autour de la tête de lecture si on la voit, sinon du milieu de la vue. */
+  const zoomerDe = (facteur: number) => {
+    const centre = instant !== null && instant >= vue.debut && instant <= fin ? instant : vue.debut + vue.duree / 2;
+    zoomerAutour(centre, facteur);
   };
 
   const pasG = pasGraduation(vue.duree);
@@ -1264,8 +1274,39 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
             {t('relecture.toutVoir')}
           </Bouton>
         )}
-        <span className="ml-auto text-soft">{t('relecture.molette')}</span>
+        {/* Le zoom se VOIT : deux loupes, la molette dite au survol. « Molette pour zoomer, clic
+            pour voir » restait écrit en permanence (clarté, 24.10.2026). */}
+        <span className="ml-auto flex items-center gap-0.5">
+          <Bouton variante="fantome" taille="petit" icone={ZoomOut} titre={t('relecture.elargir')}
+                  disabled={vue.duree >= JOUR_MS} onClick={() => zoomerDe(1 / 0.72)} />
+          <Bouton variante="fantome" taille="petit" icone={ZoomIn} titre={t('relecture.resserrer')}
+                  disabled={vue.duree <= ZOOM_MIN_MS} onClick={() => zoomerDe(0.72)} />
+        </span>
       </div>
+
+      <div className="relative">
+      {/* Ce qu'on va voir, avant le clic : la vignette de la détection visée, son genre, son
+          heure — à la place de « cliquer pour voir » (clarté, 24.10.2026). Hors de la barre,
+          qui rogne ce qui la dépasse ; tenue dans la largeur de la frise. */}
+      {survol?.d && survol.d.debut !== null && (
+        <div key={survol.d.id}
+             className="m-surgit pointer-events-none absolute bottom-[calc(100%+8px)] z-20 w-[184px] overflow-hidden rounded-[10px] border border-line2 bg-card3 shadow-[0_14px_34px_rgba(0,0,0,.5)]"
+             style={{ left: Math.max(0, Math.min(survol.largeur - 184, enFraction(survol.d.debut) * survol.largeur - 92)) }}>
+          <div className="aspect-video bg-black">
+            {survol.d.vignette && (
+              <img src={`/vignette/${survol.d.id}`} alt="" className="h-full w-full object-cover"
+                   onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+            )}
+          </div>
+          <div className="flex items-baseline justify-between gap-2 whitespace-nowrap px-2.5 py-1.5 text-meta">
+            <span style={{ color: TEINTE[genre(survol.d)] }}>
+              {etiquette(genre(survol.d))}
+              {survol.d.sujets.length > 0 && survol.d.score !== null ? ` · ${survol.d.score} %` : ''}
+            </span>
+            <span className="font-mono tabular-nums text-muted">{hms(survol.d.debut)}</span>
+          </div>
+        </div>
+      )}
 
       <div ref={barre}
            onMouseMove={auSurvol}
@@ -1357,20 +1398,11 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
                style={{ left: survol.x, background: 'rgba(255,255,255,.4)' }} />
         )}
       </div>
+      </div>
 
       <div className="mt-1 flex h-5 items-center justify-center gap-2 text-meta">
-        {survol ? (
-          <>
-            <span className="font-mono tabular-nums text-muted">{hms(survol.t)}</span>
-            {survol.d && (
-              <span style={{ color: TEINTE[genre(survol.d)] }}>
-                {etiquette(genre(survol.d))}
-                {survol.d.sujets.length > 0 && survol.d.score !== null ? ` · ${survol.d.score} %` : ''}
-                <span className="text-soft"> — {t('relecture.cliquerPourVoir')}</span>
-              </span>
-            )}
-          </>
-        ) : null}
+        {/* L'heure sous le curseur ; sur une détection, c'est son aperçu qui la dit. */}
+        {survol && !survol.d ? <span className="font-mono tabular-nums text-muted">{hms(survol.t)}</span> : null}
       </div>
     </div>
   );
