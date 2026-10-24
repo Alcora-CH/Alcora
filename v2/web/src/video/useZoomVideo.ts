@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 /**
  * Zoomer et se deplacer dans une video, partout.
@@ -63,12 +63,17 @@ export function useZoomVideo(
    *
    * La boucle de peinture est montee UNE fois et ne doit pas se remonter a chaque cran de
    * molette : la relancer perdrait le rappel d'image en vol et ferait clignoter la vue.
-   * Elle lit donc les references, que le rendu tient a jour.
+   * Elle lit donc les references, tenues a jour apres chaque rendu valide et avant la
+   * peinture — pas PENDANT le rendu, ou un rendu abandonne par React y laisserait un zoom
+   * jamais affiche (regle react/refs, rallumee le 24.10.2026). La boucle et les gestes ne
+   * les lisent qu'apres : ils voient les memes valeurs qu'avant.
    */
   const zoomRef = useRef(zoom);
   const panRef = useRef(pan);
-  zoomRef.current = zoom;
-  panRef.current = pan;
+  useLayoutEffect(() => {
+    zoomRef.current = zoom;
+    panRef.current = pan;
+  }, [zoom, pan]);
 
   /* La derniere largeur naturelle vue, pour n'ecrire l'etat qu'aux vrais changements. */
   const naturelleRef = useRef(0);

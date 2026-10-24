@@ -72,7 +72,10 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
    * C'est ICI qu'ils comptent le plus : on ouvre une sequence pour regarder un detail,
    * pas pour la contempler de loin.
    */
-  const vue = useZoomVideo(video, largeurVue, Boolean(url));
+  // Deplie : un objet qui porte une reference ferait prendre chacune de ses valeurs pour une
+  // reference (regle react/refs, rallumee le 24.10.2026).
+  const { gestes, canvasRef, zoom, agrandi, interpole, reinitialiser, zoomer } =
+    useZoomVideo(video, largeurVue, Boolean(url));
   const son = useSonVideo(video, Boolean(url));
 
   const capturer = useCallback(async () => {
@@ -120,8 +123,8 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
       else if (e.key === 'ArrowLeft') { e.preventDefault(); pas(-1); }
       else if (e.key === 'ArrowRight') { e.preventDefault(); pas(1); }
       // « = » accompagne « + » : sur nombre de claviers c'est la meme touche sans majuscule.
-      else if (e.key === '+' || e.key === '=') { e.preventDefault(); vue.zoomer(1.25); }
-      else if (e.key === '-') { e.preventDefault(); vue.zoomer(1 / 1.25); }
+      else if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomer(1.25); }
+      else if (e.key === '-') { e.preventDefault(); zoomer(1 / 1.25); }
     };
     // En capture : l'écouteur global de l'application traite aussi « Échap », et refermerait
     // le plein écran par la même touche.
@@ -199,9 +202,9 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
               <span className="text-meta text-muted">{t('extrait.duree', { n: Math.round(duree) })}</span>
             )}
             <div className="ml-auto flex shrink-0 items-center gap-1">
-              {vue.agrandi && (
-                <BoutonBandeau titre={t('video.revenirImage', { zoom: nombre(vue.zoom, 2) })}
-                               court={t('video.imageEntiere')} icone={ZoomOut} actif onClick={vue.reinitialiser} />
+              {agrandi && (
+                <BoutonBandeau titre={t('video.revenirImage', { zoom: nombre(zoom, 2) })}
+                               court={t('video.imageEntiere')} icone={ZoomOut} actif onClick={reinitialiser} />
               )}
               <BoutonBandeau
                 titre={son.aDuSon === false ? t('video.pasDeSon')
@@ -221,8 +224,8 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
         <div
           className="relative min-h-0 flex-1 select-none overflow-hidden bg-black"
           ref={(el) => { if (el) setLargeurVue(el.clientWidth); }}
-          style={{ cursor: vue.agrandi ? 'grab' : 'default' }}
-          {...vue.gestes}
+          style={{ cursor: agrandi ? 'grab' : 'default' }}
+          {...gestes}
         >
           {url && (
             <video
@@ -243,15 +246,15 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
 
           {/* Le canevas recadre dans les pixels de la SOURCE : il prend la main dès qu'on
               agrandit, et laisse l'élément vidéo afficher directement sinon. */}
-          <canvas ref={vue.canvasRef}
+          <canvas ref={canvasRef}
                   className="absolute inset-0 h-full w-full object-contain"
-                  style={{ display: vue.agrandi ? 'block' : 'none' }} />
+                  style={{ display: agrandi ? 'block' : 'none' }} />
 
-          {vue.agrandi && (
+          {agrandi && (
             <div className="veil pointer-events-none absolute bottom-2.5 left-2.5 flex h-6 items-center gap-1.5 rounded-md px-2.5 text-meta tabular-nums"
                  style={{ color: 'var(--on-1)' }}>
-              {nombre(vue.zoom, 2)}×
-              {vue.interpole && <span className="text-bad">{t('video.interpole')}</span>}
+              {nombre(zoom, 2)}×
+              {interpole && <span className="text-bad">{t('video.interpole')}</span>}
             </div>
           )}
 

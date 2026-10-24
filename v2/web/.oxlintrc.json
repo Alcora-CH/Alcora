@@ -5,8 +5,8 @@
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
 
-    "react/static-components": "off",
-    "react/refs": "off",
+    "react/static-components": "warn",
+    "react/refs": "warn",
     "react/set-state-in-effect": "off",
     "react/preserve-manual-memoization": "off",
     "react/purity": "off",

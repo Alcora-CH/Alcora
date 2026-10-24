@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Maximize2, Minimize2, PanelRightOpen, RotateCw } from 'lucide-react';
 import { CameraTile } from './video/CameraTile';
 import { SetupScreen } from './screens/SetupScreen';
@@ -532,6 +532,50 @@ export default function App() {
     }).catch(() => {});
   }, [configured, espace, tuilesAffichees, tuilesRelecture, fondAnime]);
 
+  // L'ordre choisi a la souris s'applique d'abord ; les cameras inconnues de la liste
+  // (nouvelles, ou jamais deplacees) suivent, dans leur ordre d'inventaire. Les masquees
+  // sortent de la mosaique — et d'elle seulement : le panneau les liste toujours.
+  const rang = new Map(ordre.map((id, i) => [id, i]));
+  const ordonnees = cameras.filter((c) => !masquees.includes(c.id)).sort(
+    (a, b) => (rang.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rang.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+  );
+
+  /* ---- les dispositions du mur ---- */
+  const connues = cameras.map((c) => c.id);
+  const visiblesMur = ordonnees.map((c) => c.id);
+  const dispoActive = dispositions.liste.find((d) => d.id === dispositions.active) ?? null;
+  const dispoModifiee = dispoActive !== null && !decritLeMur(dispoActive, visiblesMur, connues);
+  /** Le mur prend la disposition : ses caméras, dans son ordre ; les autres masquées. */
+  const appliquerDisposition = (d: Disposition) => {
+    const r = appliquer(d, connues, ordre);
+    // Aucune de ses caméras n'est sur le contrôleur : on ne vide pas le mur.
+    if (r.masquees.length === connues.length) return;
+    setOrdre(r.ordre);
+    setMasquees(r.masquees);
+    localStorage.setItem(CLE_MASQUEES, JSON.stringify(r.masquees));
+    setIsolee(null);
+    setDispositions((s) => ({ ...s, active: d.id }));
+  };
+
+  // Une caméra isolée occupe seule toute la zone ; sinon, la mosaïque complète.
+  const affichees = isolee ? ordonnees.filter((c) => c.id === isolee) : ordonnees;
+  const grille = meilleureGrille(taille.w, taille.h, affichees.length, 16 / 9, espacement, H_ETIQUETTE);
+
+  /*
+   * Ce que lisent le clavier et le glisser, montes hors du rendu : le mur tel qu'il est
+   * AFFICHE. Ecrit apres chaque rendu valide, avant la peinture — jamais pendant le rendu,
+   * qu'un rendu abandonne par React laisserait sinon dans les references (regle react/refs,
+   * rallumee le 24.10.2026). Ici, avant les sorties anticipees, comme tout crochet.
+   */
+  useLayoutEffect(() => {
+    ordonneesRef.current = ordonnees;
+    geometrieRef.current = grille;
+    appliquerRang.current = (r) => {
+      const d = dispositions.liste[r - 1];
+      if (d) appliquerDisposition(d);
+    };
+  });
+
   if (!pontDisponible) return <PontManquant />;
 
   const pret = relais !== null && cameras.length > 0;
@@ -565,41 +609,6 @@ export default function App() {
       </div>
     );
   }
-
-  // L'ordre choisi a la souris s'applique d'abord ; les cameras inconnues de la liste
-  // (nouvelles, ou jamais deplacees) suivent, dans leur ordre d'inventaire. Les masquees
-  // sortent de la mosaique — et d'elle seulement : le panneau les liste toujours.
-  const rang = new Map(ordre.map((id, i) => [id, i]));
-  const ordonnees = cameras.filter((c) => !masquees.includes(c.id)).sort(
-    (a, b) => (rang.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rang.get(b.id) ?? Number.MAX_SAFE_INTEGER),
-  );
-  ordonneesRef.current = ordonnees;
-
-  /* ---- les dispositions du mur ---- */
-  const connues = cameras.map((c) => c.id);
-  const visiblesMur = ordonnees.map((c) => c.id);
-  const dispoActive = dispositions.liste.find((d) => d.id === dispositions.active) ?? null;
-  const dispoModifiee = dispoActive !== null && !decritLeMur(dispoActive, visiblesMur, connues);
-  /** Le mur prend la disposition : ses caméras, dans son ordre ; les autres masquées. */
-  const appliquerDisposition = (d: Disposition) => {
-    const r = appliquer(d, connues, ordre);
-    // Aucune de ses caméras n'est sur le contrôleur : on ne vide pas le mur.
-    if (r.masquees.length === connues.length) return;
-    setOrdre(r.ordre);
-    setMasquees(r.masquees);
-    localStorage.setItem(CLE_MASQUEES, JSON.stringify(r.masquees));
-    setIsolee(null);
-    setDispositions((s) => ({ ...s, active: d.id }));
-  };
-  appliquerRang.current = (rang) => {
-    const d = dispositions.liste[rang - 1];
-    if (d) appliquerDisposition(d);
-  };
-
-  // Une caméra isolée occupe seule toute la zone ; sinon, la mosaïque complète.
-  const affichees = isolee ? ordonnees.filter((c) => c.id === isolee) : ordonnees;
-  const grille = meilleureGrille(taille.w, taille.h, affichees.length, 16 / 9, espacement, H_ETIQUETTE);
-  geometrieRef.current = grille;
 
   /*
    * Reorganisation a la souris.

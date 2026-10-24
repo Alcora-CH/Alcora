@@ -179,14 +179,22 @@ soit ~185 Mo à chaque version, quel que soit le différentiel. Ne jamais promet
 Elles rendent **45 avertissements** sur `v2/web/src`, et `--deny-warnings` fait donc
 échouer `npm test`. Elles sont **éteintes** dans `v2/web/.oxlintrc.json` :
 
-| Règle | Occurrences | Ce qu'elle dit |
-|---|---|---|
-| `react/static-components` | 16 | un composant déclaré dans un autre est recréé à chaque rendu |
-| `react/refs` | 14 | une référence lue pendant le rendu peut ne pas se rafraîchir |
-| `react/set-state-in-effect` | 5 | un `setState` synchrone dans un effet relance un rendu |
-| `react/preserve-manual-memoization` | 4 | la mémoïsation manuelle n'a pas pu être conservée |
-| `react/purity` | 3 | une valeur est modifiée pendant le rendu |
-| `react/immutability` | 3 | une prop ou un argument de crochet est muté |
+| Règle | Août 2026 | 24.10.2026 | Ce qu'elle dit |
+|---|---|---|---|
+| `react/static-components` | 16 | **rallumée** (0, la refonte les avait résorbées) | un composant déclaré dans un autre est recréé à chaque rendu |
+| `react/refs` | 14 | **rallumée** (6 corrigées) | une référence lue pendant le rendu peut ne pas se rafraîchir |
+| `react/set-state-in-effect` | 5 | 5 | un `setState` synchrone dans un effet relance un rendu |
+| `react/preserve-manual-memoization` | 4 | 4 | la mémoïsation manuelle n'a pas pu être conservée |
+| `react/purity` | 3 | 3 | une valeur est modifiée pendant le rendu |
+| `react/immutability` | 3 | 3 | une prop ou un argument de crochet est muté |
+
+`refs`, le 24.10.2026 : les valeurs vivantes recopiées dans des références PENDANT le rendu
+(zoom, ordre du mur, grille, raccourci des dispositions) le sont désormais dans un
+`useLayoutEffect` — après chaque rendu validé, avant la peinture. Dans `App.tsx`, le bloc
+du mur est remonté au-dessus des sorties anticipées pour cela. Le lecteur d'extrait déplie
+le résultat de `useZoomVideo` : un objet qui porte une référence fait prendre chacune de ses
+valeurs pour une référence. Vérifié dans la démo : chiffres et Ctrl + chiffre, glisser des
+tuiles, zoom et panoramique en pause dans le lecteur d'extrait et en relecture.
 
 **Ce ne sont pas des failles** — aucune n'a de rapport avec la sécurité. Mais plusieurs
 pointent de vrais défauts latents, en particulier `react/refs` dans `video/useZoomVideo.ts`
