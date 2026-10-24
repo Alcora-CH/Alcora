@@ -50,6 +50,30 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.40.0',
+    date: '24.10.2026',
+    fr: [
+      'La relecture montre au lieu d’expliquer : sans instant choisi, un repère « Direct » sur la '
+      + 'frise et l’heure qui avance ; au survol d’une détection, son aperçu ; deux loupes pour zoomer.',
+      'La plage à exporter tient en une ligne : la borne qui reste à poser s’éclaire, les coupures '
+      + 'd’une heure se voient sur la frise, le détail passe dans les « i ».',
+      'Dans les alertes, l’état de Protect s’affiche à côté de l’interrupteur d’Alcora ; chaque veille '
+      + 'a son propre interrupteur et se déplie en douceur.',
+      'Le journal note les gestes qui changent l’écran — séquence ouverte, plein écran, caméra '
+      + 'isolée : un diagnostic n’a plus à les deviner.',
+    ],
+    en: [
+      'Replay shows instead of explaining: with no moment chosen, a “Live” marker on the timeline and '
+      + 'the time ticking; hovering a detection previews it; two magnifiers to zoom.',
+      'The range to export fits on one line: the bound still to set lights up, one-hour cuts show on '
+      + 'the timeline, the details move into the “i”.',
+      'In alerts, Protect’s state shows next to Alcora’s switch; each watch has its own switch and '
+      + 'unfolds smoothly.',
+      'The log records the gestures that change the screen — sequence opened, full screen, isolated '
+      + 'camera — so a diagnosis no longer has to guess them.',
+    ],
+  },
+  {
     version: '2.39.0',
     date: '24.10.2026',
     fr: [
