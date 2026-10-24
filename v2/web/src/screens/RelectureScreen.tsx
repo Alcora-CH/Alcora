@@ -985,13 +985,13 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                       titre={t('export.debutTitre')} disabled={instant === null} className="relative"
                       onClick={() => { if (instant !== null) poserBorne('debut', instant); }}>
                 {t('export.debut')} <Touche>I</Touche>
-                {plage.debut === null && plage.fin !== null && <Halo />}
+                {instant !== null && plage.debut === null && plage.fin !== null && <Halo />}
               </Bouton>
               <Bouton taille="petit" variante={plage.fin !== null ? 'actif' : 'normal'} icone={ArrowLeftFromLine}
                       titre={t('export.finTitre')} disabled={instant === null} className="relative"
                       onClick={() => { if (instant !== null) poserBorne('fin', instant); }}>
                 {t('export.fin')} <Touche>O</Touche>
-                {plage.fin === null && plage.debut !== null && <Halo />}
+                {instant !== null && plage.fin === null && plage.debut !== null && <Halo />}
               </Bouton>
             </span>
             <Segment
@@ -1077,7 +1077,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   );
 }
 
-/** Le halo de la borne qui reste à poser. */
+/** Le halo de la borne qui reste à poser — seulement quand elle peut l'être : sans instant lu (revenu au direct), le bouton est inactif. */
 function Halo() {
   return <span aria-hidden className="point-activite pointer-events-none absolute -inset-1 rounded-[11px] border-2 border-accent" />;
 }
