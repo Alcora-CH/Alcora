@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette, une seule fenêtre</title>
+<!--
+  Décision de Thomas, 24.10.2026 : « Alcora devient une fenêtre unique tout-en-un, plus de doubles
+  fenêtres » — la connexion DANS le cadre (rail et barre d'état dès la première seconde) ET plus
+  aucune fenêtre posée par-dessus l'application.
+
+  Inventaire avant de dessiner : la connexion (SetupScreen.tsx) remplace aujourd'hui toute
+  l'application — 44 textes, 341 mots ; quatre surfaces se posent par-dessus avec un voile : le
+  guide de la console (FenetreGuide.tsx), les raccourcis (Raccourcis.tsx, 33 textes), « Ce qui a
+  changé » (NouveautesScreen.tsx) et la séquence d'une détection (LecteurExtrait.tsx). « Après »
+  garde chaque champ, chaque étape, chaque commande (iso-contenu), et applique à la connexion la
+  règle « Clarté avant texte ». Données, noms et images fictifs.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #05070a; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+input { font: inherit; }
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.banc { position: fixed; inset: 0 0 auto 0; min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 6px 14px;
+        background: #f1efe9; color: #23252a; font: 500 13px/1 "Barlow", system-ui, sans-serif; z-index: 100; }
+.banc b { font-weight: 600; white-space: nowrap; }
+.banc .seg { display: flex; flex-wrap: wrap; background: #dedbd2; border-radius: 8px; padding: 3px; gap: 2px; }
+.banc .seg button { padding: 6px 10px; border-radius: 6px; color: #4a4c52; white-space: nowrap; }
+.banc .seg button[aria-pressed="true"] { background: #fff; color: #15171a; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.banc .note { margin-left: auto; color: #6c6e74; }
+#scene { position: absolute; left: 0; right: 0; bottom: 0; }
+
+:root {
+  --bg: #0e131b; --card: #151b25; --card2: #1e2633; --card3: #283242;
+  --line: rgba(206,214,229,.09); --line2: rgba(206,214,229,.17);
+  --ink: #ece8df; --muted: #a9b0bc; --soft: #737d8b;
+  --accent: #dca95c; --accent-d: #e8bd78; --accent-soft: rgba(220,169,92,.14); --accent-ligne: rgba(220,169,92,.42);
+  --ok: #74c494; --ok-soft: rgba(116,196,148,.12); --bad: #e3735f; --bad-soft: rgba(227,115,95,.12); --warn: #e0a23c; --warn-soft: rgba(224,162,60,.12);
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  --vive: 140ms; --douceur: 240ms; --ample: 420ms; --pose: cubic-bezier(.2,.7,.2,1); --douce: cubic-bezier(.4,0,.2,1);
+}
+.app { position: absolute; inset: 0; display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) 34px;
+       background: var(--bg); color: var(--ink); font: 400 13px/1.45 "Atkinson Hyperlegible Next", system-ui, sans-serif; overflow: hidden; }
+.app.seule { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.ciel { background: radial-gradient(120% 90% at 30% 110%, #18233a 0%, transparent 55%), radial-gradient(90% 80% at 85% 105%, #241b33 0%, transparent 50%), linear-gradient(#0b1018, #0d121b 60%, #111827); }
+
+/* ---- rail ---- */
+.rail { grid-row: 1; grid-column: 1; display: flex; flex-direction: column; gap: 2px; padding: 14px 8px; background: var(--card); border-right: 1px solid var(--line); }
+.rail .marque { display: grid; place-items: center; height: 44px; margin-bottom: 10px; }
+.rail .marque span { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; color: #1b1406; font-weight: 700; }
+.rail .esp { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 2px 8px; border-radius: 10px; color: var(--muted); font-size: 12px;
+             transition: background var(--vive) var(--douce), color var(--vive) var(--douce), opacity var(--douceur) var(--douce); }
+.rail .esp svg { width: 20px; height: 20px; }
+.rail .esp:hover, .rail .esp[aria-current="true"] { background: var(--card2); color: var(--ink); }
+.rail .esp[aria-current="true"]::before { content: ""; position: absolute; left: -8px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
+.rail .esp[aria-current="true"] svg { color: var(--accent); }
+.rail .esp.attend { opacity: .38; cursor: default; }
+.rail .esp .point { position: absolute; top: 6px; right: 18px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.rail .bas { margin-top: auto; display: flex; flex-direction: column; gap: 2px; }
+
+/* ---- cadre ---- */
+.main { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
+.tete { height: 64px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 20px 0 24px; border-bottom: 1px solid var(--line); background: var(--card); }
+.tete h1 { margin: 0; font-size: 19px; font-weight: 600; }
+.tete .sous { color: var(--muted); }
+.tete .actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.corps { flex: 1; min-height: 0; overflow: auto; }
+.barre { grid-row: 2; grid-column: 1 / -1; display: flex; align-items: center; gap: 22px; padding: 0 14px; background: var(--card); border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.barre b { color: var(--ink); font-weight: 500; }
+.barre .droite { margin-left: auto; display: flex; gap: 22px; align-items: center; }
+.pt { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+.carte { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 8px; background: var(--card2); border: 1px solid var(--line2); color: var(--ink); white-space: nowrap;
+       transition: background var(--vive) var(--douce), transform 60ms var(--douce); }
+.btn:hover { background: var(--card3); }
+.btn:active { transform: scale(.97); }
+.btn.primaire { background: var(--accent); border-color: transparent; color: #1b1406; font-weight: 600; }
+.btn.fantome { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.fantome:hover { background: var(--card2); color: var(--ink); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.champ { display: flex; flex-direction: column; gap: 6px; }
+.champ label { font-weight: 500; }
+.champ .ligne { display: flex; align-items: center; height: 36px; padding: 0 10px; border-radius: 9px; background: var(--card2); border: 1px solid var(--line2); color: var(--ink); }
+.champ .ligne.mono { letter-spacing: .02em; }
+.champ .aide { font-size: 12px; color: var(--soft); }
+.discret { font-size: 12px; color: var(--soft); }
+.pastille { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.pastille.ok { background: var(--ok-soft); color: var(--ok); }
+.pastille.or { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-ligne); }
+.pastille.neutre { background: var(--card2); color: var(--muted); }
+.inter { position: relative; width: 38px; height: 22px; flex: none; border-radius: 11px; background: var(--accent); }
+.inter::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #1b1406; transform: translateX(16px); }
+.arrive { animation: arrive var(--douceur) var(--pose) both; }
+@keyframes arrive { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+.glisse { animation: glisse var(--ample) var(--pose) both; }
+@keyframes glisse { from { opacity: 0; transform: translate3d(24px, 0, 0); } to { opacity: 1; transform: none; } }
+
+/* ---- la connexion ---- */
+.connexion { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 22px; max-width: 1180px; margin: 0 auto; padding: 22px 24px 80px; }
+.etapes { display: flex; flex-direction: column; gap: 14px; }
+.etape { padding: 16px 18px; }
+.etape h2 { margin: 0 0 12px; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; }
+.etape h2 .n { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--card3); font-size: 12px; color: var(--muted); }
+.etape.faite h2 .n { background: var(--ok-soft); color: var(--ok); }
+.etape.courante h2 .n { background: var(--accent); color: #1b1406; }
+.verif li { display: flex; gap: 10px; align-items: center; padding: 4px 0; list-style: none; }
+.verif ul { margin: 0; padding: 0; }
+.cams { margin-top: 10px; padding: 10px 12px; border-radius: 9px; background: var(--card2); display: flex; gap: 16px; flex-wrap: wrap; }
+.actions-collees { position: sticky; bottom: 12px; display: flex; justify-content: flex-end; gap: 10px; padding: 12px 16px; box-shadow: 0 18px 40px -18px rgba(0,0,0,.7); }
+.guide { position: sticky; top: 16px; align-self: start; padding: 16px 18px; }
+.guide .anim { margin-top: 12px; height: 300px; border-radius: 10px; border: 1px solid var(--line2); background: #0b1017; position: relative; overflow: hidden; display: grid; place-items: center; color: var(--soft); }
+.guide .anim .pas { position: absolute; left: 16px; right: 16px; display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 9px; background: var(--card2); opacity: 0; animation: pas 9s var(--douce) infinite; }
+.guide .anim .pas:nth-child(1) { top: 24px; animation-delay: 0s; }
+.guide .anim .pas:nth-child(2) { top: 92px; animation-delay: 3s; }
+.guide .anim .pas:nth-child(3) { top: 160px; animation-delay: 6s; }
+@keyframes pas { 0%, 4% { opacity: 0; transform: translate3d(0, 6px, 0); } 10%, 90% { opacity: 1; transform: none; } 100% { opacity: 1; } }
+.preal { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; color: var(--muted); font-size: 12px; }
+.preal svg { color: var(--accent); margin-top: 1px; }
+.reprise { padding: 16px 18px; border-color: var(--accent-ligne); background: linear-gradient(rgba(220,169,92,.08), rgba(220,169,92,.08)), var(--card); display: flex; align-items: center; gap: 14px; }
+
+/* ---- direct (fond des autres vues) ---- */
+.mur { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 20px; align-content: center; }
+.tuile { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #0a0d12; display: flex; flex-direction: column; aspect-ratio: 16/10.2; }
+.tuile .t { height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: rgba(21,27,37,.92); font-size: 12px; }
+.tuile .img { flex: 1; background: radial-gradient(70% 60% at 40% 60%, #4a4a4a, #1a1a1a 70%), #111; }
+.tuile:nth-child(2) .img { background: radial-gradient(60% 70% at 60% 55%, #555, #1d1d1d 70%), #111; }
+.colonne { grid-row: 1; grid-column: 3; width: 312px; border-left: 1px solid var(--line); background: var(--card); display: flex; flex-direction: column; min-height: 0; }
+.colonne .h { height: 64px; flex: none; display: flex; align-items: center; padding: 0 12px 0 20px; border-bottom: 1px solid var(--line); font-size: 15px; font-weight: 600; }
+.colonne .h .x { margin-left: auto; }
+.colonne .c { flex: 1; overflow: auto; padding: 8px 16px 20px; }
+.colonne h3 { margin: 16px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--soft); font-weight: 600; }
+.racc { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; color: var(--muted); }
+.racc .k { display: flex; gap: 4px; flex: none; }
+kbd { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line2); border-bottom-width: 2px; font-family: var(--mono); font-size: 11px; color: var(--ink); background: var(--card2); }
+.recente { display: flex; gap: 10px; align-items: center; padding: 8px 4px; }
+.recente i { width: 64px; height: 36px; border-radius: 6px; background: radial-gradient(60% 60% at 50% 60%, #555, #1d1d1d); flex: none; }
+.avis { display: flex; align-items: center; gap: 10px; margin: 0 20px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); border: 1px solid var(--accent-ligne); color: var(--ink); }
+.avis b { color: var(--accent); }
+
+/* ---- la séquence, dans la page ---- */
+.sequence { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 16px 20px 18px; gap: 12px; }
+.sequence .video { flex: 1; min-height: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--line2);
+                   background: linear-gradient(90deg, #c8c8c8 0 14%, #c8c800 14% 28%, #00c8c8 28% 42%, #00c800 42% 56%, #c800c8 56% 70%, #c80000 70% 84%, #0000c8 84%); position: relative; }
+.sequence .commandes { display: flex; align-items: center; gap: 10px; }
+.sequence .piste { flex: 1; height: 6px; border-radius: 3px; background: var(--card3); position: relative; }
+.sequence .piste i { position: absolute; left: 0; top: 0; bottom: 0; width: 38%; border-radius: 3px; background: var(--accent); }
+
+/* ---- AVANT : ce qui se pose par-dessus ---- */
+.voile { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(4,6,9,.62); }
+.boite { width: min(1000px, 86%); height: min(720px, 84%); display: flex; flex-direction: column; border-radius: 12px; border: 1px solid var(--line2); background: var(--card); box-shadow: 0 40px 100px -30px rgba(0,0,0,.9); overflow: hidden; }
+.boite .h { height: 56px; flex: none; display: flex; align-items: center; padding: 0 16px 0 20px; border-bottom: 1px solid var(--line); font-size: 15px; font-weight: 600; }
+.boite .h .x { margin-left: auto; }
+.boite .c { flex: 1; min-height: 0; overflow: auto; padding: 18px 20px; }
+.marque-avant { width: 36px; height: 36px; border-radius: 9px; background: var(--accent); display: grid; place-items: center; color: #1b1406; font-weight: 700; }
+.texte-long { color: var(--muted); line-height: 1.6; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; } }
+</style>
+</head>
+<body>
+<div class="banc" id="banc">
+  <b>Une seule fenêtre</b>
+  <div class="seg" data-cle="vue"><button data-v="connexion">Connexion</button><button data-v="reprise">Connexion · reprise</button><button data-v="guide">Guide de la console</button><button data-v="raccourcis">Raccourcis</button><button data-v="nouveautes">Après une mise à jour</button><button data-v="sequence">Séquence d'une détection</button></div>
+  <div class="seg" data-cle="mode"><button data-v="avant">Avant</button><button data-v="apres">Après</button></div>
+  <span class="note" id="note"></span>
+</div>
+<div id="scene"></div>
+
+<script>
+const I = {
+  direct: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',
+  relecture: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/>',
+  detections: '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/>',
+  alertes: '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  systeme: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  reglages: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  bouclier: '<path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/>',
+  coche: '<path d="m5 12 5 5 9-10"/>', croix: '<path d="M6 6l12 12M18 6 6 18"/>', retour: '<path d="M15 18l-6-6 6-6"/>',
+  livre: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>', oeil: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  reprendre: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>', image: '<path d="M4 7h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  son: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/>', lecture: '<path d="M8 5v14l11-7z"/>', enregistrer: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', etoile: '<path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>',
+  clavier: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>',
+};
+const ic = (n) => `<svg class="i" viewBox="0 0 24 24">${I[n]}</svg>`;
+const etat = { vue: 'connexion', mode: 'apres' };
+const NOTES = {
+  connexion: 'Après : la connexion est un écran d\'Alcora comme les autres — rail et barre d\'état dès la première seconde ; les espaces qui attendent le contrôleur sont grisés.',
+  reprise: 'Après : la connexion conservée se propose en tête, dans le cadre ; un clic, rien à ressaisir.',
+  guide: 'Après : le guide se déplie DANS la carte « Aide » des Réglages, comme il le fait déjà sur l\'écran de connexion — plus de voile.',
+  raccourcis: 'Après : « ? » ouvre un panneau ancré à droite, à la place de la colonne Activité — le mur reste visible et vivant.',
+  nouveautes: 'Après : une mise à jour s\'annonce dans le direct, d\'une ligne ; « Ce qui a changé » mène aux Réglages, où les notes vivent déjà.',
+  sequence: 'Après : la séquence prend la place du mur, rail et barre d\'état gardés ; « ← Direct » ou Échap y ramène.',
+};
+
+/* ------------------------------------------------------------ le cadre commun (APRÈS) */
+function rail({ courant = 'direct', attend = false, point = false } = {}) {
+  const esp = (id, nom, bas = false) => `<button class="esp${attend && id !== 'reglages' ? ' attend' : ''}" ${courant === id ? 'aria-current="true"' : ''} ${attend && id !== 'reglages' ? 'title="Après la connexion"' : ''}>${ic(id)}<span>${nom}</span>${point && id === 'reglages' ? '<i class="point"></i>' : ''}</button>`;
+  return `<nav class="rail"><div class="marque"><span>A</span></div>${esp('direct', 'Direct')}${esp('relecture', 'Relecture')}${esp('detections', 'Détections')}${esp('alertes', 'Alertes')}
+    <div class="bas">${esp('systeme', 'Système')}${esp('reglages', 'Réglages')}</div></nav>`;
+}
+function barre({ connecte = true } = {}) {
+  return `<footer class="barre">${connecte
+    ? '<span><i class="pt" style="background:var(--ok)"></i>Flux vidéo prêt</span><span>Contrôleur <b>Maison</b></span><span>Protect <b style="color:var(--ok)">armé</b></span><span>Archive <b>8 mois 9 j</b></span>'
+    : '<span><i class="pt" style="background:var(--soft)"></i>Contrôleur <b>non connecté</b></span>'}
+    <span class="droite"><span>${ic('bouclier')} Aucune image ne quitte ton réseau</span><b class="mono">04:12:09</b><span>Raccourcis <kbd>?</kbd></span></span></footer>`;
+}
+const cadre = (opts, tete, corps, colonne = '') => `<div class="app">${rail(opts)}<main class="main">${tete}${corps}</main>${colonne}${barre(opts)}</div>`;
+const tete = (titre, sous = '', actions = '') => `<header class="tete"><h1>${titre}</h1>${sous ? `<span class="sous">${sous}</span>` : ''}${actions ? `<div class="actions">${actions}</div>` : ''}</header>`;
+const mur = () => `<div class="mur"><div class="tuile"><div class="t"><b>Portail</b><span class="discret">Haute 2160p</span><span style="color:var(--ok)">● Direct</span></div><div class="img"></div></div>
+  <div class="tuile"><div class="t"><b>Jardin</b><span class="discret">Haute 1512p</span><span style="color:var(--ok)">● Direct</span></div><div class="img"></div></div></div>`;
+const colonneActivite = () => `<aside class="colonne"><div class="h">Activité<button class="btn fantome x">${ic('croix')}</button></div><div class="c">
+  <h3>Récentes</h3>${[['Personne', 'Portail', '7 min'], ['Véhicule', 'Allée', '14 min'], ['Animal', 'Jardin', '21 min']].map(([q, c, h]) => `<div class="recente"><i></i><div style="flex:1"><div>${q}</div><div class="discret">${c}</div></div><span class="discret">${h}</span></div>`).join('')}</div></aside>`;
+
+/* ------------------------------------------------------------ la connexion, APRÈS */
+function connexionApres(reprise) {
+  const champ = (l, v, aide = '', mono = false, oeil = false) => `<div class="champ"><label>${l}</label><div class="ligne${mono ? ' mono' : ''}">${v}${oeil ? `<span style="margin-left:auto;color:var(--soft)">${ic('oeil')}</span>` : ''}</div>${aide ? `<span class="aide">${aide}</span>` : ''}</div>`;
+  const repriseBloc = reprise ? `<div class="carte reprise arrive">${ic('reprendre')}<div style="flex:1"><b>Connexion conservée</b> · <span class="mono">10.0.0.1</span><div class="discret">Rien à ressaisir</div></div><button class="btn primaire">Reprendre</button></div>
+    <div class="discret" style="text-align:center">ou une autre connexion</div>` : '';
+  return cadre({ courant: 'direct', attend: true, connecte: false },
+    tete('Connexion', '', `<span class="pastille neutre">${ic('bouclier')}Rien ne quitte ton réseau</span>`),
+    `<div class="corps ciel"><div class="connexion"><div class="etapes">${repriseBloc}
+      <section class="carte etape faite"><h2><span class="n">${ic('coche')}</span>Contrôleur</h2>${champ('Adresse', '<span class="mono">192.168.1.1</span>', 'Adresse IP ou nom de la console')}</section>
+      <section class="carte etape courante"><h2><span class="n">2</span>Compte</h2><div style="display:flex;flex-direction:column;gap:12px">
+        ${champ('Identifiant', 'alcora-visionnage', 'Un compte dédié, droits de visionnage')}
+        ${champ('Mot de passe', '••••••••••', '', false, true)}
+        ${champ('Clé à deux facteurs', '<span class="mono">JBSW Y3DP EHPK 3PXP</span>', '', true, true)}
+        <details><summary class="discret" style="cursor:pointer">Où trouver cette clé ?</summary><div class="discret" style="margin-top:6px;line-height:1.6">Compte Ubiquiti → ajout d’une application d’authentification → « saisie manuelle ».<br>Garde-la aussi sur ton téléphone.</div></details>
+      </div></section>
+      <section class="carte etape verif"><h2><span class="n">3</span>Vérification</h2><ul>
+        <li><span style="color:var(--ok)">${ic('coche')}</span>Joindre le contrôleur</li>
+        <li><span style="color:var(--ok)">${ic('coche')}</span>Se connecter</li>
+        <li><span style="color:var(--soft)">${ic('lecture')}</span><span style="color:var(--soft)">Lire les caméras</span></li></ul>
+        <div class="cams"><span><i class="pt" style="background:var(--ok)"></i>Portail <span class="discret mono">3840 × 2160</span></span><span><i class="pt" style="background:var(--ok)"></i>Jardin <span class="discret mono">2688 × 1512</span></span></div></section>
+      <section class="carte etape"><div style="display:flex;align-items:center;gap:14px"><div style="flex:1"><b>Rester connecté</b>
+        <div class="discret">Mot de passe et clé gardés sur ce PC, chiffrés par Windows</div>
+        <div class="discret" style="color:var(--warn)">Ta session Windows suffira pour te connecter, sans ton téléphone</div></div><span class="inter"></span></div></section>
+      <div class="carte actions-collees"><button class="btn">Tester</button><button class="btn primaire" disabled>Enregistrer</button></div>
+    </div>
+    <aside class="carte guide"><div style="display:flex;align-items:center;gap:10px">${ic('livre')}<b>À préparer sur la console</b><button class="btn fantome" style="margin-left:auto">Agrandir</button></div>
+      <div class="anim"><div class="pas">${ic('coche')} Protect → caméra → Avancé</div><div class="pas">${ic('coche')} RTSP : activé</div><div class="pas">${ic('coche')} Même chose pour chaque caméra</div></div>
+      <div class="preal">${ic('coche')}<span>Le RTSP activé sur chaque caméra</span></div>
+      <div class="preal">${ic('coche')}<span>Un compte dédié à Alcora, droits de visionnage</span></div></aside>
+    </div></div>`);
+}
+
+/* ------------------------------------------------------------ la connexion, AVANT (fenêtre à part) */
+function connexionAvant(reprise) {
+  return `<div class="app seule"><div class="ciel" style="overflow:auto"><div style="max-width:1120px;margin:0 auto;padding:36px 28px">
+    <div style="display:flex;gap:14px;align-items:center"><span class="marque-avant">A</span><h1 style="margin:0;font-size:24px">Connexion au contrôleur</h1></div>
+    <p style="margin:4px 0 14px 50px;color:var(--muted)">L’application interroge ton contrôleur pour découvrir les caméras. Rien n’est envoyé ailleurs.</p>
+    <div style="display:grid;grid-template-columns:1fr 440px;gap:24px"><div style="display:flex;flex-direction:column;gap:16px">
+      ${reprise ? '<div class="carte reprise"><span>Une connexion précédente est conservée (<span class="mono">10.0.0.1</span>). Inutile de tout ressaisir : la reprendre suffit.</span><button class="btn primaire">Reprendre cette connexion</button></div>' : ''}
+      <div class="carte etape"><h2>Contrôleur</h2><div class="champ"><label>Adresse du contrôleur</label><div class="ligne mono">192.168.1.1</div><span class="aide">L’adresse IP ou le nom de ta console UniFi, sans http:// ni chemin.</span></div></div>
+      <div class="carte etape"><h2>Compte</h2><div class="champ"><label>Identifiant</label><div class="ligne">alcora-visionnage</div><span class="aide">Utilise un compte dédié à cette application, avec des droits limités.</span></div>
+        <div class="champ" style="margin-top:12px"><label>Mot de passe</label><div class="ligne">••••••••••</div></div><div class="champ" style="margin-top:12px"><label>Clé à deux facteurs</label><div class="ligne mono">JBSW Y3DP EHPK 3PXP</div></div>
+        <p class="texte-long" style="margin:10px 0 0;font-size:12px">Sur le site de gestion de ton compte Ubiquiti, lors de l’ajout d’une application d’authentification, choisis « saisie manuelle » plutôt que de scanner le code : la clé s’affiche alors en toutes lettres. Garde cette même clé enrôlée sur ton téléphone. Si cette application en devenait l’unique détentrice, perdre ce PC te bloquerait l’accès à ton compte.</p></div>
+      <div class="carte etape"><h2>Vérification</h2><div class="texte-long">Joindre le contrôleur · Se connecter · Lire les caméras</div></div>
+      <div class="carte etape"><h2>Rester connecté</h2><p class="texte-long" style="margin:0">Pour se reconnecter seule après un redémarrage, l’application conserve sur ce PC ton mot de passe et la clé qui produit les codes à usage unique, chiffrés par Windows pour ton compte Windows uniquement.</p>
+        <p class="texte-long">Concrètement : une personne qui ouvrirait une session sous ton compte Windows pourrait se connecter au contrôleur sans avoir ton téléphone. En revanche, ton compte reste protégé face à quelqu’un qui ne connaîtrait que ton mot de passe.</p></div>
+    </div><div class="carte guide"><b>À préparer sur la console</b><p class="texte-long" style="font-size:12px">Le RTSP activé sur chaque caméra (Protect → caméra → Avancé). Alcora ne demande jamais d’URL : elle lit les adresses toute seule, mais le RTSP doit être ouvert.</p><div class="anim">guide animé</div></div></div>
+  </div></div></div>`;
+}
+
+/* ------------------------------------------------------------ les autres vues */
+function reglagesFond(guideOuvert, enLigne) {
+  return `<div class="corps"><div style="max-width:760px;margin:0 auto;padding:22px 24px;display:flex;flex-direction:column;gap:22px">
+    <section><h2 style="margin:0 0 10px;font-size:15px">Aide</h2><div class="carte">
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line)"><b style="flex:1">Raccourcis <kbd>?</kbd></b><button class="btn">${ic('clavier')}Voir</button></div>
+      <div style="padding:14px 18px"><div style="display:flex;align-items:center;gap:14px"><div style="flex:1"><b>Guide de la console</b><div class="discret">Activer le RTSP</div></div><button class="btn">${ic('livre')}${guideOuvert && enLigne ? 'Réduire' : 'Ouvrir'}</button></div>
+        ${guideOuvert && enLigne ? `<div class="glisse" style="margin-top:12px;height:420px;border-radius:10px;border:1px solid var(--line2);background:#0b1017;position:relative;overflow:hidden"><div class="guide" style="position:static;padding:0"><div class="anim" style="height:420px;margin:0;border:0"><div class="pas">${ic('coche')} Protect → caméra → Avancé</div><div class="pas">${ic('coche')} RTSP : activé</div><div class="pas">${ic('coche')} Même chose pour chaque caméra</div></div></div></div>` : ''}
+      </div></div></section>
+    <section><h2 style="margin:0 0 10px;font-size:15px">À propos</h2><div class="carte" style="padding:14px 18px"><b>Alcora</b> <span class="mono discret">2.38.0</span></div></section></div></div>`;
+}
+const LISTE_RACCOURCIS = `<h3>Partout</h3>
+  <div class="racc"><span>Afficher ces raccourcis</span><span class="k"><kbd>?</kbd></span></div><div class="racc"><span>Plein écran</span><span class="k"><kbd>F11</kbd></span></div>
+  <h3>Direct</h3>
+  <div class="racc"><span>Isoler la caméra</span><span class="k"><kbd>1</kbd>–<kbd>9</kbd></span></div><div class="racc"><span>Revenir à la mosaïque</span><span class="k"><kbd>0</kbd></span></div>
+  <div class="racc"><span>Disposition</span><span class="k"><kbd>Ctrl</kbd><kbd>1</kbd>–<kbd>9</kbd></span></div><div class="racc"><span>Zoomer la caméra isolée</span><span class="k"><kbd>+</kbd><kbd>−</kbd></span></div>
+  <div class="racc"><span>Mosaïque, puis quitter le plein écran</span><span class="k"><kbd>Échap</kbd></span></div><div class="racc"><span>Réorganiser, se déplacer zoomé</span><span class="k">Glisser</span></div>
+  <div class="racc"><span>Isoler, ou revenir</span><span class="k">Double-clic</span></div><div class="racc"><span>Zoomer dans l’image</span><span class="k">Molette</span></div>
+  <h3>Relecture</h3>
+  <div class="racc"><span>Lecture ou pause</span><span class="k"><kbd>Espace</kbd></span></div><div class="racc"><span>Image par image</span><span class="k"><kbd>,</kbd><kbd>.</kbd></span></div>
+  <div class="racc"><span>Reculer ou avancer de 10 s</span><span class="k"><kbd>←</kbd><kbd>→</kbd></span></div><div class="racc"><span>Début · fin de la plage</span><span class="k"><kbd>I</kbd><kbd>O</kbd></span></div>
+  <div class="racc"><span>Aller à cet instant</span><span class="k">Clic sur la frise</span></div><div class="racc"><span>Resserrer la journée</span><span class="k">Molette sur la frise</span></div>`;
+
+function vue() {
+  const a = etat.mode === 'apres';
+  switch (etat.vue) {
+    case 'connexion': return a ? connexionApres(false) : connexionAvant(false);
+    case 'reprise': return a ? connexionApres(true) : connexionAvant(true);
+    case 'guide': return a
+      ? cadre({ courant: 'reglages' }, tete('Réglages'), reglagesFond(true, true))
+      : cadre({ courant: 'reglages' }, tete('Réglages'), reglagesFond(false, false) + `<div class="voile"><div class="boite"><div class="h">Activer le RTSP sur la console<button class="btn fantome x">Fermer (Échap)</button></div><div class="c guide" style="position:static"><div class="anim" style="height:100%;margin:0">guide animé</div></div></div></div>`);
+    case 'raccourcis': return a
+      ? cadre({ courant: 'direct' }, tete('Direct', '2 caméras'), mur(), `<aside class="colonne glisse"><div class="h">Raccourcis <kbd style="margin-left:8px">?</kbd><button class="btn fantome x">${ic('croix')}</button></div><div class="c">${LISTE_RACCOURCIS}</div></aside>`)
+      : cadre({ courant: 'direct' }, tete('Direct', '2 caméras'), mur() + `<div class="voile"><div class="boite" style="width:min(760px,80%)"><div class="h">Raccourcis clavier<button class="btn fantome x">Fermer (Échap)</button></div><div class="c">${LISTE_RACCOURCIS}</div></div></div>`, colonneActivite());
+    case 'nouveautes': return a
+      ? cadre({ courant: 'direct', point: true }, tete('Direct', '2 caméras'), `<div class="avis arrive">${ic('etoile')}<span>Alcora <b>2.38.0</b> est installée</span><button class="btn fantome" style="margin-left:auto">Ce qui a changé →</button><button class="btn fantome">${ic('croix')}</button></div>${mur()}`, colonneActivite())
+      : cadre({ courant: 'direct' }, tete('Direct', '2 caméras'), mur() + `<div class="voile"><div class="boite" style="width:min(680px,80%);height:auto;max-height:84%"><div class="h">Ce qui a changé<button class="btn fantome x">Fermer (Échap)</button></div><div class="c"><b class="mono" style="color:var(--accent-d)">2.38.0</b><p class="texte-long">En plein écran, un bandeau d’activité se pose dans la place libre autour des images : les dernières détections, et d’un clic leur séquence…</p><p class="texte-long">Le bandeau ne réduit jamais les images…</p><div style="text-align:right"><button class="btn primaire">Compris</button></div></div></div></div>`, colonneActivite());
+    case 'sequence': {
+      const seq = `<div class="sequence"><div class="video"></div><div class="commandes"><button class="btn">${ic('lecture')}</button><span class="mono discret">00:07 / 00:19</span><div class="piste"><i></i></div><div class="seg" style="display:inline-flex;gap:2px;padding:3px;border-radius:9px;background:var(--card2)">${['0,5×', '1×', '2×'].map((v, i) => `<button style="padding:4px 9px;border-radius:7px;${i === 1 ? 'background:var(--card3)' : 'color:var(--muted)'}">${v}</button>`).join('')}</div></div></div>`;
+      const actions = `<button class="btn fantome">${ic('relecture')}Revoir à cet instant</button><button class="btn fantome">${ic('image')}Image</button><button class="btn fantome">${ic('son')}Son</button><button class="btn">${ic('enregistrer')}Enregistrer</button>`;
+      return a
+        ? cadre({ courant: 'direct' }, `<header class="tete arrive"><button class="btn fantome">${ic('retour')}Direct</button><h1 style="font-size:17px">Personne</h1><span class="sous">Portail · aujourd’hui 02:47 · 19 s</span><div class="actions">${actions}</div></header>`, seq)
+        : cadre({ courant: 'direct' }, tete('Direct', '2 caméras'), mur() + `<div class="voile"><div class="boite"><div class="h">Personne · Portail · 02:47<span style="margin-left:auto;display:flex;gap:6px">${actions}<button class="btn fantome">Fermer (Échap)</button></span></div><div class="c" style="padding:0;display:flex">${seq}</div></div></div>`, colonneActivite());
+    }
+  }
+  return '';
+}
+
+const mots = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent.trim().split(/\s+/).filter(Boolean).length; };
+function rendre() {
+  const banc = document.getElementById('banc').getBoundingClientRect().height;
+  const scene = document.getElementById('scene');
+  scene.style.top = `${banc}px`;
+  const html = vue();
+  scene.innerHTML = html;
+  document.getElementById('note').textContent = etat.mode === 'apres' ? NOTES[etat.vue]
+    : `Avant : ${etat.vue.startsWith('connexion') || etat.vue === 'reprise' ? 'une page à part, sans rail ni barre d\'état' : 'une fenêtre posée par-dessus, avec un voile'}.`;
+  if (etat.vue === 'connexion' || etat.vue === 'reprise') document.getElementById('note').textContent += `  (${mots(html)} mots à l'écran)`;
+}
+for (const seg of document.querySelectorAll('.banc .seg')) {
+  const cle = seg.dataset.cle;
+  for (const b of seg.querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', String(b.dataset.v === etat[cle]));
+    b.addEventListener('click', () => { etat[cle] = b.dataset.v; for (const x of seg.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b)); rendre(); });
+  }
+}
+addEventListener('resize', rendre);
+rendre();
+</script>
+</body>
+</html>
