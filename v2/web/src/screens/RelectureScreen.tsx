@@ -16,6 +16,8 @@ import { LignePlage } from './LignePlage';
 import { debutReel } from '../lib/debutReel';
 import { TuileSuiveuse } from './TuileSuiveuse';
 import { Puce } from '../ui/Puce';
+import { Horloge } from '../cadre/Horloge';
+import { useMaintenant } from '../lib/useMaintenant';
 import { Segment } from '../ui/Segment';
 import { cx } from '../ui/cx';
 import type { Cle } from '../i18n/fr';
@@ -774,19 +776,16 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
         <Carte className={cx('@container flex min-h-0 flex-1 flex-col overflow-hidden',
           multi && 'border-accent shadow-[0_0_0_1px_var(--accent)]', suivantes.length === 2 && 'row-span-2')}>
           <div className="flex h-11 shrink-0 items-center gap-2.5 pl-3.5 pr-2">
-            {multi ? (
-              /* À plusieurs, l'heure se lit dans la console : la tuile dit sa caméra. */
-              <span className="min-w-0 truncate text-titre font-semibold">{camera.name}</span>
-            ) : instant !== null ? (
-              <span className="whitespace-nowrap font-mono text-titre tabular-nums">
-                {new Date(instant).toLocaleDateString(localeDates())}&nbsp;&nbsp;{hms(instant)}
-              </span>
-            ) : relais ? (
-              /* « Direct » seulement s'il y a un direct : sans relais, l'image est noire. */
+            {/* La tuile dit sa caméra, seule comme à plusieurs : l'heure lue ne s'écrit qu'une
+                fois, dans la console — elle s'écrivait aussi ici (clarté, 24.10.2026). Le jour
+                est celui de l'en-tête. */}
+            <span className="min-w-0 truncate text-titre font-semibold">{camera.name}</span>
+            {/* « Direct » seulement s'il y a un direct : sans relais, l'image est noire. */}
+            {instant === null && relais && (
               <span className="inline-flex items-center gap-1.5 text-meta text-ok">
                 <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-current" />{t('espace.direct')}
               </span>
-            ) : null}
+            )}
             {/* La définition est LUE dans le flux, pas déduite : c'est la seule mesure honnête. */}
             {definition && courant && (
               <span className="whitespace-nowrap text-meta tabular-nums text-muted">
@@ -834,13 +833,10 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
             {/* Le relais peut ne pas être prêt : sans lui, pas de direct à montrer, et
                 l'invitation à cliquer suffit. */}
             {!courant && !erreur && relais && (
+              /* Plus de phrase posée sur l'image (« Clique la frise… ») : le repère « Direct » de
+                 la frise dit où l'on est, et que tout ce qui précède se rejoue (24.10.2026). */
               <div className="absolute inset-0">
                 <CameraTile camera={camera} relais={relais} cadre={false} hauteurEtiquette={0} />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-3">
-                  <span className="rounded-lg px-3 py-1.5" style={{ background: 'rgba(12,15,20,.78)', color: 'var(--on-2)' }}>
-                    {t('relecture.inviteDirect')}
-                  </span>
-                </div>
               </div>
             )}
 
@@ -959,10 +955,17 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
               {enLecture ? <Pause className="h-[18px] w-[18px] fill-current" aria-hidden />
                 : <Play className="h-[18px] w-[18px] fill-current" aria-hidden />}
             </button>
-            {/* L'heure regardée, en grand : la frise la montre, mais il fallait la viser. */}
-            <span className="ml-2.5 mr-3.5 font-mono text-titre tabular-nums text-ink">
-              {instant !== null ? hms(instant) : '––:––:––'}
-            </span>
+            {/* L'heure regardée, en grand : la frise la montre, mais il fallait la viser. Rien de
+                choisi : celle du direct, en vert, qui bat — on voit où l'on est (24.10.2026). */}
+            {instant === null && relais ? (
+              <span className="ml-2.5 mr-3.5 inline-flex items-center gap-2 font-mono text-titre tabular-nums text-ok">
+                <span aria-hidden className="h-[7px] w-[7px] rounded-full bg-current" /><Horloge />
+              </span>
+            ) : (
+              <span className="ml-2.5 mr-3.5 font-mono text-titre tabular-nums text-ink">
+                {instant !== null ? hms(instant) : '––:––:––'}
+              </span>
+            )}
             <Bouton variante="fantome" taille="petit" className="tabular-nums" disabled={instant === null}
                     onClick={() => sauter(-10)}>−10 s</Bouton>
             <Bouton variante="fantome" taille="petit" className="tabular-nums" disabled={instant === null}
@@ -995,6 +998,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
           </div>
 
           <Frise
+            direct={instant === null && Boolean(relais)}
             jour={jour}
             archive={archive}
             instant={instant}
@@ -1075,7 +1079,9 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
  *
  * La molette resserre la fenetre autour du curseur, de la journee entiere a la minute.
  */
-function Frise({ jour, archive, instant, detections, onViser, plage, onBorne, cadrer }: {
+function Frise({ direct, jour, archive, instant, detections, onViser, plage, onBorne, cadrer }: {
+  /** Rien de choisi, le direct à l'image : un repère le dit, au bout de ce qui est enregistré. */
+  direct: boolean;
   jour: number;
   archive: Archive | null;
   instant: number | null;
@@ -1092,6 +1098,8 @@ function Frise({ jour, archive, instant, detections, onViser, plage, onBorne, ca
   const [vue, setVue] = useState({ debut: jour, duree: JOUR_MS });
   const [survol, setSurvol] = useState<{ t: number; x: number; d: Detection | null } | null>(null);
   const [glisse, setGlisse] = useState<'debut' | 'fin' | null>(null);
+  /* Le repère du direct avance avec l'heure ; à l'échelle d'une journée, dix secondes suffisent. */
+  const maintenant = useMaintenant(10_000);
 
   useEffect(() => { setVue({ debut: jour, duree: JOUR_MS }); }, [jour]);
 
@@ -1321,6 +1329,23 @@ function Frise({ jour, archive, instant, detections, onViser, plage, onBorne, ca
           <div className="pointer-events-none absolute -inset-y-0.5 w-0.5"
                style={{ left: `${enFraction(instant) * 100}%`, background: 'var(--accent)',
                         boxShadow: '0 0 10px rgba(220,169,92,.8)' }} />
+        )}
+
+        {/* Rien de choisi : le direct est là, au bout de ce qui est enregistré, et tout ce qui
+            précède se rejoue d'un clic. Il respire, comme le point d'une détection en cours —
+            à la place de la phrase posée sur l'image (clarté, 24.10.2026). */}
+        {direct && maintenant >= vue.debut && maintenant <= fin && (
+          <>
+            <div className="point-activite pointer-events-none absolute -inset-y-0.5 w-0.5"
+                 style={{ left: `${enFraction(maintenant) * 100}%`, background: 'var(--ok)',
+                          boxShadow: '0 0 10px rgba(116,196,148,.7)' }} />
+            {/* Juste après minuit, l'étiquette passerait hors de la frise : elle change de côté. */}
+            <span className={cx('pointer-events-none absolute top-1 whitespace-nowrap rounded px-1.5 py-px text-micro font-semibold',
+                    enFraction(maintenant) < 0.08 ? 'ml-[5px]' : '-ml-[5px] -translate-x-full')}
+                  style={{ left: `${enFraction(maintenant) * 100}%`, background: 'var(--ok)', color: 'var(--bg)' }}>
+              {t('espace.direct')}
+            </span>
+          </>
         )}
 
         {plage.debut !== null && borne('debut', plage.debut)}
