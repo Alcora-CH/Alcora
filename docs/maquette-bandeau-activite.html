@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette, bandeau d'activité du plein écran</title>
+<!--
+  Demande du 24.10.2026 : en plein écran, la place laissée autour de la mosaïque (deux bandes
+  de ~215 px sur un 34" 3440×1440 avec deux caméras) accueillerait les activités récentes,
+  « pour regarder s'il s'est passé quelque chose pendant qu'on ne regardait pas ».
+
+  Inventaire du plein écran RÉEL avant de dessiner (App.tsx) : ni rail, ni en-tête, ni colonne
+  Activité, ni barre posée ; la mosaïque centrée sur les deux axes ; chaque tuile garde son
+  en-tête (nom, qualité, Direct, Revoir, Détections, Image, Son) ; les commandes (Caméras,
+  Disposition, Quitter) reviennent en haut à droite au mouvement de la souris, et la barre
+  d'état en bas avec elles. Le bandeau reprend les données de la colonne Activité, qui
+  disparaît en plein écran : les dernières détections, leur vignette, l'heure du jour.
+
+  Deux règles tenues : le bandeau ne rétrécit JAMAIS les images (une tuile plus petite ferait
+  aussi baisser la qualité demandée au contrôleur) ; sans la place, il se replie en pastille.
+  Données, noms et images fictifs.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===================================================================== banc */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #05070a; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.banc { position: fixed; inset: 0 0 auto 0; min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 6px 14px;
+        background: #f1efe9; color: #23252a; font: 500 13px/1 "Barlow", system-ui, sans-serif; z-index: 100; }
+.banc b { font-weight: 600; white-space: nowrap; }
+.banc .seg { display: flex; background: #dedbd2; border-radius: 8px; padding: 3px; gap: 2px; }
+.banc .seg button { padding: 6px 10px; border-radius: 6px; color: #4a4c52; white-space: nowrap; }
+.banc .seg button[aria-pressed="true"] { background: #fff; color: #15171a; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.banc .note { margin-left: auto; color: #6c6e74; white-space: nowrap; }
+#cadre { position: absolute; left: 0; right: 0; bottom: 0; display: grid; place-items: center; overflow: hidden; }
+#ecran { position: relative; transform-origin: 0 0; overflow: hidden; }
+
+/* ===================================================================== jetons (ceux de l'application) */
+.app {
+  --nuit: #0e131b; --instrument: #151b25; --graphite: #1e2633; --graphite2: #283242;
+  --ligne: rgba(206,214,229,.09); --ligne2: rgba(206,214,229,.17);
+  --lumiere: #ece8df; --texte2: #a9b0bc; --texte3: #737d8b;
+  --alcor: #dca95c; --alcor-doux: rgba(220,169,92,.14); --alcor-ligne: rgba(220,169,92,.42);
+  --vert: #74c494;
+  --personne: #dca95c; --vehicule: #86afcf; --animal: #74c494; --mouvement: #8a93a0;
+  --voile: rgba(14,19,27,.62);
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  position: absolute; inset: 0; color: var(--lumiere);
+  font: 400 13px/1.45 "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  background: radial-gradient(120% 90% at 30% 110%, #18233a 0%, transparent 55%),
+              radial-gradient(90% 80% at 85% 105%, #241b33 0%, transparent 50%),
+              linear-gradient(#0b1018, #0d121b 60%, #111827);
+}
+.app .num { font-variant-numeric: tabular-nums; }
+.etoile { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; opacity: .55; }
+
+/* ---------------------------------------------------------------- tuiles (identiques au direct) */
+.tuile { position: absolute; display: flex; flex-direction: column; background: #0a0d12; border: 1px solid var(--ligne); border-radius: 6px; overflow: hidden; }
+.tuile .tete { height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: rgba(21,27,37,.92); font-size: 13px; }
+.tuile .tete b { font-weight: 600; }
+.tuile .tete .q { color: var(--texte3); font-size: 12px; }
+.tuile .tete .direct { color: var(--vert); font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
+.tuile .tete .direct::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--vert); }
+.tuile .tete .act { margin-left: auto; display: flex; gap: 16px; color: var(--texte2); font-size: 12px; }
+.tuile .tete .act span { display: inline-flex; align-items: center; gap: 5px; }
+.tuile .tete .act svg.i { width: 14px; height: 14px; }
+.tuile .image { position: relative; flex: 1; overflow: hidden; }
+.tuile .image svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.osd { position: absolute; left: 8px; top: 6px; padding: 2px 6px; background: rgba(0,0,0,.35); color: #f4f4f4; font: 600 22px/1.2 "Atkinson Hyperlegible Next", sans-serif; letter-spacing: .01em; }
+.badge-vive { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 7px; background: var(--voile); backdrop-filter: blur(10px); color: var(--lumiere); font-size: 13px; }
+.badge-vive::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--personne); box-shadow: 0 0 0 3px rgba(220,169,92,.25); }
+
+/* ---------------------------------------------------------------- commandes et barre d'état du plein écran */
+.commandes { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; z-index: 30; transition: opacity .4s ease; }
+.commandes .b { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 8px; background: var(--voile); backdrop-filter: blur(12px); border: 1px solid var(--ligne2); color: var(--lumiere); font-size: 13px; }
+.commandes .b .n { color: var(--texte3); }
+.barre { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 22px; padding: 0 14px; background: rgba(15,20,29,.94); border-top: 1px solid var(--ligne); font-size: 12px; color: var(--texte2); z-index: 30; transition: opacity .4s ease; }
+.barre b { color: var(--lumiere); font-weight: 500; }
+.barre .ok { color: var(--vert); }
+.barre .jauge { display: inline-block; width: 46px; height: 4px; border-radius: 2px; background: var(--graphite2); vertical-align: middle; margin: 0 6px; position: relative; overflow: hidden; }
+.barre .jauge::after { content: ""; position: absolute; inset: 0 2% 0 0; background: var(--alcor); }
+.barre .droite { margin-left: auto; display: flex; gap: 22px; align-items: center; }
+.cache { opacity: 0; pointer-events: none; }
+
+/* ===================================================================== le bandeau — commun */
+.bandeau { position: absolute; z-index: 20; color: var(--lumiere); }
+.bandeau .titre { font-weight: 600; font-size: 13px; }
+.bandeau .soft { color: var(--texte3); }
+.bandeau .muet { color: var(--texte2); }
+.pastille-nv { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 11px; background: var(--alcor-doux); border: 1px solid var(--alcor-ligne); color: var(--alcor); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pastille-nv::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--alcor); }
+.vign { position: relative; flex: none; border-radius: 6px; overflow: hidden; background: #0a0d12; }
+.vign svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vign .vive { position: absolute; left: 5px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--personne); box-shadow: 0 0 0 3px rgba(220,169,92,.3); animation: pouls 1.6s ease-in-out infinite; }
+@keyframes pouls { 50% { box-shadow: 0 0 0 6px rgba(220,169,92,0); } }
+@media (prefers-reduced-motion: reduce) { .vign .vive { animation: none; } }
+.type { display: inline-flex; align-items: center; gap: 6px; }
+.type::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--c, var(--mouvement)); flex: none; }
+.lien { color: var(--alcor); font-size: 13px; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+
+/* ---------------------------------------------------------------- A — la pellicule */
+.A { display: flex; align-items: stretch; gap: 14px; padding: 12px 14px; border-radius: 12px;
+     background: linear-gradient(rgba(21,27,37,.55), rgba(21,27,37,.38)); border: 1px solid var(--ligne); backdrop-filter: blur(14px); }
+.A .resume { width: 210px; flex: none; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding-right: 14px; border-right: 1px solid var(--ligne); }
+.A .resume .jour { font-size: 12px; color: var(--texte2); }
+.A .resume .absence { font-size: 12px; color: var(--texte3); }
+.A .cartes { flex: 1; min-width: 0; display: flex; gap: 10px; overflow: hidden; }
+.A .carte { width: 262px; flex: none; display: flex; gap: 10px; align-items: center; padding: 7px; border-radius: 9px; border: 1px solid transparent; position: relative; text-align: left; }
+.A .carte:hover { background: rgba(40,50,66,.55); }
+.A .carte .vign { width: 92px; height: 52px; }
+.A .carte .txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.A .carte .txt .soft { font-size: 12px; }
+.A .carte .txt span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.A .carte.nv { background: rgba(220,169,92,.07); border-color: rgba(220,169,92,.28); }
+.A .carte.nv::after { content: ""; position: absolute; right: 9px; top: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--alcor); }
+.A .carte.vue { opacity: .78; }
+.A .sep { width: 1px; flex: none; align-self: stretch; margin: 6px 2px; background: linear-gradient(transparent, var(--alcor-ligne), transparent); position: relative; }
+
+.A .fin { flex: none; display: flex; align-items: center; padding-left: 12px; border-left: 1px solid var(--ligne); }
+
+.A.debout { flex-direction: column; height: auto !important; }
+.A.debout .resume { width: auto; padding: 0 0 12px; border-right: 0; border-bottom: 1px solid var(--ligne); }
+.A.debout .cartes { flex-direction: column; overflow: hidden; }
+.A.debout .carte { width: 100%; }
+.A.debout .sep { width: auto; height: 1px; margin: 2px 6px; background: linear-gradient(90deg, transparent, var(--alcor-ligne), transparent); }
+.A.debout .fin { padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--ligne); }
+
+/* ---------------------------------------------------------------- B — la ligne */
+.B { display: flex; align-items: center; gap: 14px; height: 40px; padding: 0 14px; border-radius: 20px;
+     background: rgba(21,27,37,.5); border: 1px solid var(--ligne); backdrop-filter: blur(14px); font-size: 13px; white-space: nowrap; }
+.B .fil { flex: 1; min-width: 0; display: flex; align-items: center; gap: 18px; overflow: hidden; mask-image: linear-gradient(90deg, #000 88%, transparent); }
+.B .ev { display: inline-flex; align-items: center; gap: 8px; position: relative; }
+.B .ev .h { color: var(--texte3); font-variant-numeric: tabular-nums; }
+.B .ev.nv .h { color: var(--alcor); }
+.B .ev.nv::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--alcor); }
+.B .ev.vue { opacity: .72; }
+.B .apercu { position: absolute; bottom: 30px; left: -10px; padding: 8px; border-radius: 10px; background: rgba(21,27,37,.96); border: 1px solid var(--ligne2); box-shadow: 0 12px 30px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 6px; }
+.B .apercu .vign { width: 176px; height: 99px; }
+
+/* ---------------------------------------------------------------- C — la frise du jour */
+.C { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 12px; border-radius: 12px;
+     background: linear-gradient(rgba(21,27,37,.55), rgba(21,27,37,.38)); border: 1px solid var(--ligne); backdrop-filter: blur(14px); }
+.C .haut { display: flex; align-items: center; gap: 12px; }
+.C .haut .legende { margin-left: auto; display: flex; gap: 14px; font-size: 12px; color: var(--texte2); }
+.C .rangee { display: flex; gap: 18px; align-items: stretch; }
+.C .frise { position: relative; flex: 1; min-width: 0; height: 58px; border-radius: 8px; background: rgba(10,13,18,.55); border: 1px solid var(--ligne); }
+.C .frise .absent { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, rgba(220,169,92,.10) 0 6px, rgba(220,169,92,.04) 6px 12px); border-left: 1px solid var(--alcor-ligne); border-right: 1px solid var(--alcor-ligne); }
+.C .frise .tic { position: absolute; bottom: 8px; width: 3px; border-radius: 2px; background: var(--c); }
+.C .frise .maintenant { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--lumiere); border-radius: 1px; }
+.C .frise .heures { position: absolute; left: 0; right: 0; top: 4px; display: flex; justify-content: space-between; padding: 0 6px; font-size: 11px; color: var(--texte3); }
+.C .dernieres { display: flex; gap: 10px; flex: none; }
+.C .mini { width: 104px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; position: relative; }
+.C .mini .vign { width: 104px; height: 58px; }
+.C .mini.nv .vign { outline: 1px solid var(--alcor-ligne); }
+.C .mini.nv::after { content: ""; position: absolute; right: 5px; top: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--alcor); }
+
+/* ---------------------------------------------------------------- le repli : la pastille */
+.repli { position: absolute; z-index: 25; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 12px; height: 38px; padding: 0 8px 0 10px; border-radius: 19px;
+         background: var(--voile); backdrop-filter: blur(14px); border: 1px solid var(--ligne2); font-size: 13px; white-space: nowrap; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.repli .vign { width: 52px; height: 29px; border-radius: 5px; }
+.repli.calme { opacity: .0; }
+.explique { position: absolute; z-index: 40; max-width: 520px; padding: 12px 14px; border-radius: 10px; background: rgba(241,239,233,.96); color: #23252a; font: 500 13px/1.45 "Barlow", system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.explique b { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="banc" id="banc">
+  <b>Bandeau d'activité — plein écran</b>
+  <div class="seg" data-cle="variante">
+    <button data-v="A">A · Pellicule</button><button data-v="B">B · Ligne</button><button data-v="C">C · Frise du jour</button>
+  </div>
+  <div class="seg" data-cle="format">
+    <button data-v="34">34" 3440×1440 · 2 caméras</button><button data-v="24">24" 1920×1080 · 2 caméras</button><button data-v="quatre">3440×1440 · 4 caméras</button>
+  </div>
+  <div class="seg" data-cle="etat">
+    <button data-v="calme">Rien de nouveau</button><button data-v="absence">Après ton absence</button><button data-v="cours">Détection en cours</button>
+  </div>
+  <div class="seg" data-cle="souris">
+    <button data-v="immobile">Souris immobile</button><button data-v="bouge">Souris bougée</button><button data-v="survol">Sur le bandeau</button>
+  </div>
+  <span class="note" id="note"></span>
+</div>
+<div id="cadre"><div id="ecran"></div></div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="f1" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="5" seed="3"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="gamma" exponent="1.6" amplitude="1.05"/><feFuncG type="gamma" exponent="1.6" amplitude="1.05"/><feFuncB type="gamma" exponent="1.6" amplitude="1.05"/></feComponentTransfer></filter>
+    <filter id="f2" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.018 0.03" numOctaves="5" seed="11"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="gamma" exponent="1.4"/><feFuncG type="gamma" exponent="1.4"/><feFuncB type="gamma" exponent="1.4"/></feComponentTransfer></filter>
+    <filter id="f3" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.01 0.016" numOctaves="4" seed="27"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="gamma" exponent="1.9"/><feFuncG type="gamma" exponent="1.9"/><feFuncB type="gamma" exponent="1.9"/></feComponentTransfer></filter>
+    <filter id="f4" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.022 0.014" numOctaves="4" seed="41"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="gamma" exponent="1.7"/><feFuncG type="gamma" exponent="1.7"/><feFuncB type="gamma" exponent="1.7"/></feComponentTransfer></filter>
+    <linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050505" stop-opacity=".85"/><stop offset="1" stop-color="#050505" stop-opacity="0"/></linearGradient>
+    <radialGradient id="vignettage" cx="50%" cy="45%" r="75%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/></radialGradient>
+  </defs>
+</svg>
+
+<script>
+const ICONES = {
+  revoir: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/>',
+  scan: '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/>',
+  image: '<path d="M4 7h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  son: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="m17 9 4 6M21 9l-4 6"/>',
+  grille: '<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>',
+  dispo: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M10 10v9"/>',
+  quitter: '<path d="M9 4H4v5M15 20h5v-5M4 4l6 6M20 20l-6-6"/>',
+  fleche: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  bas: '<path d="m6 9 6 6 6-6"/>',
+  bouclier: '<path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/>',
+};
+const ic = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24">${ICONES[n]}</svg>`;
+
+/* Des images de nuit fictives : un feuillage infrarouge (bruit), une allée, une silhouette. */
+function scene(filtre, sujet, clair = 1) {
+  const sil = sujet === 'personne'
+    ? '<g fill="#e9e9e9" opacity=".85"><circle cx="560" cy="250" r="16"/><path d="M542 270h36l8 70-10 4-6-50-2 96h-12l-4-70-4 70h-12l-2-96-6 50-10-4z"/></g>'
+    : sujet === 'vehicule'
+      ? '<g opacity=".9"><path d="M420 330 455 290h170l40 40v40H420z" fill="#cfcfcf"/><circle cx="470" cy="372" r="18" fill="#2a2a2a"/><circle cx="615" cy="372" r="18" fill="#2a2a2a"/><circle cx="642" cy="338" r="7" fill="#fff"/></g>'
+      : sujet === 'animal'
+        ? '<g fill="#dcdcdc" opacity=".85"><ellipse cx="600" cy="360" rx="34" ry="16"/><circle cx="632" cy="350" r="10"/><path d="M574 372l-4 18M590 374l-2 18M612 374l2 18M624 372l4 16" stroke="#dcdcdc" stroke-width="4"/></g>'
+        : '';
+  return `<svg viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice">
+    <rect width="1000" height="562" fill="#151515"/>
+    <rect width="1000" height="562" filter="url(#${filtre})" opacity="${0.55 * clair}"/>
+    <rect width="1000" height="200" fill="url(#ciel)"/>
+    <path d="M0 430 Q 300 360 520 400 T 1000 380 V562 H0z" fill="#3a3a3a" opacity=".75"/>
+    <path d="M380 562 L 470 380 L 560 380 L 720 562z" fill="#5a5a5a" opacity=".45"/>
+    ${sil}
+    <rect width="1000" height="562" fill="url(#vignettage)"/>
+  </svg>`;
+}
+
+const CAMERAS = [
+  { id: 'portail', nom: 'Portail', q: 'Haute 2160p', filtre: 'f1' },
+  { id: 'jardin', nom: 'Jardin', q: 'Haute 1512p', filtre: 'f2' },
+  { id: 'allee', nom: 'Allée', q: 'Haute 1440p', filtre: 'f3' },
+  { id: 'terrasse', nom: 'Terrasse', q: 'Moyenne 720p', filtre: 'f4' },
+];
+const TYPES = { personne: ['Personne', 'var(--personne)'], vehicule: ['Véhicule', 'var(--vehicule)'], animal: ['Animal', 'var(--animal)'], mouvement: ['Mouvement', 'var(--mouvement)'] };
+const MAINTENANT = '02:54';
+/* Les détections du jour, fictives, la plus récente en tête. « nv » : arrivée pendant l'absence. */
+const BASE = [
+  { h: '02:47', t: 'personne', cam: 'portail', il: 'il y a 7 min', nv: true },
+  { h: '02:40', t: 'vehicule', cam: 'allee', il: 'il y a 14 min', nv: true, detail: 'Plaque lue' },
+  { h: '02:33', t: 'animal', cam: 'jardin', il: 'il y a 21 min', nv: true },
+  { h: '02:18', t: 'mouvement', cam: 'jardin', il: 'il y a 36 min' },
+  { h: '01:52', t: 'personne', cam: 'portail', il: 'il y a 1 h' },
+  { h: '01:10', t: 'vehicule', cam: 'allee', il: 'il y a 1 h 44' },
+  { h: '00:41', t: 'mouvement', cam: 'terrasse', il: 'il y a 2 h 13' },
+  { h: '00:12', t: 'animal', cam: 'jardin', il: 'il y a 2 h 42' },
+  { h: '23:58', t: 'personne', cam: 'portail', il: 'hier, 23:58' },
+];
+const ABSENCE = { de: '02:31', a: '02:52' };
+
+function detections(etat) {
+  if (etat === 'calme') return BASE.map((d) => ({ ...d, nv: false }));
+  if (etat === 'cours') return [{ h: '02:54', t: 'personne', cam: 'portail', il: 'en cours', cours: true }, ...BASE.map((d) => ({ ...d, nv: false }))];
+  return BASE;
+}
+const camNom = (id) => CAMERAS.find((c) => c.id === id).nom;
+
+/* La regle de la mosaique (video/grille.ts), en plus court : la plus grande image qui tient. */
+function grille(W, H, n, ecart = 8, etiquette = 44) {
+  let mieux = null;
+  for (let col = 1; col <= n; col++) {
+    const rangs = Math.ceil(n / col);
+    let w = (W - ecart * (col - 1)) / col;
+    let h = w * 9 / 16 + etiquette;
+    if (rangs * h + ecart * (rangs - 1) > H) { h = (H - ecart * (rangs - 1)) / rangs; w = (h - etiquette) * 16 / 9; }
+    const aire = w * (h - etiquette);
+    if (!mieux || aire > mieux.aire) mieux = { col, rangs, w: Math.floor(w), h: Math.floor(h), aire };
+  }
+  const totalW = mieux.col * mieux.w + ecart * (mieux.col - 1);
+  const totalH = mieux.rangs * mieux.h + ecart * (mieux.rangs - 1);
+  return { ...mieux, x0: Math.round((W - totalW) / 2), y0: Math.round((H - totalH) / 2), totalW, totalH, ecart };
+}
+
+const FORMATS = { 34: { W: 3440, H: 1440, n: 2 }, 24: { W: 1920, H: 1080, n: 2 }, quatre: { W: 3440, H: 1440, n: 4 } };
+const HAUTEUR = { A: 92, B: 40, C: 116 };
+const BARRE = 34;
+
+const etat = { variante: 'A', format: '34', etat: 'absence', souris: 'immobile' };
+
+function tuiles(g, f, enCours) {
+  let html = '';
+  for (let i = 0; i < f.n; i++) {
+    const cam = CAMERAS[i];
+    const x = g.x0 + (i % g.col) * (g.w + g.ecart);
+    const y = g.y0 + Math.floor(i / g.col) * (g.h + g.ecart);
+    const vive = enCours && cam.id === 'portail';
+    html += `<div class="tuile" style="left:${x}px;top:${y}px;width:${g.w}px;height:${g.h}px">
+      <div class="tete"><b>${cam.nom}</b><span class="q">${cam.q}</span><span class="direct">Direct</span>
+        <span class="act"><span>${ic('revoir')}Revoir</span><span>${ic('scan')}Détections</span><span>${ic('image')}Image</span><span>${ic('son')}Son</span></span></div>
+      <div class="image">${scene(cam.filtre, vive ? 'personne' : '', 1)}
+        <span class="osd">2026-10-24 02:54:0${2 + i} | ${cam.nom}</span>
+        ${vive ? '<span class="badge-vive">Personne · en cours</span>' : ''}</div>
+    </div>`;
+  }
+  return html;
+}
+
+function vignette(d, cls = '') {
+  return `<span class="vign ${cls}">${scene(CAMERAS.find((c) => c.id === d.cam).filtre, d.t === 'mouvement' ? '' : d.t, .9)}${d.cours ? '<i class="vive"></i>' : ''}</span>`;
+}
+const libelle = (d) => `<span class="type" style="--c:${TYPES[d.t][1]}">${TYPES[d.t][0]}${d.detail ? ` · ${d.detail}` : ''}</span>`;
+
+function resumeTexte(ds) {
+  const nv = ds.filter((d) => d.nv).length;
+  const cours = ds.find((d) => d.cours);
+  return { nv, cours };
+}
+
+/* ---------------------------------------------------------------- A */
+function bandeauA(ds, largeur, debout = false, hauteur = 0) {
+  const { nv, cours } = resumeTexte(ds);
+  const place = debout ? Math.max(1, Math.floor((hauteur - 150) / 74)) : Math.max(1, Math.floor((largeur - 210 - 28 - 14 - 190) / 272));
+  const vues = ds.slice(0, place);
+  let cartes = '';
+  let sepPose = false;
+  vues.forEach((d, i) => {
+    if (nv && !d.nv && !sepPose && i > 0) { cartes += '<span class="sep"></span>'; sepPose = true; }
+    cartes += `<button class="carte ${d.nv ? 'nv' : (nv ? 'vue' : '')}">${vignette(d)}
+      <span class="txt">${libelle(d)}<span class="muet">${camNom(d.cam)}</span><span class="soft num">${d.cours ? 'en cours' : `${d.h} · ${d.il}`}</span></span></button>`;
+  });
+  const resume = cours
+    ? `<span class="titre">Activité</span><span class="pastille-nv" style="align-self:flex-start">En cours · ${camNom(cours.cam)}</span><span class="jour num">Aujourd'hui 25</span>`
+    : nv
+      ? `<span class="titre">Activité</span><span class="pastille-nv" style="align-self:flex-start">${nv} pendant ton absence</span><span class="absence num">de ${ABSENCE.de} à ${ABSENCE.a} · aujourd'hui 24</span>`
+      : `<span class="titre">Activité</span><span class="jour num">Aujourd'hui 24 · rien depuis 02:47</span>`;
+  return `<div class="A${debout ? ' debout' : ''}" style="height:${HAUTEUR.A}px"><div class="resume">${resume}</div><div class="cartes">${cartes}</div>
+    <div class="fin"><span class="lien">Toutes les détections ${ic('fleche')}</span></div></div>`;
+}
+
+/* ---------------------------------------------------------------- B */
+function bandeauB(ds, survol) {
+  const { nv, cours } = resumeTexte(ds);
+  const tete = cours ? `<span class="pastille-nv">En cours · ${camNom(cours.cam)}</span>`
+    : nv ? `<span class="pastille-nv">${nv} pendant ton absence</span>` : '<span class="titre">Activité</span>';
+  const evs = ds.slice(0, 9).map((d, i) => `<span class="ev ${d.nv ? 'nv' : (nv ? 'vue' : '')}"><span class="h">${d.cours ? 'en cours' : d.h}</span>${libelle(d)}<span class="muet">${camNom(d.cam)}</span>
+      ${survol && i === 0 ? `<span class="apercu">${vignette(d)}<span class="soft num" style="font-size:12px">${d.cours ? 'en cours' : d.il} · clic : la séquence</span></span>` : ''}</span>`).join('');
+  return `<div class="B">${tete}<span class="fil">${evs}</span><span class="soft num">Aujourd'hui ${cours ? 25 : 24}</span><span class="lien">Toutes ${ic('fleche')}</span></div>`;
+}
+
+/* ---------------------------------------------------------------- C */
+function bandeauC(ds) {
+  const { nv, cours } = resumeTexte(ds);
+  const enMin = (h) => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
+  const borne = enMin(MAINTENANT);
+  /* La frise couvre les six dernières heures : assez pour une nuit, assez fin pour lire. */
+  const debut = borne - 360;
+  const pos = (h) => { let m = enMin(h); if (m > borne) m -= 1440; return ((m - debut) / 360) * 100; };
+  const tics = [...ds, { h: '22:40', t: 'mouvement', cam: 'jardin' }, { h: '21:30', t: 'vehicule', cam: 'allee' }]
+    .filter((d) => pos(d.h) >= 0)
+    .map((d) => `<span class="tic" style="left:${pos(d.h)}%;height:${d.t === 'mouvement' ? 14 : 24}px;--c:${TYPES[d.t][1]}"></span>`).join('');
+  const heures = ['21h', '22h', '23h', '0h', '1h', '2h', ''].map((h) => `<span>${h}</span>`).join('');
+  const absent = nv ? `<span class="absent" style="left:${pos(ABSENCE.de)}%;width:${pos(ABSENCE.a) - pos(ABSENCE.de)}%"></span>` : '';
+  const minis = ds.slice(0, 4).map((d) => `<span class="mini ${d.nv ? 'nv' : ''}">${vignette(d)}<span class="num soft">${d.cours ? 'en cours' : d.h} · ${camNom(d.cam)}</span></span>`).join('');
+  const tete = cours ? `<span class="pastille-nv">En cours · ${camNom(cours.cam)}</span>`
+    : nv ? `<span class="pastille-nv">${nv} pendant ton absence · ${ABSENCE.de} – ${ABSENCE.a}</span>` : '<span class="soft">Rien depuis 02:47</span>';
+  return `<div class="C" style="height:${HAUTEUR.C + 14}px"><div class="haut"><span class="titre">Les six dernières heures</span>${tete}
+      <span class="legende">${Object.values(TYPES).map(([n, c]) => `<span class="type" style="--c:${c}">${n}</span>`).join('')}<span class="lien">Toutes les détections ${ic('fleche')}</span></span></div>
+    <div class="rangee"><div class="frise"><div class="heures">${heures}</div>${absent}${tics}<span class="maintenant" style="left:calc(100% - 2px)"></span></div>
+      <div class="dernieres">${minis}</div></div></div>`;
+}
+
+function rendre() {
+  const f = FORMATS[etat.format];
+  const g = grille(f.W, f.H, f.n);
+  const ds = detections(etat.etat);
+  const bouge = etat.souris !== 'immobile';
+  const survol = etat.souris === 'survol';
+  const bandeH = f.H - (g.y0 + g.totalH);
+  const besoin = (etat.variante === 'C' ? HAUTEUR.C + 14 : HAUTEUR[etat.variante]) + 48;
+  const posee = bandeH >= besoin + BARRE / 2;
+  /* Pas la place dessous, mais sur les cotes : la pellicule se met debout a droite (A seulement). */
+  const cote = !posee && etat.variante === 'A' && g.x0 >= 300 + 48;
+
+  let etoiles = '';
+  for (let i = 0; i < 90; i++) {
+    const x = (i * 9301 + 49297) % 233280 / 233280 * f.W;
+    const y = (i * 4507 + 1237) % 99991 / 99991 * f.H;
+    etoiles += `<i class="etoile" style="left:${x.toFixed(0)}px;top:${y.toFixed(0)}px;opacity:${(.25 + (i % 5) * .1).toFixed(2)}"></i>`;
+  }
+
+  let bandeau = '';
+  let note = '';
+  if (posee) {
+    /* Posé dans la bande libre, accroché à la mosaïque : mêmes bords, 24 px sous les images. */
+    const top = g.y0 + g.totalH + 24;
+    const contenu = etat.variante === 'A' ? bandeauA(ds, g.totalW) : etat.variante === 'B' ? bandeauB(ds, survol) : bandeauC(ds);
+    const largeur = etat.variante === 'B' ? Math.min(g.totalW, 1500) : g.totalW;
+    bandeau = `<div class="bandeau" style="left:${g.x0 + (g.totalW - largeur) / 2}px;top:${top}px;width:${largeur}px">${contenu}</div>`;
+    note = `Bande libre sous les images : ${bandeH} px — le bandeau s'y pose, rien ne bouge dans la mosaïque.`;
+  } else if (cote) {
+    const largeur = Math.min(340, g.x0 - 48);
+    bandeau = `<div class="bandeau" style="left:${g.x0 + g.totalW + 24}px;top:${g.y0 + 44}px;width:${largeur}px">${bandeauA(ds, largeur, true, g.totalH - 44)}</div>`;
+    note = `Pas de bande libre dessous (${Math.max(0, bandeH)} px), mais ${g.x0} px sur les côtés : la pellicule s'y met debout.`;
+  } else {
+    /* Pas la place : une pastille au-dessus de la barre d'état ; le bandeau entier au survol, PAR-DESSUS, le temps du survol. */
+    const { nv, cours } = resumeTexte(ds);
+    const d0 = ds[0];
+    const visible = nv || cours || bouge;
+    const bas = (bouge ? BARRE : 0) + 16;
+    if (survol) {
+      const largeur = Math.min(g.totalW - 40, 2200);
+      const contenu = etat.variante === 'A' ? bandeauA(ds, largeur) : etat.variante === 'B' ? bandeauB(ds, false) : bandeauC(ds);
+      bandeau = `<div class="bandeau" style="left:${(f.W - largeur) / 2}px;bottom:${bas}px;width:${largeur}px;box-shadow:0 18px 50px rgba(0,0,0,.5);border-radius:12px">${contenu}</div>`;
+    } else {
+      const tete = cours ? `<span class="pastille-nv">En cours · ${camNom(cours.cam)}</span>`
+        : nv ? `<span class="pastille-nv">${nv} pendant ton absence</span>` : '<span class="titre">Activité</span>';
+      bandeau = `<div class="repli${visible ? '' : ' calme'}" style="bottom:${bas}px">${tete}${vignette(d0)}<span>${TYPES[d0.t][0]} · ${camNom(d0.cam)}</span><span class="soft num">${d0.cours ? 'en cours' : d0.h}</span><span class="lien" style="padding:0 6px">${ic('bas', '')}</span></div>`;
+    }
+    note = `Aucune bande libre (${Math.max(0, bandeH)} px) : repli en pastille, jamais d'image rétrécie.`;
+  }
+
+  document.getElementById('ecran').innerHTML = `<div class="app" style="width:${f.W}px;height:${f.H}px">
+    ${etoiles}
+    ${tuiles(g, f, etat.etat === 'cours')}
+    ${bandeau}
+    <div class="commandes ${bouge ? '' : 'cache'}"><span class="b">${ic('grille')}Caméras <span class="n">${f.n}/${f.n}</span>${ic('bas')}</span><span class="b">${ic('dispo')}Disposition ${ic('bas')}</span><span class="b">${ic('quitter')}Quitter</span></div>
+    <div class="barre ${bouge ? '' : 'cache'}"><span class="ok">● Flux vidéo prêt</span><span>Contrôleur <b>Maison</b></span><span>Protect <b class="ok">armé</b></span><span>Archive <b>8 mois 9 j</b></span><span>Disque<span class="jauge"></span><b>98 %</b></span>
+      <span class="droite"><span>${ic('bouclier')} Aucune image ne quitte ton réseau</span><b class="num">${MAINTENANT}:19</b><span>Raccourcis</span><span>Système</span></span></div>
+  </div>`;
+  document.getElementById('note').textContent = note;
+  ajuster();
+}
+
+function ajuster() {
+  const f = FORMATS[etat.format];
+  const banc = document.getElementById('banc').getBoundingClientRect().height;
+  const cadre = document.getElementById('cadre');
+  cadre.style.top = `${banc}px`;
+  const ecran = document.getElementById('ecran');
+  const k = Math.min(cadre.clientWidth / f.W, cadre.clientHeight / f.H);
+  ecran.style.width = `${f.W}px`; ecran.style.height = `${f.H}px`;
+  ecran.style.transform = `scale(${k})`;
+  ecran.style.marginRight = `${-(f.W * (1 - k))}px`; ecran.style.marginBottom = `${-(f.H * (1 - k))}px`;
+}
+
+for (const seg of document.querySelectorAll('.seg')) {
+  const cle = seg.dataset.cle;
+  for (const b of seg.querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', String(b.dataset.v === etat[cle]));
+    b.addEventListener('click', () => {
+      etat[cle] = b.dataset.v;
+      for (const x of seg.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+      rendre();
+    });
+  }
+}
+addEventListener('resize', ajuster);
+rendre();
+</script>
+</body>
+</html>
