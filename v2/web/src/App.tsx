@@ -184,6 +184,8 @@ export default function App() {
   const [indice, setIndice] = useState(false);
   /** La fenetre des raccourcis clavier (touche « ? », barre d'etat). */
   const [raccourcis, setRaccourcis] = useState(false);
+  /* Stable : le panneau s'abonne au clavier avec elle, il ne doit pas se réabonner à chaque rendu. */
+  const fermerRaccourcis = useCallback(() => setRaccourcis(false), []);
   /** Le guide d'activation du RTSP, demandé hors des Réglages (menu Caméras, Système) : les
       Réglages s'ouvrent sur lui, déplié — plus de fenêtre par-dessus (24.10.2026). */
   const [guideDemande, setGuideDemande] = useState(false);
@@ -970,7 +972,10 @@ export default function App() {
       {/* L'activité ne vit que sur le direct : sur les autres écrans, elle ne faisait que
           prendre de la place. La replier change la largeur des images — et donc la
           qualité demandée au contrôleur : c'est un geste, jamais un survol. */}
-      {habille && !enConnexion && espace === 'direct' && activiteVisible && (
+      {/* Les raccourcis : un panneau ancré, à la place de la colonne Activité tant qu'il est
+          ouvert — plus de fenêtre par-dessus (24.10.2026). */}
+      {raccourcis && <Raccourcis espace={espace} onFermer={fermerRaccourcis} />}
+      {!raccourcis && habille && !enConnexion && espace === 'direct' && activiteVisible && (
         <ColonneActivite onOuvrir={ouvrirDetection} onRevoir={revoirA}
                          onToutes={() => allerVers('detections')}
                          onMasquer={() => setActiviteVisible(false)} />
@@ -988,7 +993,6 @@ export default function App() {
         </div>
       )}
 
-      {raccourcis && <Raccourcis onFermer={() => setRaccourcis(false)} />}
 
       {/* Par-dessus tout : une bulle cliquée doit montrer sa séquence sans rien déranger. */}
       {sequence && (
