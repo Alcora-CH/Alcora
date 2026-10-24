@@ -704,6 +704,19 @@ export const fr = {
   'dispositions.precision': '{nom} · {reste}',
   'dispositions.precisionModifiee': '{nom} (modifiée) · {reste}',
   'raccourcis.disposition': 'Passer à la disposition correspondante',
+
+  // Bandeau d'activité du plein écran (maquette docs/maquette-bandeau-activite.html, 24.10.2026)
+  'bandeau.region': 'Activité récente',
+  'bandeau.enAbsence': '{n} pendant ton absence',
+  'bandeau.enAbsences': '{n} pendant tes absences',
+  'bandeau.plage': 'de {de} à {a}',
+  'bandeau.plageOuverte': 'depuis {de}',
+  'bandeau.duJour': 'aujourd’hui {n}',
+  'bandeau.duJourMaj': 'Aujourd’hui {n}',
+  'bandeau.rienDepuis': 'rien depuis {h}',
+  'bandeau.enCours': 'En cours · {camera}',
+  'bandeau.enCoursCourt': 'en cours',
+  'bandeau.ouvrir': '{quoi}, {camera} : voir la séquence',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

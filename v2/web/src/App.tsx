@@ -9,6 +9,7 @@ import { LecteurExtrait } from './screens/LecteurExtrait';
 import { NouveautesScreen } from './screens/NouveautesScreen';
 import { CielScreen } from './screens/CielScreen';
 import { ColonneActivite } from './screens/ColonneActivite';
+import { BandeauActivite } from './screens/BandeauActivite';
 import { VeillesScreen } from './screens/VeillesScreen';
 import { SystemeScreen } from './screens/SystemeScreen';
 import { BarreEtat } from './cadre/BarreEtat';
@@ -25,6 +26,8 @@ import { Bouton } from './ui/Bouton';
 import { EnTete, Touche } from './ui/Cadre';
 import { Planetarium } from './Planetarium';
 import { meilleureGrille } from './video/grille';
+import { placerBandeau } from './lib/placementBandeau';
+import { useAbsence } from './lib/useAbsence';
 import { bridge, pontDisponible } from './lib/bridge';
 import { FournisseurActivite } from './lib/FournisseurActivite';
 import { definirLangue, t, useLangue } from './i18n';
@@ -56,6 +59,8 @@ const CLE_FOND = 'alcora.fond';
  * nom a cote de l'icone, et le nom de la camera se lit d'un coup d'oeil.
  */
 const H_ETIQUETTE = 44;
+/** La barre d'état (cadre/BarreEtat.tsx) : en plein écran, elle se pose en bas, sur le mur. */
+const H_BARRE = 34;
 /** Espace entre les vues, en pixels. Zero est un choix legitime : images bord a bord. */
 const CLE_ESPACE = 'protectviewer.espace';
 /** Ordre des cameras choisi a la souris. Liste d'identifiants, jamais elaguee : une
@@ -567,6 +572,9 @@ export default function App() {
    * qu'un rendu abandonne par React laisserait sinon dans les references (regle react/refs,
    * rallumee le 24.10.2026). Ici, avant les sorties anticipees, comme tout crochet.
    */
+  /* Ce que tu n'as pas vu : tenu dès le lancement, montré par le bandeau du plein écran. */
+  const { etat: absence, marquerVu } = useAbsence();
+
   useLayoutEffect(() => {
     ordonneesRef.current = ordonnees;
     geometrieRef.current = grille;
@@ -753,7 +761,7 @@ export default function App() {
           {/* La marge est portée par le parent : l'élément mesuré ne doit en avoir aucune,
               car « clientHeight » l'inclurait et la grille déborderait d'autant.
               En plein écran elle disparaît : « intégralement » veut dire jusqu'au bord. */}
-          <div className={habille ? `min-h-0 flex-1 px-5 pt-5${indiceGestes ? '' : ' pb-5'}` : 'min-h-0 flex-1'}>
+          <div className={habille ? `min-h-0 flex-1 px-5 pt-5${indiceGestes ? '' : ' pb-5'}` : 'relative min-h-0 flex-1'}>
             <div ref={zoneRef} className="h-full w-full overflow-hidden">
               {grille && (
                 /* Centrée sur les deux axes : le vide se répartit autour des images plutôt
@@ -795,6 +803,15 @@ export default function App() {
                 </div>
               )}
             </div>
+            {/* En plein écran, la colonne Activité n'est plus là : le bandeau prend la place
+                que la mosaïque laisse libre, sans jamais la rétrécir (lib/placementBandeau.ts). */}
+            {pleinEcran && grille && (
+              <BandeauActivite placement={placerBandeau(taille, grille, espacement, H_ETIQUETTE, H_BARRE)}
+                               absence={absence} largeurZone={taille.w}
+                               bas={(barreVisible ? H_BARRE : 0) + 16} commandesVisibles={commandesVisibles}
+                               onOuvrir={ouvrirDetection} onVu={marquerVu}
+                               onToutes={() => { basculerPleinEcran(); allerVers('detections'); }} />
+            )}
           </div>
           {/* Les gestes du mur n'étaient dits nulle part, sinon dans une infobulle qui
               couvrait toute la tuile. Une ligne, sous les images, et la fenêtre des

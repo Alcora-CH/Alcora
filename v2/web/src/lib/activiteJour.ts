@@ -46,6 +46,35 @@ export function parHeure(liste: Detection[], partiel: boolean) {
 }
 
 /**
+ * Les dernières détections, pour la colonne Activité et le bandeau du plein écran : les
+ * vives d'abord (elles portent l'état de la détection en cours), puis celles du jour que le
+ * direct n'a pas apportées. Triées sur l'heure : la plus récente en tête.
+ */
+export function dernieres({ dujour, vives }: ActiviteJour, n: number): (DetectionVive & { vignette?: boolean })[] {
+  const vues = new Set(vives.map((d) => d.id));
+  const dujourVives: (DetectionVive & { vignette?: boolean })[] = (dujour ?? [])
+    .filter((d) => !vues.has(d.id))
+    .map((d) => ({ ...d, commence: false }));
+  return [...vives, ...dujourVives]
+    .sort((a, b) => (b.debut ?? 0) - (a.debut ?? 0))
+    .slice(0, n);
+}
+
+/**
+ * L'image d'une détection. Tant qu'elle COURT, il n'existe aucune vignette : on montre
+ * l'instantané de la caméra, daté du début pour que le navigateur le garde. Finie, la vraie
+ * vignette de l'événement prend la place — si le contrôleur en a fait une.
+ */
+export function imageDe(d: DetectionVive & { vignette?: boolean }): string | null {
+  const finie = Boolean(d.fin && d.id);
+  if (finie && d.vignette !== false) return `/vignette/${d.id}`;
+  return !finie && d.camera ? `/instantane/${d.camera}?t=${d.debut ?? 0}` : null;
+}
+
+/** La détection court encore : commencée, pas finie. */
+export const enCoursDe = (d: DetectionVive) => !d.fin && d.debut !== null;
+
+/**
  * La dernière détection de chaque caméra, pour la page Système : la plus récente entre
  * celles du jour et celles arrivées en direct depuis la dernière lecture.
  */

@@ -677,4 +677,17 @@ export const de: Record<Cle, string> = {
   'dispositions.precision': '{nom} · {reste}',
   'dispositions.precisionModifiee': '{nom} (geändert) · {reste}',
   'raccourcis.disposition': 'Zur entsprechenden Anordnung wechseln',
+
+  // Bandeau d'activité du plein écran (maquette docs/maquette-bandeau-activite.html, 24.10.2026)
+  'bandeau.region': 'Letzte Aktivität',
+  'bandeau.enAbsence': '{n} während deiner Abwesenheit',
+  'bandeau.enAbsences': '{n} während deiner Abwesenheiten',
+  'bandeau.plage': 'von {de} bis {a}',
+  'bandeau.plageOuverte': 'seit {de}',
+  'bandeau.duJour': 'heute {n}',
+  'bandeau.duJourMaj': 'Heute {n}',
+  'bandeau.rienDepuis': 'nichts seit {h}',
+  'bandeau.enCours': 'Läuft · {camera}',
+  'bandeau.enCoursCourt': 'läuft',
+  'bandeau.ouvrir': '{quoi}, {camera}: Sequenz ansehen',
 };

@@ -426,3 +426,29 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .point-activite { animation: none; }
 }
+
+/* ---------------------------------------------------- Le bandeau d'activité du plein écran
+
+   Maquette docs/maquette-bandeau-activite.html, variante A (24.10.2026). Posé sur le ciel
+   dans la place que la mosaïque laisse : un verre à peine teinté, le même filet que les
+   tuiles, pour qu'il se lise comme une part du mur plutôt qu'un panneau posé dessus. Ce qui
+   est arrivé pendant l'absence se dit en or ; rien ne bouge, hormis le point d'une
+   détection en cours (.point-activite, plus haut). */
+.bandeau {
+  background: linear-gradient(rgba(21, 27, 37, 0.55), rgba(21, 27, 37, 0.38));
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  color: var(--ink);
+}
+.bandeau-carte { width: 262px; border-color: transparent; }
+.bandeau-carte:not(:disabled):hover { background: rgba(40, 50, 66, 0.55); }
+.bandeau-nouvelle { background: rgba(220, 169, 92, 0.07); border-color: rgba(220, 169, 92, 0.28); }
+.bandeau-filet { width: 1px; flex: none; align-self: stretch; margin: 6px 2px;
+                 background: linear-gradient(transparent, var(--accent-ligne), transparent); }
+.bandeau-filet-h { height: 1px; flex: none; margin: 2px 6px;
+                   background: linear-gradient(90deg, transparent, var(--accent-ligne), transparent); }
+.pastille-nv { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 11px;
+               background: var(--accent-soft); border: 1px solid var(--accent-ligne); color: var(--accent);
+               font-size: var(--text-meta, 12px); font-weight: 600; white-space: nowrap; }
+.pastille-nv::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }

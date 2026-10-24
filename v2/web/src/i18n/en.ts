@@ -674,4 +674,17 @@ export const en: Record<Cle, string> = {
   'dispositions.precision': '{nom} · {reste}',
   'dispositions.precisionModifiee': '{nom} (modified) · {reste}',
   'raccourcis.disposition': 'Switch to the matching layout',
+
+  // Bandeau d'activité du plein écran (maquette docs/maquette-bandeau-activite.html, 24.10.2026)
+  'bandeau.region': 'Recent activity',
+  'bandeau.enAbsence': '{n} while you were away',
+  'bandeau.enAbsences': '{n} while you were away',
+  'bandeau.plage': 'from {de} to {a}',
+  'bandeau.plageOuverte': 'since {de}',
+  'bandeau.duJour': 'today {n}',
+  'bandeau.duJourMaj': 'Today {n}',
+  'bandeau.rienDepuis': 'nothing since {h}',
+  'bandeau.enCours': 'Ongoing · {camera}',
+  'bandeau.enCoursCourt': 'ongoing',
+  'bandeau.ouvrir': '{quoi}, {camera}: watch the sequence',
 };

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { History, PanelRightClose } from 'lucide-react';
 import { t, useLangue } from '../i18n';
-import { parHeure, useActivite } from '../lib/activiteJour';
+import { dernieres, imageDe, parHeure, useActivite } from '../lib/activiteJour';
 import { ceQuiAEteVu, ilYa } from '../lib/lisible';
 import { Bouton } from '../ui/Bouton';
 import type { DetectionVive } from '../types/protect';
@@ -41,17 +41,7 @@ export function ColonneActivite({ onOuvrir, onRevoir, onToutes, onMasquer }: {
   const { heures, depuis } = useMemo(() => parHeure(dujour ?? [], partiel), [dujour, partiel]);
   const maxi = Math.max(1, ...heures);
 
-  /* Les vives d'abord (elles portent l'état de la détection en cours), puis celles du jour
-     que le direct n'a pas apportées. Triées sur l'heure : la plus récente en tête. */
-  const recentes = useMemo(() => {
-    const vues = new Set(vives.map((d) => d.id));
-    const dujourVives: (DetectionVive & { vignette?: boolean })[] = (dujour ?? [])
-      .filter((d) => !vues.has(d.id))
-      .map((d) => ({ ...d, commence: false }));
-    return [...vives, ...dujourVives]
-      .sort((a, b) => (b.debut ?? 0) - (a.debut ?? 0))
-      .slice(0, RECENTES);
-  }, [dujour, vives]);
+  const recentes = useMemo(() => dernieres({ dujour, partiel, vives }, RECENTES), [dujour, partiel, vives]);
 
   return (
     <aside aria-label={t('activite.titre')}
@@ -102,15 +92,7 @@ export function ColonneActivite({ onOuvrir, onRevoir, onToutes, onMasquer }: {
       ) : (
         <ul className="min-h-0 overflow-y-auto px-2.5 py-1.5">
           {recentes.map((d) => {
-            /*
-             * Tant que la détection COURT, il n'existe aucune vignette : on montre l'instantané
-             * de la caméra, daté du début pour que le navigateur le garde. Finie, la vraie
-             * vignette de l'événement prend la place — si le contrôleur en a fait une.
-             */
-            const finie = Boolean(d.fin && d.id);
-            const aVignette = finie && (d as { vignette?: boolean }).vignette !== false;
-            const src = aVignette ? `/vignette/${d.id}`
-              : !finie && d.camera ? `/instantane/${d.camera}?t=${d.debut ?? 0}` : null;
+            const src = imageDe(d);
             return (
               <li key={d.id ?? String(d.debut)} className="group/rec relative">
                 <button type="button" onClick={() => onOuvrir(d)} disabled={!d.id || d.debut === null}
