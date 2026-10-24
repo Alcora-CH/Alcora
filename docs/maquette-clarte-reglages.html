@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette, clarté des Réglages</title>
+<!--
+  Première passe de la règle « Clarté avant texte » (CLAUDE.md, 24.10.2026) : « s'il y a trop de
+  texte dans l'application, c'est que l'UX et le visuel ne sont pas assez clairs ».
+
+  Inventaire fait avant de dessiner (ReglagesScreen.tsx, démo du 24.10.2026) : 64 textes, 413 mots,
+  dix blocs — Version, Langue, Apparence, Démarrage, Captures et son, Connexion, En cas de
+  problème, Aide, À propos, Ce qui a changé. « Après » garde CHAQUE bloc, chaque commande et chaque
+  information (iso-contenu) : une phrase d'explication y devient un visuel, se raccourcit, ou passe
+  en infobulle. « Ce qui a changé » est une exception de la règle — le texte y est le contenu.
+  Données fictives.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #0e131b; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+[hidden] { display: none !important; }
+
+/* ===================================================================== banc */
+.banc { position: fixed; inset: 0 0 auto 0; min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 6px 14px;
+        background: #f1efe9; color: #23252a; font: 500 13px/1 "Barlow", system-ui, sans-serif; z-index: 100; }
+.banc b { font-weight: 600; white-space: nowrap; }
+.banc .seg { display: flex; background: #dedbd2; border-radius: 8px; padding: 3px; gap: 2px; }
+.banc .seg button { padding: 6px 10px; border-radius: 6px; color: #4a4c52; white-space: nowrap; }
+.banc .seg button[aria-pressed="true"] { background: #fff; color: #15171a; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.banc .note { margin-left: auto; color: #6c6e74; white-space: nowrap; }
+
+/* ===================================================================== jetons (ceux de l'application) */
+:root {
+  --bg: #0e131b; --card: #151b25; --card2: #1e2633; --card3: #283242;
+  --line: rgba(206,214,229,.09); --line2: rgba(206,214,229,.17);
+  --ink: #ece8df; --muted: #a9b0bc; --soft: #737d8b;
+  --accent: #dca95c; --accent-d: #e8bd78; --accent-soft: rgba(220,169,92,.14); --accent-ligne: rgba(220,169,92,.42);
+  --ok: #74c494; --ok-soft: rgba(116,196,148,.12); --bad: #e3735f; --bad-soft: rgba(227,115,95,.12); --info: #86afcf;
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  --vive: 140ms; --douceur: 240ms; --ample: 420ms;
+  --pose: cubic-bezier(.2,.7,.2,1); --douce: cubic-bezier(.4,0,.2,1);
+}
+#vues { position: absolute; inset: 44px 0 0 0; display: grid; grid-template-columns: 1fr; gap: 0; }
+#vues.deux { grid-template-columns: 1fr 1fr; }
+.app { position: relative; min-width: 0; height: 100%; overflow: auto; background: var(--bg); color: var(--ink);
+       font: 400 13px/1.45 "Atkinson Hyperlegible Next", system-ui, sans-serif; border-right: 1px solid var(--line2); }
+.app .etiquette-vue { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 20px;
+                      background: rgba(14,19,27,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); font-size: 12px; color: var(--soft); }
+.app .etiquette-vue b { color: var(--ink); font-weight: 600; }
+.app .etiquette-vue .compte { margin-left: auto; font-family: var(--mono); }
+.tete { display: flex; align-items: baseline; gap: 14px; padding: 22px 28px 6px; }
+.tete h1 { margin: 0; font-size: 19px; font-weight: 600; }
+.tete .sous { color: var(--muted); }
+.corps { display: grid; grid-template-columns: 170px minmax(0, 720px); gap: 28px; padding: 16px 28px 60px; }
+.sommaire { position: sticky; top: 56px; align-self: start; display: flex; flex-direction: column; }
+.sommaire button { text-align: left; padding: 7px 12px; border-radius: 8px; color: var(--muted); transition: background var(--vive) var(--douce), color var(--vive) var(--douce); }
+.sommaire button[aria-current="true"] { background: var(--card2); color: var(--ink); }
+.blocs { display: flex; flex-direction: column; gap: 26px; }
+.bloc h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.carte { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.rangee { display: flex; align-items: center; gap: 18px; padding: 14px 18px; }
+.rangee + .rangee { border-top: 1px solid var(--line); }
+.rangee .gauche { min-width: 0; flex: 1; }
+.rangee .titre { font-weight: 500; }
+.rangee .expl { margin-top: 3px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.rangee .discret { margin-top: 2px; font-size: 12px; color: var(--soft); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 8px; background: var(--card2); border: 1px solid var(--line2);
+       color: var(--ink); white-space: nowrap; transition: background var(--vive) var(--douce), transform 60ms var(--douce); }
+.btn:hover { background: var(--card3); }
+.btn:active { transform: scale(.97); }
+.btn.fantome { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.fantome:hover { background: var(--card2); color: var(--ink); }
+.btn.danger { background: var(--bad-soft); border-color: rgba(227,115,95,.4); color: var(--bad); }
+.btn[disabled] { opacity: .55; cursor: default; }
+
+/* L'interrupteur glisse : transform, sur la durée « douceur ». */
+.inter { position: relative; width: 38px; height: 22px; flex: none; border-radius: 11px; background: var(--card3); transition: background var(--douceur) var(--douce); }
+.inter::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink);
+                transition: transform var(--douceur) var(--pose); }
+.inter[aria-checked="true"] { background: var(--accent); }
+.inter[aria-checked="true"]::after { transform: translateX(16px); background: #1b1406; }
+
+.segment { display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: var(--card2); }
+.segment button { padding: 5px 11px; border-radius: 7px; color: var(--muted); transition: background var(--douceur) var(--douce), color var(--douceur) var(--douce); white-space: nowrap; }
+.segment button[aria-pressed="true"] { background: var(--card3); color: var(--ink); }
+.segment .sous-libelle { color: var(--soft); font-size: 11px; margin-left: 4px; }
+
+/* ---------------------------------------------------------------- l'état de la version, en pastille */
+.etat { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; border-radius: 13px; font-size: 12px; font-weight: 500; white-space: nowrap;
+        animation: arrive var(--douceur) var(--pose) both; }
+.etat.ok { background: var(--ok-soft); color: var(--ok); }
+.etat.attente { background: var(--card2); color: var(--muted); }
+.etat.prete { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-ligne); }
+.etat.refus { background: var(--bad-soft); color: var(--bad); }
+.etat .barre { width: 60px; height: 4px; border-radius: 2px; background: var(--card3); overflow: hidden; }
+.etat .barre i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; transform: scaleX(.42); transition: transform var(--ample) var(--douce); }
+@keyframes arrive { from { opacity: 0; transform: translate3d(0, 4px, 0); } to { opacity: 1; transform: none; } }
+.roue { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line2); border-top-color: var(--muted); animation: tourne .8s linear infinite; }
+@keyframes tourne { to { transform: rotate(360deg); } }
+
+/* ---------------------------------------------------------------- les aperçus vivants */
+.apercu-mur { width: 92px; height: 52px; flex: none; border-radius: 7px; background: #090c11; border: 1px solid var(--line); position: relative; overflow: hidden; }
+.apercu-mur i { position: absolute; width: 50%; height: 50%; background: linear-gradient(135deg, #3a4150, #232935); transition: transform var(--douceur) var(--pose); }
+.apercu-ciel { width: 92px; height: 52px; flex: none; border-radius: 7px; position: relative; overflow: hidden; border: 1px solid var(--line);
+               background: radial-gradient(90% 90% at 30% 110%, #1d2a44, transparent 60%), linear-gradient(#0b1018, #121a28); }
+.apercu-ciel i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; opacity: .8; }
+.apercu-ciel.anime .filante { position: absolute; left: -20px; top: 12px; width: 26px; height: 1px; background: linear-gradient(90deg, transparent, #fff);
+                              animation: file 3.2s var(--douce) infinite; opacity: 0; }
+@keyframes file { 0% { transform: translateX(0) translateY(0); opacity: 0; } 10% { opacity: 1; } 40% { transform: translateX(130px) translateY(24px); opacity: 0; } 100% { opacity: 0; } }
+.apercu-ciel.anime .tourne { position: absolute; inset: -40%; animation: tourne 40s linear infinite; }
+.touche { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line2); border-bottom-width: 2px;
+          font-family: var(--mono); font-size: 12px; color: var(--ink); background: var(--card2); }
+.info { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: var(--soft); cursor: help; position: relative; }
+.info:hover { color: var(--ink); }
+.info .bulle { position: absolute; bottom: 26px; right: -8px; width: 280px; padding: 9px 11px; border-radius: 9px; background: var(--card3); border: 1px solid var(--line2);
+               color: var(--ink); font-size: 12px; line-height: 1.5; box-shadow: 0 12px 30px rgba(0,0,0,.4); opacity: 0; transform: translate3d(0, 4px, 0); pointer-events: none;
+               transition: opacity var(--douceur) var(--douce), transform var(--douceur) var(--pose); z-index: 10; }
+.info:hover .bulle { opacity: 1; transform: none; }
+.alerte { display: flex; gap: 10px; padding: 10px 12px; border-radius: 9px; background: var(--bad-soft); color: var(--bad); animation: arrive var(--douceur) var(--pose) both; }
+.alerte b { font-weight: 600; }
+.notes p { margin: 0 0 6px; color: var(--muted); }
+.notes .v { display: flex; gap: 10px; align-items: baseline; margin: 14px 0 6px; }
+.notes .v b { font-family: var(--mono); color: var(--accent-d); }
+.marque { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); display: grid; place-items: center; color: #1b1406; font-weight: 700; font-size: 12px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="banc">
+  <b>Clarté — Réglages</b>
+  <div class="seg" data-cle="vue">
+    <button data-v="avant">Avant</button><button data-v="apres">Après</button><button data-v="deux">Côte à côte</button>
+  </div>
+  <div class="seg" data-cle="maj">
+    <button data-v="repos">À jour</button><button data-v="telechargement">Téléchargement</button><button data-v="prete">Prête</button><button data-v="refusee">Refusée</button><button data-v="manuelle">Linux</button>
+  </div>
+  <span class="note">Survole les « i » ; clique « Vérifier », les interrupteurs, l'espacement, « Modifier la connexion ».</span>
+</div>
+<div id="vues"></div>
+
+<script>
+const ICONES = {
+  dossier: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  clavier: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>',
+  livre: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>',
+  lien: '<path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>',
+  alerte: '<path d="M12 4 3 20h18z"/><path d="M12 10v4M12 17h.01"/>',
+  coche: '<path d="m5 12 5 5 9-10"/>',
+  croix: '<path d="M6 6l12 12M18 6 6 18"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  son: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/>',
+  journal: '<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h6"/>',
+};
+const ic = (n) => `<svg class="i" viewBox="0 0 24 24">${ICONES[n]}</svg>`;
+const etat = { vue: 'deux', maj: 'repos', espacement: 8, fond: true, demarrage: true, son: false, langue: 'auto', confirme: { avant: false, apres: false }, verif: { avant: false, apres: false } };
+
+const SECTIONS = ['Version', 'Langue', 'Apparence', 'Démarrage', 'Captures et son', 'Connexion', 'En cas de problème', 'Aide', 'À propos', 'Ce qui a changé'];
+const sommaire = () => `<nav class="sommaire">${SECTIONS.map((s, i) => `<button ${i === 0 ? 'aria-current="true"' : ''}>${s}</button>`).join('')}</nav>`;
+const inter = (cle) => `<button class="inter" role="switch" aria-checked="${etat[cle]}" data-inter="${cle}"></button>`;
+const info = (texte) => `<span class="info">${ic('info')}<span class="bulle">${texte}</span></span>`;
+const NOTES = `<div class="notes"><div class="v"><b>2.38.0</b><span class="mono" style="color:var(--soft)">24.10.2026</span></div>
+  <p>En plein écran, un bandeau d’activité se pose dans la place libre autour des images : les dernières détections, et d’un clic leur séquence. Ce qui est arrivé pendant ton absence s’y marque en or.</p>
+  <p>Le bandeau ne réduit jamais les images : sans place dessous, il se met sur le côté, ou devient une pastille.</p></div>`;
+
+/* ------------------------------------------------------------ AVANT : l'écran d'aujourd'hui */
+function avant() {
+  const m = etat.maj;
+  const explVersion = m === 'telechargement' ? 'Téléchargement de la version 2.39.0 : 42 %.'
+    : m === 'prete' ? 'La version 2.39.0 est prête : redémarre pour l’appliquer.'
+    : m === 'refusee' ? '<span style="color:var(--bad)">La version 2.39.0 a été refusée : elle ne porte pas la signature d’Alcora. La version installée reste en service.</span>'
+    : m === 'manuelle' ? 'Sur cette plateforme, la mise à jour est manuelle : télécharge la nouvelle version depuis alcora.ch, puis remplace l’application.'
+    : etat.verif.avant ? 'Vérification en cours…' : 'L’application vérifie d’elle-même les nouvelles versions, les télécharge en silence, puis propose de redémarrer.';
+  return `
+  <div class="tete"><h1>Réglages</h1><span class="sous">Version installée, connexion au contrôleur, et où trouver le journal.</span></div>
+  <div class="corps">${sommaire()}<div class="blocs">
+    <section class="bloc"><h2>Version</h2><div class="carte"><div class="rangee"><div class="gauche">
+      <div class="titre" style="display:flex;gap:10px;align-items:center"><span class="marque">A</span><span class="mono" style="font-size:15px;color:var(--accent-d)">Alcora 2.38.0</span></div>
+      <div class="expl">${explVersion}</div></div>
+      ${m === 'manuelle' ? '' : `<button class="btn" data-verifier="avant">Vérifier maintenant</button>`}</div></div></section>
+
+    <section class="bloc"><h2>Langue</h2><div class="carte"><div class="rangee"><div class="gauche"><div class="expl" style="margin:0">L’interface et les notifications. « Automatique » suit la langue de Windows.</div></div>
+      <div class="segment">${['Automatique', 'Français', 'English', 'Deutsch', 'Italiano'].map((l, i) => `<button aria-pressed="${i === 0}">${l}</button>`).join('')}</div></div></div></section>
+
+    <section class="bloc"><h2>Apparence</h2><div class="carte">
+      <div class="rangee" style="flex-direction:column;align-items:stretch;gap:10px"><div style="display:flex;gap:18px"><div class="gauche"><div class="titre">Espacement entre les vues</div>
+        <div class="expl">À « aucun », les images se touchent, sans cadre — un seul mur d’images.</div></div><span class="mono">${etat.espacement === 0 ? 'aucun' : `${etat.espacement} px`}</span></div>
+        <input type="range" min="0" max="24" value="${etat.espacement}" data-espacement style="width:100%;accent-color:var(--accent)"></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Fond animé</div><div class="expl">Fait vivre le ciel derrière les images : il tourne, des étoiles filent, les nébuleuses dérivent. Éteint, le ciel reste, immobile. Il se fige aussi de lui-même si Windows demande de réduire les animations.</div></div>${inter('fond')}</div>
+    </div></section>
+
+    <section class="bloc"><h2>Démarrage</h2><div class="carte"><div class="rangee"><div class="gauche"><div class="titre">Ouvrir Alcora avec Windows</div><div class="expl">L’application se lance dès l’ouverture de la session Windows.</div></div>${inter('demarrage')}</div></div></section>
+
+    <section class="bloc"><h2>Captures et son</h2><div class="carte">
+      <div class="rangee"><div class="gauche"><div class="titre">Où vont les captures</div><div class="expl mono">C:\\Users\\exemple\\Images\\Alcora</div></div><button class="btn">${ic('dossier')}Changer</button><button class="btn fantome">Ouvrir le dossier</button></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Son actif dès l’ouverture</div><div class="expl">Éteint par défaut : un mur d’images qui se met à parler tout seul au lancement est vite insupportable. Le son se demande caméra par caméra, sous l’image.</div></div>${inter('son')}</div>
+    </div></section>
+
+    ${connexion('avant')}
+
+    <section class="bloc"><h2>En cas de problème</h2><div class="carte"><div class="rangee"><div class="gauche"><div style="color:var(--muted)">Tout ce que fait l’application est consigné dans un fichier. C’est ce fichier qu’il faut envoyer lorsque quelque chose ne fonctionne pas.</div>
+      <div class="discret mono" style="margin-top:6px">C:\\…\\journal.txt</div></div><button class="btn">${ic('dossier')}Ouvrir le dossier</button></div></div></section>
+
+    <section class="bloc"><h2>Aide</h2><div class="carte">
+      <div class="rangee"><div class="gauche"><div class="titre">Raccourcis clavier</div><div class="expl">Tous les gestes du clavier et de la souris, écran par écran. La touche « ? » les montre partout.</div></div><button class="btn">${ic('clavier')}Voir les raccourcis</button></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Activer le RTSP sur la console</div><div class="expl">Le guide étape par étape, le même que sur l’écran de connexion.</div></div><button class="btn">${ic('livre')}Ouvrir le guide</button></div>
+    </div></section>
+
+    <section class="bloc"><h2>À propos</h2><div class="carte">
+      <div class="rangee"><div class="gauche"><div class="titre">Alcora</div><div class="expl">Client de bureau pour UniFi Protect, entièrement local. Non affilié à Ubiquiti.</div></div><span class="mono">2.38.0</span></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Moteur</div></div><span class="mono">Electron 45.0.0</span></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Relais vidéo</div></div><span class="mono">MediaMTX v1.21.2</span></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Licence</div><div class="expl">GPL-3.0 — © Thomas. Le code source est public ; toute œuvre dérivée doit le rester.</div></div><button class="btn fantome">${ic('lien')}Code source</button></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Composants de tiers</div><div class="expl">Les licences de chaque bibliothèque embarquée.</div></div><button class="btn">Voir les licences</button></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Site</div></div><button class="btn fantome">${ic('lien')}alcora.ch</button></div>
+    </div></section>
+
+    <section class="bloc"><h2>Ce qui a changé</h2><div class="carte" style="padding:4px 18px 14px">${NOTES}</div></section>
+  </div></div>`;
+}
+
+/* ------------------------------------------------------------ APRÈS : la même chose, sans l'expliquer */
+function pastilleVersion() {
+  const m = etat.maj;
+  if (etat.verif.apres) return '<span class="etat attente"><span class="roue"></span>Vérification</span>';
+  if (m === 'telechargement') return '<span class="etat attente">2.39.0<span class="barre"><i></i></span>42 %</span>';
+  if (m === 'prete') return '<span class="etat prete">2.39.0 prête</span>';
+  if (m === 'refusee') return `<span class="etat refus">${ic('croix')}2.39.0 refusée</span>${info('Elle ne porte pas la signature d’Alcora : rien n’a été installé, la version actuelle reste en service.')}`;
+  if (m === 'manuelle') return '<span class="etat attente">Mise à jour manuelle</span>';
+  return `<span class="etat ok">${ic('coche')}À jour</span>`;
+}
+function apres() {
+  const m = etat.maj;
+  const actionVersion = m === 'prete' ? '<button class="btn" style="background:var(--accent);color:#1b1406;border-color:transparent">Redémarrer</button>'
+    : m === 'manuelle' ? `<button class="btn fantome">${ic('lien')}alcora.ch</button>`
+    : `<button class="btn" data-verifier="apres" ${etat.verif.apres || m === 'telechargement' ? 'disabled' : ''}>Vérifier</button>`;
+  const e = etat.espacement;
+  const tuile = (x, y) => `<i style="left:0;top:0;transform:translate(${x ? `calc(100% + ${e / 4}px)` : '0'}, ${y ? `calc(100% + ${e / 4}px)` : '0'}) scale(${1 - e / 92})"></i>`;
+  let etoiles = '';
+  for (let i = 0; i < 14; i++) etoiles += `<i style="left:${(i * 37) % 90}px;top:${(i * 23) % 48}px;opacity:${.3 + (i % 4) * .18}"></i>`;
+  return `
+  <div class="tete"><h1>Réglages</h1></div>
+  <div class="corps">${sommaire()}<div class="blocs">
+    <section class="bloc"><h2>Version</h2><div class="carte"><div class="rangee">
+      <div class="gauche" style="display:flex;align-items:center;gap:12px"><span class="marque">A</span><span class="mono" style="font-size:15px;color:var(--accent-d)">Alcora 2.38.0</span>${pastilleVersion()}</div>
+      ${actionVersion}</div></div></section>
+
+    <section class="bloc"><h2>Langue</h2><div class="carte"><div class="rangee"><div class="gauche"><div class="titre">Langue</div></div>
+      <div class="segment">${[['auto', 'Auto', 'Windows'], ['fr', 'Français'], ['en', 'English'], ['de', 'Deutsch'], ['it', 'Italiano']].map(([c, l, s]) =>
+        `<button aria-pressed="${etat.langue === c}" data-langue="${c}">${l}${s ? `<span class="sous-libelle">${s}</span>` : ''}</button>`).join('')}</div></div></div></section>
+
+    <section class="bloc"><h2>Apparence</h2><div class="carte">
+      <div class="rangee"><div class="apercu-mur">${tuile(0, 0)}${tuile(1, 0)}${tuile(0, 1)}${tuile(1, 1)}</div>
+        <div class="gauche"><div class="titre">Espacement</div><input type="range" min="0" max="24" value="${e}" data-espacement style="width:100%;margin-top:6px;accent-color:var(--accent)"></div>
+        <span class="mono" style="width:56px;text-align:right">${e === 0 ? 'aucun' : `${e} px`}</span></div>
+      <div class="rangee"><div class="apercu-ciel ${etat.fond ? 'anime' : ''}"><div class="tourne">${etoiles}</div><span class="filante"></span></div>
+        <div class="gauche"><div class="titre">Ciel animé</div></div>${inter('fond')}</div>
+    </div></section>
+
+    <section class="bloc"><h2>Démarrage</h2><div class="carte"><div class="rangee"><div class="gauche"><div class="titre">Lancer avec Windows</div></div>${inter('demarrage')}</div></div></section>
+
+    <section class="bloc"><h2>Captures et son</h2><div class="carte">
+      <div class="rangee"><div class="gauche"><div class="titre">Captures</div><div class="discret mono">C:\\Users\\exemple\\Images\\Alcora</div></div><button class="btn">${ic('dossier')}Changer</button><button class="btn fantome">Ouvrir</button></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Son au lancement</div><div class="discret">Sinon, caméra par caméra</div></div>${inter('son')}</div>
+    </div></section>
+
+    ${connexion('apres')}
+
+    <section class="bloc"><h2>En cas de problème</h2><div class="carte"><div class="rangee">
+      <div class="gauche" style="display:flex;gap:12px;align-items:center"><span style="color:var(--muted)">${ic('journal')}</span><div><div class="titre">Journal</div><div class="discret">À joindre à toute demande d’aide · <span class="mono">C:\\…\\journal.txt</span></div></div></div>
+      <button class="btn">${ic('dossier')}Ouvrir</button></div></div></section>
+
+    <section class="bloc"><h2>Aide</h2><div class="carte">
+      <div class="rangee"><div class="gauche" style="display:flex;gap:10px;align-items:center"><span class="titre">Raccourcis</span><span class="touche">?</span></div><button class="btn">${ic('clavier')}Voir</button></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Guide de la console</div><div class="discret">Activer le RTSP</div></div><button class="btn">${ic('livre')}Ouvrir</button></div>
+    </div></section>
+
+    <section class="bloc"><h2>À propos</h2><div class="carte">
+      <div class="rangee"><div class="gauche"><div class="titre">Alcora <span class="mono" style="color:var(--soft)">2.38.0</span></div><div class="discret">Client local pour UniFi Protect · non affilié à Ubiquiti</div></div><button class="btn fantome">${ic('lien')}alcora.ch</button></div>
+      <div class="rangee"><div class="gauche"><div class="titre">Moteur · relais</div></div><span class="mono" style="color:var(--muted)">Electron 45.0.0 · MediaMTX v1.21.2</span></div>
+      <div class="rangee"><div class="gauche"><div class="titre">GPL-3.0 · © Thomas</div></div>${info('Le code source est public ; toute œuvre dérivée doit le rester.')}<button class="btn fantome">${ic('lien')}Code source</button><button class="btn fantome">Licences</button></div>
+    </div></section>
+
+    <section class="bloc"><h2>Ce qui a changé</h2><div class="carte" style="padding:4px 18px 14px">${NOTES}</div></section>
+  </div></div>`;
+}
+
+function connexion(cote) {
+  const ouvert = etat.confirme[cote];
+  const alerte = cote === 'avant'
+    ? `<p class="alerte">${ic('alerte')}<span>Le mot de passe et la clé à deux facteurs seront effacés de ce PC, et l’écran de connexion réapparaîtra. Les caméras cesseront de s’afficher jusqu’à ce que tu les saisisses à nouveau.</span></p>`
+    : `<p class="alerte">${ic('alerte')}<span><b>Mot de passe et clé effacés de ce PC.</b> Plus d’images jusqu’à la reconnexion.</span></p>`;
+  return `<section class="bloc"><h2>Connexion</h2><div class="carte">
+    <div class="rangee"><div class="gauche"><div class="titre">Contrôleur</div></div><span class="mono">10.0.0.1</span></div>
+    <div class="rangee"><div class="gauche"><div class="titre">Compte</div></div><span class="mono">demo@exemple.test</span></div>
+    <div class="rangee"><div class="gauche"><div class="titre">Identité vérifiée</div></div><span style="color:var(--ok)">${cote === 'apres' ? ic('coche') : 'oui'}</span></div>
+    <div class="rangee" style="flex-direction:column;align-items:flex-start">${ouvert
+      ? `${alerte}<div style="display:flex;gap:8px;margin-top:4px"><button class="btn danger">Effacer et se reconnecter</button><button class="btn fantome" data-confirme="${cote}">Annuler</button></div>`
+      : `<button class="btn" data-confirme="${cote}">Modifier la connexion</button>`}</div>
+  </div></section>`;
+}
+
+const mots = (html) => { const d = document.createElement('div'); d.innerHTML = html; d.querySelectorAll('.bulle').forEach((b) => b.remove()); return d.textContent.trim().split(/\s+/).filter(Boolean).length; };
+function rendre() {
+  const vues = document.getElementById('vues');
+  const a = avant();
+  const p = apres();
+  const blocA = `<div class="app" data-cote="avant"><div class="etiquette-vue"><b>Avant</b> l’écran d’aujourd’hui<span class="compte">${mots(a)} mots</span></div>${a}</div>`;
+  const blocP = `<div class="app" data-cote="apres"><div class="etiquette-vue"><b>Après</b> mêmes blocs, mêmes commandes<span class="compte">${mots(p)} mots</span></div>${p}</div>`;
+  vues.className = etat.vue === 'deux' ? 'deux' : '';
+  const scrolls = [...vues.querySelectorAll('.app')].map((x) => x.scrollTop);
+  vues.innerHTML = etat.vue === 'avant' ? blocA : etat.vue === 'apres' ? blocP : blocA + blocP;
+  [...vues.querySelectorAll('.app')].forEach((x, i) => { x.scrollTop = scrolls[i] ?? 0; });
+}
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.inter) { etat[b.dataset.inter] = !etat[b.dataset.inter]; b.setAttribute('aria-checked', String(etat[b.dataset.inter])); setTimeout(rendre, 260); return; }
+  if (b.dataset.langue) { etat.langue = b.dataset.langue; rendre(); return; }
+  if (b.dataset.confirme) { etat.confirme[b.dataset.confirme] = !etat.confirme[b.dataset.confirme]; rendre(); return; }
+  if (b.dataset.verifier) {
+    const c = b.dataset.verifier; etat.verif[c] = true; rendre();
+    setTimeout(() => { etat.verif[c] = false; rendre(); }, 1400);
+  }
+});
+document.addEventListener('input', (e) => {
+  if (e.target.matches('[data-espacement]')) { etat.espacement = Number(e.target.value); rendre(); document.querySelector(`[data-cote="${e.target.closest('.app').dataset.cote}"] [data-espacement]`)?.focus(); }
+});
+for (const seg of document.querySelectorAll('.banc .seg')) {
+  const cle = seg.dataset.cle;
+  for (const b of seg.querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', String(b.dataset.v === etat[cle]));
+    b.addEventListener('click', () => {
+      etat[cle] = b.dataset.v;
+      for (const x of seg.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+      rendre();
+    });
+  }
+}
+rendre();
+</script>
+</body>
+</html>
