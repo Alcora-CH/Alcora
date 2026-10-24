@@ -8,8 +8,8 @@
     "react/static-components": "warn",
     "react/refs": "warn",
     "react/set-state-in-effect": "warn",
-    "react/preserve-manual-memoization": "off",
+    "react/preserve-manual-memoization": "warn",
     "react/purity": "warn",
-    "react/immutability": "off"
+    "react/immutability": "warn"
   }
 }

@@ -164,6 +164,29 @@ soit ~185 Mo à chaque version, quel que soit le différentiel. Ne jamais promet
   `.m-surgit`, `.m-pression`. Une surface qui s'ouvre doit aussi **partir** animée —
   `useFermetureAnimee` (`lib/fermeture.ts`) tient l'état, écoute `animationend` plutôt
   qu'un délai écrit en dur, et garde un secours si l'événement n'arrive jamais.
+- **Clarté avant texte** (règle de Thomas, 24.10.2026) : « s'il y a trop de texte dans
+  l'application, c'est que l'UX et le visuel ne sont pas assez clairs, et que tout doit être
+  expliqué — souvent parce que ce n'a pas été pensé pour être intuitif ». Donc :
+  1. **Un texte qui explique comment se servir d'un écran est un défaut de conception.** On
+     corrige d'abord le dessin — place, forme, icône, état visible, geste attendu — et le
+     texte vient en dernier recours. Avant d'ajouter une phrase : quel élément visuel la
+     rendrait inutile ?
+  2. **Court et simple.** Libellés d'un à trois mots ; une aide tient en une phrase courte,
+     jamais un paragraphe à l'écran ; un chiffre, un point ou une icône plutôt qu'une phrase
+     quand ils disent la même chose. Le détail (pourquoi, comment, chiffres précis) va dans
+     l'infobulle, le guide ou le journal.
+  3. **Montrer plutôt que dire** : l'état se lit à la couleur, à la forme, au point, à la
+     vignette, à la place (l'or pour ce qui attend ton regard).
+  4. **Doux et fluide, jamais brutal.** Un geste reçoit une réponse visible tout de suite
+     (enfoncement, survol) — jamais de délai artificiel —, puis ce qu'il provoque se POSE
+     au lieu d'apparaître d'un coup : ouvrir, fermer, filtrer, appliquer, changer d'écran.
+     Léger : le mouvement accompagne, il ne décore pas, et la règle « Mouvement » ci-dessus
+     s'applique en entier.
+  5. **Exceptions, là où le texte EST le contenu** : le guide de la console, « Ce qui a
+     changé », les erreurs (une ligne pour la cause, une pour le remède), le juridique, le
+     journal.
+  6. **Chaque écran touché est relu** : tout texte d'explication permanent est remplacé par du
+     visuel, raccourci ou déplacé. Les maquettes montrent cette relecture.
 - **Jamais de données réelles** (personnes, adresses, domaines, mesures d'un poste
   précis) dans le code, les tests ou les exemples publics. Fixtures fictives.
 - **Erreurs typées** (`protect/errors.js`) : message utilisateur + remède via i18n,
@@ -173,37 +196,23 @@ soit ~185 Mo à chaque version, quel que soit le différentiel. Ne jamais promet
   textes — c'est l'outil de vérification vivante ; la mire vidéo
   (`v2/web/public/demo-extrait.mp4`) donne de vrais pixels au zoom et à la capture.
 
-## Une dette assumée : les règles du compilateur React
+## Les règles du compilateur React — toutes allumées
 
-`oxlint` 1.80 (26.08.2026) a ajouté six familles de règles issues du compilateur React.
-Elles rendent **45 avertissements** sur `v2/web/src`, et `--deny-warnings` fait donc
-échouer `npm test`. Elles sont **éteintes** dans `v2/web/.oxlintrc.json` :
+`oxlint` 1.80 (26.08.2026) a ajouté six familles de règles issues du compilateur React :
+45 avertissements, éteints alors faute de pouvoir vérifier le zoom et la relecture à l'œil.
+**Rallumées une à une le 24.10.2026**, chacune vérifiée dans la démo, et désormais tenues
+par `--deny-warnings` (`v2/web/.oxlintrc.json`) :
 
-| Règle | Août 2026 | 24.10.2026 | Ce qu'elle dit |
-|---|---|---|---|
-| `react/static-components` | 16 | **rallumée** (0, la refonte les avait résorbées) | un composant déclaré dans un autre est recréé à chaque rendu |
-| `react/refs` | 14 | **rallumée** (6 corrigées) | une référence lue pendant le rendu peut ne pas se rafraîchir |
-| `react/set-state-in-effect` | 5 | **rallumée** (5 corrigées) | un `setState` synchrone dans un effet relance un rendu |
-| `react/preserve-manual-memoization` | 4 | 4 | la mémoïsation manuelle n'a pas pu être conservée |
-| `react/purity` | 3 | **rallumée** (4 corrigées) | une fonction impure (l'horloge) appelée pendant le rendu |
-| `react/immutability` | 3 | 3 | une prop ou un argument de crochet est muté |
+| Règle | Août 2026 | Corrigé le 24.10.2026 |
+|---|---|---|
+| `react/static-components` | 16 | déjà résorbées par la refonte |
+| `react/refs` | 14 | 6 : valeurs vivantes recopiées dans un `useLayoutEffect` (zoom, mur), résultat de `useZoomVideo` déplié dans le lecteur |
+| `react/purity` | 3 | 4 : l'heure se lit à la demande (recherche) ou dans un état qui bat (`lib/useMaintenant.ts`) |
+| `react/set-state-in-effect` | 5 | 5 : chargement et erreur de la recherche déduits de la clé de la demande, saisie des dispositions abandonnée là où le menu se ferme, rappel « Échap » ajusté pendant le rendu |
+| `react/preserve-manual-memoization` et `react/immutability` | 4 + 3 | les fonctions du lecteur définies avant l'effet clavier qui les appelle ; le crochet du son nomme sa référence `videoRef` |
 
-`refs`, le 24.10.2026 : les valeurs vivantes recopiées dans des références PENDANT le rendu
-(zoom, ordre du mur, grille, raccourci des dispositions) le sont désormais dans un
-`useLayoutEffect` — après chaque rendu validé, avant la peinture. Dans `App.tsx`, le bloc
-du mur est remonté au-dessus des sorties anticipées pour cela. Le lecteur d'extrait déplie
-le résultat de `useZoomVideo` : un objet qui porte une référence fait prendre chacune de ses
-valeurs pour une référence. Vérifié dans la démo : chiffres et Ctrl + chiffre, glisser des
-tuiles, zoom et panoramique en pause dans le lecteur d'extrait et en relecture.
-
-**Ce ne sont pas des failles** — aucune n'a de rapport avec la sécurité. Mais plusieurs
-pointent de vrais défauts latents, en particulier `react/refs` dans `video/useZoomVideo.ts`
-et les seize `static-components`. Elles ont été mises de côté parce que les corriger touche
-le zoom, la capture et la relecture — du code réglé à la main sur de vrais pixels — et que
-cela demande de vérifier l'application à l'œil, ce qui n'était pas possible ce soir-là.
-
-**À reprendre règle par règle, en vérifiant sur la mire vidéo à chaque fois.** Rallumer les
-six d'un coup et corriger en série est le chemin le plus sûr vers une régression invisible.
+**Une règle qui rougit se corrige, elle ne s'éteint pas.** Une seule exception défendable :
+un faux positif prouvé — et alors la ligne, pas la règle.
 
 ## Conventions
 

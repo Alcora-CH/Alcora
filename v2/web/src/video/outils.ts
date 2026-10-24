@@ -37,12 +37,14 @@ export function imageDeLaVideo(video: HTMLVideoElement | null): Promise<Blob | n
  * parier. Sur un fichier telecharge la reponse est immediate ; sur un flux negocie elle
  * peut arriver apres la video, d'ou la surveillance.
  */
-export function useSonVideo(video: React.RefObject<HTMLVideoElement | null>, pret: boolean) {
+/* « videoRef » et non « video » : le compilateur de React reconnaît une référence à son nom,
+   et refusait sinon de laisser couper le son de l'élément (règle react/immutability). */
+export function useSonVideo(videoRef: React.RefObject<HTMLVideoElement | null>, pret: boolean) {
   const [aDuSon, setADuSon] = useState<boolean | undefined>(undefined);
   const [sonActif, setSonActif] = useState(false);
 
   const regarder = useCallback(() => {
-    const v = video.current;
+    const v = videoRef.current;
     if (!v) return;
     /*
      * L'etat du bouton se met au diapason de l'ELEMENT, pas l'inverse. En relecture les
@@ -62,14 +64,14 @@ export function useSonVideo(video: React.RefObject<HTMLVideoElement | null>, pre
     if (typeof avec.mozHasAudio === 'boolean') { setADuSon(avec.mozHasAudio); return; }
     if (avec.audioTracks) { setADuSon(avec.audioTracks.length > 0); return; }
     setADuSon(undefined);
-  }, [video]);
+  }, [videoRef]);
 
   const basculer = useCallback(() => {
-    const v = video.current;
+    const v = videoRef.current;
     if (!v) return;
     v.muted = !v.muted;
     setSonActif(!v.muted);
-  }, [video]);
+  }, [videoRef]);
 
   /* La piste peut arriver APRES la video : on regarde encore un peu, puis on s'arrête. */
   useEffect(() => {

@@ -106,7 +106,22 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
     return () => { vivant = false; off(); };
   }, [detection.camera, detection.debut, detection.fin]);
 
+  const basculer = useCallback(() => {
+    const v = video.current;
+    if (!v) return;
+    if (v.paused) void v.play().catch(() => {});
+    else v.pause();
+  }, []);
+
+  /** Avance ou recule d'une image. Le lecteur doit être en pause pour que cela ait un sens. */
+  const pas = useCallback((sens: number) => {
+    const v = video.current;
+    if (!v) return;
+    v.pause();
+    v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + sens * PAS_IMAGE));
+  }, []);
   /* ---- Échap referme, comme partout ailleurs ---- */
+  // (Les fonctions qu'il appelle sont définies AVANT lui : règle react/immutability.)
   useEffect(() => {
     const auClavier = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.stopPropagation(); fermer(); return; }
@@ -132,20 +147,6 @@ export function LecteurExtrait({ detection, onFermer, onRelecture }: {
     return () => window.removeEventListener('keydown', auClavier, true);
   });
 
-  const basculer = useCallback(() => {
-    const v = video.current;
-    if (!v) return;
-    if (v.paused) void v.play().catch(() => {});
-    else v.pause();
-  }, []);
-
-  /** Avance ou recule d'une image. Le lecteur doit être en pause pour que cela ait un sens. */
-  const pas = useCallback((sens: number) => {
-    const v = video.current;
-    if (!v) return;
-    v.pause();
-    v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + sens * PAS_IMAGE));
-  }, []);
 
   const jeton = url ? url.replace('/extrait/', '') : null;
 
