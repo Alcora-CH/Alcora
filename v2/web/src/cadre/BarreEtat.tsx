@@ -136,7 +136,9 @@ export function BarreEtat({
                   debut: new Date(exportEnCours.debut).toLocaleTimeString(localeDates()),
                   fin: new Date(exportEnCours.fin).toLocaleTimeString(localeDates()),
                 })}
-                className="inline-flex h-[18px] shrink-0 items-center gap-[7px] whitespace-nowrap border-r border-line2 px-3.5 text-accent hover:text-ink">
+                /* Elle se POSE à son arrivée : c'est elle qui suit l'export hors de la relecture,
+                   et la ligne de la plage ne le dit plus en toutes lettres (24.10.2026). */
+                className="m-surgit inline-flex h-[18px] shrink-0 items-center gap-[7px] whitespace-nowrap border-r border-line2 px-3.5 text-accent hover:text-ink">
           <Download className="h-4 w-4" aria-hidden />
           {t('export.export')}
           <span aria-hidden className="h-[5px] w-[60px] overflow-hidden rounded-[3px] bg-card3 @max-[1100px]:hidden">

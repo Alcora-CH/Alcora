@@ -120,7 +120,8 @@ export function LignePlage({
           {restant !== null && <> · {t('export.restant', { duree: dureeVideo(restant) })}</>}
         </span>
         <Fin><Bouton taille="petit" icone={X} onClick={onAnnuler}>{t('export.annuler')}</Bouton></Fin>
-        <Note>{t('export.continuer')}</Note>
+        {/* Plus de « Tu peux continuer à relire… » : la case Export de la barre d'état arrive en
+            même temps que cette ligne — on voit que l'export vit ailleurs (clarté, 24.10.2026). */}
       </Cadre>
     );
   }
