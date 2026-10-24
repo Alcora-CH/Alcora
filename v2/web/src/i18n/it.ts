@@ -492,7 +492,7 @@ export const it: Record<Cle, string> = {
   'reglages.aide.guide': 'Guida della console',
   'reglages.aide.ouvrirGuide': 'Apri',
   'reglages.apropos.titre': 'Informazioni',
-  'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Il codice sorgente è pubblico; ogni opera derivata deve restarlo.',
+  'reglages.apropos.licenceDetail': 'Il codice sorgente è pubblico; ogni opera derivata deve restarlo.',
   'reglages.apropos.source': 'Codice sorgente',
   'reglages.apropos.voirLicences': 'Licenze',
   'reglages.apropos.licencesAbsentes': 'Il file delle licenze non si trova in questa installazione.',
@@ -671,4 +671,7 @@ export const it: Record<Cle, string> = {
   // Une seule fenêtre : la mise à jour annoncée d'une ligne (24.10.2026)
   'nouveautes.installee': 'Alcora {version} è installata',
   'nouveautes.nouveau': 'Nuovo',
+
+  // Réglages, À propos : la licence lisible d'un coup d'œil (24.10.2026)
+  'reglages.apropos.licenceTitre': 'GPL-3.0 · © Thomas',
 };

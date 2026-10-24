@@ -494,7 +494,7 @@ export const de: Record<Cle, string> = {
   'reglages.aide.guide': 'Konsolen-Anleitung',
   'reglages.aide.ouvrirGuide': 'Öffnen',
   'reglages.apropos.titre': 'Über Alcora',
-  'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Der Quellcode ist öffentlich; jedes abgeleitete Werk muss es bleiben.',
+  'reglages.apropos.licenceDetail': 'Der Quellcode ist öffentlich; jedes abgeleitete Werk muss es bleiben.',
   'reglages.apropos.source': 'Quellcode',
   'reglages.apropos.voirLicences': 'Lizenzen',
   'reglages.apropos.licencesAbsentes': 'Die Lizenzdatei ist in dieser Installation nicht zu finden.',
@@ -673,4 +673,7 @@ export const de: Record<Cle, string> = {
   // Une seule fenêtre : la mise à jour annoncée d'une ligne (24.10.2026)
   'nouveautes.installee': 'Alcora {version} ist installiert',
   'nouveautes.nouveau': 'Neu',
+
+  // Réglages, À propos : la licence lisible d'un coup d'œil (24.10.2026)
+  'reglages.apropos.licenceTitre': 'GPL-3.0 · © Thomas',
 };

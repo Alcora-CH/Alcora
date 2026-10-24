@@ -520,7 +520,7 @@ export const fr = {
   'reglages.aide.guide': 'Guide de la console',
   'reglages.aide.ouvrirGuide': 'Ouvrir',
   'reglages.apropos.titre': 'À propos',
-  'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Le code source est public ; toute œuvre dérivée doit le rester.',
+  'reglages.apropos.licenceDetail': 'Le code source est public ; toute œuvre dérivée doit le rester.',
   'reglages.apropos.source': 'Code source',
   'reglages.apropos.voirLicences': 'Licences',
   'reglages.apropos.licencesAbsentes': 'Le fichier des licences est introuvable dans cette installation.',
@@ -699,6 +699,9 @@ export const fr = {
   // Une seule fenêtre : la mise à jour annoncée d'une ligne (24.10.2026)
   'nouveautes.installee': 'Alcora {version} est installée',
   'nouveautes.nouveau': 'Nouveau',
+
+  // Réglages, À propos : la licence lisible d'un coup d'œil (24.10.2026)
+  'reglages.apropos.licenceTitre': 'GPL-3.0 · © Thomas',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

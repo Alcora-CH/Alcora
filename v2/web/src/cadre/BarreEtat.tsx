@@ -46,7 +46,9 @@ function Pastille({ ton }: { ton: string }) {
   return <span aria-hidden className="h-[7px] w-[7px] shrink-0 rounded-full" style={{ background: ton }} />;
 }
 
-export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccourcis, onRelecture, horsConnexion }: {
+export function BarreEtat({
+  relay, systeme: systemeLu, cameras: camerasLues, espace, onSysteme, onRaccourcis, onRelecture, horsConnexion,
+}: {
   relay: RelayState;
   systeme: SystemeEtat | null;
   cameras: DiscoveredCamera[];
@@ -59,6 +61,11 @@ export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccou
   horsConnexion?: boolean;
 }) {
   useLangue();
+  /* Hors connexion, ce que la barre saurait encore du contrôleur vient d'une session PASSÉE
+     (« Modifier la connexion ») : elle n'en dit rien, plutôt que « non connecté » à côté du
+     nom du contrôleur et de son archive. */
+  const systeme = horsConnexion ? null : systemeLu;
+  const cameras = horsConnexion ? [] : camerasLues;
   const exportEnCours = useEtatExport();
   const archive = archiveGlobale(systeme?.archive);
   const armement = systeme?.armement ? armementLisible(systeme.armement) : null;
@@ -148,16 +155,20 @@ export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccou
       <span className="inline-flex h-[18px] items-center border-l border-line2 px-3.5">
         <Horloge className="font-mono tabular-nums text-ink" />
       </span>
-      {/* Le nom accessible ne doit pas tomber à « ? » quand le libellé cède la place. */}
-      <Bouton variante="fantome" taille="petit" titre={t('barre.raccourcisTitre')} onClick={onRaccourcis}
-              aria-label={t('raccourcis.titre')} className="ml-1">
-        <span className="@max-[1180px]:hidden">{t('barre.raccourcis')}</span> <Touche>?</Touche>
-      </Bouton>
+      {/* Ni raccourcis ni Système avant la première connexion : « ? » n'y fait rien (App.tsx),
+          et les gestes listés sont ceux d'écrans encore grisés. */}
       {!horsConnexion && (
-        <Bouton variante={espace === 'systeme' ? 'actif' : 'fantome'} taille="petit" onClick={onSysteme}
-                aria-current={espace === 'systeme' ? 'page' : undefined} className="ml-1">
-          {t('espace.systeme')}<ChevronRight className="h-4 w-4" aria-hidden />
-        </Bouton>
+        <>
+          {/* Le nom accessible ne doit pas tomber à « ? » quand le libellé cède la place. */}
+          <Bouton variante="fantome" taille="petit" titre={t('barre.raccourcisTitre')} onClick={onRaccourcis}
+                  aria-label={t('raccourcis.titre')} className="ml-1">
+            <span className="@max-[1180px]:hidden">{t('barre.raccourcis')}</span> <Touche>?</Touche>
+          </Bouton>
+          <Bouton variante={espace === 'systeme' ? 'actif' : 'fantome'} taille="petit" onClick={onSysteme}
+                  aria-current={espace === 'systeme' ? 'page' : undefined} className="ml-1">
+            {t('espace.systeme')}<ChevronRight className="h-4 w-4" aria-hidden />
+          </Bouton>
+        </>
       )}
     </footer>
   );

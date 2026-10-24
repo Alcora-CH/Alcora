@@ -451,7 +451,7 @@ export function ReglagesScreen({
                   <Valeur>{infos ? `Electron ${infos.electron} · MediaMTX ${infos.relais}` : '…'}</Valeur>
                 </Rangee>
                 {/* La licence : le nom et l'auteur se lisent, l'obligation qui l'accompagne au survol. */}
-                <Rangee titre="GPL-3.0 · © Thomas"
+                <Rangee titre={t('reglages.apropos.licenceTitre')}
                         explication={licencesAbsentes ? t('reglages.apropos.licencesAbsentes') : undefined}>
                   <Info>{t('reglages.apropos.licenceDetail')}</Info>
                   <LienExterne href={DEPOT}>{t('reglages.apropos.source')}</LienExterne>
