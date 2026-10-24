@@ -706,6 +706,11 @@ export const fr = {
   // Relecture, clarté : les loupes de la frise (24.10.2026)
   'relecture.elargir': 'Élargir — molette',
   'relecture.resserrer': 'Resserrer — molette',
+
+  // Relecture, clarté : la ligne de la plage dit ses faits, le pourquoi passe dans les « i » (24.10.2026)
+  'export.nFichiers': '{n} fichiers',
+  'export.fichiersDetail': 'Une heure au plus par fichier, enregistrés l’un après l’autre : les coupures se voient sur la frise.',
+  'export.basse': 'basse définition',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

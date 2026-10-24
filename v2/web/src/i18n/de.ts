@@ -680,4 +680,9 @@ export const de: Record<Cle, string> = {
   // Relecture, clarté : les loupes de la frise (24.10.2026)
   'relecture.elargir': 'Herauszoomen — Mausrad',
   'relecture.resserrer': 'Hineinzoomen — Mausrad',
+
+  // Relecture, clarté : la ligne de la plage dit ses faits, le pourquoi passe dans les « i » (24.10.2026)
+  'export.nFichiers': '{n} Dateien',
+  'export.fichiersDetail': 'Höchstens eine Stunde pro Datei, nacheinander gespeichert: Die Schnitte sind auf der Zeitleiste zu sehen.',
+  'export.basse': 'niedrige Auflösung',
 };

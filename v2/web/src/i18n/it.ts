@@ -678,4 +678,9 @@ export const it: Record<Cle, string> = {
   // Relecture, clarté : les loupes de la frise (24.10.2026)
   'relecture.elargir': 'Riduci lo zoom — rotellina',
   'relecture.resserrer': 'Aumenta lo zoom — rotellina',
+
+  // Relecture, clarté : la ligne de la plage dit ses faits, le pourquoi passe dans les « i » (24.10.2026)
+  'export.nFichiers': '{n} file',
+  'export.fichiersDetail': 'Al massimo un’ora per file, salvati uno dopo l’altro: i tagli si vedono sulla linea del tempo.',
+  'export.basse': 'bassa definizione',
 };

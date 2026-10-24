@@ -3,6 +3,7 @@ import { localeDates, t, useLangue } from '../i18n';
 import { dureeVideo, poids } from '../lib/lisible';
 import { pourcentExport, type Plage } from '../lib/exportPlage';
 import { Bouton } from '../ui/Bouton';
+import { Info } from '../ui/Info';
 import { cx } from '../ui/cx';
 import type { Cle } from '../i18n/fr';
 import type { EtatExport, RaisonExport } from '../types/protect';
@@ -180,7 +181,6 @@ export function LignePlage({
             …<span className="mx-1.5 text-soft">→</span>{hms(plage.fin!)}
           </span>
         )}
-        <span className="text-muted">{plage.debut !== null ? t('export.poseFin') : t('export.poseDebut')}</span>
         <Fin><Bouton taille="petit" variante="fantome" icone={X} onClick={onEffacer}>{t('export.effacer')}</Bouton></Fin>
       </Cadre>
     );
@@ -191,20 +191,46 @@ export function LignePlage({
   const heures = Math.ceil(duree / HEURE_MS);
   const parties = heures * cameras;
   const basse = frontiere !== null && plage.debut < frontiere;
-  // À plusieurs, la définition et le son sont ceux de chaque caméra : on dit leur nombre.
-  const faits = [
-    ...(cameras > 1 ? [t('export.nCameras', { n: cameras })] : []),
-    estimation > 0 ? t('export.environ', { taille: poids(estimation) }) : t('export.tailleInconnue'),
-    ...(cameras === 1 && definition && !basse ? [definition] : []),
-    ...(cameras === 1 && aDuSon !== null ? [aDuSon ? t('export.sonCompris') : t('export.sansSon')] : []),
+  /*
+   * Des faits courts, et le pourquoi dans les « i » — règle « Clarté avant texte » (maquette
+   * docs/maquette-clarte-relecture.html, 24.10.2026). Quatre phrases suivaient la ligne, dont
+   * celle des images-clés sous CHAQUE plage ; le bouton dit déjà « Exporter en N fichiers ».
+   * À plusieurs, la définition et le son sont ceux de chaque caméra : on dit leur nombre.
+   */
+  const faits: { cle: string; contenu: React.ReactNode }[] = [
+    ...(cameras > 1 ? [{ cle: 'cameras', contenu: t('export.nCameras', { n: cameras }) }] : []),
+    { cle: 'poids', contenu: estimation > 0 ? t('export.environ', { taille: poids(estimation) }) : t('export.tailleInconnue') },
+    ...(cameras === 1 && definition && !basse ? [{ cle: 'definition', contenu: definition }] : []),
+    ...(cameras === 1 && aDuSon !== null ? [{ cle: 'son', contenu: aDuSon ? t('export.sonCompris') : t('export.sansSon') }] : []),
+    ...(parties > 1 ? [{
+      cle: 'fichiers',
+      contenu: (
+        <span className="inline-flex items-center gap-1">
+          {t('export.nFichiers', { n: parties })}
+          {/* À plusieurs ET sur plus d'une heure, les deux raisons : un fichier par caméra, et par heure. */}
+          <Info>{[cameras > 1 ? t('export.unParCamera') : '', heures > 1 ? t('export.fichiersDetail') : ''].filter(Boolean).join(' ')}</Info>
+        </span>
+      ),
+    }] : []),
+    ...(basse ? [{
+      cle: 'basse',
+      contenu: (
+        <span className="inline-flex items-center gap-1">
+          <span className="text-warn">{t('export.basse')}</span>
+          <Info>{t('export.frontiere', { date: new Date(frontiere!).toLocaleDateString(localeDates()) })}</Info>
+        </span>
+      ),
+    }] : []),
   ];
   return (
     <Cadre ton={refus ? 'erreur' : parties > 1 || basse ? 'avert' : 'neutre'} annonce={Boolean(refus)}>
       <Titre icone={refus ? AlertCircle : Download} ton={refus ? 'text-bad' : 'text-accent'}>{t('export.plage')}</Titre>
       <Bornes debut={plage.debut} fin={plage.fin} />
-      <span className="whitespace-nowrap text-muted">
-        <b className="font-medium text-ink">{dureeVideo(duree)}</b>
-        {faits.map((f) => <span key={f}><span className="mx-1.5 text-soft">·</span>{f}</span>)}
+      <span className="inline-flex items-center whitespace-nowrap text-muted">
+        {/* « ≈ » : le contrôleur coupe sur les images-clés — le détail est dans le « i ». */}
+        <b className="font-medium text-ink">≈ {dureeVideo(duree)}</b>
+        <span className="ml-1 inline-flex"><Info>{t('export.imagesCles')}</Info></span>
+        {faits.map((f) => <span key={f.cle} className="inline-flex items-center"><span className="mx-1.5 text-soft">·</span>{f.contenu}</span>)}
       </span>
       <Fin>
         <Bouton taille="petit" variante="fantome" icone={X} onClick={onEffacer}>{t('export.effacer')}</Bouton>
@@ -215,14 +241,6 @@ export function LignePlage({
       {refus && (
         <Note ton="text-[#f0a898]">{t(RAISON[refus.raison], { fichier: refus.fichier ?? '', statut: '' })}</Note>
       )}
-      {cameras > 1 && <Note>{t('export.unParCamera')}</Note>}
-      {heures > 1 && <Note ton="text-warn">{t('export.parties', { n: parties })}</Note>}
-      {basse && (
-        <Note ton="text-warn">
-          {t('export.frontiere', { date: new Date(frontiere!).toLocaleDateString(localeDates()) })}
-        </Note>
-      )}
-      <Note>{t('export.imagesCles')}</Note>
     </Cadre>
   );
 }

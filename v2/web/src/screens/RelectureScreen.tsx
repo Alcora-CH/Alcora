@@ -42,6 +42,8 @@ import type { Archive, Detection, DiscoveredCamera, RaisonExport, RelaisAcces } 
  */
 
 const JOUR_MS = 86_400_000;
+/** Une heure au plus par fichier exporté (v2/desktop/export-plage.js). */
+const HEURE_MS = 3_600_000;
 /**
  * Deux durees, et c'est un compromis assume.
  *
@@ -974,17 +976,22 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                     disabled={!courant} onClick={() => pas(-1)} />
             <Bouton variante="fantome" taille="petit" icone={SkipForward} titre={t('video.imageSuivante')}
                     disabled={!courant} onClick={() => pas(1)} />
-            {/* Les bornes de la plage a exporter, posees a l'instant lu (touches I et O). */}
+            {/* Les bornes de la plage a exporter, posees a l'instant lu (touches I et O). Celle
+                qui reste a poser se designe d'un halo d'or qui respire — a la place de « Pose la
+                fin a l'instant voulu… » (clarte, 24.10.2026) ; meme respiration que le point
+                d'une detection en cours. */}
             <span className="ml-2.5 flex items-center gap-1 border-l border-line2 pl-3">
               <Bouton taille="petit" variante={plage.debut !== null ? 'actif' : 'normal'} icone={ArrowRightFromLine}
-                      titre={t('export.debutTitre')} disabled={instant === null}
+                      titre={t('export.debutTitre')} disabled={instant === null} className="relative"
                       onClick={() => { if (instant !== null) poserBorne('debut', instant); }}>
                 {t('export.debut')} <Touche>I</Touche>
+                {plage.debut === null && plage.fin !== null && <Halo />}
               </Bouton>
               <Bouton taille="petit" variante={plage.fin !== null ? 'actif' : 'normal'} icone={ArrowLeftFromLine}
-                      titre={t('export.finTitre')} disabled={instant === null}
+                      titre={t('export.finTitre')} disabled={instant === null} className="relative"
                       onClick={() => { if (instant !== null) poserBorne('fin', instant); }}>
                 {t('export.fin')} <Touche>O</Touche>
+                {plage.fin === null && plage.debut !== null && <Halo />}
               </Bouton>
             </span>
             <Segment
@@ -1068,6 +1075,11 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
       </div>
     </div>
   );
+}
+
+/** Le halo de la borne qui reste à poser. */
+function Halo() {
+  return <span aria-hidden className="point-activite pointer-events-none absolute -inset-1 rounded-[11px] border-2 border-accent" />;
 }
 
 /**
@@ -1365,6 +1377,16 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
                         background: bande.ouverte
                           ? 'linear-gradient(90deg, rgba(220,169,92,.2), rgba(220,169,92,0))' : 'rgba(220,169,92,.2)' }} />
         )}
+
+        {/* Plus d'une heure : un fichier par heure, et les coupures se voient — l'export découpe
+            depuis le début de la plage (v2/desktop/export-plage.js, « decouper »). */}
+        {plage.debut !== null && plage.fin !== null && plage.fin - plage.debut > HEURE_MS
+          && Array.from({ length: Math.ceil((plage.fin - plage.debut) / HEURE_MS) - 1 }, (_, i) => plage.debut! + (i + 1) * HEURE_MS)
+            .filter((c) => c > vue.debut && c < fin)
+            .map((c) => (
+              <div key={c} className="pointer-events-none absolute inset-y-1.5 border-l border-dashed"
+                   style={{ left: `${enFraction(c) * 100}%`, borderColor: 'rgba(220,169,92,.85)' }} />
+            ))}
 
         {instant !== null && instant >= vue.debut && instant <= fin && (
           <div className="pointer-events-none absolute -inset-y-0.5 w-0.5"
