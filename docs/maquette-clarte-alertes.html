@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette, clarté des Alertes</title>
+<!--
+  Troisième écran de la règle « Clarté avant texte » (CLAUDE.md, 24.10.2026), après les Réglages et
+  la Relecture.
+
+  Inventaire fait avant de dessiner (VeillesScreen.tsx, HistoriqueAlertes.tsx, démo du 24.10.2026 :
+  veilles repliées, veille dépliée, historique) : 56 textes, 277 mots, dont cinq phrases de plus de
+  90 caractères. Ce qui explique au lieu de montrer :
+    1. « Cet interrupteur est celui d'Alcora, indépendant de l'armement de Protect… » (164), en
+       permanence en tête des veilles ;
+    2. les sous-titres « Ce qui mérite qu'Alcora te prévienne sur ce PC, et quand » et « Ce que les
+       veilles ont envoyé, gardé 90 jours sur ce PC » — le second redit la ligne du bas ;
+    3. « Une personne qui reste dans le champ produit une détection toutes les quinze secondes… »
+       (124), sous la retenue ;
+    4. la cloche qui allume ou éteint une veille : un bouton carré, que rien ne désigne comme un
+       interrupteur — les Réglages ont, eux, de vrais interrupteurs ;
+    5. le badge « avec son » répété sur chaque alerte ;
+    6. le mouvement : la veille se déplie d'un coup, alors que la règle « Mouvement » en fait son
+       exception assumée ; « Enregistré » surgit et disparaît d'un coup.
+
+  « Après » garde chaque commande et chaque information (iso-contenu). Les deux interrupteurs se
+  MONTRENT côte à côte (celui d'Alcora, l'état de Protect), l'explication passe dans le « i ». Les
+  erreurs, la confirmation d'effacement et les infobulles des badges gardent leur texte : c'est
+  l'exception de la règle. Données fictives.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #0e131b; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+.banc { position: fixed; inset: 0 0 auto 0; min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 6px 14px;
+        background: #f1efe9; color: #23252a; font: 500 13px/1 "Barlow", system-ui, sans-serif; z-index: 100; }
+.banc b { font-weight: 600; white-space: nowrap; }
+.banc .seg { display: flex; flex-wrap: wrap; background: #dedbd2; border-radius: 8px; padding: 3px; gap: 2px; }
+.banc .seg button { padding: 6px 10px; border-radius: 6px; color: #4a4c52; white-space: nowrap; }
+.banc .seg button[aria-pressed="true"] { background: #fff; color: #15171a; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.banc .note { margin-left: auto; color: #6c6e74; white-space: nowrap; }
+
+:root {
+  --bg: #0e131b; --card: #151b25; --card2: #1e2633; --card3: #283242;
+  --line: rgba(206,214,229,.09); --line2: rgba(206,214,229,.17);
+  --ink: #ece8df; --muted: #a9b0bc; --soft: #737d8b;
+  --accent: #dca95c; --accent-soft: rgba(220,169,92,.14); --accent-ligne: rgba(220,169,92,.42);
+  --ok: #74c494; --ok-soft: rgba(116,196,148,.12); --bad: #e3735f; --bad-soft: rgba(227,115,95,.12); --warn: #e0a23c;
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  --vive: 140ms; --douceur: 240ms; --ample: 420ms;
+  --pose: cubic-bezier(.2,.7,.2,1); --douce: cubic-bezier(.4,0,.2,1);
+}
+#vues { position: absolute; inset: 44px 0 0 0; display: grid; grid-template-columns: 1fr; }
+#vues.deux { grid-template-columns: 1fr 1fr; }
+.app { position: relative; min-width: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); color: var(--ink);
+       font: 400 13px/1.45 "Atkinson Hyperlegible Next", system-ui, sans-serif; border-right: 1px solid var(--line2); }
+.etiquette-vue { flex: none; display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 16px;
+                 background: rgba(14,19,27,.92); border-bottom: 1px solid var(--line); font-size: 12px; color: var(--soft); }
+.etiquette-vue b { color: var(--ink); font-weight: 600; }
+.etiquette-vue .compte { margin-left: auto; font-family: var(--mono); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.entete { flex: none; display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 8px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.entete h1 { margin: 0; font-size: 17px; font-weight: 600; }
+.entete .sous { color: var(--muted); font-size: 12px; }
+.onglets { display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: var(--card2); }
+.onglets button { padding: 5px 11px; border-radius: 7px; color: var(--muted); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.onglets button[aria-pressed="true"] { background: var(--card3); color: var(--ink); }
+.onglets .nb { min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #1b1406; font-size: 10.5px; font-weight: 700; }
+.droite { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.enregistre { display: inline-flex; align-items: center; gap: 6px; color: var(--ok); font-size: 12px; animation: surgit var(--douceur) var(--pose) both; }
+.armement { display: flex; align-items: center; gap: 12px; padding: 6px 14px 6px 10px; border-radius: 10px; border: 1px solid var(--line2); background: var(--card2); }
+.armement .l1 { font-weight: 500; line-height: 1.2; }
+.armement .l2 { font-size: 12px; color: var(--soft); line-height: 1.2; }
+.armement .protect { display: flex; align-items: center; gap: 7px; padding-left: 12px; border-left: 1px solid var(--line2); color: var(--muted); font-size: 12px; white-space: nowrap; }
+.armement .protect b { color: var(--ink); font-weight: 500; }
+.pt { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+.inter { position: relative; width: 38px; height: 22px; flex: none; border-radius: 11px; background: var(--card3); transition: background var(--douceur) var(--douce); }
+.inter::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); transition: transform var(--douceur) var(--pose); }
+.inter[aria-checked="true"] { background: var(--ok); }
+.inter[aria-checked="true"]::after { transform: translateX(16px); background: #0e1a12; }
+.inter.or[aria-checked="true"] { background: var(--accent); }
+.inter.or[aria-checked="true"]::after { background: #1b1406; }
+
+.corps { flex: 1; min-height: 0; overflow: auto; }
+.colonne { max-width: 980px; margin: 0 auto; padding: 20px 22px 40px; }
+.para { margin: 0 0 16px; max-width: 720px; color: var(--muted); line-height: 1.6; }
+.carte { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; }
+.veille + .veille { border-top: 1px solid var(--line); }
+.ligne-veille { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto auto 40px 20px; align-items: center; gap: 14px; padding: 13px 16px; }
+.ligne-veille.avant { grid-template-columns: 36px minmax(0, 1fr) auto auto 20px; }
+.ligne-veille.eteinte > :not(.inter):not(.bascule) { opacity: .55; }
+.cloche { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; background: var(--card2); color: var(--soft); }
+.cloche.on { background: var(--accent-soft); color: var(--accent); }
+.nom { font-size: 14.5px; font-weight: 600; }
+.quoi { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.quand { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.vol { font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chevron { color: var(--soft); display: grid; place-items: center; transition: transform var(--douceur) var(--pose); }
+.chevron.ouvert { transform: rotate(180deg); }
+/* Le dépliement : l'exception assumée de la règle « Mouvement » — la hauteur s'anime. */
+.detail-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--ample) var(--pose); }
+.detail-wrap.ouvert { grid-template-rows: 1fr; }
+.detail-wrap > div { overflow: hidden; }
+.detail { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 34px; padding: 4px 16px 22px 66px; }
+.detail h3 { margin: 0 0 9px; font-size: 13px; font-weight: 600; }
+.detail h3 + * { margin-bottom: 20px; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.puce { height: 28px; padding: 0 11px; border-radius: 14px; border: 1px solid var(--line2); color: var(--muted); font-size: 12px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.puce.on { background: var(--accent-soft); border-color: var(--accent-ligne); color: var(--accent); }
+.puce.urgence { border-color: rgba(227,115,95,.4); }
+.puce .n { font-size: 11px; }
+.aide { margin-top: 6px; font-size: 12px; color: var(--soft); line-height: 1.5; }
+.libelle { font-size: 12px; color: var(--muted); margin: 0 4px; display: inline-flex; align-items: center; gap: 4px; }
+.segment { display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: var(--card2); }
+.segment button { padding: 5px 10px; border-radius: 7px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.segment button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.semaine { display: grid; grid-template-columns: 30px 1fr; gap: 4px 10px; align-items: center; margin-top: 10px; font-size: 11px; color: var(--soft); }
+.semaine .barre { position: relative; height: 11px; border-radius: 3px; background: var(--card2); overflow: hidden; }
+.semaine .barre i { position: absolute; top: 0; bottom: 0; background: var(--accent); opacity: .75; border-radius: 3px; }
+.semaine .heures { grid-column: 2; display: flex; justify-content: space-between; }
+
+.filtres { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.filtres .compte { margin-left: auto; font-size: 12px; color: var(--muted); }
+.jour-tete { display: flex; align-items: baseline; gap: 8px; padding: 10px 16px 8px; background: var(--card2); border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.jour-tete:first-child { border-top: 0; border-radius: 12px 12px 0 0; }
+.jour-tete b { font-size: 13px; color: var(--ink); font-weight: 600; }
+.alerte { position: relative; display: grid; grid-template-columns: 108px 64px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 10px 16px; border-top: 1px solid var(--line); }
+.alerte.urgence::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--bad); }
+.vign { height: 60px; border-radius: 7px; background: linear-gradient(135deg, #2b3442, #141920); display: grid; place-items: center; color: var(--soft); }
+.heure { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+.ilya { font-size: 12px; color: var(--soft); }
+.titre-al { font-size: 14px; font-weight: 600; }
+.veille-al { font-size: 12px; color: var(--muted); }
+.badges { display: flex; gap: 5px; margin-top: 6px; align-items: center; }
+.badge { height: 20px; padding: 0 7px; border-radius: 10px; border: 1px solid var(--line2); color: var(--muted); font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.badge.or { border-color: var(--accent-ligne); color: var(--accent); }
+.badge.orange { border-color: rgba(224,162,60,.4); color: var(--warn); }
+.badge.icone { width: 20px; padding: 0; justify-content: center; }
+.badge svg.i { width: 12px; height: 12px; }
+.actions { display: flex; gap: 6px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; background: var(--card2); border: 1px solid var(--line2); color: var(--ink); font-size: 12px; white-space: nowrap; }
+.btn.fantome { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.danger { background: var(--bad-soft); border-color: rgba(227,115,95,.45); color: var(--bad); }
+.pied { display: flex; align-items: center; gap: 9px; margin-top: 12px; font-size: 12px; color: var(--soft); }
+.pied .btn { margin-left: auto; }
+.confirme { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: 9px; background: var(--bad-soft); border: 1px solid rgba(227,115,95,.35);
+            animation: surgit var(--douceur) var(--pose) both; }
+.confirme .fin { margin-left: auto; display: flex; gap: 8px; }
+.vide { text-align: center; padding: 34px 24px; color: var(--muted); }
+.vide .t { font-size: 15px; font-weight: 600; color: var(--ink); margin: 8px 0 4px; }
+
+.info { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: var(--soft); cursor: help; position: relative; vertical-align: middle; }
+.info:hover { color: var(--ink); }
+.info svg.i { width: 14px; height: 14px; }
+.info .bulle { position: absolute; top: 24px; right: -8px; width: 280px; padding: 9px 11px; border-radius: 9px; background: var(--card3); border: 1px solid var(--line2);
+               color: var(--ink); font-size: 12px; line-height: 1.5; white-space: normal; text-align: left; box-shadow: 0 12px 30px rgba(0,0,0,.45); opacity: 0; transform: translate3d(0, -4px, 0);
+               pointer-events: none; transition: opacity var(--douceur) var(--douce), transform var(--douceur) var(--pose); z-index: 20; font-weight: 400; }
+.info:hover .bulle { opacity: 1; transform: none; }
+[data-tip] { position: relative; }
+[data-tip]:hover::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); padding: 5px 8px; border-radius: 7px;
+                         background: var(--card3); border: 1px solid var(--line2); color: var(--ink); font-size: 11px; white-space: nowrap; z-index: 20; }
+@keyframes surgit { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="banc">
+  <b>Clarté — Alertes</b>
+  <div class="seg" data-cle="vue">
+    <button data-v="avant">Avant</button><button data-v="apres">Après</button><button data-v="deux">Côte à côte</button>
+  </div>
+  <div class="seg" data-cle="cas">
+    <button data-v="veilles">Veilles</button><button data-v="deplie">Veille dépliée</button><button data-v="historique">Historique</button><button data-v="vide">Historique vide</button><button data-v="effacer">Effacer ?</button>
+  </div>
+  <span class="note">Clique une veille pour la déplier, son interrupteur pour l'éteindre ; survole les « i ».</span>
+</div>
+<div id="vues"></div>
+
+<script>
+const ICONES = {
+  cloche: '<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  clocheOff: '<path d="M6 16V11a6 6 0 0 1 9-5.2M18 11v5l1.5 2H9"/><path d="M10 20a2 2 0 0 0 4 0M4 4l16 16"/>',
+  bas: '<path d="m6 9 6 6 6-6"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  coche: '<path d="m5 12 5 5 9-10"/>',
+  son: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/>',
+  sansSon: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="m17 10 4 4M21 10l-4 4"/>',
+  sansImage: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 3l18 18"/>',
+  revoir: '<path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4M12 8v4l3 2"/>',
+  play: '<path d="M8 5v14l11-7z"/>',
+  bouclier: '<path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/>',
+  poubelle: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+};
+const ic = (n) => `<svg class="i" viewBox="0 0 24 24">${ICONES[n]}</svg>`;
+const info = (texte) => `<span class="info">${ic('info')}<span class="bulle">${texte}</span></span>`;
+const etat = { vue: 'deux', cas: 'veilles', actives: { personne: true, urgence: true }, ouverte: { avant: null, apres: null } };
+
+const INDEPENDANT = 'Cet interrupteur est celui d’Alcora, indépendant de l’armement de Protect. Les deux peuvent différer : Alcora préviendra sur ce PC même si Protect reste silencieux.';
+const RETENUE = 'Une personne qui reste dans le champ produit une détection toutes les quinze secondes. Sans cette retenue, autant de bulles.';
+const VEILLES = [
+  { id: 'personne', nom: 'Une personne est détectée', quoi: 'Personne — toutes les caméras', quand: 'Quand la veille est active', vol: '~1 par jour', ton: 'var(--ok)' },
+  { id: 'urgence', nom: 'Bris de verre, fumée, sirène, monoxyde', quoi: 'Bris de verre, Fumée, Sirène, Monoxyde — toutes les caméras', quand: 'Toujours', vol: 'presque jamais', ton: 'var(--ok)' },
+];
+
+/* ---------------------------------------------------------------- en-tête */
+function entete(cote, onglet) {
+  const sous = cote === 'avant'
+    ? `<span class="sous">${onglet === 'veilles' ? 'Ce qui mérite qu’Alcora te prévienne sur ce PC, et quand' : 'Ce que les veilles ont envoyé, gardé 90 jours sur ce PC'}</span>` : '';
+  /* APRÈS : les deux interrupteurs côte à côte — celui d'Alcora, l'état de Protect. Ils peuvent
+     différer, et cela SE VOIT ; le pourquoi est dans le « i ». */
+  const protect = cote === 'apres'
+    ? `<span class="protect"><span class="pt" style="background:var(--soft)"></span>Protect <b>désarmé</b>${info(INDEPENDANT)}</span>` : '';
+  return `<header class="entete"><h1>Alertes</h1>${sous}
+    <div class="onglets"><button aria-pressed="${onglet === 'veilles'}">Veilles</button><button aria-pressed="${onglet === 'historique'}">Historique${onglet === 'veilles' ? '<span class="nb">2</span>' : ''}</button></div>
+    <div class="droite">
+      ${etat.enregistre?.[cote] ? `<span class="enregistre">${ic('coche')}Enregistré</span>` : ''}
+      <div class="armement"><button class="inter" role="switch" aria-checked="true"></button>
+        <div><div class="l1">Veille active</div><div class="l2">profil Nuit</div></div>${protect}</div>
+    </div></header>`;
+}
+
+/* ---------------------------------------------------------------- les veilles */
+function detail(cote) {
+  const S = [['Personne', true], ['Véhicule', false, '46/j', 'var(--bad)'], ['Animal', false, '7/j', 'var(--warn)'], ['Colis'], ['Bris de verre', false, '', '', true], ['Fumée', false, '', '', true],
+    ['Sirène', false, '', '', true], ['Monoxyde', false, '', '', true], ['Aboiement'], ['Parole'], ['Pleurs'], ['Mouvement', false, '157/j', 'var(--bad)']];
+  const sujets = S.map(([n, on, c, ton, urg]) => `<span class="puce${on ? ' on' : ''}${urg ? ' urgence' : ''}">${n}${c ? `<span class="n" style="color:${ton}">${c}</span>` : ''}</span>`).join('');
+  const jours = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const semaine = `<div class="semaine">${jours.map((j) => `<span>${j}</span><span class="barre"><i style="left:0;width:29%"></i><i style="left:92%;width:8%"></i></span>`).join('')}
+    <span class="heures"><span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span></span></div>`;
+  return `<div class="detail">
+    <div>
+      <h3>Ce qui déclenche</h3><div class="puces">${sujets}</div>
+      <h3>Sur quelles caméras</h3><div class="puces"><span class="puce on">Toutes</span><span class="puce">Entrée</span><span class="puce">Jardin</span></div>
+      <h3>Ce que ça fait</h3>
+      <div><div class="puces"><span class="puce on">Son</span><span class="libelle">au plus une bulle toutes les${cote === 'apres' ? info(RETENUE) : ''}</span>
+        <span class="puce">1 min</span><span class="puce on">5 min</span><span class="puce">15 min</span><span class="puce">1 h</span></div>
+        ${cote === 'avant' ? `<p class="aide">${RETENUE}</p>` : ''}</div>
+    </div>
+    <div>
+      <h3>Quand</h3>
+      <div><div class="segment"><button>Toujours</button><button aria-pressed="true">Quand la veille est active</button><button>Sur un horaire à moi</button></div>
+        <p class="aide">Suit l’interrupteur et ses horaires</p></div>
+      <h3>Selon quel horaire</h3>
+      <div><div class="puces"><span class="puce">En permanence</span><span class="puce on">Nuit</span></div>${semaine}</div>
+    </div></div>`;
+}
+
+function veilles(cote) {
+  const lignes = VEILLES.map((v) => {
+    const on = etat.actives[v.id];
+    const ouverte = etat.ouverte[cote] === v.id;
+    /* AVANT : la cloche est le bouton qui allume et éteint. APRÈS : la cloche dit l'état, un vrai
+       interrupteur le change — comme dans les Réglages. */
+    const tete = cote === 'avant'
+      ? `<div class="ligne-veille avant${on ? '' : ' eteinte'}">
+          <button class="cloche${on ? ' on' : ''}" data-bascule="${v.id}" title="${on ? 'Désactiver' : 'Activer'}">${ic(on ? 'cloche' : 'clocheOff')}</button>
+          <button style="text-align:left;min-width:0" data-ouvre="${v.id}" data-cote="${cote}"><div class="nom">${v.nom}</div><div class="quoi">${v.quoi}</div></button>
+          <span class="quand">${v.quand}</span><span class="vol" style="color:${v.ton}">${v.vol}</span>
+          <button class="chevron${ouverte ? ' ouvert' : ''}" data-ouvre="${v.id}" data-cote="${cote}">${ic('bas')}</button></div>`
+      : `<div class="ligne-veille${on ? '' : ' eteinte'}">
+          <span class="cloche${on ? ' on' : ''}">${ic(on ? 'cloche' : 'clocheOff')}</span>
+          <button style="text-align:left;min-width:0" data-ouvre="${v.id}" data-cote="${cote}"><div class="nom">${v.nom}</div><div class="quoi">${v.quoi}</div></button>
+          <span class="quand">${v.quand}</span><span class="vol" style="color:${v.ton}">${v.vol}</span>
+          <button class="inter or bascule" role="switch" aria-checked="${on}" data-bascule="${v.id}" data-tip="${on ? 'Désactiver' : 'Activer'}"></button>
+          <button class="chevron${ouverte ? ' ouvert' : ''}" data-ouvre="${v.id}" data-cote="${cote}">${ic('bas')}</button></div>`;
+    /* AVANT : le détail apparaît d'un coup. APRÈS : il se déplie (hauteur animée — l'exception assumée). */
+    const corps = cote === 'avant' ? (ouverte ? detail(cote) : '') : `<div class="detail-wrap${ouverte ? ' ouvert' : ''}"><div>${detail(cote)}</div></div>`;
+    return `<div class="veille">${tete}${corps}</div>`;
+  }).join('');
+  return `<div class="colonne">${cote === 'avant' ? `<p class="para">${INDEPENDANT}</p>` : ''}<div class="carte">${lignes}</div></div>`;
+}
+
+/* ---------------------------------------------------------------- l'historique */
+const ALERTES = [
+  { jour: 'Aujourd’hui', n: 2, liste: [
+    { h: '14:08', ilya: 'il y a 24 min', titre: 'Personne — Entrée', veille: 'Une personne est détectée', son: true, retenues: 3 },
+    { h: '12:42', ilya: 'il y a 1 h', titre: 'Personne — Jardin', veille: 'Une personne est détectée', son: true, sansImage: true } ] },
+  { jour: 'Hier', n: 2, liste: [
+    { h: '22:22', ilya: 'il y a 16 h', titre: 'Personne — Entrée', veille: 'Une personne est détectée', son: true },
+    { h: '12:22', ilya: 'il y a 1 j', titre: 'Bris de verre — Jardin', veille: 'Bris de verre, fumée, sirène, monoxyde', son: true, urgence: true } ] },
+  { jour: 'Jeudi 22 octobre', n: 1, liste: [
+    { h: '12:22', ilya: 'il y a 2 j', titre: 'Personne — Entrée', veille: 'Une personne est détectée', son: false, retenues: 1 } ] },
+];
+function historique(cote, vide, confirmer) {
+  if (vide) {
+    return `<div class="colonne"><div class="carte vide">${ic('cloche')}<div class="t">Aucune alerte envoyée pour l’instant</div>
+      <div>${cote === 'avant' ? 'Quand une veille préviendra, l’alerte apparaîtra ici — même si personne n’a vu la bulle.' : 'Chaque bulle s’inscrira ici, même manquée.'}</div></div></div>`;
+  }
+  const rangs = ALERTES.map((j) => `<div class="jour-tete"><b>${j.jour}</b>${j.n} alerte${j.n > 1 ? 's' : ''}</div>${j.liste.map((a) => {
+    /* AVANT : « avec son » écrit sur chaque alerte. APRÈS : le haut-parleur seul, nommé au survol. */
+    const son = cote === 'avant'
+      ? `<span class="badge">${ic(a.son ? 'son' : 'sansSon')}${a.son ? 'avec son' : 'sans son'}</span>`
+      : `<span class="badge icone" data-tip="${a.son ? 'avec son' : 'sans son'}">${ic(a.son ? 'son' : 'sansSon')}</span>`;
+    return `<div class="alerte${a.urgence ? ' urgence' : ''}"><div class="vign">${ic('cloche')}</div>
+      <div><div class="heure">${a.h}</div><div class="ilya">${a.ilya}</div></div>
+      <div style="min-width:0"><div class="titre-al">${a.titre}</div><div class="veille-al">${a.veille}</div>
+        <div class="badges">${son}${a.sansImage ? `<span class="badge orange" title="L’instantané n’est pas arrivé à temps : la bulle est partie sans image, pour ne pas prévenir en retard.">${ic('sansImage')}bulle sans image</span>` : ''}${a.retenues ? `<span class="badge or" title="Les détections suivantes de cette veille, pour ce sujet, que la retenue a tues : au plus une bulle par durée choisie.">+${a.retenues} retenue${a.retenues > 1 ? 's' : ''}</span>` : ''}</div></div>
+      <div class="actions"><button class="btn">${ic('revoir')}Revoir</button><button class="btn">${ic('play')}Séquence</button></div></div>`;
+  }).join('')}`).join('');
+  const pied = confirmer
+    ? `<div class="confirme"><span>Effacer les 5 alertes de l’historique ? Les veilles, elles, ne changent pas.</span><span class="fin"><button class="btn">Annuler</button><button class="btn danger">${ic('poubelle')}Effacer</button></span></div>`
+    : `<div class="pied">${ic('bouclier')}${cote === 'avant' ? 'Gardé 90 jours sur ce PC, jamais ailleurs.' : '90 jours, sur ce PC seulement'}<button class="btn fantome">${ic('poubelle')}Effacer l’historique</button></div>`;
+  return `<div class="colonne"><div class="filtres"><span class="puce on">Toutes <span class="n" style="color:var(--soft)">5</span></span><span class="puce">Une personne est détectée <span class="n" style="color:var(--soft)">4</span></span><span class="puce">Bris de verre, fumée, sirène, monoxyde <span class="n" style="color:var(--soft)">1</span></span><span class="compte">5 alertes</span></div>
+    <div class="carte">${rangs}</div>${pied}</div>`;
+}
+
+function ecran(cote) {
+  const onglet = ['veilles', 'deplie'].includes(etat.cas) ? 'veilles' : 'historique';
+  const contenu = onglet === 'veilles' ? veilles(cote) : historique(cote, etat.cas === 'vide', etat.cas === 'effacer');
+  return `${entete(cote, onglet)}<div class="corps">${contenu}</div>`;
+}
+
+const mots = (html) => {
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  d.querySelectorAll('.bulle, .filtres, .semaine, .heure, .ilya, .detail-wrap:not(.ouvert)').forEach((b) => b.remove());
+  return d.textContent.replace(/[0-9:,.%×→…·−+–~/]+/g, ' ').trim().split(/\s+/).filter((w) => w.length > 1).length;
+};
+function rendre() {
+  const vues = document.getElementById('vues');
+  const a = ecran('avant');
+  const p = ecran('apres');
+  const blocA = `<div class="app" data-cote="avant"><div class="etiquette-vue"><b>Avant</b> l’écran d’aujourd’hui<span class="compte">${mots(a)} mots</span></div>${a}</div>`;
+  const blocP = `<div class="app" data-cote="apres"><div class="etiquette-vue"><b>Après</b> mêmes commandes, mêmes informations<span class="compte">${mots(p)} mots</span></div>${p}</div>`;
+  vues.className = etat.vue === 'deux' ? 'deux' : '';
+  vues.innerHTML = etat.vue === 'avant' ? blocA : etat.vue === 'apres' ? blocP : blocA + blocP;
+}
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b || b.closest('.banc')) return;
+  if (b.dataset.bascule) {
+    const id = b.dataset.bascule;
+    etat.actives[id] = !etat.actives[id];
+    const cote = b.closest('.app').dataset.cote;
+    etat.enregistre = { [cote]: true };
+    b.setAttribute('aria-checked', String(etat.actives[id]));
+    setTimeout(rendre, 200);
+    setTimeout(() => { etat.enregistre = {}; rendre(); }, 1800);
+    return;
+  }
+  if (b.dataset.ouvre) {
+    const cote = b.dataset.cote;
+    etat.ouverte[cote] = etat.ouverte[cote] === b.dataset.ouvre ? null : b.dataset.ouvre;
+    if (cote === 'apres') {
+      /* Le dépliement se joue sur la page en place : on bascule la classe, sans tout redessiner. */
+      const app = b.closest('.app');
+      app.querySelectorAll('.veille').forEach((v, i) => {
+        const ouvert = etat.ouverte.apres === VEILLES[i].id;
+        v.querySelector('.detail-wrap').classList.toggle('ouvert', ouvert);
+        v.querySelector('.chevron').classList.toggle('ouvert', ouvert);
+      });
+      return;
+    }
+    rendre();
+  }
+});
+for (const seg of document.querySelectorAll('.banc .seg')) {
+  const cle = seg.dataset.cle;
+  for (const b of seg.querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', String(b.dataset.v === etat[cle]));
+    b.addEventListener('click', () => {
+      etat[cle] = b.dataset.v;
+      if (cle === 'cas') etat.ouverte = etat.cas === 'deplie' ? { avant: 'personne', apres: 'personne' } : { avant: null, apres: null };
+      for (const x of seg.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+      rendre();
+    });
+  }
+}
+rendre();
+</script>
+</body>
+</html>
