@@ -83,12 +83,11 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
   /** Numéro de la demande : une recherche lente ne doit pas écraser une plus récente. */
   const demande = useRef(0);
 
-  const criteres = useMemo<CriteresRecherche>(() => ({
-    depuis: Date.now() - (PERIODES.find((p) => p.id === periode)?.ms ?? 7 * 86_400_000),
-    jusqua: Date.now(),
+  const periodeMs = PERIODES.find((p) => p.id === periode)?.ms ?? 7 * 86_400_000;
+  const filtres = useMemo<Omit<CriteresRecherche, 'depuis' | 'jusqua'>>(() => ({
     sujets, seuil, types, couleurs, cameras: camerasChoisies,
     texte: texte.trim() || undefined,
-  }), [periode, sujets, seuil, types, couleurs, camerasChoisies, texte]);
+  }), [sujets, seuil, types, couleurs, camerasChoisies, texte]);
 
   useEffect(() => {
     const n = ++demande.current;
@@ -96,7 +95,9 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
     setErreur(null);
     // Le texte se tape lettre par lettre : on laisse la frappe se poser.
     const minuteur = setTimeout(() => {
-      bridge.recherche(criteres)
+      // L'heure se lit a la demande, pas pendant le rendu (regle react/purity, 24.10.2026).
+      const jusqua = Date.now();
+      bridge.recherche({ ...filtres, depuis: jusqua - periodeMs, jusqua })
         .then((r) => {
           if (n !== demande.current) return;
           setObjets(r.objets);
@@ -108,7 +109,7 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
         .finally(() => { if (n === demande.current) setChargement(false); });
     }, texte ? 320 : 0);
     return () => clearTimeout(minuteur);
-  }, [criteres, texte]);
+  }, [filtres, periodeMs, texte]);
 
   const bascule = useCallback(
     (liste: string[], set: (v: string[]) => void, id: string) =>

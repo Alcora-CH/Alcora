@@ -22,7 +22,7 @@ function lire(): unknown {
 export function useAbsence(): { etat: EtatAbsence; marquerVu: () => void } {
   const [etat, setEtat] = useState<EtatAbsence>(() => auLancement(lire(), Date.now()));
   const actuel = useRef(etat);
-  const dernierGeste = useRef(Date.now());
+  const dernierGeste = useRef(0);
 
   useEffect(() => {
     actuel.current = etat;
@@ -35,6 +35,7 @@ export function useAbsence(): { etat: EtatAbsence; marquerVu: () => void } {
   }, [etat]);
 
   useEffect(() => {
+    dernierGeste.current = Date.now();
     const geste = () => {
       dernierGeste.current = Date.now();
       if (enCours(actuel.current)) setEtat((e) => revenir(e, Date.now()));

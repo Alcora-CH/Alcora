@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useMaintenant } from '../lib/useMaintenant';
 import { Eye, EyeOff, FolderOpen, RotateCw, ShieldCheck } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { localeDates, t, useLangue } from '../i18n';
@@ -77,6 +78,7 @@ export function SystemeScreen({
   onGuide: () => void;
 }) {
   useLangue();
+  const maintenant = useMaintenant();
   const activite = useActivite();
   const dernieres = useMemo(() => derniereParCamera(activite), [activite]);
 
@@ -255,7 +257,7 @@ export function SystemeScreen({
                   <Ligne k={t('colonne.disponible')} v={systeme.versionDisponible} ton="var(--warn)" />
                 )}
                 {systeme.depuis != null && (
-                  <Ligne k={t('colonne.allumeDepuis')} v={duree(Date.now() - systeme.depuis)} />
+                  <Ligne k={t('colonne.allumeDepuis')} v={duree(maintenant - systeme.depuis)} />
                 )}
               </Bloc>
             )}

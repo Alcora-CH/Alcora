@@ -9,7 +9,7 @@
     "react/refs": "warn",
     "react/set-state-in-effect": "off",
     "react/preserve-manual-memoization": "off",
-    "react/purity": "off",
+    "react/purity": "warn",
     "react/immutability": "off"
   }
 }
