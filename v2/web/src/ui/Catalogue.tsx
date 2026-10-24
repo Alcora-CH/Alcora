@@ -31,7 +31,7 @@ export function Catalogue() {
       <div className="mx-auto flex max-w-[960px] flex-col gap-8 px-6 py-8">
         <Section titre="text-micro · text-meta · text-corps · text-titre · text-ecran">
           <Carte className="flex flex-col gap-2 p-5">
-            <span className="text-micro text-soft">11 — {t('relecture.molette')}</span>
+            <span className="text-micro text-soft">11 — {t('relecture.revoirJournee')}</span>
             <span className="text-meta text-muted">12 — {t('setup.adresse.hint')}</span>
             <span className="text-corps">13 — {t('setup.sousTitre')}</span>
             <span className="text-titre font-semibold">15 — {t('setup.compte.titre')}</span>
