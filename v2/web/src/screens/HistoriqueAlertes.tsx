@@ -52,10 +52,16 @@ function Vignette({ id }: { id: string | null }) {
   );
 }
 
-function Badge({ ton, titre, children }: { ton?: 'or' | 'orange'; titre?: string; children: React.ReactNode }) {
+function Badge({ ton, titre, carre, children }: {
+  ton?: 'or' | 'orange'; titre?: string;
+  /** Une icône seule : le badge devient un rond. */
+  carre?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <span title={titre}
-          className={cx('inline-flex h-5 items-center gap-[5px] rounded-full border px-[7px] text-[11.5px]',
+          className={cx('inline-flex h-5 items-center gap-[5px] rounded-full border text-[11.5px]',
+            carre ? 'w-5 justify-center' : 'px-[7px]',
             ton === 'or' ? 'border-accent-ligne text-accent'
               : ton === 'orange' ? 'border-[rgba(224,162,60,.4)] text-warn' : 'border-line2 text-muted')}>
       {children}
@@ -161,9 +167,12 @@ export function HistoriqueAlertes({ libelleSujet, estUrgence, onOuvrir, onRevoir
                     </div>
                     <div className="mt-0.5 truncate text-meta text-muted">{e.veilleNom ?? '—'}</div>
                     <div className="mt-1.5 flex flex-wrap gap-[5px]">
-                      {e.son
-                        ? <Badge><Volume2 className="h-3 w-3" aria-hidden />{t('historique.avecSon')}</Badge>
-                        : <Badge><VolumeX className="h-3 w-3" aria-hidden />{t('historique.sansSon')}</Badge>}
+                      {/* Le haut-parleur suffit ; son nom au survol, et pour le lecteur d'écran — « avec
+                          son » s'écrivait sur chaque alerte (clarté, 24.10.2026). */}
+                      <Badge carre titre={e.son ? t('historique.avecSon') : t('historique.sansSon')}>
+                        {e.son ? <Volume2 className="h-3 w-3" aria-hidden /> : <VolumeX className="h-3 w-3" aria-hidden />}
+                        <span className="sr-only">{e.son ? t('historique.avecSon') : t('historique.sansSon')}</span>
+                      </Badge>
                       {!e.image && (
                         <Badge ton="orange" titre={t('historique.sansImageTitre')}>
                           <ImageOff className="h-3 w-3" aria-hidden />{t('historique.sansImage')}
