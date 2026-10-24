@@ -66,6 +66,33 @@ const CLES = [
       '-----END PUBLIC KEY-----',
     ].join('\n'),
   },
+  {
+    // Nee dans la puce du poste de construction le 24.10.2026 (scripts/cle-tpm.mjs).
+    nom: 'TPM key Alcora-declaration 378529C9 (2026)',
+    role: 'puce',
+    pem: [
+      '-----BEGIN PUBLIC KEY-----',
+      'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvSH6hVJP2mpGr32CZiiI',
+      '7yYtcKxUNIRGNX4iaBgahIKl2khdul60lvklw1JJAw0nS0Fa9//wSNw5tpxZHI5Q',
+      'ycMFVZisdEqP8XHy7PwkYbkZt2adScN0mipUYq0KLHxEqItYOqLdw6k+Bf1Ugk/M',
+      'NEyUzltXiLT2/QBMuFpdiLtiYtdDS9YRKP9InQVza8C05/iiyWWUCdlXloyBeZrx',
+      'IaYxJ47Ks5AszTcbzQrbaz0djYuGStYbZ57izoTAPxciW1iCrkHPd+LhfCBZ/jhT',
+      'Nt4Oo/O1gAZJzF1y0YJDR7yAc+uzuZRIgmK3PWVae8DO2Bw++vrO+cpoNMxQ2Tw4',
+      '3QIDAQAB',
+      '-----END PUBLIC KEY-----',
+    ].join('\n'),
+  },
+  {
+    // Creee le 24.10.2026 (scripts/cle-secours.mjs) ; sa partie privee n'existe que
+    // chiffree, dans une note Proton Pass.
+    nom: 'Ed25519 backup key A1CD2B18 (2026)',
+    role: 'secours',
+    pem: [
+      '-----BEGIN PUBLIC KEY-----',
+      'MCowBQYDK2VwAyEA4+9wMp75Y80THhGOGR8ptm2hAEXBFdZ6fQLG87xVJB8=',
+      '-----END PUBLIC KEY-----',
+    ].join('\n'),
+  },
 ];
 
 /** Le nom de la declaration publiee a cote du paquet. */

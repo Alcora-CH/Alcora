@@ -341,6 +341,33 @@ const verdict = (d, attendu = CHAMPS, cles = CLES_TEST) => verifierDeclaration(d
     }
   }
 
+  console.log('\n=== Les cles epinglees de la puce et du secours sont les vraies ===');
+  {
+    /*
+     * Comme pour le certificat : les cles publiques ecrites par scripts/cle-tpm.mjs et
+     * scripts/cle-secours.mjs (signature/, hors depot) doivent etre celles de CLES. Une cle
+     * mal recopiee, et la puce signerait des versions que les postes 2.37.0 refuseraient.
+     */
+    const { empreintePublique } = await import(pathToFileURL(path.join(SCRIPTS, 'secours.mjs')).href);
+    const der = (p) => crypto.createPublicKey(p).export({ type: 'spki', format: 'der' });
+    for (const [role, fichier, type] of [
+      ['puce', 'cle-tpm-publique.pem', 'rsa'], ['secours', 'cle-secours-publique.pem', 'ed25519'],
+    ]) {
+      const epinglees = CLES.filter((c) => c.role === role);
+      check(`une seule cle « ${role} » dans CLES`, epinglees.length === 1, String(epinglees.length));
+      const chemin = path.resolve(__dirname, '..', '..', 'signature', fichier);
+      if (!fs.existsSync(chemin) || epinglees.length !== 1) {
+        check(`la cle publique est presente (${chemin}, hors depot)`, false);
+        continue;
+      }
+      const pemFichier = fs.readFileSync(chemin, 'utf8');
+      check(`CLES « ${role} » est la cle de ${fichier}`, der(epinglees[0].pem).equals(der(pemFichier)));
+      check(`… de type ${type}`, crypto.createPublicKey(epinglees[0].pem).asymmetricKeyType === type);
+      const debut = empreintePublique(pemFichier).replace(/ /g, '').slice(0, 8);
+      check(`son nom porte le debut de son empreinte (${debut})`, epinglees[0].nom.includes(debut), epinglees[0].nom);
+    }
+  }
+
   console.log('\n' + (echecs === 0 ? 'TOUS LES TESTS PASSENT' : `${echecs} TEST(S) EN ECHEC`));
   process.exit(echecs === 0 ? 0 : 1);
 })().catch((e) => { console.error(e); process.exit(1); });

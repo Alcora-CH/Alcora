@@ -39,6 +39,26 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.37.0',
+    date: '24.10.2026',
+    fr: [
+      'Les mises à jour peuvent porter plusieurs signatures. Chaque version est désormais signée, '
+      + 'en plus, par une clé née dans la puce de sécurité (TPM) du poste qui construit Alcora : '
+      + 'elle ne peut pas en être copiée, et chaque publication exige son code PIN. Une clé de '
+      + 'secours, gardée hors ligne, prend le relais si ce poste était perdu.',
+      'Rien ne change à l’usage : la signature d’origine reste acceptée pendant la transition, '
+      + 'et sera retirée dans une version suivante.',
+    ],
+    en: [
+      'Updates can carry several signatures. Each version is now also signed by a key created '
+      + 'inside the security chip (TPM) of the machine that builds Alcora: it cannot be copied '
+      + 'out, and every publication requires its PIN. A backup key, kept offline, takes over '
+      + 'should that machine be lost.',
+      'Nothing changes in use: the original signature remains accepted during the transition, '
+      + 'and will be removed in a later version.',
+    ],
+  },
+  {
     version: '2.36.0',
     date: '24.10.2026',
     fr: [
