@@ -452,3 +452,54 @@ body {
                background: var(--accent-soft); border: 1px solid var(--accent-ligne); color: var(--accent);
                font-size: var(--text-meta, 12px); font-weight: 600; white-space: nowrap; }
 .pastille-nv::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+/* ---------------------------------------------------- L'infobulle « i » (ui/Info.tsx)
+
+   Le détail qu'une rangée ne dit plus (règle « Clarté avant texte », 24.10.2026). Elle
+   arrive en fondu et descend de quelques pixels — opacité et transform seulement. */
+.info-bulle-texte {
+  position: absolute; top: 26px; right: -8px; z-index: 40; width: 280px; padding: 9px 11px;
+  border-radius: 9px; background: var(--card3); border: 1px solid var(--line2); color: var(--ink);
+  font-size: var(--text-meta); line-height: 1.5; text-align: left; white-space: normal;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); pointer-events: none;
+  opacity: 0; transform: translate3d(0, -4px, 0);
+  transition: opacity var(--douceur) var(--douce), transform var(--douceur) var(--pose);
+}
+.info-bulle:hover .info-bulle-texte,
+.info-bulle:focus-within .info-bulle-texte { opacity: 1; transform: none; }
+
+/* ---------------------------------------------------- Les aperçus des Réglages
+
+   Ce que fait un réglage se VOIT au lieu de se lire (règle « Clarté avant texte ») :
+   l'espacement resserre une mosaïque miniature, le ciel animé s'anime ou se fige. Le ciel
+   est de la famille du Planétarium : il tourne et file en transform/opacité, et se fige avec
+   prefers-reduced-motion comme lui. */
+.apercu-mur { position: relative; width: 92px; height: 52px; flex: none; overflow: hidden;
+              border-radius: 7px; border: 1px solid var(--line); background: #090c11; }
+.apercu-mur > i { position: absolute; width: 46px; height: 26px;
+                  background: linear-gradient(135deg, #3a4150, #232935);
+                  transition: transform var(--douceur) var(--pose); }
+.apercu-ciel { position: relative; width: 92px; height: 52px; flex: none; overflow: hidden;
+               border-radius: 7px; border: 1px solid var(--line);
+               background: radial-gradient(90% 90% at 30% 110%, #1d2a44, transparent 60%), linear-gradient(#0b1018, #121a28); }
+.apercu-ciel .voute { position: absolute; inset: -40%; }
+.apercu-ciel .voute > i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; }
+.apercu-ciel .filante { position: absolute; left: -20px; top: 12px; width: 26px; height: 1px; opacity: 0;
+                        background: linear-gradient(90deg, transparent, #fff); }
+.apercu-ciel.anime .voute { animation: apercu-tourne 40s linear infinite; }
+.apercu-ciel.anime .filante { animation: apercu-file 3.2s var(--douce) infinite; }
+@keyframes apercu-tourne { to { transform: rotate(360deg); } }
+@keyframes apercu-file {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  10% { opacity: 1; }
+  40% { transform: translate3d(130px, 24px, 0); opacity: 0; }
+  100% { opacity: 0; }
+}
+/* La barre de téléchargement de la pastille de version : elle s'allonge en transform. */
+.barre-maj { width: 60px; height: 4px; overflow: hidden; border-radius: 2px; background: var(--card3); }
+.barre-maj > i { display: block; height: 100%; background: var(--accent); transform-origin: left;
+                 transition: transform var(--ample) var(--douce); }
+@media (prefers-reduced-motion: reduce) {
+  .info-bulle-texte, .apercu-mur > i, .barre-maj > i { transition: none; }
+  .apercu-ciel.anime .voute, .apercu-ciel.anime .filante { animation: none; }
+}

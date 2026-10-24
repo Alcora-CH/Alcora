@@ -88,46 +88,28 @@ export const en: Record<Cle, string> = {
   'reglages.sousTitre': 'Installed version, controller connection, and where to find the log.',
 
   'reglages.version.titre': 'Version',
-  'reglages.version.verification': 'Checking…',
-  'reglages.version.telechargement': 'Downloading {version}… {pourcent} %',
-  'reglages.version.prete': 'Version {version} is ready: restart to apply it.',
-  'reglages.version.erreur': 'The update check did not go through. It will retry on its own.',
-  'reglages.version.repos':
-    'The application checks for new versions on its own, downloads them silently, ' +
-    'then offers to restart.',
-  'reglages.version.manuelle':
-    'On this platform, updating is manual: download the new version from alcora.ch, ' +
-    'then replace the application.',
-  'reglages.version.verifier': 'Check now',
+  'reglages.version.verifier': 'Check',
 
   'reglages.langue.titre': 'Language',
-  'reglages.langue.detail':
-    'Interface and notifications. “Automatic” follows the Windows language.',
   'reglages.langue.auto': 'Automatic',
 
   'reglages.apparence.titre': 'Appearance',
-  'reglages.apparence.espacement': 'Spacing between views',
+  'reglages.apparence.espacement': 'Spacing',
   'reglages.apparence.aucun': 'none',
-  'reglages.apparence.detail':
-    'At “none”, the images touch each other, frameless — a single wall of images.',
-  'reglages.apparence.fond': 'Animated background',
+  'reglages.apparence.fond': 'Animated sky',
   'reglages.apparence.fondDetail':
     'Brings the sky behind the images to life: it turns, stars shoot across, nebulae ' +
     'drift. Off, the sky stays, still. It also freezes on its own if Windows asks for ' +
     'reduced motion.',
 
   'reglages.demarrage.titre': 'Startup',
-  'reglages.demarrage.ouvrir': 'Open Alcora with Windows',
+  'reglages.demarrage.ouvrir': 'Start with Windows',
   'reglages.demarrage.indisponible': 'Unavailable outside the installed application.',
-  'reglages.demarrage.detail': 'The application launches as soon as you sign in to Windows.',
 
   'reglages.confort.titre': 'Captures and sound',
-  'reglages.confort.dossier': 'Where captures go',
+  'reglages.confort.dossier': 'Captures',
   'reglages.confort.changer': 'Change',
-  'reglages.confort.son': 'Sound on from the start',
-  'reglages.confort.sonDetail':
-    'Off by default: a wall of images that starts talking on its own at launch quickly ' +
-    'becomes unbearable. Sound is enabled camera by camera, below the image.',
+  'reglages.confort.son': 'Sound at start',
 
   'reglages.historique.titre': 'What changed',
   'reglages.historique.installee': 'installed',
@@ -139,16 +121,11 @@ export const en: Record<Cle, string> = {
   'reglages.connexion.oui': 'yes',
   'reglages.connexion.non': 'no',
   'reglages.connexion.modifier': 'Change the connection',
-  'reglages.connexion.avertissement':
-    'The password and the two-factor key will be erased from this PC, and the sign-in ' +
-    'screen will come back. The cameras will stop displaying until you enter them again.',
+  'reglages.connexion.avertissement': 'Password and key will be erased from this PC.',
   'reglages.connexion.effacer': 'Erase and re-enter',
   'reglages.connexion.annuler': 'Cancel',
 
   'reglages.probleme.titre': 'If something goes wrong',
-  'reglages.probleme.detail':
-    'Everything the application does is written to a file. That file is what to send ' +
-    'when something does not work.',
 
   'setup.titre': 'Connecting to the controller',
   'setup.sousTitre':
@@ -529,23 +506,14 @@ export const en: Record<Cle, string> = {
   // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
   'reglages.sommaire': 'Sections',
   'reglages.aide.titre': 'Help',
-  'reglages.aide.raccourcisDetail': 'Every keyboard and mouse gesture, screen by screen. The “?” key shows them everywhere.',
-  'reglages.aide.voirRaccourcis': 'See the shortcuts',
-  'reglages.aide.guide': 'Enable RTSP on the console',
-  'reglages.aide.guideDetail': 'The step-by-step guide, the same as on the connection screen.',
-  'reglages.aide.ouvrirGuide': 'Open the guide',
+  'reglages.aide.voirRaccourcis': 'View',
+  'reglages.aide.guide': 'Console guide',
+  'reglages.aide.ouvrirGuide': 'Open',
   'reglages.apropos.titre': 'About',
-  'reglages.apropos.alcora': 'Desktop client for UniFi Protect, entirely local. Not affiliated with Ubiquiti.',
-  'reglages.apropos.moteur': 'Engine',
-  'reglages.apropos.relais': 'Video relay',
-  'reglages.apropos.licence': 'Licence',
   'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. The source code is public; any derivative work must remain so.',
   'reglages.apropos.source': 'Source code',
-  'reglages.apropos.tiers': 'Third-party components',
-  'reglages.apropos.tiersDetail': 'The licences of every bundled library.',
-  'reglages.apropos.voirLicences': 'See the licences',
+  'reglages.apropos.voirLicences': 'Licences',
   'reglages.apropos.licencesAbsentes': 'The licence file cannot be found in this installation.',
-  'reglages.apropos.site': 'Website',
 
   // Sequence d'une detection (direction Observatoire, 23.10.2026)
   'extrait.duree': '{n} s clip around the detection',
@@ -554,7 +522,6 @@ export const en: Record<Cle, string> = {
   'veilles.interrupteur': 'Alcora watch',
 
   // Mise a jour refusee, raison dite (23.10.2026)
-  'reglages.version.refusee': 'Version {version} was refused: it does not carry Alcora’s signature. The installed version stays in service.',
 
   // Export d'une plage de la relecture (maquette docs/maquette-export-plage.html, 23.10.2026)
   'unite.mo': 'MB',
@@ -687,4 +654,28 @@ export const en: Record<Cle, string> = {
   'bandeau.enCours': 'Ongoing · {camera}',
   'bandeau.enCoursCourt': 'ongoing',
   'bandeau.ouvrir': '{quoi}, {camera}: watch the sequence',
+
+  // Réglages, passe de clarté (maquette docs/maquette-clarte-reglages.html, 24.10.2026)
+  'reglages.etat.aJour': 'Up to date',
+  'reglages.etat.verification': 'Checking',
+  'reglages.etat.controle': 'Verifying {version}',
+  'reglages.etat.application': 'Installing',
+  'reglages.etat.prete': '{version} ready',
+  'reglages.etat.refusee': '{version} refused',
+  'reglages.etat.erreur': 'Check failed',
+  'reglages.etat.manuelle': 'Manual update',
+  'reglages.version.redemarrer': 'Restart',
+  'reglages.version.refuseeDetail': 'It does not carry Alcora’s signature: nothing was installed, the current version stays in service.',
+  'reglages.version.erreurDetail': 'It will try again on its own.',
+  'reglages.langue.windows': 'Windows',
+  'reglages.confort.sonSinon': 'Otherwise, camera by camera',
+  'reglages.probleme.journal': 'Log',
+  'reglages.probleme.joindre': 'Attach it to any request for help',
+  'reglages.aide.raccourcis': 'Shortcuts',
+  'reglages.aide.guideCourt': 'Enable RTSP',
+  'reglages.apropos.ligne': 'Local client for UniFi Protect · not affiliated with Ubiquiti',
+  'reglages.apropos.moteurRelais': 'Engine · relay',
+  'reglages.ouvrir': 'Open',
+  'reglages.connexion.avertissementSuite': 'No images until you reconnect.',
+  'commun.plusInfo': 'More information',
 };

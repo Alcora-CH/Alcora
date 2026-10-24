@@ -101,49 +101,30 @@ export const fr = {
   'reglages.sousTitre': 'Version installée, connexion au contrôleur, et où trouver le journal.',
 
   'reglages.version.titre': 'Version',
-  'reglages.version.verification': 'Vérification en cours…',
-  'reglages.version.telechargement': 'Téléchargement de la {version}… {pourcent} %',
-  'reglages.version.prete': 'La version {version} est prête : redémarre pour l’appliquer.',
-  'reglages.version.erreur':
-    'La vérification des mises à jour n’a pas abouti. Elle réessaiera d’elle-même.',
-  'reglages.version.repos':
-    'L’application vérifie d’elle-même les nouvelles versions, les télécharge en silence, ' +
-    'puis propose de redémarrer.',
-  'reglages.version.manuelle':
-    'Sur cette plateforme, la mise à jour est manuelle : télécharge la nouvelle version ' +
-    'depuis alcora.ch, puis remplace l’application.',
-  'reglages.version.verifier': 'Vérifier maintenant',
+  'reglages.version.verifier': 'Vérifier',
 
   // Les NOMS des langues (Français, English, Deutsch…) ne sont pas ici : chacun
   // s'ecrit dans sa propre langue, toujours — ils vivent dans le registre (index.ts).
   'reglages.langue.titre': 'Langue',
-  'reglages.langue.detail':
-    'L’interface et les notifications. « Automatique » suit la langue de Windows.',
   'reglages.langue.auto': 'Automatique',
 
   'reglages.apparence.titre': 'Apparence',
-  'reglages.apparence.espacement': 'Espacement entre les vues',
+  'reglages.apparence.espacement': 'Espacement',
   'reglages.apparence.aucun': 'aucun',
-  'reglages.apparence.detail':
-    'À « aucun », les images se touchent, sans cadre — un seul mur d’images.',
-  'reglages.apparence.fond': 'Fond animé',
+  'reglages.apparence.fond': 'Ciel animé',
   'reglages.apparence.fondDetail':
     'Fait vivre le ciel derrière les images : il tourne, des étoiles filent, les nébuleuses ' +
     'dérivent. Éteint, le ciel reste, immobile. Il se fige aussi de lui-même si Windows ' +
     'demande de réduire les animations.',
 
   'reglages.demarrage.titre': 'Démarrage',
-  'reglages.demarrage.ouvrir': 'Ouvrir Alcora avec Windows',
+  'reglages.demarrage.ouvrir': 'Lancer avec Windows',
   'reglages.demarrage.indisponible': 'Indisponible hors application installée.',
-  'reglages.demarrage.detail': 'L’application se lance dès l’ouverture de la session Windows.',
 
   'reglages.confort.titre': 'Captures et son',
-  'reglages.confort.dossier': 'Où vont les captures',
+  'reglages.confort.dossier': 'Captures',
   'reglages.confort.changer': 'Changer',
-  'reglages.confort.son': 'Son actif dès l’ouverture',
-  'reglages.confort.sonDetail':
-    'Éteint par défaut : un mur d’images qui se met à parler tout seul au lancement est ' +
-    'vite insupportable. Le son se demande caméra par caméra, sous l’image.',
+  'reglages.confort.son': 'Son au lancement',
 
   'reglages.historique.titre': 'Ce qui a changé',
   'reglages.historique.installee': 'installée',
@@ -155,17 +136,11 @@ export const fr = {
   'reglages.connexion.oui': 'oui',
   'reglages.connexion.non': 'non',
   'reglages.connexion.modifier': 'Modifier la connexion',
-  'reglages.connexion.avertissement':
-    'Le mot de passe et la clé à deux facteurs seront effacés de ce PC, et l’écran de ' +
-    'connexion réapparaîtra. Les caméras cesseront de s’afficher jusqu’à ce que tu les ' +
-    'saisisses à nouveau.',
+  'reglages.connexion.avertissement': 'Mot de passe et clé seront effacés de ce PC.',
   'reglages.connexion.effacer': 'Effacer et ressaisir',
   'reglages.connexion.annuler': 'Annuler',
 
   'reglages.probleme.titre': 'En cas de problème',
-  'reglages.probleme.detail':
-    'Tout ce que fait l’application est consigné dans un fichier. C’est ce fichier qu’il ' +
-    'faut envoyer lorsque quelque chose ne fonctionne pas.',
 
   // ---- l'ecran de connexion
   'setup.titre': 'Connexion au contrôleur',
@@ -559,23 +534,14 @@ export const fr = {
   // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
   'reglages.sommaire': 'Sections',
   'reglages.aide.titre': 'Aide',
-  'reglages.aide.raccourcisDetail': 'Tous les gestes du clavier et de la souris, écran par écran. La touche « ? » les montre partout.',
-  'reglages.aide.voirRaccourcis': 'Voir les raccourcis',
-  'reglages.aide.guide': 'Activer le RTSP sur la console',
-  'reglages.aide.guideDetail': 'Le guide étape par étape, le même que sur l’écran de connexion.',
-  'reglages.aide.ouvrirGuide': 'Ouvrir le guide',
+  'reglages.aide.voirRaccourcis': 'Voir',
+  'reglages.aide.guide': 'Guide de la console',
+  'reglages.aide.ouvrirGuide': 'Ouvrir',
   'reglages.apropos.titre': 'À propos',
-  'reglages.apropos.alcora': 'Client de bureau pour UniFi Protect, entièrement local. Non affilié à Ubiquiti.',
-  'reglages.apropos.moteur': 'Moteur',
-  'reglages.apropos.relais': 'Relais vidéo',
-  'reglages.apropos.licence': 'Licence',
   'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Le code source est public ; toute œuvre dérivée doit le rester.',
   'reglages.apropos.source': 'Code source',
-  'reglages.apropos.tiers': 'Composants de tiers',
-  'reglages.apropos.tiersDetail': 'Les licences de chaque bibliothèque embarquée.',
-  'reglages.apropos.voirLicences': 'Voir les licences',
+  'reglages.apropos.voirLicences': 'Licences',
   'reglages.apropos.licencesAbsentes': 'Le fichier des licences est introuvable dans cette installation.',
-  'reglages.apropos.site': 'Site',
 
   // Sequence d'une detection (direction Observatoire, 23.10.2026)
   'extrait.duree': 'Séquence de {n} s autour de la détection',
@@ -584,7 +550,6 @@ export const fr = {
   'veilles.interrupteur': 'Veille d’Alcora',
 
   // Mise a jour refusee, raison dite (23.10.2026)
-  'reglages.version.refusee': 'La version {version} a été refusée : elle ne porte pas la signature d’Alcora. La version installée reste en service.',
 
   // Export d'une plage de la relecture (maquette docs/maquette-export-plage.html, 23.10.2026)
   'unite.mo': 'Mo',
@@ -717,6 +682,30 @@ export const fr = {
   'bandeau.enCours': 'En cours · {camera}',
   'bandeau.enCoursCourt': 'en cours',
   'bandeau.ouvrir': '{quoi}, {camera} : voir la séquence',
+
+  // Réglages, passe de clarté (maquette docs/maquette-clarte-reglages.html, 24.10.2026)
+  'reglages.etat.aJour': 'À jour',
+  'reglages.etat.verification': 'Vérification',
+  'reglages.etat.controle': 'Contrôle de {version}',
+  'reglages.etat.application': 'Installation',
+  'reglages.etat.prete': '{version} prête',
+  'reglages.etat.refusee': '{version} refusée',
+  'reglages.etat.erreur': 'Vérification impossible',
+  'reglages.etat.manuelle': 'Mise à jour manuelle',
+  'reglages.version.redemarrer': 'Redémarrer',
+  'reglages.version.refuseeDetail': 'Elle ne porte pas la signature d’Alcora : rien n’a été installé, la version actuelle reste en service.',
+  'reglages.version.erreurDetail': 'Elle réessaiera d’elle-même.',
+  'reglages.langue.windows': 'Windows',
+  'reglages.confort.sonSinon': 'Sinon, caméra par caméra',
+  'reglages.probleme.journal': 'Journal',
+  'reglages.probleme.joindre': 'À joindre à toute demande d’aide',
+  'reglages.aide.raccourcis': 'Raccourcis',
+  'reglages.aide.guideCourt': 'Activer le RTSP',
+  'reglages.apropos.ligne': 'Client local pour UniFi Protect · non affilié à Ubiquiti',
+  'reglages.apropos.moteurRelais': 'Moteur · relais',
+  'reglages.ouvrir': 'Ouvrir',
+  'reglages.connexion.avertissementSuite': 'Plus d’images jusqu’à la reconnexion.',
+  'commun.plusInfo': 'En savoir plus',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

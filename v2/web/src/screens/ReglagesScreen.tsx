@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, BookOpen, ExternalLink, FolderOpen, Keyboard } from 'lucide-react';
+import { AlertTriangle, BookOpen, Check, ExternalLink, FileText, FolderOpen, Keyboard, Loader2, X } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { Marque } from '../Marque';
 import { changementsDe, VERSIONS } from '../versions';
-import { CODES_LANGUE, definirLangue, LANGUES, useLangue, type CodeLangue } from '../i18n';
+import { CODES_LANGUE, definirLangue, LANGUES, t, useLangue, type CodeLangue } from '../i18n';
 import { Bouton } from '../ui/Bouton';
-import { Carte, EnTete, Rangee } from '../ui/Cadre';
+import { Carte, EnTete, Rangee, Touche } from '../ui/Cadre';
+import { Info } from '../ui/Info';
 import { Interrupteur } from '../ui/Interrupteur';
 import { Segment } from '../ui/Segment';
 import { cx } from '../ui/cx';
@@ -56,6 +57,85 @@ function Bloc({ id, titre, children }: { id: string; titre: string; children: Re
 /** Une valeur technique a droite d'une rangee : un nom d'hote, une version. */
 function Valeur({ children, ton }: { children: React.ReactNode; ton?: string }) {
   return <span className="shrink-0 font-mono tabular-nums" style={ton ? { color: ton } : undefined}>{children}</span>;
+}
+
+/*
+ * L'état de la mise à jour, en PASTILLE — règle « Clarté avant texte » (24.10.2026). La
+ * phrase qui expliquait la chaîne de mise à jour à chaque visite cède la place à son état :
+ * à jour, en cours, prête, refusée. Le pourquoi d'un refus reste au survol du « i ».
+ * Aucun état connu (rien n'a encore été vérifié) : rien plutôt qu'un « à jour » non prouvé.
+ */
+function PastilleVersion({ maj }: { maj: MajState | null }) {
+  const base = 'm-surgit inline-flex h-[26px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-meta font-medium';
+  const attente = `${base} bg-card2 text-muted`;
+  if (!maj) return null;
+  switch (maj.etat) {
+    case 'aucune':
+      return <span className={`${base} bg-ok-soft text-ok`}><Check size={14} aria-hidden />{t('reglages.etat.aJour')}</span>;
+    case 'verification':
+      return <span className={attente}><Loader2 size={14} className="animate-spin" aria-hidden />{t('reglages.etat.verification')}</span>;
+    case 'controle':
+      return <span className={attente}><Loader2 size={14} className="animate-spin" aria-hidden />{t('reglages.etat.controle', { version: maj.version ?? '' })}</span>;
+    case 'application':
+      return <span className={attente}><Loader2 size={14} className="animate-spin" aria-hidden />{t('reglages.etat.application')}</span>;
+    case 'telechargement':
+      return (
+        <span className={attente}>
+          <span className="font-mono">{maj.version}</span>
+          <span className="barre-maj"><i style={{ transform: `scaleX(${(maj.pourcent ?? 0) / 100})` }} /></span>
+          <span className="tabular-nums">{maj.pourcent ?? 0} %</span>
+        </span>
+      );
+    case 'prete':
+      return <span className={`${base} border border-accent-ligne bg-accent-soft text-accent`}>{t('reglages.etat.prete', { version: maj.version ?? '' })}</span>;
+    case 'erreur':
+      return maj.refusee ? (
+        <>
+          <span className={`${base} bg-bad-soft text-bad`}><X size={14} aria-hidden />{t('reglages.etat.refusee', { version: maj.refusee })}</span>
+          <Info>{t('reglages.version.refuseeDetail')}</Info>
+        </>
+      ) : (
+        <>
+          <span className={`${base} bg-warn-soft text-warn`}>{t('reglages.etat.erreur')}</span>
+          <Info>{t('reglages.version.erreurDetail')}</Info>
+        </>
+      );
+    case 'manuelle':
+      return <span className={attente}>{t('reglages.etat.manuelle')}</span>;
+    default:
+      return null;
+  }
+}
+
+/** L'espacement se VOIT : une mosaïque de quatre tuiles, qui se resserre ou s'écarte. */
+function ApercuMur({ espacement }: { espacement: number }) {
+  const ecart = espacement / 4;   // 0 à 24 px dans l'application, 0 à 6 px dans l'aperçu
+  const sx = (46 - ecart / 2) / 46;
+  const sy = (26 - ecart / 2) / 26;
+  return (
+    <span aria-hidden className="apercu-mur">
+      {[[0, 0], [1, 0], [0, 1], [1, 1]].map(([c, r]) => (
+        <i key={`${c}${r}`} style={{
+          left: c * 46, top: r * 26,
+          transformOrigin: `${c ? 'right' : 'left'} ${r ? 'bottom' : 'top'}`,
+          transform: `scale(${sx}, ${sy})`,
+        }} />
+      ))}
+    </span>
+  );
+}
+
+/** Le ciel animé se VOIT : il tourne et une étoile file — ou il reste immobile. */
+const ETOILES = Array.from({ length: 16 }, (_, i) => ({ x: (i * 37) % 120, y: (i * 23) % 70, o: 0.3 + (i % 4) * 0.18 }));
+function ApercuCiel({ anime }: { anime: boolean }) {
+  return (
+    <span aria-hidden className={cx('apercu-ciel', anime && 'anime')}>
+      <span className="voute">
+        {ETOILES.map((e, i) => <i key={i} style={{ left: e.x, top: e.y, opacity: e.o }} />)}
+      </span>
+      <span className="filante" />
+    </span>
+  );
 }
 
 /** Un lien externe : la fenetre le confie au navigateur (https seulement, main.js). */
@@ -143,7 +223,8 @@ export function ReglagesScreen({
 
   return (
     <div className="flex h-full flex-col">
-      <EnTete titre={t('reglages.titre')} precision={t('reglages.sousTitre')} />
+      {/* Plus de sous-titre : il ne faisait que décrire ce que l'écran montre déjà. */}
+      <EnTete titre={t('reglages.titre')} />
 
       <div ref={corps} className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto grid max-w-[1080px] grid-cols-[190px_minmax(0,1fr)] gap-9 px-6 pb-12 pt-[22px] max-[1000px]:grid-cols-1">
@@ -167,28 +248,24 @@ export function ReglagesScreen({
               <Carte>
                 <Rangee
                   titre={(
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex flex-wrap items-center gap-2.5">
                       <Marque taille={22} anime={fondAnime} />
                       <span className="font-mono text-titre text-accent-d">Alcora {actuelle ?? '…'}</span>
+                      {/* La clé change avec l'état : chaque nouvel état arrive en fondu. */}
+                      <span key={maj?.etat ?? 'inconnu'} className="flex items-center gap-1.5"><PastilleVersion maj={maj} /></span>
                     </span>
-                  )}
-                  explication={
-                    maj?.etat === 'verification' ? t('reglages.version.verification')
-                      : maj?.etat === 'telechargement' ? t('reglages.version.telechargement',
-                          { version: maj.version ?? '', pourcent: maj.pourcent ?? 0 })
-                      : maj?.etat === 'prete' ? t('reglages.version.prete', { version: maj.version ?? '' })
-                      /* Un refus se dit, et en rouge : une version non authentique a été écartée,
-                         et celle qui tourne reste en service (planche des états dégradés). */
-                      : maj?.etat === 'erreur' && maj.refusee
-                        ? <span className="text-bad">{t('reglages.version.refusee', { version: maj.refusee })}</span>
-                      : maj?.etat === 'erreur' ? t('reglages.version.erreur')
-                      : maj?.etat === 'manuelle' ? t('reglages.version.manuelle')
-                      : t('reglages.version.repos')}>
-                  {/* Sans chaine automatique, le bouton n'aurait rien a lancer : il disparait
-                      plutot que de rester la sans effet. */}
-                  {maj?.etat !== 'manuelle' && (
+                  )}>
+                  {/* Chaque état propose le geste qui lui va : redémarrer une version prête,
+                      aller chercher la version à la main sans chaîne automatique (Linux),
+                      vérifier sinon. */}
+                  {maj?.etat === 'prete' ? (
+                    <Bouton variante="primaire" onClick={() => { void bridge.majRedemarrer(); }}>{t('reglages.version.redemarrer')}</Bouton>
+                  ) : maj?.etat === 'manuelle' ? (
+                    <LienExterne href={SITE}>alcora.ch</LienExterne>
+                  ) : (
                     <Bouton onClick={() => { void bridge.majVerifier(); }}
-                            disabled={maj?.etat === 'verification' || maj?.etat === 'telechargement'}>
+                            disabled={maj?.etat === 'verification' || maj?.etat === 'telechargement'
+                              || maj?.etat === 'controle' || maj?.etat === 'application'}>
                       {t('reglages.version.verifier')}
                     </Bouton>
                   )}
@@ -199,39 +276,43 @@ export function ReglagesScreen({
             {/* ---- langue ---- */}
             <Bloc id="langue" titre={t('reglages.langue.titre')}>
               <Carte>
-                <Rangee explication={t('reglages.langue.detail')}>
+                <div className="px-[18px] py-4">
                   {/* Les langues viennent du REGISTRE : en ajouter une n'exige rien ici.
                       Chaque nom s'ecrit dans sa propre langue — c'est ainsi qu'on retrouve
-                      la sienne dans une interface qu'on ne comprend pas. */}
+                      la sienne dans une interface qu'on ne comprend pas. « Automatique » dit
+                      lui-même ce qu'il suit : la phrase qui l'expliquait n'a plus lieu d'être. */}
                   <Segment etiquette={t('reglages.langue.titre')} valeur={langueChoix}
                            onChange={(c) => { void changerLangue(c); }}
                            options={(['auto', ...CODES_LANGUE] as const).map((c) => ({
-                             valeur: c, libelle: c === 'auto' ? t('reglages.langue.auto') : LANGUES[c].nom,
+                             valeur: c,
+                             libelle: c === 'auto'
+                               ? <>{t('reglages.langue.auto')} <span className="text-micro text-soft">{t('reglages.langue.windows')}</span></>
+                               : LANGUES[c].nom,
                            }))} />
-                </Rangee>
+                </div>
               </Carte>
             </Bloc>
 
             {/* ---- apparence ---- */}
             <Bloc id="apparence" titre={t('reglages.apparence.titre')}>
               <Carte>
-                <div className="px-[18px] py-4">
-                  <div className="flex items-baseline gap-6">
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium">{t('reglages.apparence.espacement')}</div>
-                      <p className="mt-[3px] text-meta leading-normal text-muted">{t('reglages.apparence.detail')}</p>
-                    </div>
-                    <Valeur>{espacement === 0 ? t('reglages.apparence.aucun') : `${espacement} px`}</Valeur>
+                {/* Ce que font ces deux réglages se VOIT dans leur aperçu : plus besoin de
+                    l'écrire (règle « Clarté avant texte », 24.10.2026). */}
+                <div className="flex items-center gap-4 px-[18px] py-4">
+                  <ApercuMur espacement={espacement} />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">{t('reglages.apparence.espacement')}</div>
+                    <input type="range" min={0} max={24} step={1} value={espacement}
+                           onChange={(e) => onEspacementChange(Number(e.target.value))}
+                           className="mt-1.5 w-full accent-[var(--accent)]"
+                           aria-label={t('reglages.apparence.espacement')} />
                   </div>
-                  <input type="range" min={0} max={24} step={1} value={espacement}
-                         onChange={(e) => onEspacementChange(Number(e.target.value))}
-                         className="mt-3 w-full accent-[var(--accent)]"
-                         aria-label={t('reglages.apparence.espacement')} />
+                  <span className="w-14 text-right"><Valeur>{espacement === 0 ? t('reglages.apparence.aucun') : `${espacement} px`}</Valeur></span>
                 </div>
-                <div className="border-t border-line">
-                  <Rangee titre={t('reglages.apparence.fond')} explication={t('reglages.apparence.fondDetail')}>
-                    <Interrupteur allume={fondAnime} onChange={onFondAnimeChange} etiquette={t('reglages.apparence.fond')} />
-                  </Rangee>
+                <div className="flex items-center gap-4 border-t border-line px-[18px] py-4">
+                  <ApercuCiel anime={fondAnime} />
+                  <div className="min-w-0 flex-1 font-medium">{t('reglages.apparence.fond')}</div>
+                  <Interrupteur allume={fondAnime} onChange={onFondAnimeChange} etiquette={t('reglages.apparence.fond')} />
                 </div>
               </Carte>
             </Bloc>
@@ -240,8 +321,7 @@ export function ReglagesScreen({
             <Bloc id="demarrage" titre={t('reglages.demarrage.titre')}>
               <Carte>
                 <Rangee titre={t('reglages.demarrage.ouvrir')}
-                        explication={auto?.disponible === false
-                          ? t('reglages.demarrage.indisponible') : t('reglages.demarrage.detail')}>
+                        explication={auto?.disponible === false ? t('reglages.demarrage.indisponible') : undefined}>
                   {/* L'etat affiche vient du REGISTRE, relu apres chaque bascule : le bouton ne
                       peut pas pretendre un demarrage automatique qui n'existe pas. */}
                   <Interrupteur allume={Boolean(auto?.actif)} desactive={!auto?.disponible}
@@ -260,13 +340,13 @@ export function ReglagesScreen({
                 {/* Le dossier des IMAGES de Windows, pas un recoin du dossier de donnees : une
                     capture se prend pour la montrer, elle doit se retrouver la ou l'on cherche. */}
                 <Rangee titre={t('reglages.confort.dossier')}
-                        explication={<span className="block truncate font-mono" title={confort?.dossierCaptures}>{confort?.dossierCaptures ?? '…'}</span>}>
+                        explication={<span className="block truncate font-mono text-soft" title={confort?.dossierCaptures}>{confort?.dossierCaptures ?? '…'}</span>}>
                   <Bouton icone={FolderOpen} onClick={() => { void bridge.choisirDossierCaptures().then(setConfort).catch(() => {}); }}>
                     {t('reglages.confort.changer')}
                   </Bouton>
-                  <Bouton variante="fantome" onClick={() => { void bridge.ouvrirCaptures(); }}>{t('commun.ouvrirDossier')}</Bouton>
+                  <Bouton variante="fantome" onClick={() => { void bridge.ouvrirCaptures(); }}>{t('reglages.ouvrir')}</Bouton>
                 </Rangee>
-                <Rangee titre={t('reglages.confort.son')} explication={t('reglages.confort.sonDetail')}>
+                <Rangee titre={t('reglages.confort.son')} explication={t('reglages.confort.sonSinon')}>
                   <Interrupteur allume={Boolean(confort?.sonParDefaut)} etiquette={t('reglages.confort.son')}
                                 onChange={() => {
                                   if (!confort) return;
@@ -283,9 +363,9 @@ export function ReglagesScreen({
                 <Rangee titre={t('reglages.connexion.controleur')}><Valeur>{infos?.host ?? '—'}</Valeur></Rangee>
                 <Rangee titre={t('reglages.connexion.compte')}><Valeur>{infos?.username || '—'}</Valeur></Rangee>
                 <Rangee titre={t('reglages.connexion.identite')}>
-                  <span className={infos?.appaire ? 'text-ok' : 'text-warn'}>
-                    {infos?.appaire ? t('reglages.connexion.oui') : t('reglages.connexion.non')}
-                  </span>
+                  {infos?.appaire
+                    ? <span className="text-ok" title={t('reglages.connexion.oui')}><Check size={16} aria-label={t('reglages.connexion.oui')} /></span>
+                    : <span className="text-warn">{t('reglages.connexion.non')}</span>}
                 </Rangee>
                 <div className="border-t border-line px-[18px] py-4">
                   {!confirme ? (
@@ -294,7 +374,7 @@ export function ReglagesScreen({
                     <>
                       <p className="flex gap-2.5 rounded-[9px] bg-bad-soft px-3 py-2.5 text-bad">
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                        <span>{t('reglages.connexion.avertissement')}</span>
+                        <span><b className="font-semibold">{t('reglages.connexion.avertissement')}</b> {t('reglages.connexion.avertissementSuite')}</span>
                       </p>
                       <div className="mt-3 flex gap-2">
                         <Bouton variante="danger" onClick={onReconfigurer}>{t('reglages.connexion.effacer')}</Bouton>
@@ -309,13 +389,10 @@ export function ReglagesScreen({
             {/* ---- en cas de problème ---- */}
             <Bloc id="probleme" titre={t('reglages.probleme.titre')}>
               <Carte>
-                <Rangee explication={(
-                  <>
-                    <span className="block text-corps text-muted">{t('reglages.probleme.detail')}</span>
-                    <span className="mt-1.5 block break-all font-mono text-soft">{infos?.journal ?? '…'}</span>
-                  </>
-                )}>
-                  <Bouton icone={FolderOpen} onClick={() => { void bridge.ouvrirJournal(); }}>{t('commun.ouvrirDossier')}</Bouton>
+                <Rangee
+                  titre={<span className="flex items-center gap-2"><FileText size={16} className="text-muted" aria-hidden />{t('reglages.probleme.journal')}</span>}
+                  explication={<>{t('reglages.probleme.joindre')} · <span className="break-all font-mono text-soft">{infos?.journal ?? '…'}</span></>}>
+                  <Bouton icone={FolderOpen} onClick={() => { void bridge.ouvrirJournal(); }}>{t('reglages.ouvrir')}</Bouton>
                 </Rangee>
               </Carte>
             </Bloc>
@@ -323,10 +400,10 @@ export function ReglagesScreen({
             {/* ---- aide ---- */}
             <Bloc id="aide" titre={t('reglages.aide.titre')}>
               <Carte>
-                <Rangee titre={t('raccourcis.titre')} explication={t('reglages.aide.raccourcisDetail')}>
+                <Rangee titre={<span className="flex items-center gap-2">{t('reglages.aide.raccourcis')} <Touche>?</Touche></span>}>
                   <Bouton icone={Keyboard} onClick={onRaccourcis}>{t('reglages.aide.voirRaccourcis')}</Bouton>
                 </Rangee>
-                <Rangee titre={t('reglages.aide.guide')} explication={t('reglages.aide.guideDetail')}>
+                <Rangee titre={t('reglages.aide.guide')} explication={t('reglages.aide.guideCourt')}>
                   <Bouton icone={BookOpen} onClick={onGuide}>{t('reglages.aide.ouvrirGuide')}</Bouton>
                 </Rangee>
               </Carte>
@@ -335,21 +412,22 @@ export function ReglagesScreen({
             {/* ---- à propos ---- */}
             <Bloc id="apropos" titre={t('reglages.apropos.titre')}>
               <Carte>
-                <Rangee titre="Alcora" explication={t('reglages.apropos.alcora')}><Valeur>{actuelle ?? '…'}</Valeur></Rangee>
-                <Rangee titre={t('reglages.apropos.moteur')}><Valeur>{infos ? `Electron ${infos.electron}` : '…'}</Valeur></Rangee>
-                <Rangee titre={t('reglages.apropos.relais')}><Valeur>{infos ? `MediaMTX ${infos.relais}` : '…'}</Valeur></Rangee>
-                <Rangee titre={t('reglages.apropos.licence')} explication={t('reglages.apropos.licenceDetail')}>
-                  <LienExterne href={DEPOT}>{t('reglages.apropos.source')}</LienExterne>
+                <Rangee titre={<>Alcora <span className="font-mono text-soft">{actuelle ?? '…'}</span></>}
+                        explication={t('reglages.apropos.ligne')}>
+                  <LienExterne href={SITE}>alcora.ch</LienExterne>
                 </Rangee>
-                <Rangee titre={t('reglages.apropos.tiers')}
-                        explication={licencesAbsentes ? t('reglages.apropos.licencesAbsentes') : t('reglages.apropos.tiersDetail')}>
+                <Rangee titre={t('reglages.apropos.moteurRelais')}>
+                  <Valeur>{infos ? `Electron ${infos.electron} · MediaMTX ${infos.relais}` : '…'}</Valeur>
+                </Rangee>
+                {/* La licence : le nom et l'auteur se lisent, l'obligation qui l'accompagne au survol. */}
+                <Rangee titre="GPL-3.0 · © Thomas"
+                        explication={licencesAbsentes ? t('reglages.apropos.licencesAbsentes') : undefined}>
+                  <Info>{t('reglages.apropos.licenceDetail')}</Info>
+                  <LienExterne href={DEPOT}>{t('reglages.apropos.source')}</LienExterne>
                   <Bouton variante="fantome"
                           onClick={() => { void bridge.ouvrirLicences().then((ok) => setLicencesAbsentes(!ok)).catch(() => setLicencesAbsentes(true)); }}>
                     {t('reglages.apropos.voirLicences')}
                   </Bouton>
-                </Rangee>
-                <Rangee titre={t('reglages.apropos.site')}>
-                  <LienExterne href={SITE}>alcora.ch</LienExterne>
                 </Rangee>
               </Carte>
             </Bloc>

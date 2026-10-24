@@ -87,47 +87,28 @@ export const it: Record<Cle, string> = {
   'reglages.sousTitre': 'Versione installata, connessione al controller, e dove trovare il registro.',
 
   'reglages.version.titre': 'Versione',
-  'reglages.version.verification': 'Verifica in corso…',
-  'reglages.version.telechargement': 'Scaricamento della {version}… {pourcent} %',
-  'reglages.version.prete': 'La versione {version} è pronta: riavvia per applicarla.',
-  'reglages.version.erreur': 'La verifica degli aggiornamenti non è andata a buon fine. Riproverà da sola.',
-  'reglages.version.repos':
-    'L’applicazione verifica da sola le nuove versioni, le scarica in silenzio, ' +
-    'poi propone di riavviare.',
-  'reglages.version.manuelle':
-    'Su questa piattaforma l’aggiornamento è manuale: scarica la nuova versione da ' +
-    'alcora.ch, poi sostituisci l’applicazione.',
-  'reglages.version.verifier': 'Verifica ora',
+  'reglages.version.verifier': 'Verifica',
 
   'reglages.langue.titre': 'Lingua',
-  'reglages.langue.detail':
-    'L’interfaccia e le notifiche. «Automatica» segue la lingua di Windows.',
   'reglages.langue.auto': 'Automatica',
 
   'reglages.apparence.titre': 'Aspetto',
-  'reglages.apparence.espacement': 'Spazio tra le viste',
+  'reglages.apparence.espacement': 'Spaziatura',
   'reglages.apparence.aucun': 'nessuno',
-  'reglages.apparence.detail':
-    'Con «nessuno», le immagini si toccano, senza cornice — un solo muro di immagini.',
-  'reglages.apparence.fond': 'Sfondo animato',
+  'reglages.apparence.fond': 'Cielo animato',
   'reglages.apparence.fondDetail':
     'Dà vita al cielo dietro le immagini: ruota, passano stelle cadenti, le nebulose ' +
     'si spostano. Spento, il cielo resta, immobile. Si ferma anche da solo se Windows ' +
     'chiede di ridurre le animazioni.',
 
   'reglages.demarrage.titre': 'Avvio',
-  'reglages.demarrage.ouvrir': 'Apri Alcora con Windows',
+  'reglages.demarrage.ouvrir': 'Avvia con Windows',
   'reglages.demarrage.indisponible': 'Non disponibile fuori dall’applicazione installata.',
-  'reglages.demarrage.detail': 'L’applicazione si avvia appena accedi a Windows.',
 
   'reglages.confort.titre': 'Catture e audio',
-  'reglages.confort.dossier': 'Dove vanno le catture',
+  'reglages.confort.dossier': 'Catture',
   'reglages.confort.changer': 'Cambia',
-  'reglages.confort.son': 'Audio attivo dall’inizio',
-  'reglages.confort.sonDetail':
-    'Spento per impostazione: un muro di immagini che si mette a parlare da solo ' +
-    'all’avvio diventa presto insopportabile. L’audio si attiva telecamera per ' +
-    'telecamera, sotto l’immagine.',
+  'reglages.confort.son': 'Audio all’avvio',
 
   'reglages.historique.titre': 'Cosa è cambiato',
   'reglages.historique.installee': 'installata',
@@ -139,17 +120,11 @@ export const it: Record<Cle, string> = {
   'reglages.connexion.oui': 'sì',
   'reglages.connexion.non': 'no',
   'reglages.connexion.modifier': 'Modifica la connessione',
-  'reglages.connexion.avertissement':
-    'La password e la chiave a due fattori saranno cancellate da questo PC, e la ' +
-    'schermata di accesso riapparirà. Le telecamere smetteranno di mostrarsi finché ' +
-    'non le reinserisci.',
+  'reglages.connexion.avertissement': 'Password e chiave verranno cancellate da questo PC.',
   'reglages.connexion.effacer': 'Cancella e reinserisci',
   'reglages.connexion.annuler': 'Annulla',
 
   'reglages.probleme.titre': 'Se qualcosa non va',
-  'reglages.probleme.detail':
-    'Tutto ciò che fa l’applicazione è scritto in un file. È quel file da inviare ' +
-    'quando qualcosa non funziona.',
 
   'setup.titre': 'Connessione al controller',
   'setup.sousTitre':
@@ -531,23 +506,14 @@ export const it: Record<Cle, string> = {
   // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
   'reglages.sommaire': 'Sezioni',
   'reglages.aide.titre': 'Aiuto',
-  'reglages.aide.raccourcisDetail': 'Tutti i gesti di tastiera e mouse, schermo per schermo. Il tasto «?» li mostra ovunque.',
-  'reglages.aide.voirRaccourcis': 'Vedi le scorciatoie',
-  'reglages.aide.guide': 'Attivare l’RTSP sulla console',
-  'reglages.aide.guideDetail': 'La guida passo per passo, la stessa dello schermo di connessione.',
-  'reglages.aide.ouvrirGuide': 'Apri la guida',
+  'reglages.aide.voirRaccourcis': 'Vedi',
+  'reglages.aide.guide': 'Guida della console',
+  'reglages.aide.ouvrirGuide': 'Apri',
   'reglages.apropos.titre': 'Informazioni',
-  'reglages.apropos.alcora': 'Client desktop per UniFi Protect, interamente locale. Non affiliato a Ubiquiti.',
-  'reglages.apropos.moteur': 'Motore',
-  'reglages.apropos.relais': 'Inoltro video',
-  'reglages.apropos.licence': 'Licenza',
   'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Il codice sorgente è pubblico; ogni opera derivata deve restarlo.',
   'reglages.apropos.source': 'Codice sorgente',
-  'reglages.apropos.tiers': 'Componenti di terze parti',
-  'reglages.apropos.tiersDetail': 'Le licenze di ogni libreria inclusa.',
-  'reglages.apropos.voirLicences': 'Vedi le licenze',
+  'reglages.apropos.voirLicences': 'Licenze',
   'reglages.apropos.licencesAbsentes': 'Il file delle licenze non si trova in questa installazione.',
-  'reglages.apropos.site': 'Sito',
 
   // Sequence d'une detection (direction Observatoire, 23.10.2026)
   'extrait.duree': 'Sequenza di {n} s attorno al rilevamento',
@@ -556,7 +522,6 @@ export const it: Record<Cle, string> = {
   'veilles.interrupteur': 'Guardia di Alcora',
 
   // Mise a jour refusee, raison dite (23.10.2026)
-  'reglages.version.refusee': 'La versione {version} è stata rifiutata: non porta la firma di Alcora. La versione installata resta in servizio.',
 
   // Export d'une plage de la relecture (maquette docs/maquette-export-plage.html, 23.10.2026)
   'unite.mo': 'MB',
@@ -689,4 +654,28 @@ export const it: Record<Cle, string> = {
   'bandeau.enCours': 'In corso · {camera}',
   'bandeau.enCoursCourt': 'in corso',
   'bandeau.ouvrir': '{quoi}, {camera}: guarda la sequenza',
+
+  // Réglages, passe de clarté (maquette docs/maquette-clarte-reglages.html, 24.10.2026)
+  'reglages.etat.aJour': 'Aggiornata',
+  'reglages.etat.verification': 'Verifica',
+  'reglages.etat.controle': 'Controllo di {version}',
+  'reglages.etat.application': 'Installazione',
+  'reglages.etat.prete': '{version} pronta',
+  'reglages.etat.refusee': '{version} rifiutata',
+  'reglages.etat.erreur': 'Verifica non riuscita',
+  'reglages.etat.manuelle': 'Aggiornamento manuale',
+  'reglages.version.redemarrer': 'Riavvia',
+  'reglages.version.refuseeDetail': 'Non porta la firma di Alcora: non è stato installato nulla, la versione attuale resta in servizio.',
+  'reglages.version.erreurDetail': 'Riproverà da sola.',
+  'reglages.langue.windows': 'Windows',
+  'reglages.confort.sonSinon': 'Altrimenti, telecamera per telecamera',
+  'reglages.probleme.journal': 'Registro',
+  'reglages.probleme.joindre': 'Da allegare a ogni richiesta di aiuto',
+  'reglages.aide.raccourcis': 'Scorciatoie',
+  'reglages.aide.guideCourt': 'Attivare l’RTSP',
+  'reglages.apropos.ligne': 'Client locale per UniFi Protect · non affiliato a Ubiquiti',
+  'reglages.apropos.moteurRelais': 'Motore · relay',
+  'reglages.ouvrir': 'Apri',
+  'reglages.connexion.avertissementSuite': 'Nessuna immagine fino alla riconnessione.',
+  'commun.plusInfo': 'Maggiori informazioni',
 };

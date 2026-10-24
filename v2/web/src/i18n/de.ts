@@ -88,46 +88,28 @@ export const de: Record<Cle, string> = {
   'reglages.sousTitre': 'Installierte Version, Verbindung zum Controller, und wo das Protokoll liegt.',
 
   'reglages.version.titre': 'Version',
-  'reglages.version.verification': 'Prüfung läuft…',
-  'reglages.version.telechargement': 'Version {version} wird geladen… {pourcent} %',
-  'reglages.version.prete': 'Version {version} ist bereit: Neustart, um sie anzuwenden.',
-  'reglages.version.erreur': 'Die Update-Prüfung ist nicht durchgekommen. Sie versucht es von selbst erneut.',
-  'reglages.version.repos':
-    'Die Anwendung prüft selbständig auf neue Versionen, lädt sie still herunter ' +
-    'und schlägt dann einen Neustart vor.',
-  'reglages.version.manuelle':
-    'Auf dieser Plattform erfolgt die Aktualisierung manuell: Lade die neue Version ' +
-    'von alcora.ch herunter und ersetze die Anwendung.',
-  'reglages.version.verifier': 'Jetzt prüfen',
+  'reglages.version.verifier': 'Prüfen',
 
   'reglages.langue.titre': 'Sprache',
-  'reglages.langue.detail':
-    'Oberfläche und Benachrichtigungen. «Automatisch» folgt der Windows-Sprache.',
   'reglages.langue.auto': 'Automatisch',
 
   'reglages.apparence.titre': 'Darstellung',
-  'reglages.apparence.espacement': 'Abstand zwischen den Ansichten',
+  'reglages.apparence.espacement': 'Abstand',
   'reglages.apparence.aucun': 'keiner',
-  'reglages.apparence.detail':
-    'Bei «keiner» berühren sich die Bilder rahmenlos — eine einzige Bildwand.',
-  'reglages.apparence.fond': 'Animierter Hintergrund',
+  'reglages.apparence.fond': 'Animierter Himmel',
   'reglages.apparence.fondDetail':
     'Belebt den Himmel hinter den Bildern: Er dreht sich, Sternschnuppen ziehen vorbei, ' +
     'Nebel treiben. Ausgeschaltet bleibt der Himmel, unbewegt. Er steht auch von selbst ' +
     'still, wenn Windows weniger Animationen verlangt.',
 
   'reglages.demarrage.titre': 'Start',
-  'reglages.demarrage.ouvrir': 'Alcora mit Windows öffnen',
+  'reglages.demarrage.ouvrir': 'Mit Windows starten',
   'reglages.demarrage.indisponible': 'Ausserhalb der installierten Anwendung nicht verfügbar.',
-  'reglages.demarrage.detail': 'Die Anwendung startet, sobald du dich bei Windows anmeldest.',
 
   'reglages.confort.titre': 'Aufnahmen und Ton',
-  'reglages.confort.dossier': 'Wohin die Standbilder gehen',
+  'reglages.confort.dossier': 'Standbilder',
   'reglages.confort.changer': 'Ändern',
-  'reglages.confort.son': 'Ton von Anfang an',
-  'reglages.confort.sonDetail':
-    'Standardmässig aus: eine Bildwand, die beim Start von selbst zu reden beginnt, ' +
-    'wird schnell unerträglich. Der Ton wird Kamera für Kamera eingeschaltet, unter dem Bild.',
+  'reglages.confort.son': 'Ton beim Start',
 
   'reglages.historique.titre': 'Was sich geändert hat',
   'reglages.historique.installee': 'installiert',
@@ -139,17 +121,11 @@ export const de: Record<Cle, string> = {
   'reglages.connexion.oui': 'ja',
   'reglages.connexion.non': 'nein',
   'reglages.connexion.modifier': 'Verbindung ändern',
-  'reglages.connexion.avertissement':
-    'Das Passwort und der Zwei-Faktor-Schlüssel werden von diesem PC gelöscht, und der ' +
-    'Anmeldebildschirm erscheint wieder. Die Kameras zeigen nichts mehr an, bis du sie ' +
-    'neu eingibst.',
+  'reglages.connexion.avertissement': 'Passwort und Schlüssel werden von diesem PC gelöscht.',
   'reglages.connexion.effacer': 'Löschen und neu eingeben',
   'reglages.connexion.annuler': 'Abbrechen',
 
   'reglages.probleme.titre': 'Wenn etwas nicht geht',
-  'reglages.probleme.detail':
-    'Alles, was die Anwendung tut, wird in eine Datei geschrieben. Diese Datei schickst ' +
-    'du, wenn etwas nicht funktioniert.',
 
   'setup.titre': 'Verbindung zum Controller',
   'setup.sousTitre':
@@ -532,23 +508,14 @@ export const de: Record<Cle, string> = {
   // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
   'reglages.sommaire': 'Abschnitte',
   'reglages.aide.titre': 'Hilfe',
-  'reglages.aide.raccourcisDetail': 'Alle Tastatur- und Mausgesten, Bildschirm für Bildschirm. Die Taste «?» zeigt sie überall.',
-  'reglages.aide.voirRaccourcis': 'Tastenkürzel anzeigen',
-  'reglages.aide.guide': 'RTSP auf der Konsole aktivieren',
-  'reglages.aide.guideDetail': 'Die Schritt-für-Schritt-Anleitung, dieselbe wie auf dem Verbindungsbildschirm.',
-  'reglages.aide.ouvrirGuide': 'Anleitung öffnen',
+  'reglages.aide.voirRaccourcis': 'Anzeigen',
+  'reglages.aide.guide': 'Konsolen-Anleitung',
+  'reglages.aide.ouvrirGuide': 'Öffnen',
   'reglages.apropos.titre': 'Über Alcora',
-  'reglages.apropos.alcora': 'Desktop-Client für UniFi Protect, vollständig lokal. Nicht mit Ubiquiti verbunden.',
-  'reglages.apropos.moteur': 'Laufzeitumgebung',
-  'reglages.apropos.relais': 'Video-Relais',
-  'reglages.apropos.licence': 'Lizenz',
   'reglages.apropos.licenceDetail': 'GPL-3.0 — © Thomas. Der Quellcode ist öffentlich; jedes abgeleitete Werk muss es bleiben.',
   'reglages.apropos.source': 'Quellcode',
-  'reglages.apropos.tiers': 'Komponenten von Drittanbietern',
-  'reglages.apropos.tiersDetail': 'Die Lizenzen jeder mitgelieferten Bibliothek.',
-  'reglages.apropos.voirLicences': 'Lizenzen anzeigen',
+  'reglages.apropos.voirLicences': 'Lizenzen',
   'reglages.apropos.licencesAbsentes': 'Die Lizenzdatei ist in dieser Installation nicht zu finden.',
-  'reglages.apropos.site': 'Website',
 
   // Sequence d'une detection (direction Observatoire, 23.10.2026)
   'extrait.duree': 'Sequenz von {n} s rund um die Erkennung',
@@ -557,7 +524,6 @@ export const de: Record<Cle, string> = {
   'veilles.interrupteur': 'Wache von Alcora',
 
   // Mise a jour refusee, raison dite (23.10.2026)
-  'reglages.version.refusee': 'Die Version {version} wurde abgelehnt: Sie trägt nicht die Signatur von Alcora. Die installierte Version bleibt in Betrieb.',
 
   // Export d'une plage de la relecture (maquette docs/maquette-export-plage.html, 23.10.2026)
   'unite.mo': 'MB',
@@ -690,4 +656,28 @@ export const de: Record<Cle, string> = {
   'bandeau.enCours': 'Läuft · {camera}',
   'bandeau.enCoursCourt': 'läuft',
   'bandeau.ouvrir': '{quoi}, {camera}: Sequenz ansehen',
+
+  // Réglages, passe de clarté (maquette docs/maquette-clarte-reglages.html, 24.10.2026)
+  'reglages.etat.aJour': 'Aktuell',
+  'reglages.etat.verification': 'Prüfung',
+  'reglages.etat.controle': 'Prüfung von {version}',
+  'reglages.etat.application': 'Installation',
+  'reglages.etat.prete': '{version} bereit',
+  'reglages.etat.refusee': '{version} abgelehnt',
+  'reglages.etat.erreur': 'Prüfung fehlgeschlagen',
+  'reglages.etat.manuelle': 'Manuelle Aktualisierung',
+  'reglages.version.redemarrer': 'Neu starten',
+  'reglages.version.refuseeDetail': 'Sie trägt nicht die Signatur von Alcora: Nichts wurde installiert, die aktuelle Version bleibt in Betrieb.',
+  'reglages.version.erreurDetail': 'Sie versucht es von selbst erneut.',
+  'reglages.langue.windows': 'Windows',
+  'reglages.confort.sonSinon': 'Sonst Kamera für Kamera',
+  'reglages.probleme.journal': 'Protokoll',
+  'reglages.probleme.joindre': 'Jeder Hilfeanfrage beilegen',
+  'reglages.aide.raccourcis': 'Tastenkürzel',
+  'reglages.aide.guideCourt': 'RTSP aktivieren',
+  'reglages.apropos.ligne': 'Lokaler Client für UniFi Protect · nicht mit Ubiquiti verbunden',
+  'reglages.apropos.moteurRelais': 'Engine · Relais',
+  'reglages.ouvrir': 'Öffnen',
+  'reglages.connexion.avertissementSuite': 'Keine Bilder bis zur erneuten Verbindung.',
+  'commun.plusInfo': 'Mehr erfahren',
 };
