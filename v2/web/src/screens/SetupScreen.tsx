@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { bridge, isMocked } from '../lib/bridge';
 import { useLangue } from '../i18n';
+import { CadreGuide } from '../cadre/CadreGuide';
 import { Bouton } from '../ui/Bouton';
 import { Carte, EnTete } from '../ui/Cadre';
 import { Info } from '../ui/Info';
@@ -68,7 +69,7 @@ function Bloc({ titre, children, className }: { titre?: React.ReactNode; childre
  * C'est un CADRE sur le fichier embarque (v2/web/public/guide-rtsp.html, copie depuis
  * site/ a la construction), et non un composant recrit : deux versions du meme guide
  * finiraient par diverger, et c'est celle qu'on ne relit pas qui resterait fausse. La
- * fenetre « Aide » des reglages (cadre/FenetreGuide.tsx) montre le meme fichier.
+ * carte « Aide » des Reglages le deplie aussi, avec le meme cadre (cadre/CadreGuide.tsx).
  *
  * « sandbox » sans « allow-same-origin » est le point qui compte : le cadre partagerait
  * sinon l'origine de l'interface et pourrait atteindre le pont vers le processus
@@ -97,17 +98,7 @@ function GuideRtsp() {
         animee : le guide ne se recharge pas, son animation ne repart pas de zero.
         « 78vh » agrandi laisse voir le formulaire dessous — on reste dans la page.
       */}
-      <div className="mt-3.5 overflow-hidden rounded-[10px] border border-line2"
-           style={{ height: grand ? '78vh' : 340, background: '#0b1017',
-                    transition: 'height var(--ample) var(--pose)' }}>
-        <iframe
-          src="guide-rtsp.html?integre=1"
-          title={t('camera.guide')}
-          sandbox="allow-scripts"
-          className="h-full w-full"
-          style={{ border: 0 }}
-        />
-      </div>
+      <div className="mt-3.5"><CadreGuide hauteur={grand ? '78vh' : 340} /></div>
 
       {/* Les deux préalables, cochés comme une liste à suivre. Le second ne figure pas dans
           le guide, qui ne parle que du flux : le retirer l'aurait fait disparaître en silence. */}

@@ -6,6 +6,7 @@ import { changementsDe, VERSIONS } from '../versions';
 import { CODES_LANGUE, definirLangue, LANGUES, t, useLangue, type CodeLangue } from '../i18n';
 import { Bouton } from '../ui/Bouton';
 import { Carte, EnTete, Rangee, Touche } from '../ui/Cadre';
+import { CadreGuide } from '../cadre/CadreGuide';
 import { Info } from '../ui/Info';
 import { Interrupteur } from '../ui/Interrupteur';
 import { Segment } from '../ui/Segment';
@@ -149,7 +150,8 @@ function LienExterne({ href, children }: { href: string; children: React.ReactNo
 }
 
 export function ReglagesScreen({
-  espacement, onEspacementChange, fondAnime, onFondAnimeChange, onReconfigurer, onRaccourcis, onGuide,
+  espacement, onEspacementChange, fondAnime, onFondAnimeChange, onReconfigurer, onRaccourcis,
+  guideDemande, onGuideOuvert,
 }: {
   espacement: number;
   onEspacementChange: (n: number) => void;
@@ -157,7 +159,10 @@ export function ReglagesScreen({
   onFondAnimeChange: (actif: boolean) => void;
   onReconfigurer: () => void;
   onRaccourcis: () => void;
-  onGuide: () => void;
+  /** Un autre écran a demandé le guide (menu Caméras, Système) : il s'ouvre déplié. */
+  guideDemande: boolean;
+  /** La demande est servie : l'application l'oublie. */
+  onGuideOuvert: () => void;
 }) {
   const [infos, setInfos] = useState<Infos | null>(null);
   const [confirme, setConfirme] = useState(false);
@@ -168,6 +173,15 @@ export function ReglagesScreen({
   const [licencesAbsentes, setLicencesAbsentes] = useState(false);
   const [courante, setCourante] = useState(SECTIONS[0].id);
   const corps = useRef<HTMLDivElement>(null);
+  /* Le guide se déplie DANS la carte Aide — plus de fenêtre par-dessus (24.10.2026). */
+  const [guideOuvert, setGuideOuvert] = useState(guideDemande);
+  useEffect(() => {
+    if (!guideDemande) return;
+    onGuideOuvert();
+    document.getElementById('reglages-aide')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // Une seule fois, à l'arrivée : la demande ne vaut que pour cette visite.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const t = useLangue();
 
   useEffect(() => { bridge.langue().then((l) => setLangueChoix(l.choix)).catch(() => {}); }, []);
@@ -404,8 +418,13 @@ export function ReglagesScreen({
                   <Bouton icone={Keyboard} onClick={onRaccourcis}>{t('reglages.aide.voirRaccourcis')}</Bouton>
                 </Rangee>
                 <Rangee titre={t('reglages.aide.guide')} explication={t('reglages.aide.guideCourt')}>
-                  <Bouton icone={BookOpen} onClick={onGuide}>{t('reglages.aide.ouvrirGuide')}</Bouton>
+                  <Bouton icone={BookOpen} aria-expanded={guideOuvert} onClick={() => setGuideOuvert((v) => !v)}>
+                    {guideOuvert ? t('setup.guide.reduire') : t('reglages.aide.ouvrirGuide')}
+                  </Bouton>
                 </Rangee>
+                {guideOuvert && (
+                  <div className="m-surgit border-t border-line px-[18px] pb-4 pt-4"><CadreGuide hauteur={560} /></div>
+                )}
               </Carte>
             </Bloc>
 

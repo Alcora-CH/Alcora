@@ -14,7 +14,6 @@ import { VeillesScreen } from './screens/VeillesScreen';
 import { SystemeScreen } from './screens/SystemeScreen';
 import { BarreEtat } from './cadre/BarreEtat';
 import { Raccourcis } from './cadre/Raccourcis';
-import { FenetreGuide } from './cadre/FenetreGuide';
 import { Rail, type Espace } from './cadre/Rail';
 import { MenuCameras } from './cadre/MenuCameras';
 import { MenuDispositions } from './cadre/MenuDispositions';
@@ -185,8 +184,9 @@ export default function App() {
   const [indice, setIndice] = useState(false);
   /** La fenetre des raccourcis clavier (touche « ? », barre d'etat). */
   const [raccourcis, setRaccourcis] = useState(false);
-  /** Le guide d'activation du RTSP, ouvert hors de l'écran de connexion. */
-  const [guide, setGuide] = useState(false);
+  /** Le guide d'activation du RTSP, demandé hors des Réglages (menu Caméras, Système) : les
+      Réglages s'ouvrent sur lui, déplié — plus de fenêtre par-dessus (24.10.2026). */
+  const [guideDemande, setGuideDemande] = useState(false);
   const [espacement, setEspacement] = useState(() => {
     const brut = localStorage.getItem(CLE_ESPACE);
     const n = Number(brut);
@@ -455,7 +455,7 @@ export default function App() {
       // Jamais sous ce qui couvre l'ecran (introduction, sequence, nouveautes), ni avant la
       // configuration : elle s'ouvrirait invisible, et le prochain Echap fermerait les deux.
       else if (e.key === '?' && !saisie && configured && !introVisible && !sequence
-               && !(introFinie && nouveautes) && !guide) { e.preventDefault(); setRaccourcis(true); }
+               && !(introFinie && nouveautes)) { e.preventDefault(); setRaccourcis(true); }
       else if (e.key === 'Escape') {
         if (isolee) setIsolee(null);
         else if (pleinEcran) basculerPleinEcran();
@@ -710,9 +710,8 @@ export default function App() {
   const precisionDirect = !dispoActive ? precisionMur
     : t(dispoModifiee ? 'dispositions.precisionModifiee' : 'dispositions.precision', { nom: dispoActive.nom, reste: precisionMur });
 
-  /* Le guide de la console s'ouvre sur place. Il ne vivait que dans l'écran de connexion,
-     où l'on n'arrivait qu'en effaçant le mot de passe (« Modifier la connexion »). */
-  const versLeGuide = () => setGuide(true);
+  /* Le guide de la console : les Réglages s'ouvrent sur lui, déplié dans la carte Aide. */
+  const versLeGuide = () => { setGuideDemande(true); allerVers('reglages'); };
 
   /* Dès que l'inventaire est lu, même vide : c'est le menu qui dit « Aucune caméra ». */
   const menuCameras = (sombre?: boolean) => relais !== null && (
@@ -923,7 +922,8 @@ export default function App() {
               void bridge.reconfigure().then(() => { setEspace('direct'); setConfigured(false); });
             }}
             onRaccourcis={() => setRaccourcis(true)}
-            onGuide={versLeGuide}
+            guideDemande={guideDemande}
+            onGuideOuvert={() => setGuideDemande(false)}
           />
         ) : espace === 'detections' ? (
           <RechercheScreen cameras={cameras} cameraInitiale={cameraCible} onRevoir={revoirA} />
@@ -989,7 +989,6 @@ export default function App() {
       )}
 
       {raccourcis && <Raccourcis onFermer={() => setRaccourcis(false)} />}
-      {guide && <FenetreGuide onFermer={() => setGuide(false)} />}
 
       {/* Par-dessus tout : une bulle cliquée doit montrer sa séquence sans rien déranger. */}
       {sequence && (
