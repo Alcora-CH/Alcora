@@ -61,6 +61,9 @@ console.log('\nÉtape 1 — RANGER. La clé est dans le presse-papiers : une lon
 console.log('« alcora-secours-1: » (hors de l\'historique de Windows). Elle est déjà chiffrée par ta phrase de passe :');
 console.log('c\'est elle, et elle seule, qu\'il faut ranger. Dans Proton Pass, crée une note « Alcora — clé de secours »');
 console.log('et colle-la (Ctrl + V) dans son contenu — ou dans un champ masqué —, puis enregistre.');
+// Quelques caracteres aleatoires d'une cle chiffree : de quoi la reconnaitre, rien de quoi l'ouvrir.
+const reperes = `elle commence par « ${note.slice(0, 37)}… », finit par « …${note.slice(-4)} » et compte ${note.length} caractères`;
+console.log(`La ligne à ranger, et plus tard à recopier : ${reperes}.`);
 await attendreEntree('Une fois la note enregistrée, appuie sur Entrée… ');
 viderPressePapiers();
 
@@ -76,6 +79,7 @@ for (let tour = 0; tour < 5 && !rangee; tour++) {
   const ecart = ecartDeNote(copiee, note);
   if (ecart) {
     console.log(`  ${ecart}`);
+    console.log(`  Attendu : une seule ligne — ${reperes}.`);
     const choix = await attendreEntree('  Entrée pour réessayer, ou R puis Entrée pour remettre la clé dans le presse-papiers (note pas encore créée)… ');
     if (/^r$/i.test(choix)) {
       copier(note);
