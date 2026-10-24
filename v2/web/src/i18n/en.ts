@@ -481,7 +481,6 @@ export const en: Record<Cle, string> = {
   'recherche.revoirCourt': 'Replay',
 
   // Alertes (direction Observatoire, 23.10.2026)
-  'veilles.precision': 'What deserves a warning from Alcora on this PC, and when',
 
   // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
   'reglages.sommaire': 'Sections',
@@ -554,7 +553,6 @@ export const en: Record<Cle, string> = {
   'historique.onglets': 'Alerts screen view',
   'historique.ongletVeilles': 'Watches',
   'historique.onglet': 'History',
-  'historique.precision': 'What the watches have sent, kept 90 days on this PC',
   'historique.uneNonVue': '1 unseen alert',
   'historique.nonVues': '{n} unseen alerts',
   'historique.vide': 'No alert sent yet',

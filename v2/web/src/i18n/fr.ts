@@ -508,7 +508,6 @@ export const fr = {
   'recherche.revoirCourt': 'Revoir',
 
   // Alertes (direction Observatoire, 23.10.2026)
-  'veilles.precision': 'Ce qui mérite qu’Alcora te prévienne sur ce PC, et quand',
 
   // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
   'reglages.sommaire': 'Sections',
@@ -581,7 +580,6 @@ export const fr = {
   'historique.onglets': 'Vue de l’écran Alertes',
   'historique.ongletVeilles': 'Veilles',
   'historique.onglet': 'Historique',
-  'historique.precision': 'Ce que les veilles ont envoyé, gardé 90 jours sur ce PC',
   'historique.uneNonVue': '1 alerte non vue',
   'historique.nonVues': '{n} alertes non vues',
   'historique.vide': 'Aucune alerte envoyée pour l’instant',

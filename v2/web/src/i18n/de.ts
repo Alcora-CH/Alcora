@@ -482,7 +482,6 @@ export const de: Record<Cle, string> = {
   'recherche.revoirCourt': 'Wiedergabe',
 
   // Alertes (direction Observatoire, 23.10.2026)
-  'veilles.precision': 'Was eine Warnung von Alcora auf diesem PC verdient, und wann',
 
   // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
   'reglages.sommaire': 'Abschnitte',
@@ -555,7 +554,6 @@ export const de: Record<Cle, string> = {
   'historique.onglets': 'Ansicht des Alarm-Bildschirms',
   'historique.ongletVeilles': 'Wachen',
   'historique.onglet': 'Verlauf',
-  'historique.precision': 'Was die Wachen gesendet haben, 90 Tage auf diesem PC aufbewahrt',
   'historique.uneNonVue': '1 ungesehener Alarm',
   'historique.nonVues': '{n} ungesehene Alarme',
   'historique.vide': 'Noch kein Alarm gesendet',

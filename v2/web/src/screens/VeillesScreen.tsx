@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Bell, BellOff, Check, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { messageLisible } from '../lib/erreurs';
+import { armementLisible } from '../lib/lisible';
+import { Info } from '../ui/Info';
 import { t, useLangue } from '../i18n';
 import { Carte, EnTete } from '../ui/Cadre';
 import { useAlertes } from '../lib/alertes';
@@ -78,8 +80,10 @@ const RETENUES = [
   { ms: 3_600_000, libelle: '1 h' },
 ];
 
-export function VeillesScreen({ cameras, onOuvrir, onRevoir }: {
+export function VeillesScreen({ cameras, armement, onOuvrir, onRevoir }: {
   cameras: DiscoveredCamera[];
+  /** L'armement de Protect, tel que le contrôleur le dit : montré à côté de l'interrupteur d'Alcora. */
+  armement: string | null;
   /** Ouvrir la séquence d'une alerte de l'historique. */
   onOuvrir: (d: DetectionVive) => void;
   /** La relecture à l'instant d'une alerte. */
@@ -127,6 +131,8 @@ export function VeillesScreen({ cameras, onOuvrir, onRevoir }: {
     });
   }, [config, enregistrer]);
 
+  const protect = armement ? armementLisible(armement) : null;
+
   const profilActifNom = useMemo(() => {
     if (!config) return null;
     return config.profils.map((p) => p.nom).join(', ') || null;
@@ -154,13 +160,13 @@ export function VeillesScreen({ cameras, onOuvrir, onRevoir }: {
 
   return (
     <div className="flex h-full flex-col">
+      {/* Plus de sous-titre : il décrivait ce que l'écran montre déjà (clarté, 24.10.2026). */}
       <EnTete
         titre={t('espace.alertes')}
-        precision={onglet === 'veilles' ? t('veilles.precision') : t('historique.precision')}
         actions={(
           <>
             {etat === 'enregistre' && (
-              <span className="flex items-center gap-1.5 text-meta text-ok">
+              <span className="m-surgit flex items-center gap-1.5 text-meta text-ok">
                 <Check className="h-4 w-4" aria-hidden /> {t('veilles.enregistre')}
               </span>
             )}
@@ -173,6 +179,18 @@ export function VeillesScreen({ cameras, onOuvrir, onRevoir }: {
               <div className="leading-tight">
                 <div className="font-medium">{config.armee ? t('veilles.active') : t('veilles.desactivee')}</div>
                 {profilActifNom && <div className="text-meta text-soft">{t('veilles.profil', { nom: profilActifNom })}</div>}
+              </div>
+              {/* Les deux interrupteurs côte à côte : celui d'Alcora, l'état de Protect. Ils peuvent
+                  différer, et cela SE VOIT ; le pourquoi est dans le « i » — un paragraphe de 164
+                  caractères le disait en tête des veilles (clarté, 24.10.2026). */}
+              <div className="flex items-center gap-2 whitespace-nowrap border-l border-line2 pl-3 text-meta text-muted">
+                {protect && (
+                  <>
+                    <span aria-hidden className="h-[7px] w-[7px] rounded-full" style={{ background: protect.ton }} />
+                    Protect <b className="font-medium" style={{ color: protect.ton === 'var(--soft)' ? 'var(--ink)' : protect.ton }}>{protect.texte}</b>
+                  </>
+                )}
+                <Info>{t('veilles.independant')}</Info>
               </div>
             </div>
           </>
@@ -202,9 +220,6 @@ export function VeillesScreen({ cameras, onOuvrir, onRevoir }: {
       ) : (
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-[1100px] px-6 pb-10 pt-[22px]">
-          {/* Deux interrupteurs sur le même mur : le dire plutôt que de laisser deviner. */}
-          <p className="mb-[18px] max-w-[760px] leading-relaxed text-muted">{t('veilles.independant')}</p>
-
           {/* L'échec d'un enregistrement se lit EN ENTIER : sa cause est la seule chose utile. */}
           {etat === 'erreur' && (
             <p role="alert" className="mb-[18px] flex gap-2.5 rounded-[9px] bg-warn-soft px-3 py-2.5 text-warn">

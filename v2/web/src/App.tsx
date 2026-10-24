@@ -963,7 +963,8 @@ export default function App() {
           <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible}
                            instantInitial={instantCible} onTuiles={setTuilesRelecture} />
         ) : espace === 'alertes' ? (
-          <VeillesScreen cameras={cameras} onOuvrir={(d) => ouvrirDetection(d, 'alerts')} onRevoir={revoirA} />
+          <VeillesScreen cameras={cameras} armement={systeme?.armement ?? null}
+                         onOuvrir={(d) => ouvrirDetection(d, 'alerts')} onRevoir={revoirA} />
         ) : espace === 'systeme' ? (
           <SystemeScreen systeme={systeme} relay={relay} cameras={cameras} masquees={masquees}
                          onBasculerMasquee={basculerMasquee} versionAlcora={infosVersion}

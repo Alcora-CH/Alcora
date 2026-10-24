@@ -480,7 +480,6 @@ export const it: Record<Cle, string> = {
   'recherche.revoirCourt': 'Rivedi',
 
   // Alertes (direction Observatoire, 23.10.2026)
-  'veilles.precision': 'Ciò che merita un avviso di Alcora su questo PC, e quando',
 
   // Reglages : sommaire, Aide, A propos (direction Observatoire, 23.10.2026)
   'reglages.sommaire': 'Sezioni',
@@ -553,7 +552,6 @@ export const it: Record<Cle, string> = {
   'historique.onglets': 'Vista della schermata Avvisi',
   'historique.ongletVeilles': 'Guardie',
   'historique.onglet': 'Cronologia',
-  'historique.precision': 'Ciò che le guardie hanno inviato, conservato 90 giorni su questo PC',
   'historique.uneNonVue': '1 avviso non visto',
   'historique.nonVues': '{n} avvisi non visti',
   'historique.vide': 'Nessun avviso inviato per ora',
