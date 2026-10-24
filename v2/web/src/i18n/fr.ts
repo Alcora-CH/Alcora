@@ -706,6 +706,10 @@ export const fr = {
   'reglages.ouvrir': 'Ouvrir',
   'reglages.connexion.avertissementSuite': 'Plus d’images jusqu’à la reconnexion.',
   'commun.plusInfo': 'En savoir plus',
+
+  // Une seule fenêtre : la connexion dans le cadre (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
+  'rail.apresConnexion': 'Après la connexion',
+  'barre.nonConnecte': 'non connecté',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

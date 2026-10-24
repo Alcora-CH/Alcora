@@ -678,4 +678,8 @@ export const it: Record<Cle, string> = {
   'reglages.ouvrir': 'Apri',
   'reglages.connexion.avertissementSuite': 'Nessuna immagine fino alla riconnessione.',
   'commun.plusInfo': 'Maggiori informazioni',
+
+  // Une seule fenêtre : la connexion dans le cadre (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
+  'rail.apresConnexion': 'Dopo la connessione',
+  'barre.nonConnecte': 'non connesso',
 };

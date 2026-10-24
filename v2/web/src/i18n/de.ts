@@ -680,4 +680,8 @@ export const de: Record<Cle, string> = {
   'reglages.ouvrir': 'Öffnen',
   'reglages.connexion.avertissementSuite': 'Keine Bilder bis zur erneuten Verbindung.',
   'commun.plusInfo': 'Mehr erfahren',
+
+  // Une seule fenêtre : la connexion dans le cadre (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
+  'rail.apresConnexion': 'Nach der Anmeldung',
+  'barre.nonConnecte': 'nicht verbunden',
 };

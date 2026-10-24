@@ -46,7 +46,7 @@ function Pastille({ ton }: { ton: string }) {
   return <span aria-hidden className="h-[7px] w-[7px] shrink-0 rounded-full" style={{ background: ton }} />;
 }
 
-export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccourcis, onRelecture }: {
+export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccourcis, onRelecture, horsConnexion }: {
   relay: RelayState;
   systeme: SystemeEtat | null;
   cameras: DiscoveredCamera[];
@@ -55,6 +55,8 @@ export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccou
   onRaccourcis: () => void;
   /** L'export d'une plage continue hors de la relecture : un clic sur sa case y ramène. */
   onRelecture: () => void;
+  /** Avant la première connexion : la barre dit seulement que le contrôleur attend. */
+  horsConnexion?: boolean;
 }) {
   useLangue();
   const exportEnCours = useEtatExport();
@@ -66,11 +68,19 @@ export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccou
 
   return (
     <footer className="@container flex h-[34px] shrink-0 items-center border-t border-line bg-card pl-3.5 pr-2 text-meta text-muted">
-      {/* L'état du flux d'abord, en couleur : c'est ce qu'on vient vérifier. */}
-      <Case souple>
-        <Pastille ton={relay.running ? 'var(--ok)' : 'var(--warn)'} />
-        <span className={cx('truncate', !relay.running && 'text-warn')}>{relay.message}</span>
-      </Case>
+      {/* L'état du flux d'abord, en couleur : c'est ce qu'on vient vérifier. Avant la première
+          connexion, il n'y a pas encore de flux : la barre dit ce qui attend. */}
+      {horsConnexion ? (
+        <Case souple>
+          <Pastille ton="var(--soft)" />
+          <span className="truncate">{t('colonne.controleur')} <b className="font-medium text-ink">{t('barre.nonConnecte')}</b></span>
+        </Case>
+      ) : (
+        <Case souple>
+          <Pastille ton={relay.running ? 'var(--ok)' : 'var(--warn)'} />
+          <span className={cx('truncate', !relay.running && 'text-warn')}>{relay.message}</span>
+        </Case>
+      )}
 
       {/* Ce qui ne va pas passe avant ce qui va : suspension, caméras perdues. */}
       {systeme?.enregistrementSuspendu && (
@@ -143,10 +153,12 @@ export function BarreEtat({ relay, systeme, cameras, espace, onSysteme, onRaccou
               aria-label={t('raccourcis.titre')} className="ml-1">
         <span className="@max-[1180px]:hidden">{t('barre.raccourcis')}</span> <Touche>?</Touche>
       </Bouton>
-      <Bouton variante={espace === 'systeme' ? 'actif' : 'fantome'} taille="petit" onClick={onSysteme}
-              aria-current={espace === 'systeme' ? 'page' : undefined} className="ml-1">
-        {t('espace.systeme')}<ChevronRight className="h-4 w-4" aria-hidden />
-      </Bouton>
+      {!horsConnexion && (
+        <Bouton variante={espace === 'systeme' ? 'actif' : 'fantome'} taille="petit" onClick={onSysteme}
+                aria-current={espace === 'systeme' ? 'page' : undefined} className="ml-1">
+          {t('espace.systeme')}<ChevronRight className="h-4 w-4" aria-hidden />
+        </Bouton>
+      )}
     </footer>
   );
 }

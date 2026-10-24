@@ -33,11 +33,17 @@ const BAS: Entree[] = [
 /** Le trait d'or est en retrait de l'entrée, en haut comme en bas (maquette : 12 px). */
 const RETRAIT = 12;
 
-export function Rail({ espace, onChoisir, marqueAnimee }: {
+export function Rail({ espace, onChoisir, marqueAnimee, enAttente }: {
   espace: string;
   onChoisir: (id: Espace) => void;
   /** La marque ne tourne que si l'apparence animée est choisie (Réglages, « Fond animé »). */
   marqueAnimee: boolean;
+  /**
+   * Les espaces qui attendent le contrôleur — avant la première connexion. Ils restent à leur
+   * place, grisés, plutôt que de disparaître : Alcora est la même fenêtre dès la première
+   * seconde (décision de Thomas, 24.10.2026 : « une fenêtre unique tout-en-un »).
+   */
+  enAttente?: ReadonlySet<string>;
 }) {
   const t = useLangue();
   /* Les alertes arrivées depuis la dernière visite de l'historique : une bulle de Windows
@@ -68,13 +74,15 @@ export function Rail({ espace, onChoisir, marqueAnimee }: {
 
   const entree = ({ id, cle, Icone }: Entree) => {
     const actif = espace === id;
+    const attend = enAttente?.has(id) ?? false;
     return (
-      <button key={id} type="button" onClick={() => onChoisir(id)}
+      <button key={id} type="button" onClick={() => { if (!attend) onChoisir(id); }}
               aria-current={actif ? 'page' : undefined}
+              aria-disabled={attend || undefined} title={attend ? t('rail.apresConnexion') : undefined}
               ref={(el) => { if (el) boutons.current.set(id, el); else boutons.current.delete(id); }}
               className={cx(
                 'm-pression relative flex flex-col items-center gap-[5px] whitespace-nowrap rounded-[10px] px-1.5 pb-2 pt-2.5 text-meta transition-colors',
-                actif ? 'bg-card2 text-ink' : 'text-muted hover:bg-card2 hover:text-ink',
+                actif ? 'bg-card2 text-ink' : attend ? 'cursor-default text-muted opacity-40' : 'text-muted hover:bg-card2 hover:text-ink',
               )}>
         <Icone className={cx('h-5 w-5', actif && 'text-accent')} aria-hidden />
         {t(cle)}

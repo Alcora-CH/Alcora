@@ -61,6 +61,8 @@ const CLE_FOND = 'alcora.fond';
 const H_ETIQUETTE = 44;
 /** La barre d'état (cadre/BarreEtat.tsx) : en plein écran, elle se pose en bas, sur le mur. */
 const H_BARRE = 34;
+/** Avant la première connexion, ces espaces n'ont rien à montrer : le rail les grise. */
+const ATTEND_LE_CONTROLEUR: ReadonlySet<string> = new Set(['relecture', 'detections', 'alertes', 'systeme']);
 /** Espace entre les vues, en pixels. Zero est un choix legitime : images bord a bord. */
 const CLE_ESPACE = 'protectviewer.espace';
 /** Ordre des cameras choisi a la souris. Liste d'identifiants, jamais elaguee : une
@@ -617,18 +619,24 @@ export default function App() {
   if (configured === null || (!configured && maj?.demarrage)) {
     return <div className="relative h-full">{intro}</div>;
   }
-  // La premiere configuration a son propre recit d'etapes : pas d'introduction par-dessus.
-  // Le ciel l'accompagne des le premier ecran : c'est la premiere image qu'on ait
-  // d'Alcora, elle doit deja etre la sienne. Meme scene isolee qu'ailleurs — sans
-  // « isolate », le Planetarium en z:-1 passerait sous le fond et disparaitrait.
-  if (!configured) {
-    return (
-      <div className="app-scene isolate relative h-full">
-        <Planetarium anime={fondAnime} />
-        <SetupScreen onDone={() => { setConfigured(true); setIntroFinie(true); }} />
-      </div>
-    );
-  }
+  /*
+   * La premiere configuration vit DANS le cadre : rail et barre d'etat des la premiere
+   * seconde, comme partout — « une fenetre unique tout-en-un » (Thomas, 24.10.2026). Avant,
+   * elle remplacait l'application entiere, et Alcora commencait par ressembler a une autre.
+   * Les espaces qui attendent le controleur restent a leur place, grises ; les Reglages
+   * restent ouverts (la langue se choisit avant de se connecter). Pas d'introduction
+   * par-dessus : la connexion a son propre recit d'etapes.
+   */
+  const enConnexion = !configured;
+  const connexion = (
+    // Le ciel accompagne la connexion : c'est la premiere image qu'on ait d'Alcora. Meme
+    // scene isolee qu'ailleurs — sans « isolate », le Planetarium en z:-1 passerait sous le
+    // fond et disparaitrait.
+    <div className="app-scene isolate relative flex min-h-0 flex-1 flex-col">
+      <Planetarium anime={fondAnime} />
+      <SetupScreen onDone={() => { setConfigured(true); setIntroFinie(true); }} />
+    </div>
+  );
 
   /*
    * Reorganisation a la souris.
@@ -728,7 +736,7 @@ export default function App() {
   const barreVisible = commandesVisibles || !relay.running || Boolean(systeme?.enregistrementSuspendu)
     || cameras.some((c) => !c.online);
   const barre = (
-    <BarreEtat relay={relay} systeme={systeme} cameras={cameras} espace={espace}
+    <BarreEtat relay={relay} systeme={systeme} cameras={cameras} espace={espace} horsConnexion={enConnexion}
                onSysteme={() => allerVers('systeme')}
                onRaccourcis={() => setRaccourcis(true)}
                onRelecture={() => allerVers('relecture')} />
@@ -848,7 +856,7 @@ export default function App() {
           cela, une visite aux Détections restait filtrée sur la dernière caméra dont on
           avait cliqué le bouton, sans que rien ne l'indique. */}
       {habille && (
-        <Rail espace={espace} marqueAnimee={fondAnime}
+        <Rail espace={espace} marqueAnimee={fondAnime} enAttente={enConnexion ? ATTEND_LE_CONTROLEUR : undefined}
               onChoisir={(id: Espace) => allerVers(id)} />
       )}
 
@@ -905,7 +913,7 @@ export default function App() {
           * démonté en quittant, ces branches s'excluant l'une l'autre.
           */}
         <div key={espace} className="m-ecran flex min-h-0 flex-1 flex-col">
-        {espace === 'reglages' ? (
+        {enConnexion && espace !== 'reglages' ? connexion : espace === 'reglages' ? (
           <ReglagesScreen
             espacement={espacement}
             onEspacementChange={setEspacement}
@@ -962,7 +970,7 @@ export default function App() {
       {/* L'activité ne vit que sur le direct : sur les autres écrans, elle ne faisait que
           prendre de la place. La replier change la largeur des images — et donc la
           qualité demandée au contrôleur : c'est un geste, jamais un survol. */}
-      {habille && espace === 'direct' && activiteVisible && (
+      {habille && !enConnexion && espace === 'direct' && activiteVisible && (
         <ColonneActivite onOuvrir={ouvrirDetection} onRevoir={revoirA}
                          onToutes={() => allerVers('detections')}
                          onMasquer={() => setActiviteVisible(false)} />
