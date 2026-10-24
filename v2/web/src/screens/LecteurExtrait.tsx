@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
 import { useFermetureAnimee } from '../lib/fermeture';
+import { noterGeste, type OrigineSequence } from '../lib/gestes';
 import { BoutonBandeau } from '../video/BoutonBandeau';
 import { Bouton } from '../ui/Bouton';
 import { Segment } from '../ui/Segment';
@@ -40,8 +41,10 @@ function mmss(s: number): string {
   return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 }
 
-export function LecteurExtrait({ detection, retour, onFermer, onRelecture }: {
+export function LecteurExtrait({ detection, origine, retour, onFermer, onRelecture }: {
   detection: Detection;
+  /** D'où elle a été ouverte — pour le journal. */
+  origine: OrigineSequence;
   /** L'écran d'où l'on vient, nommé sur le bouton de retour : « ← Direct ». */
   retour: string;
   onFermer: () => void;
@@ -52,6 +55,14 @@ export function LecteurExtrait({ detection, retour, onFermer, onRelecture }: {
   /* La séquence part EN FONDU : « onFermer » n'est appelé qu'une fois l'animation finie,
      et l'écran resté dessous réapparaît à travers elle. */
   const { part, fermer, ref: fenetre } = useFermetureAnimee<HTMLElement>(onFermer);
+  /* Au journal : d'où vient la séquence, combien de temps elle est restée ouverte
+     (lib/gestes.ts). La clé du lecteur porte la détection : une autre est un autre montage. */
+  useEffect(() => {
+    const ouverte = performance.now();
+    const quand = detection.debut !== null ? new Date(detection.debut).toISOString() : 'unknown time';
+    noterGeste(`sequence opened from ${origine}: ${detection.cameraNom ?? detection.camera} at ${quand}`);
+    return () => noterGeste(`sequence closed after ${Math.round((performance.now() - ouverte) / 1000)} s`);
+  }, [origine, detection.cameraNom, detection.camera, detection.debut]);
   /* Le focus sur le lecteur lui-même : Espace, les flèches et + − le visent — et non la
      carte cliquée ailleurs, qui gardait le focus et se re-cliquait (revue du 23.10.2026).
      En partant, il revient à cette carte, restée montée sous la séquence — sauf si l'on est

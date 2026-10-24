@@ -27,6 +27,7 @@ import { Planetarium } from './Planetarium';
 import { meilleureGrille } from './video/grille';
 import { placerBandeau } from './lib/placementBandeau';
 import { useAbsence } from './lib/useAbsence';
+import { useGesteNote, type OrigineSequence } from './lib/gestes';
 import { bridge, pontDisponible } from './lib/bridge';
 import { FournisseurActivite } from './lib/FournisseurActivite';
 import { definirLangue, t, useLangue } from './i18n';
@@ -234,6 +235,8 @@ export default function App() {
    * de la colonne d'activité ou du bandeau du plein écran.
    */
   const [sequence, setSequence] = useState<Detection | null>(null);
+  /** D'où elle vient — la colonne, le bandeau, une bulle de Windows, les alertes : pour le journal. */
+  const [origineSequence, setOrigineSequence] = useState<OrigineSequence>('column');
   /**
    * Changer d'espace, éventuellement pour une caméra. Un seul chemin, qui OUBLIE l'instant
    * visé : sans cela, la relecture rouverte depuis le rail reviendrait à la dernière
@@ -280,8 +283,9 @@ export default function App() {
    *
    * Une detection qui COURT n'a pas encore de fin : le lecteur la borne alors lui-meme.
    */
-  const ouvrirDetection = useCallback((d: DetectionVive) => {
+  const ouvrirDetection = useCallback((d: DetectionVive, origine: OrigineSequence) => {
     if (!d.id || d.debut === null) return;
+    setOrigineSequence(origine);
     setSequence({
       id: d.id, type: d.type, camera: d.camera ?? '', cameraNom: d.cameraNom,
       debut: d.debut, fin: d.fin, sujets: d.sujets, score: d.score, vignette: Boolean(d.fin),
@@ -291,7 +295,7 @@ export default function App() {
   /* Clic sur une bulle Windows. Vivait dans le Journal ; le Journal n'existe plus. */
   useEffect(() => {
     if (!pontDisponible) return;
-    return bridge.onOuvrirDetection(ouvrirDetection);
+    return bridge.onOuvrirDetection((d) => ouvrirDetection(d, 'bubble'));
   }, [ouvrirDetection]);
 
   /*
@@ -592,6 +596,18 @@ export default function App() {
   /* Ce que tu n'as pas vu : tenu dès le lancement, montré par le bandeau du plein écran. */
   const { etat: absence, marquerVu } = useAbsence();
 
+  /* Ce qui change ce que montre la fenêtre — l'écran, la largeur ou le nombre des tuiles —
+     laisse une ligne au journal (lib/gestes.ts). La séquence se note dans son lecteur. */
+  const nomCamera = (id: string) => cameras.find((c) => c.id === id)?.name ?? id;
+  useGesteNote(espace, (e) => `screen ${e}`);
+  useGesteNote(pleinEcran, (p) => `full screen ${p ? 'on' : 'off'}`);
+  useGesteNote(isolee, (id) => (id ? `camera isolated: ${nomCamera(id)}` : 'mosaic'));
+  useGesteNote(activiteVisible, (v) => `activity column ${v ? 'shown' : 'hidden'}`);
+  useGesteNote(raccourcis, (v) => `shortcuts panel ${v ? 'open' : 'closed'}`);
+  useGesteNote(dispoActive?.nom ?? null, (n) => `active layout: ${n ?? 'none'}`);
+  useGesteNote(masquees, (m) => `hidden cameras: ${m.length ? m.map(nomCamera).join(', ') : 'none'}`,
+    (a, b) => a.length === b.length && a.every((x, i) => x === b[i]));
+
   /*
    * Ce que lisent le clavier et le glisser, montes hors du rendu : le mur tel qu'il est
    * AFFICHE. Ecrit apres chaque rendu valide, avant la peinture — jamais pendant le rendu,
@@ -837,7 +853,7 @@ export default function App() {
               <BandeauActivite placement={placerBandeau(taille, grille, espacement, H_ETIQUETTE, H_BARRE)}
                                absence={absence} largeurZone={taille.w}
                                bas={(barreVisible ? H_BARRE : 0) + 16} commandesVisibles={commandesVisibles}
-                               onOuvrir={ouvrirDetection} onVu={marquerVu}
+                               onOuvrir={(d) => ouvrirDetection(d, 'strip')} onVu={marquerVu}
                                onToutes={() => { basculerPleinEcran(); allerVers('detections'); }} />
             )}
           </div>
@@ -947,7 +963,7 @@ export default function App() {
           <RelectureScreen cameras={cameras} relais={relais} cameraInitiale={cameraCible}
                            instantInitial={instantCible} onTuiles={setTuilesRelecture} />
         ) : espace === 'alertes' ? (
-          <VeillesScreen cameras={cameras} onOuvrir={ouvrirDetection} onRevoir={revoirA} />
+          <VeillesScreen cameras={cameras} onOuvrir={(d) => ouvrirDetection(d, 'alerts')} onRevoir={revoirA} />
         ) : espace === 'systeme' ? (
           <SystemeScreen systeme={systeme} relay={relay} cameras={cameras} masquees={masquees}
                          onBasculerMasquee={basculerMasquee} versionAlcora={infosVersion}
@@ -999,14 +1015,15 @@ export default function App() {
           prendre de la place. La replier change la largeur des images — et donc la
           qualité demandée au contrôleur : c'est un geste, jamais un survol. */}
       {!raccourcis && habille && !enConnexion && espace === 'direct' && activiteVisible && (
-        <ColonneActivite onOuvrir={ouvrirDetection} onRevoir={revoirA}
+        <ColonneActivite onOuvrir={(d) => ouvrirDetection(d, 'column')} onRevoir={revoirA}
                          onToutes={() => allerVers('detections')}
                          onMasquer={() => setActiviteVisible(false)} />
       )}
       </div>
 
       {sequence && (
-        <LecteurExtrait key={sequence.id} detection={sequence} retour={t(`espace.${espace}` as Cle)}
+        <LecteurExtrait key={sequence.id} detection={sequence} origine={origineSequence}
+                        retour={t(`espace.${espace}` as Cle)}
                         onFermer={() => setSequence(null)}
                         onRelecture={sequence.debut !== null
                           ? () => revoirA(sequence.camera, sequence.debut as number) : undefined} />

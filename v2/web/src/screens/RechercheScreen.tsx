@@ -337,7 +337,7 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
       </div>
 
       {ouvert && (
-        <LecteurExtrait key={ouvert.id} detection={ouvert} retour={t('espace.detections')}
+        <LecteurExtrait key={ouvert.id} detection={ouvert} origine="detections" retour={t('espace.detections')}
                         onFermer={() => setOuvert(null)}
                         onRelecture={ouvert.debut !== null
                           ? () => onRevoir(ouvert.camera, ouvert.debut as number) : undefined} />
