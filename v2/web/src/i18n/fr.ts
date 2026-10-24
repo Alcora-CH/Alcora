@@ -329,8 +329,6 @@ export const fr = {
   'veilles.independant':
     'Cet interrupteur est celui d’Alcora, indépendant de l’armement de Protect. Les deux ' +
     'peuvent différer : Alcora préviendra sur ce PC même si Protect reste silencieux.',
-  'veilles.activerCourt': 'Activer',
-  'veilles.desactiverCourt': 'Désactiver',
   'veilles.toutesCameras': 'toutes les caméras',
   'veilles.volumesIndisponibles':
     'Les volumes des sept derniers jours n’ont pas pu être lus : les estimations ' +

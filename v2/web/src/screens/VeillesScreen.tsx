@@ -96,6 +96,15 @@ export function VeillesScreen({ cameras, armement, onOuvrir, onRevoir }: {
   const [config, setConfig] = useState<ConfigVeilles | null>(null);
   const [volumes, setVolumes] = useState<Record<string, number> | null>(null);
   const [ouverte, setOuverte] = useState<string | null>(null);
+  /* La veille dont le dépliement est FINI : pendant l'animation, le détail rogne ce qui dépasse ;
+     une fois déplié, il laisse sortir les infobulles, qu'il couperait sinon (« rien de tronqué »). */
+  const [depliee, setDepliee] = useState<string | null>(null);
+  useEffect(() => {
+    if (!ouverte) return;
+    const id = setTimeout(() => setDepliee(ouverte), 480);   // la durée « ample » et un peu de marge
+    return () => clearTimeout(id);
+  }, [ouverte]);
+  const basculerDetail = (id: string) => { setDepliee(null); setOuverte((o) => (o === id ? null : id)); };
   const [etat, setEtat] = useState<'lecture' | 'prete' | 'enregistre' | 'erreur'>('lecture');
   const [message, setMessage] = useState<string | null>(null);
 
@@ -229,25 +238,24 @@ export function VeillesScreen({ cameras, armement, onOuvrir, onRevoir }: {
           )}
 
           {/* ---- les veilles : une liste, alignée en colonnes ---- */}
-          <Carte className="@container m-cascade overflow-hidden">
+          {/* Sans « overflow-hidden » : une infobulle du détail doit pouvoir en sortir. */}
+          <Carte className="@container m-cascade">
             {config.veilles.map((v) => {
               const cout = coutParJour(coutVeille(v, volumes));
               const estOuverte = ouverte === v.id;
               return (
                 <div key={v.id} className="[&+&]:border-t [&+&]:border-line">
-                  {/* Une veille éteinte s'estompe, comme avant. */}
-                  <div className={cx('grid grid-cols-[36px_minmax(0,1fr)_auto_auto_28px] items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/[.02]',
-                    !v.actif && 'opacity-55')}>
-                    <button type="button" onClick={() => majVeille(v.id, { actif: !v.actif })}
-                            aria-pressed={v.actif} title={v.actif ? t('veilles.desactiverCourt') : t('veilles.activerCourt')}
-                            aria-label={`${v.nom} — ${v.actif ? t('veilles.desactiverCourt') : t('veilles.activerCourt')}`}
-                            className={cx('m-pression grid h-9 w-9 place-items-center rounded-[9px]',
-                              v.actif ? 'bg-accent-soft text-accent' : 'bg-card2 text-soft')}>
-                      {v.actif ? <Bell className="h-4 w-4" aria-hidden /> : <BellOff className="h-4 w-4" aria-hidden />}
-                    </button>
+                  {/* Une veille éteinte s'estompe, comme avant — son interrupteur, lui, reste net. */}
+                  <div className="grid grid-cols-[36px_minmax(0,1fr)_auto_auto_auto_28px] items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/[.02]">
+                    {/* La cloche DIT l'état ; l'interrupteur, plus loin, le change, comme dans les
+                        Réglages. Elle était le bouton, et rien ne le désignait (clarté, 24.10.2026). */}
+                    <span aria-hidden className={cx('grid h-9 w-9 place-items-center rounded-[9px] transition-[opacity,background-color,color]',
+                      v.actif ? 'bg-accent-soft text-accent' : 'bg-card2 text-soft opacity-55')}>
+                      {v.actif ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                    </span>
 
-                    <button type="button" onClick={() => setOuverte(estOuverte ? null : v.id)}
-                            aria-expanded={estOuverte} className="min-w-0 text-left">
+                    <button type="button" onClick={() => basculerDetail(v.id)}
+                            aria-expanded={estOuverte} className={cx('min-w-0 text-left transition-opacity', !v.actif && 'opacity-55')}>
                       <span className="block truncate text-titre font-semibold">{v.nom}</span>
                       <span className="mt-0.5 block truncate text-meta text-muted">
                         {v.sujets.map(libelleSujet).join(', ')}
@@ -258,23 +266,31 @@ export function VeillesScreen({ cameras, armement, onOuvrir, onRevoir }: {
                       </span>
                     </button>
 
-                    <span className="whitespace-nowrap text-meta text-muted @max-[620px]:hidden">
+                    <span className={cx('whitespace-nowrap text-meta text-muted transition-opacity @max-[620px]:hidden', !v.actif && 'opacity-55')}>
                       {t(QUAND.find((q) => q.id === v.quand)?.cle ?? 'veilles.quand.toujours')}
                     </span>
                     {/* Le volume attendu, avant d'activer. Protect ne le dit nulle part. */}
-                    <span className="whitespace-nowrap text-meta tabular-nums" style={{ color: cout.ton }}>
+                    <span className={cx('whitespace-nowrap text-meta tabular-nums transition-opacity', !v.actif && 'opacity-55')} style={{ color: cout.ton }}>
                       {cout.texte}
                     </span>
-                    <button type="button" onClick={() => setOuverte(estOuverte ? null : v.id)}
+                    <Interrupteur allume={v.actif} etiquette={v.nom} onChange={(actif) => majVeille(v.id, { actif })} />
+                    <button type="button" onClick={() => basculerDetail(v.id)}
                             aria-hidden tabIndex={-1} className="grid place-items-center text-soft">
                       {estOuverte ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </button>
                   </div>
 
-                  {estOuverte && (
-                    <Reglage veille={v} cameras={cameras} config={config} volumes={volumes}
-                             onChange={(champs) => majVeille(v.id, champs)} />
-                  )}
+                  {/* Le détail se DÉPLIE : la hauteur s'anime, l'exception assumée de la règle
+                      « Mouvement » (CLAUDE.md) — il apparaissait d'un coup. Replié, il reste monté
+                      mais inerte : on ne tabule pas dans ce qu'on ne voit pas. */}
+                  <div inert={!estOuverte}
+                       className={cx('grid transition-[grid-template-rows] duration-(--ample) ease-(--pose) motion-reduce:transition-none',
+                         estOuverte ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')}>
+                    <div className={cx('min-h-0', estOuverte && depliee === v.id ? 'overflow-visible' : 'overflow-hidden')}>
+                      <Reglage veille={v} cameras={cameras} config={config} volumes={volumes}
+                               onChange={(champs) => majVeille(v.id, champs)} />
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -353,14 +369,17 @@ function Reglage({ veille, cameras, config, volumes, onChange }: {
             <Puce allumee={veille.son !== false} onClick={() => onChange({ son: veille.son === false })}>
               {t('veilles.son')}
             </Puce>
-            <span className="mx-1 text-meta text-muted">{t('veilles.retenue')}</span>
+            <span className="mx-1 inline-flex items-center gap-1 text-meta text-muted">
+              {t('veilles.retenue')}
+              {/* Le pourquoi de la retenue, au survol : il s'écrivait sous les durées (24.10.2026). */}
+              <Info>{t('veilles.retenueDetail')}</Info>
+            </span>
             {RETENUES.map((r) => (
               <Puce key={r.ms} allumee={veille.retenueMs === r.ms} onClick={() => onChange({ retenueMs: r.ms })}>
                 {r.libelle}
               </Puce>
             ))}
           </div>
-          <p className="mt-1.5 text-meta leading-normal text-soft">{t('veilles.retenueDetail')}</p>
         </Rubrique>
       </div>
 

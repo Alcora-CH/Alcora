@@ -306,8 +306,6 @@ export const it: Record<Cle, string> = {
   'veilles.independant':
     'Questo interruttore è di Alcora, indipendente dall’attivazione di Protect. I due ' +
     'possono differire: Alcora avviserà su questo PC anche se Protect resta in silenzio.',
-  'veilles.activerCourt': 'Attiva',
-  'veilles.desactiverCourt': 'Disattiva',
   'veilles.toutesCameras': 'tutte le telecamere',
   'veilles.volumesIndisponibles':
     'I volumi degli ultimi sette giorni non hanno potuto essere letti: le stime ' +

@@ -308,8 +308,6 @@ export const de: Record<Cle, string> = {
     'Dieser Schalter gehört Alcora und ist von der Scharfschaltung von Protect ' +
     'unabhängig. Beide können sich unterscheiden: Alcora meldet auf diesem PC, auch ' +
     'wenn Protect still bleibt.',
-  'veilles.activerCourt': 'Einschalten',
-  'veilles.desactiverCourt': 'Ausschalten',
   'veilles.toutesCameras': 'alle Kameras',
   'veilles.volumesIndisponibles':
     'Die Mengen der letzten sieben Tage konnten nicht gelesen werden: die Schätzungen ' +

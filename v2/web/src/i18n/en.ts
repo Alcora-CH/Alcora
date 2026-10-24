@@ -307,8 +307,6 @@ export const en: Record<Cle, string> = {
   'veilles.independant':
     'This switch is Alcora’s, independent of Protect’s arming. The two can differ: ' +
     'Alcora will notify on this PC even if Protect stays silent.',
-  'veilles.activerCourt': 'Enable',
-  'veilles.desactiverCourt': 'Disable',
   'veilles.toutesCameras': 'all cameras',
   'veilles.volumesIndisponibles':
     'The volumes of the last seven days could not be read: estimates will stay empty ' +
