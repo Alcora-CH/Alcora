@@ -288,6 +288,12 @@ const verdict = (d, attendu = CHAMPS, cles = CLES_TEST) => verifierDeclaration(d
     check('diagnostic : ligne coupee', /incomplète/.test(ecart(note.slice(0, -5))));
     check('diagnostic : une autre cle de secours', /pas celle de ce lancement/.test(ecart(autre.join(':'))));
 
+    // Le 24.10.2026, le script de creation est tombe ici, la note deja rangee et relue.
+    const attendue = SECOURS.publicKey.export({ type: 'spki', format: 'pem' });
+    let pems = [];
+    try { pems = [s.pemPublique(SECOURS.publicKey), s.pemPublique(SECOURS.privateKey), s.pemPublique(attendue)]; } catch { /* rouge */ }
+    check('la cle publique s ecrit depuis une cle publique, une privee ou un PEM', pems.length === 3 && pems.every((p) => p === attendue));
+
     let courte = false;
     try { s.chiffrerCleDeSecours(SECOURS.privateKey, 'x'.repeat(s.PHRASE_MIN - 1)); } catch { courte = true; }
     check(`une phrase de moins de ${s.PHRASE_MIN} caracteres : refusee`, courte);

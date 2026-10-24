@@ -105,8 +105,15 @@ export function ecartDeNote(copie, attendue) {
 /** @returns {string} signature en base64 — la forme de la declaration */
 export const signerAvecLeSecours = (privee, message) => crypto.sign(null, message, privee).toString('base64');
 
-/** La cle publique, en PEM : ce qui s'epingle dans CLES. */
-export const pemPublique = (cle) => crypto.createPublicKey(cle).export({ type: 'spki', format: 'pem' });
+/**
+ * La cle publique, en PEM : ce qui s'epingle dans CLES. D'une cle privee (relue dans la
+ * note) comme d'une publique : createPublicKey refuse une cle deja publique — le script
+ * de creation en est tombe le 24.10.2026, la note deja rangee et relue.
+ */
+export function pemPublique(cle) {
+  const publique = cle instanceof crypto.KeyObject && cle.type === 'public' ? cle : crypto.createPublicKey(cle);
+  return publique.export({ type: 'spki', format: 'pem' });
+}
 
 /** L'empreinte d'une cle publique (SHA-256 de sa forme SPKI), pour la reconnaitre a l'oeil. */
 export function empreintePublique(pem) {

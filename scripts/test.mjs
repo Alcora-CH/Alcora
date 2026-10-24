@@ -140,6 +140,17 @@ const suites = [
   },
   {
     /*
+     * Ajoutee le 24.10.2026 : le premier vrai lancement du script de la cle de secours est
+     * tombe APRES le rangement de la note dans Proton Pass, sur une ligne jamais executee.
+     * Le script entier, joue avec un faux presse-papiers et un faux Proton Pass.
+     */
+    nom: 'Clé de secours (le script, geste par geste)',
+    commande: 'node',
+    args: ['test-cle-secours.mjs'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * Le contrat entre le processus principal et la page, que RIEN ne verifiait : le
      * contrat est ecrit en TypeScript, le processus principal en JavaScript. Six champs
      * ajoutes le 30.07.2026 ont ainsi ete calcules, declares, affiches — et jetes au
