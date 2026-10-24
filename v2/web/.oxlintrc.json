@@ -7,7 +7,7 @@
 
     "react/static-components": "warn",
     "react/refs": "warn",
-    "react/set-state-in-effect": "off",
+    "react/set-state-in-effect": "warn",
     "react/preserve-manual-memoization": "off",
     "react/purity": "warn",
     "react/immutability": "off"

@@ -183,7 +183,7 @@ Elles rendent **45 avertissements** sur `v2/web/src`, et `--deny-warnings` fait 
 |---|---|---|---|
 | `react/static-components` | 16 | **rallumée** (0, la refonte les avait résorbées) | un composant déclaré dans un autre est recréé à chaque rendu |
 | `react/refs` | 14 | **rallumée** (6 corrigées) | une référence lue pendant le rendu peut ne pas se rafraîchir |
-| `react/set-state-in-effect` | 5 | 5 | un `setState` synchrone dans un effet relance un rendu |
+| `react/set-state-in-effect` | 5 | **rallumée** (5 corrigées) | un `setState` synchrone dans un effet relance un rendu |
 | `react/preserve-manual-memoization` | 4 | 4 | la mémoïsation manuelle n'a pas pu être conservée |
 | `react/purity` | 3 | **rallumée** (4 corrigées) | une fonction impure (l'horloge) appelée pendant le rendu |
 | `react/immutability` | 3 | 3 | une prop ou un argument de crochet est muté |

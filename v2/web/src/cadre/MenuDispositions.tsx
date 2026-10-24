@@ -53,18 +53,19 @@ export function MenuDispositions({
 
   useEffect(() => { onOuvert?.(ouvert); }, [ouvert, onOuvert]);
   useEffect(() => () => onOuvert?.(false), [onOuvert]);
-  useEffect(() => { if (!ouvert) setSaisie(null); }, [ouvert]);
+  /* Fermer, c'est aussi abandonner la saisie en cours : là où le menu se ferme, pas dans un effet. */
+  const fermer = () => { setOuvert(false); setSaisie(null); };
 
   useEffect(() => {
     if (!ouvert) return;
     const dehors = (e: PointerEvent) => {
       // Une saisie en cours ne se perd pas sur un clic à côté.
-      if (!saisie && !zone.current?.contains(e.target as Node)) setOuvert(false);
+      if (!saisie && !zone.current?.contains(e.target as Node)) fermer();
     };
     const clavier = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       e.stopPropagation();
-      if (saisie) setSaisie(null); else setOuvert(false);
+      if (saisie) setSaisie(null); else fermer();
     };
     document.addEventListener('pointerdown', dehors);
     window.addEventListener('keydown', clavier, true);
@@ -88,7 +89,7 @@ export function MenuDispositions({
     <div ref={zone} className="relative">
       <Bouton icone={LayoutPanelTop} aria-expanded={ouvert} aria-controls={idPanneau}
               titre={t('dispositions.titreBouton')}
-              onClick={() => setOuvert((o) => !o)}
+              onClick={() => (ouvert ? fermer() : setOuvert(true))}
               className={cx(sombre && 'veil')} style={sombre ? { color: 'var(--on-1)' } : undefined}>
         <span className="max-w-[180px] truncate">{active ? active.nom : t('dispositions.bouton')}</span>
         {active && modifiee && <span className="text-meta text-accent">· {t('dispositions.modifiee')}</span>}
@@ -138,7 +139,7 @@ export function MenuDispositions({
               <div key={d.id} className={cx('group grid grid-cols-[20px_minmax(0,1fr)_auto_auto] items-center gap-2.5 rounded-[9px] px-2.5 py-2 hover:bg-card2',
                 estActive && 'bg-card2')}>
                 <span className="text-accent">{estActive && <Check className="h-4 w-4" aria-hidden />}</span>
-                <button type="button" onClick={() => { onAppliquer(d); setOuvert(false); }}
+                <button type="button" onClick={() => { onAppliquer(d); fermer(); }}
                         aria-current={estActive ? 'true' : undefined} className="min-w-0 text-left">
                   <span className="block truncate font-semibold">
                     {d.nom}

@@ -74,10 +74,11 @@ export function useSonVideo(video: React.RefObject<HTMLVideoElement | null>, pre
   /* La piste peut arriver APRES la video : on regarde encore un peu, puis on s'arrête. */
   useEffect(() => {
     if (!pret) return;
-    regarder();
+    // Le premier relevé part au tour suivant, pas dans l'effet même (règle react/set-state-in-effect).
+    const premier = setTimeout(regarder, 0);
     const id = setInterval(regarder, 800);
     const fin = setTimeout(() => clearInterval(id), 6000);
-    return () => { clearInterval(id); clearTimeout(fin); };
+    return () => { clearTimeout(premier); clearInterval(id); clearTimeout(fin); };
   }, [pret, regarder]);
 
   return { aDuSon, sonActif, basculer };

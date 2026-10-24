@@ -76,8 +76,6 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
   const [recensement, setRecensement] = useState<Recensement | null>(null);
   const [total, setTotal] = useState(0);
   const [tronque, setTronque] = useState(false);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState<string | null>(null);
   const [ouvert, setOuvert] = useState<Detection | null>(null);
 
   /** Numéro de la demande : une recherche lente ne doit pas écraser une plus récente. */
@@ -89,10 +87,18 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
     texte: texte.trim() || undefined,
   }), [sujets, seuil, types, couleurs, camerasChoisies, texte]);
 
+  /*
+   * La demande se reconnaît à sa clé : « chargement » et « erreur » s'en DÉDUISENT — une
+   * réponse reçue pour une autre clé n'en dit rien. Avant, l'effet les remettait à zéro à
+   * chaque départ, ce qui coûtait un second rendu (règle react/set-state-in-effect).
+   */
+  const cle = useMemo(() => JSON.stringify([filtres, periodeMs]), [filtres, periodeMs]);
+  const [recue, setRecue] = useState<{ cle: string; erreur: string | null } | null>(null);
+  const chargement = recue?.cle !== cle;
+  const erreur = recue && !chargement ? recue.erreur : null;
+
   useEffect(() => {
     const n = ++demande.current;
-    setChargement(true);
-    setErreur(null);
     // Le texte se tape lettre par lettre : on laisse la frappe se poser.
     const minuteur = setTimeout(() => {
       // L'heure se lit a la demande, pas pendant le rendu (regle react/purity, 24.10.2026).
@@ -104,12 +110,12 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
           setRecensement(r.recensement);
           setTotal(r.total);
           setTronque(r.tronque);
+          setRecue({ cle, erreur: null });
         })
-        .catch((e) => { if (n === demande.current) setErreur(e instanceof Error ? e.message : String(e)); })
-        .finally(() => { if (n === demande.current) setChargement(false); });
+        .catch((e) => { if (n === demande.current) setRecue({ cle, erreur: e instanceof Error ? e.message : String(e) }); });
     }, texte ? 320 : 0);
     return () => clearTimeout(minuteur);
-  }, [filtres, periodeMs, texte]);
+  }, [cle, filtres, periodeMs, texte]);
 
   const bascule = useCallback(
     (liste: string[], set: (v: string[]) => void, id: string) =>

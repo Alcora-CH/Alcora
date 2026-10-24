@@ -352,7 +352,8 @@ export default function App() {
   /** Le menu « Caméras » est ouvert : les commandes du plein écran ne s'effacent pas sous lui. */
   const [menuOuvert, setMenuOuvert] = useState(false);
   useEffect(() => {
-    if (!pleinEcran) { setCommandes(false); return; }
+    // Hors du plein écran, elles ne se montrent pas : « commandesVisibles » le déduit, rien à remettre ici.
+    if (!pleinEcran) return;
     let minuteur: number | undefined;
     const bouge = () => {
       setCommandes(true);
@@ -474,13 +475,24 @@ export default function App() {
     return () => window.removeEventListener('keydown', auClavier);
   });
 
-  /** Le rappel s'efface seul : en plein ecran, rien ne doit rester en travers de l'image. */
+  /*
+   * Le rappel s'efface seul : en plein ecran, rien ne doit rester en travers de l'image.
+   * Il se rallume quand on entre en plein ecran ou qu'on isole une camera — ajuste PENDANT
+   * le rendu, au changement (le motif que React documente), et non par un effet qui
+   * relancerait un second rendu (regle react/set-state-in-effect, 24.10.2026). L'effet ne
+   * fait plus que programmer l'extinction.
+   */
+  const cleRappel = `${pleinEcran}|${isolee ?? ''}`;
+  const [rappelVu, setRappelVu] = useState(cleRappel);
+  if (rappelVu !== cleRappel) {
+    setRappelVu(cleRappel);
+    setIndice(pleinEcran || isolee !== null);
+  }
   useEffect(() => {
-    if (!pleinEcran && !isolee) return;
-    setIndice(true);
+    if (!indice) return;
     const t = setTimeout(() => setIndice(false), 2600);
     return () => clearTimeout(t);
-  }, [pleinEcran, isolee]);
+  }, [indice, cleRappel]);
 
   // L'inventaire et le relais sont prets a des instants differents : on suit les deux.
   useEffect(() => {
@@ -710,7 +722,7 @@ export default function App() {
                       sombre={sombre} onOuvert={sombre ? setMenuOuvert : undefined} />
   );
 
-  const commandesVisibles = commandes || menuOuvert;
+  const commandesVisibles = (pleinEcran && commandes) || menuOuvert;
   /* En plein écran, la barre d'état revient avec les commandes — et RESTE quand quelque chose
      ne va pas : c'est par elle qu'on atteint l'état, le remède et « Réessayer ». */
   const barreVisible = commandesVisibles || !relay.running || Boolean(systeme?.enregistrementSuspendu)
