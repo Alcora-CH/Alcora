@@ -126,7 +126,7 @@ export const it: Record<Cle, string> = {
 
   'reglages.probleme.titre': 'Se qualcosa non va',
 
-  'setup.titre': 'Connessione al controller',
+  'setup.titre': 'Connessione',
   'setup.sousTitre':
     'L’applicazione interroga il tuo controller per scoprire le telecamere. ' +
     'Nulla è inviato altrove.',
@@ -138,43 +138,34 @@ export const it: Record<Cle, string> = {
   'setup.etape.inventaire': 'Leggere le telecamere',
   'setup.etape.flux': 'Verificare i flussi',
 
-  'setup.reprise.conservee': 'Una connessione precedente è conservata su questo PC',
-  'setup.reprise.detail': 'Puoi riprenderla senza reinserire nulla.',
-  'setup.reprise.bouton': 'Riprendi questa connessione',
+  'setup.reprise.conservee': 'Connessione conservata',
+  'setup.reprise.detail': 'Niente da reinserire',
+  'setup.reprise.bouton': 'Riprendi',
   'setup.reprise.encours': 'Ripresa…',
   'setup.reprise.echec': 'La ripresa non è andata a buon fine. Inserisci le credenziali qui sotto.',
 
-  'setup.adresse.label': 'Indirizzo del controller',
-  'setup.adresse.hint': 'L’indirizzo IP del tuo UDM, Cloud Key o UNVR.',
+  'setup.adresse.label': 'Indirizzo',
+  'setup.adresse.hint': 'IP dell’UDM, della Cloud Key o dell’UNVR',
 
   'setup.guide.agrandir': 'Ingrandisci',
   'setup.guide.reduire': 'Riduci',
   'setup.prealable.titre': 'Da preparare sulla console',
-  'setup.prealable.rtsp':
-    'L’RTSP attivo su ogni telecamera (Protect → telecamera → Avanzate). Alcora non '
-    + 'chiede mai un URL: legge gli indirizzi da sola, ma l’RTSP deve essere aperto.',
-  'setup.prealable.compte':
-    'Un account dedicato ad Alcora, con diritti di visione — non il tuo account proprietario.',
+  'setup.prealable.rtsp': 'RTSP attivato su ogni telecamera',
+  'setup.prealable.compte': 'Un account dedicato ad Alcora, diritti di visione',
   'setup.compte.titre': 'Account',
   'setup.compte.identifiant': 'Nome utente',
-  'setup.compte.identifiantHint':
-    'Usa un account dedicato a questa applicazione, con diritti limitati.',
+  'setup.compte.identifiantHint': 'Un account dedicato, diritti di visione',
   'setup.compte.motDePasse': 'Password',
   'setup.compte.masquerMdp': 'Nascondi la password',
   'setup.compte.afficherMdp': 'Mostra la password',
-  'setup.compte.cle': 'Chiave di autenticazione a due fattori',
+  'setup.compte.cle': 'Chiave a due fattori',
   'setup.compte.clePlaceholder': 'lascia vuoto se l’account non ne ha',
   'setup.compte.masquerCle': 'Nascondi la chiave',
   'setup.compte.afficherCle': 'Mostra la chiave',
 
   'setup.aide.question': 'Dove trovare questa chiave?',
-  'setup.aide.p1':
-    'Sul sito di gestione del tuo account Ubiquiti, quando aggiungi un’app di ' +
-    'autenticazione, scegli «inserimento manuale» invece di scansionare il codice: la ' +
-    'chiave viene allora mostrata per esteso.',
-  'setup.aide.p2':
-    'Tieni la stessa chiave anche sul telefono. Se questa applicazione ne diventasse ' +
-    'l’unica custode, perdere questo PC ti chiuderebbe fuori dal tuo account.',
+  'setup.aide.p1': 'Account Ubiquiti → aggiungi un’app di autenticazione → «inserimento manuale»: la chiave appare per intero.',
+  'setup.aide.p2': 'Tienila anche sul telefono: questo PC non deve esserne l’unico detentore.',
 
   'setup.verification.titre': 'Verifica',
   'setup.verification.lent': 'Sta durando più del previsto…',
@@ -184,18 +175,12 @@ export const it: Record<Cle, string> = {
   'setup.cameras.titre': 'Telecamere trovate',
 
   'setup.rester.titre': 'Rimanere connessi',
-  'setup.rester.p1':
-    'Per riconnettersi da sola dopo un riavvio, l’applicazione conserva su questo PC la ' +
-    'tua password e la chiave che produce i codici monouso, cifrate da Windows solo per ' +
-    'il tuo account Windows.',
-  'setup.rester.p2':
-    'In concreto: chi aprisse una sessione con il tuo account Windows potrebbe ' +
-    'connettersi al controller senza avere il tuo telefono. Il tuo account resta invece ' +
-    'protetto da chi conoscesse solo la tua password.',
+  'setup.rester.p1': 'Password e chiave conservate su questo PC, cifrate da Windows',
+  'setup.rester.p2': 'La tua sessione Windows basterà per connetterti, senza il telefono',
   'setup.rester.case': 'Rimani connesso su questo PC',
 
-  'setup.actions.tester': 'Prova la connessione',
-  'setup.actions.enregistrer': 'Salva e avvia',
+  'setup.actions.tester': 'Prova',
+  'setup.actions.enregistrer': 'Salva',
   'setup.actions.echecEnregistrement': 'Il salvataggio non è andato a buon fine.',
 
   'colonne.controleur': 'Controller',
@@ -682,4 +667,7 @@ export const it: Record<Cle, string> = {
   // Une seule fenêtre : la connexion dans le cadre (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
   'rail.apresConnexion': 'Dopo la connessione',
   'barre.nonConnecte': 'non connesso',
+
+  // Connexion, passe de clarté (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
+  'setup.rester.detail': 'Per riconnettersi da sola dopo un riavvio, Alcora conserva la tua password e la chiave a due fattori, cifrate da Windows solo per il tuo account Windows. Chi aprisse la tua sessione potrebbe quindi connettersi senza il tuo telefono; chi conoscesse solo la tua password, no.',
 };

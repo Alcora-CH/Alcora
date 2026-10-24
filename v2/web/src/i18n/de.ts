@@ -127,7 +127,7 @@ export const de: Record<Cle, string> = {
 
   'reglages.probleme.titre': 'Wenn etwas nicht geht',
 
-  'setup.titre': 'Verbindung zum Controller',
+  'setup.titre': 'Anmeldung',
   'setup.sousTitre':
     'Die Anwendung fragt deinen Controller ab, um die Kameras zu finden. ' +
     'Nichts wird woandershin gesendet.',
@@ -139,27 +139,23 @@ export const de: Record<Cle, string> = {
   'setup.etape.inventaire': 'Kameras lesen',
   'setup.etape.flux': 'Streams prüfen',
 
-  'setup.reprise.conservee': 'Eine frühere Verbindung ist auf diesem PC hinterlegt',
-  'setup.reprise.detail': 'Du kannst sie übernehmen, ohne etwas neu einzutippen.',
-  'setup.reprise.bouton': 'Diese Verbindung übernehmen',
+  'setup.reprise.conservee': 'Gespeicherte Verbindung',
+  'setup.reprise.detail': 'Nichts neu einzugeben',
+  'setup.reprise.bouton': 'Fortsetzen',
   'setup.reprise.encours': 'Übernahme…',
   'setup.reprise.echec': 'Die Übernahme ist nicht durchgekommen. Gib die Zugangsdaten unten ein.',
 
-  'setup.adresse.label': 'Adresse des Controllers',
-  'setup.adresse.hint': 'Die IP-Adresse deiner UDM, deines Cloud Key oder UNVR.',
+  'setup.adresse.label': 'Adresse',
+  'setup.adresse.hint': 'IP der UDM, des Cloud Key oder des UNVR',
 
   'setup.guide.agrandir': 'Vergrössern',
   'setup.guide.reduire': 'Verkleinern',
   'setup.prealable.titre': 'Auf der Konsole vorzubereiten',
-  'setup.prealable.rtsp':
-    'RTSP auf jeder Kamera aktiviert (Protect → Kamera → Erweitert). Alcora fragt nie '
-    + 'nach einer URL: sie liest die Adressen selbst, aber RTSP muss offen sein.',
-  'setup.prealable.compte':
-    'Ein eigenes Konto für Alcora mit Leserechten — nicht dein Besitzerkonto.',
+  'setup.prealable.rtsp': 'RTSP auf jeder Kamera aktiviert',
+  'setup.prealable.compte': 'Ein eigenes Konto für Alcora, mit Ansichtsrechten',
   'setup.compte.titre': 'Konto',
   'setup.compte.identifiant': 'Benutzername',
-  'setup.compte.identifiantHint':
-    'Verwende ein Konto nur für diese Anwendung, mit eingeschränkten Rechten.',
+  'setup.compte.identifiantHint': 'Ein eigenes Konto, Ansichtsrechte',
   'setup.compte.motDePasse': 'Passwort',
   'setup.compte.masquerMdp': 'Passwort verbergen',
   'setup.compte.afficherMdp': 'Passwort anzeigen',
@@ -169,13 +165,8 @@ export const de: Record<Cle, string> = {
   'setup.compte.afficherCle': 'Schlüssel anzeigen',
 
   'setup.aide.question': 'Wo findet man diesen Schlüssel?',
-  'setup.aide.p1':
-    'Wähle auf der Verwaltungsseite deines Ubiquiti-Kontos beim Hinzufügen einer ' +
-    'Authenticator-App «manuelle Eingabe» statt den Code zu scannen: der Schlüssel wird ' +
-    'dann ausgeschrieben angezeigt.',
-  'setup.aide.p2':
-    'Behalte denselben Schlüssel auch auf deinem Telefon. Wäre diese Anwendung seine ' +
-    'einzige Trägerin, würde dich der Verlust dieses PCs aus deinem Konto aussperren.',
+  'setup.aide.p1': 'Ubiquiti-Konto → Authentifizierungs-App hinzufügen → «manuelle Eingabe»: Der Schlüssel erscheint im Klartext.',
+  'setup.aide.p2': 'Behalte ihn auch auf deinem Telefon: Dieser PC darf nicht sein einziger Träger sein.',
 
   'setup.verification.titre': 'Prüfung',
   'setup.verification.lent': 'Das dauert länger als erwartet…',
@@ -185,18 +176,12 @@ export const de: Record<Cle, string> = {
   'setup.cameras.titre': 'Gefundene Kameras',
 
   'setup.rester.titre': 'Angemeldet bleiben',
-  'setup.rester.p1':
-    'Um sich nach einem Neustart selbst wieder zu verbinden, behält die Anwendung auf ' +
-    'diesem PC dein Passwort und den Schlüssel für die Einmalcodes — von Windows ' +
-    'verschlüsselt, nur für dein Windows-Konto.',
-  'setup.rester.p2':
-    'Konkret: wer sich unter deinem Windows-Konto anmeldet, könnte sich ohne dein ' +
-    'Telefon mit dem Controller verbinden. Gegen jemanden, der nur dein Passwort kennt, ' +
-    'bleibt dein Konto hingegen geschützt.',
+  'setup.rester.p1': 'Passwort und Schlüssel bleiben auf diesem PC, von Windows verschlüsselt',
+  'setup.rester.p2': 'Deine Windows-Sitzung genügt zur Anmeldung, ohne dein Telefon',
   'setup.rester.case': 'Auf diesem PC angemeldet bleiben',
 
-  'setup.actions.tester': 'Verbindung testen',
-  'setup.actions.enregistrer': 'Speichern und starten',
+  'setup.actions.tester': 'Testen',
+  'setup.actions.enregistrer': 'Speichern',
   'setup.actions.echecEnregistrement': 'Das Speichern ist nicht durchgekommen.',
 
   'colonne.controleur': 'Controller',
@@ -684,4 +669,7 @@ export const de: Record<Cle, string> = {
   // Une seule fenêtre : la connexion dans le cadre (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
   'rail.apresConnexion': 'Nach der Anmeldung',
   'barre.nonConnecte': 'nicht verbunden',
+
+  // Connexion, passe de clarté (maquette docs/maquette-fenetre-unique.html, 24.10.2026)
+  'setup.rester.detail': 'Um sich nach einem Neustart selbst wieder anzumelden, behält Alcora dein Passwort und den Zwei-Faktor-Schlüssel, von Windows nur für dein Windows-Konto verschlüsselt. Wer deine Sitzung öffnet, könnte sich also ohne dein Telefon anmelden; wer nur dein Passwort kennt, nicht.',
 };

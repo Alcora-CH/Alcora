@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  BookOpen, Check, Eye, EyeOff, Loader2, Maximize2, Minimize2, Minus, RotateCcw, X,
+  BookOpen, Check, Eye, EyeOff, Loader2, Maximize2, Minimize2, Minus, RotateCcw, ShieldCheck, X,
 } from 'lucide-react';
 import { bridge, isMocked } from '../lib/bridge';
 import { useLangue } from '../i18n';
-import { Marque } from '../Marque';
 import { Bouton } from '../ui/Bouton';
-import { Carte } from '../ui/Cadre';
+import { Carte, EnTete } from '../ui/Cadre';
+import { Info } from '../ui/Info';
+import { Interrupteur } from '../ui/Interrupteur';
 import { Champ } from '../ui/Champ';
 import { cx } from '../ui/cx';
 import type {
@@ -31,6 +32,19 @@ function StepIcon({ state }: { state: StepState }) {
     case 'ignore': return <span className={cx(rond, 'bg-card2 text-soft')}><Minus className="h-3 w-3" /></span>;
     default: return <span className={rond}><span className="h-1.5 w-1.5 rounded-full bg-soft" /></span>;
   }
+}
+
+/**
+ * Le numéro d'une étape du formulaire — règle « Clarté avant texte » (24.10.2026) : on voit
+ * où l'on en est au lieu de le lire. Coché quand l'étape est faite, doré quand c'est son tour.
+ */
+function Numero({ n, fait, courant }: { n: number; fait: boolean; courant: boolean }) {
+  return (
+    <span aria-hidden className={cx('grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full text-meta font-semibold transition-colors',
+      fait ? 'bg-ok-soft text-ok' : courant ? 'bg-accent text-sur-accent' : 'bg-card3 text-muted')}>
+      {fait ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : n}
+    </span>
+  );
 }
 
 /** Un bloc du formulaire : son titre, puis ses champs. */
@@ -78,8 +92,6 @@ function GuideRtsp() {
         </Bouton>
       </div>
 
-      <p className="mt-1.5 text-meta leading-normal text-muted">{t('setup.prealable.rtsp')}</p>
-
       {/*
         La hauteur est la SEULE chose qui change entre les deux tailles, et elle est
         animee : le guide ne se recharge pas, son animation ne repart pas de zero.
@@ -97,9 +109,12 @@ function GuideRtsp() {
         />
       </div>
 
-      {/* Le second prealable ne figure pas dans le guide, qui ne parle que du flux :
-          le retirer avec l'ancienne liste l'aurait fait disparaitre en silence. */}
-      <p className="mt-3.5 text-meta leading-normal text-muted">{t('setup.prealable.compte')}</p>
+      {/* Les deux préalables, cochés comme une liste à suivre. Le second ne figure pas dans
+          le guide, qui ne parle que du flux : le retirer l'aurait fait disparaître en silence. */}
+      <ul className="mt-3.5 flex flex-col gap-1.5 text-meta text-muted">
+        <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />{t('setup.prealable.rtsp')}</li>
+        <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />{t('setup.prealable.compte')}</li>
+      </ul>
     </Carte>
   );
 }
@@ -214,20 +229,28 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
     }
   }, [normalizedHost, username, password, seed, keepSignedIn, onDone, t]);
 
-  return (
-    <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-[1120px] px-7 pt-9">
+  /* Où en est-on : chaque étape se coche, la première qui reste se dore. */
+  const fait1 = Boolean(normalizedHost);
+  const fait2 = Boolean(username.trim() && password);
+  const fait3 = succeeded;
+  const courante = !fait1 ? 1 : !fait2 ? 2 : !fait3 ? 3 : 0;
 
-        <header className="mb-3.5">
-          <div className="flex items-center gap-3.5">
-            <Marque taille={36} />
-            <h1 className="text-ecran font-semibold">{t('setup.titre')}</h1>
-          </div>
-          <p className="ml-[50px] mt-1 text-muted">{t('setup.sousTitre')}</p>
-          {isMocked && (
-            <p className="mt-3 rounded-lg bg-warn-soft px-3 py-2 text-meta text-warn">{t('setup.demo')}</p>
-          )}
-        </header>
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      {/* L'en-tête du cadre, comme sur tout écran : la connexion n'est plus une page à part.
+          La promesse de l'ancien sous-titre tient dans la pastille. */}
+      <EnTete titre={t('setup.titre')}
+              actions={(
+                <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-card2 px-3 text-meta text-muted">
+                  <ShieldCheck className="h-4 w-4" aria-hidden />{t('barre.prive')}
+                </span>
+              )} />
+      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto max-w-[1120px] px-7 pt-6">
+
+        {isMocked && (
+          <p className="mb-3.5 rounded-lg bg-warn-soft px-3 py-2 text-meta text-warn">{t('setup.demo')}</p>
+        )}
 
         <div className="grid grid-cols-[minmax(0,1fr)_440px] items-start gap-6 max-[1100px]:grid-cols-1">
 
@@ -240,33 +263,33 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
             {sauvegarde?.existe && (
               /* La carte de reprise se teinte d'or : c'est le chemin qu'on propose d'abord. */
               <Bloc className="border-accent-ligne bg-[linear-gradient(rgba(220,169,92,.08),rgba(220,169,92,.08))]">
-                <p className="flex gap-2.5">
-                  <RotateCcw className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
-                  <span>
-                    {t('setup.reprise.conservee')}
-                    {sauvegarde.host ? <> (<span className="font-mono">{sauvegarde.host}</span>)</> : null}
-                    {'. '}
-                    {t('setup.reprise.detail')}
-                  </span>
-                </p>
-                <div className="mt-3.5 flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
+                  <RotateCcw className="h-4 w-4 shrink-0 text-accent" aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <div>
+                      <b className="font-semibold">{t('setup.reprise.conservee')}</b>
+                      {sauvegarde.host ? <> · <span className="font-mono">{sauvegarde.host}</span></> : null}
+                    </div>
+                    <div className={cx('text-meta', repriseEchouee ? 'text-warn' : 'text-soft')}>
+                      {repriseEchouee ? t('setup.reprise.echec') : t('setup.reprise.detail')}
+                    </div>
+                  </div>
                   <Bouton variante="primaire" onClick={reprendre} disabled={reprise}>
                     {reprise ? t('setup.reprise.encours') : t('setup.reprise.bouton')}
                   </Bouton>
-                  {repriseEchouee && <span className="text-meta text-warn">{t('setup.reprise.echec')}</span>}
                 </div>
               </Bloc>
             )}
 
             {/* ---- contrôleur ---- */}
-            <Bloc titre={t('colonne.controleur')}>
+            <Bloc titre={<><Numero n={1} fait={fait1} courant={courante === 1} />{t('colonne.controleur')}</>}>
               <Champ id="setup-hote" libelle={t('setup.adresse.label')} aide={t('setup.adresse.hint')}
                      value={host} onChange={(e) => setHost(e.target.value)}
                      placeholder="192.168.1.1" inputMode="url" spellCheck={false} autoComplete="off" />
             </Bloc>
 
             {/* ---- compte ---- */}
-            <Bloc titre={t('setup.compte.titre')}>
+            <Bloc titre={<><Numero n={2} fait={fait2} courant={courante === 2} />{t('setup.compte.titre')}</>}>
               <div className="flex flex-col gap-3.5">
                 <Champ id="setup-identifiant" libelle={t('setup.compte.identifiant')} aide={t('setup.compte.identifiantHint')}
                        value={username} onChange={(e) => setUsername(e.target.value)}
@@ -304,6 +327,7 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
 
             {/* ---- vérification ---- */}
             <Bloc titre={<>
+              <Numero n={3} fait={fait3} courant={courante === 3} />
               {t('setup.verification.titre')}
               {slow && <span className="text-meta font-normal text-soft">{t('setup.verification.lent')}</span>}
             </>}>
@@ -355,17 +379,17 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
             </Bloc>
 
             {/* ---- divulgation ---- */}
-            <Bloc titre={t('setup.rester.titre')}>
-              <div className="flex flex-col gap-2.5 leading-relaxed text-muted">
-                <p>{t('setup.rester.p1')}</p>
-                <p>{t('setup.rester.p2')}</p>
+            {/* Le compromis reste DIT, en une ligne : c'est une question de sécurité, pas une
+                aide. Son explication complète est au survol du « i ». */}
+            <Bloc>
+              <div className="flex items-center gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 font-semibold">{t('setup.rester.titre')}<Info>{t('setup.rester.detail')}</Info></div>
+                  <div className="text-meta text-soft">{t('setup.rester.p1')}</div>
+                  {keepSignedIn && <div className="text-meta text-warn">{t('setup.rester.p2')}</div>}
+                </div>
+                <Interrupteur allume={keepSignedIn} onChange={setKeepSignedIn} etiquette={t('setup.rester.case')} />
               </div>
-              <label className="mt-3.5 flex cursor-pointer items-center gap-2.5">
-                <input type="checkbox" checked={keepSignedIn}
-                       onChange={(e) => setKeepSignedIn(e.target.checked)}
-                       className="h-4 w-4 accent-[var(--accent)]" />
-                {t('setup.rester.case')}
-              </label>
             </Bloc>
 
             {/* ---- actions ----
@@ -396,6 +420,7 @@ export function SetupScreen({ onDone }: { onDone: () => void }) {
             <GuideRtsp />
           </aside>
         </div>
+      </div>
       </div>
     </div>
   );
