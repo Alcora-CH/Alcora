@@ -20,6 +20,26 @@ export interface WhepSession {
  */
 const DELAI_NEGOCIATION_MS = 10_000;
 
+/**
+ * Le chemin que la connexion a retenu : type et protocole du candidat local, adresse du relais.
+ * C'est ce que disaient, à la lecture, les quinze lignes de candidats — en une seule.
+ */
+async function cheminRetenu(pc: RTCPeerConnection): Promise<string | null> {
+  try {
+    const stats = await pc.getStats();
+    let paire: RTCIceCandidatePairStats | undefined;
+    stats.forEach((s) => { if (s.type === 'transport' && s.selectedCandidatePairId) paire = stats.get(s.selectedCandidatePairId); });
+    if (!paire) stats.forEach((s) => { if (s.type === 'candidate-pair' && s.nominated && s.state === 'succeeded') paire = s; });
+    if (!paire) return null;
+    const local = stats.get(paire.localCandidateId);
+    const distant = stats.get(paire.remoteCandidateId);
+    // Une adresse masquée (mDNS, côté navigateur) arrive vide : « ? » plutôt que « → :62967 ».
+    return `${local?.candidateType || '?'} ${local?.protocol || '?'} → ${distant?.address || '?'}:${distant?.port ?? '?'}`;
+  } catch {
+    return null;
+  }
+}
+
 export async function connectWhep(
   url: string,
   video: HTMLVideoElement,
@@ -47,15 +67,38 @@ export async function connectWhep(
 
   async function negocier(): Promise<WhepSession> {
 
-  // Journalise la PROGRESSION de la negociation, pas seulement son echec. Sans cela, une
-  // signalisation reussie suivie d'une connexion qui n'aboutit jamais est indiscernable
-  // d'un succes : c'est exactement ce qui a masque le probleme pendant des heures.
+  /*
+   * Journalise l'ISSUE de la negociation, pas seulement son echec. Sans cela, une signalisation
+   * reussie suivie d'une connexion qui n'aboutit jamais est indiscernable d'un succes : c'est
+   * exactement ce qui a masque le probleme pendant des heures.
+   *
+   * Mais une ligne par connexion reussie, plus quinze : chaque candidat ICE et chaque etat
+   * faisaient tourner le journal de 2 Mo en deux ou trois jours, emportant les gestes et le
+   * reste (releve du 27.10.2026). Le detail — candidats des deux cotes — ne s'ecrit plus que
+   * quand la connexion echoue, la ou il sert. En anglais, comme tout le journal.
+   */
   const trace = (m: string) => console.log(`[whep] ${url.split('/').slice(-2, -1)[0]} ${m}`);
-  pc.oniceconnectionstatechange = () => trace(`ICE ${pc.iceConnectionState}`);
-  pc.onconnectionstatechange = () => trace(`connexion ${pc.connectionState}`);
+  const debut = performance.now();
+  let distants: string[] = [];
+  const locaux = () => (pc.localDescription?.sdp ?? '').split('\n')
+    .filter((l) => l.startsWith('a=candidate')).map((l) => l.trim());
+  pc.onconnectionstatechange = () => {
+    const etat = pc.connectionState;
+    if (etat === 'connected') {
+      const duree = Math.round(performance.now() - debut);
+      void cheminRetenu(pc).then((chemin) => trace(
+        `connected in ${duree} ms${chemin ? ` via ${chemin}` : ''} (${distants.length} remote, ${locaux().length} local candidates)`));
+    } else if (etat === 'disconnected' || etat === 'failed') {
+      trace(`connection ${etat} (ICE ${pc.iceConnectionState})`);
+      if (etat === 'failed') {
+        for (const c of distants) trace(`remote ${c}`);
+        for (const c of locaux()) trace(`local ${c}`);
+      }
+    }
+  };
   pc.onicecandidateerror = (e) => {
     const err = e as RTCPeerConnectionIceErrorEvent;
-    trace(`candidat en erreur : ${err.errorCode} ${err.errorText}`);
+    trace(`candidate error: ${err.errorCode} ${err.errorText}`);
   };
 
   // Reception seule : on ne publie jamais rien.
@@ -112,12 +155,8 @@ export async function connectWhep(
   if (lieu) ressource = new URL(lieu, url).toString();
 
   const sdp = await response.text();
-  for (const ligne of sdp.split('\n').filter((l) => l.startsWith('a=candidate'))) {
-    trace(`candidat distant ${ligne.trim()}`);
-  }
-  for (const ligne of pc.localDescription!.sdp.split('\n').filter((l) => l.startsWith('a=candidate'))) {
-    trace(`candidat local ${ligne.trim()}`);
-  }
+  // Gardes pour le journal : ils ne s'ecrivent que si la connexion echoue.
+  distants = sdp.split('\n').filter((l) => l.startsWith('a=candidate')).map((l) => l.trim());
 
   await pc.setRemoteDescription({ type: 'answer', sdp });
 
