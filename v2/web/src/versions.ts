@@ -50,6 +50,20 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.40.1',
+    date: '27.10.2026',
+    fr: [
+      'La relecture a un bouton « Exporter » : un clic pose une minute à exporter autour de l’instant '
+      + 'lu — ou la dernière minute depuis le direct —, qu’on ajuste aux poignées avant d’exporter.',
+      'La molette zoome sur l’image sans faire défiler la page en même temps.',
+    ],
+    en: [
+      'Replay has an “Export” button: one click sets a minute to export around the moment shown — or '
+      + 'the last minute from live — to adjust with the handles before exporting.',
+      'The mouse wheel zooms into the image without scrolling the page at the same time.',
+    ],
+  },
+  {
     version: '2.40.0',
     date: '24.10.2026',
     fr: [
