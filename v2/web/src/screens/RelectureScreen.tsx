@@ -857,7 +857,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
               tue le panoramique par pointercancel. Mesure sur le poste le 02.08.2026. */}
           <div
             className="relative min-h-0 flex-1 select-none overflow-hidden bg-black"
-            ref={(el) => { if (el) setLargeurVue(el.clientWidth); }}
+            ref={(el) => { if (el) setLargeurVue(el.clientWidth); vue.refZone(el); }}
             style={{ cursor: vue.agrandi ? 'grab' : 'default' }}
             {...vue.gestes}
           >

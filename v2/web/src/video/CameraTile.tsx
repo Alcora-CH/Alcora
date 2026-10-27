@@ -141,6 +141,10 @@ export function CameraTile({
   }, [zoomClavier]);
   const { zoom } = vue;
   const canvasRef = vue.canvasRef;
+  /* Stable : une référence recréée à chaque rendu retirerait et reposerait l'écouteur de la
+     molette à chaque fois — et une tuile se redessine souvent. */
+  const refZone = vue.refZone;
+  const refConteneur = useCallback((el: HTMLDivElement | null) => { containerRef.current = el; refZone(el); }, [refZone]);
 
   // Le canal suit la surface reellement affichee ET le zoom. Recalcule a chaque
   // changement, mais la reconnexion n'a lieu que si le chemin change vraiment.
@@ -389,7 +393,8 @@ export function CameraTile({
 
   const image = (
     <div
-      ref={containerRef}
+      /* La molette du zoom passe par un ecouteur natif, non passif (video/useZoomVideo.ts). */
+      ref={refConteneur}
       /* La cellule est deja dimensionnee a la bonne proportion par la mosaique : imposer
          « aspect-video » ici ferait s'affronter deux regles sur le meme arrondi. */
       className="group relative h-full w-full select-none overflow-hidden bg-black"

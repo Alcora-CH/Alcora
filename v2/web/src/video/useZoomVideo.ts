@@ -25,7 +25,6 @@ export const ZOOM_MAX = 8;
 export interface ZoomVideo {
   /** A poser sur le conteneur : il porte les gestes. */
   gestes: {
-    onWheel: (e: React.WheelEvent) => void;
     onPointerDown: (e: React.PointerEvent) => void;
     onPointerMove: (e: React.PointerEvent) => void;
     onPointerUp: () => void;
@@ -33,6 +32,8 @@ export interface ZoomVideo {
     onDragStart: (e: React.DragEvent) => void;
   };
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  /** A appeler depuis la reference du conteneur : c'est elle qui recoit la molette. */
+  refZone: (el: HTMLElement | null) => void;
   zoom: number;
   /** Vrai des que l'on depasse 1 : le canevas prend alors la main sur l'element video. */
   agrandi: boolean;
@@ -162,10 +163,24 @@ export function useZoomVideo(
     });
   }, []);
 
-  const onWheel = useCallback((e: React.WheelEvent) => {
+  /*
+   * La molette zoome, et ne fait RIEN d'autre : sans cela, la page qui contient l'image défile
+   * en même temps — la relecture, dans une fenêtre basse. L'écouteur de React est PASSIF : son
+   * preventDefault était refusé (« Unable to preventDefault inside passive event listener »,
+   * trois fois dans le journal du poste le 26.10.2026). Celui-ci, posé à la main, ne l'est pas :
+   * la même parade que la frise de la relecture.
+   */
+  const zone = useRef<HTMLElement | null>(null);
+  const molette = useCallback((e: WheelEvent) => {
     e.preventDefault();
     zoomer(e.deltaY < 0 ? 1.25 : 1 / 1.25);
   }, [zoomer]);
+  const refZone = useCallback((el: HTMLElement | null) => {
+    if (zone.current === el) return;
+    zone.current?.removeEventListener('wheel', molette);
+    zone.current = el;
+    el?.addEventListener('wheel', molette, { passive: false });
+  }, [molette]);
 
   const glisse = useRef<{ x: number; y: number } | null>(null);
 
@@ -246,10 +261,11 @@ export function useZoomVideo(
 
   return {
     gestes: {
-      onWheel, onPointerDown, onPointerMove, onPointerUp,
+      onPointerDown, onPointerMove, onPointerUp,
       onPointerCancel: onPointerUp, onDragStart,
     },
     canvasRef,
+    refZone,
     zoom,
     agrandi: zoom > 1.001,
     interpole: zoom > limiteSansPerte + 0.001,

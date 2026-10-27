@@ -96,7 +96,7 @@ export function LecteurExtrait({ detection, origine, retour, onFermer, onRelectu
    */
   // Deplie : un objet qui porte une reference ferait prendre chacune de ses valeurs pour une
   // reference (regle react/refs, rallumee le 24.10.2026).
-  const { gestes, canvasRef, zoom, agrandi, interpole, reinitialiser, zoomer } =
+  const { gestes, canvasRef, refZone, zoom, agrandi, interpole, reinitialiser, zoomer } =
     useZoomVideo(video, largeurVue, Boolean(url));
   const son = useSonVideo(video, Boolean(url));
 
@@ -245,7 +245,7 @@ export function LecteurExtrait({ detection, origine, retour, onFermer, onRelectu
             tue le panoramique par pointercancel. Mesure sur le poste le 02.08.2026. */}
         <div
           className="relative min-h-0 flex-1 select-none overflow-hidden bg-black"
-          ref={(el) => { if (el) setLargeurVue(el.clientWidth); }}
+          ref={(el) => { if (el) setLargeurVue(el.clientWidth); refZone(el); }}
           style={{ cursor: agrandi ? 'grab' : 'default' }}
           {...gestes}
         >
