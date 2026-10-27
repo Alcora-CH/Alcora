@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alcora — maquette, l’export visible</title>
+<!--
+  L'export d'une plage existe depuis la 2.33.0, mais il ne se trouve pas : relevé de Thomas le
+  27.10.2026 (« on ne peut pas encore exporter une plage vidéo d'une caméra dans relecture »). Son
+  journal le confirme : aucune ligne « export range », donc « Exporter… » jamais atteint. Le mot
+  « Exporter » n'apparaît qu'une fois les DEUX bornes posées, et les boutons « Début » / « Fin » ne
+  disent pas qu'ils servent à exporter. Règle « Clarté avant texte » : défaut de conception.
+
+  Décidé avec Thomas : un bouton « Exporter » toujours visible dans la console. Sans plage, un clic
+  pose une plage d'une minute autour de l'instant lu ; depuis le direct, la dernière minute (la
+  lecture s'y rend). La frise se resserre sur elle, ses poignées respirent un instant pour inviter
+  à l'ajuster, et la ligne de la plage montre ce qu'elle donnera, avec « Exporter… ». Les bornes
+  « Début » / « Fin » et les touches I / O restent, pour qui veut la poser à la main.
+
+  « Avant » = la 2.40.0 publiée ; « Après » = la même avec le bouton. Données fictives.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #0e131b; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+svg.i.plein { fill: currentColor; stroke: none; }
+
+/* ===================================================================== banc */
+.banc { position: fixed; inset: 0 0 auto 0; min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 6px 14px;
+        background: #f1efe9; color: #23252a; font: 500 13px/1 "Barlow", system-ui, sans-serif; z-index: 100; }
+.banc b { font-weight: 600; white-space: nowrap; }
+.banc .seg { display: flex; flex-wrap: wrap; background: #dedbd2; border-radius: 8px; padding: 3px; gap: 2px; }
+.banc .seg button { padding: 6px 10px; border-radius: 6px; color: #4a4c52; white-space: nowrap; }
+.banc .seg button[aria-pressed="true"] { background: #fff; color: #15171a; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.banc .note { margin-left: auto; color: #6c6e74; white-space: nowrap; }
+
+/* ===================================================================== jetons (ceux de l'application) */
+:root {
+  --bg: #0e131b; --card: #151b25; --card2: #1e2633; --card3: #283242;
+  --line: rgba(206,214,229,.09); --line2: rgba(206,214,229,.17);
+  --ink: #ece8df; --muted: #a9b0bc; --soft: #737d8b;
+  --accent: #dca95c; --accent-d: #e8bd78; --accent-soft: rgba(220,169,92,.14); --accent-ligne: rgba(220,169,92,.42);
+  --ok: #74c494; --ok-soft: rgba(116,196,148,.12); --bad: #e3735f; --bad-soft: rgba(227,115,95,.12); --warn: #e0a23c; --info: #86afcf;
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  --vive: 140ms; --douceur: 240ms; --ample: 420ms;
+  --pose: cubic-bezier(.2,.7,.2,1); --douce: cubic-bezier(.4,0,.2,1);
+}
+#vues { position: absolute; inset: 44px 0 0 0; display: grid; grid-template-columns: 1fr; }
+#vues.deux { grid-template-columns: 1fr 1fr; }
+.app { position: relative; min-width: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); color: var(--ink);
+       font: 400 13px/1.45 "Atkinson Hyperlegible Next", system-ui, sans-serif; border-right: 1px solid var(--line2); }
+.etiquette-vue { flex: none; display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 16px;
+                 background: rgba(14,19,27,.92); border-bottom: 1px solid var(--line); font-size: 12px; color: var(--soft); }
+.etiquette-vue b { color: var(--ink); font-weight: 600; }
+.etiquette-vue .compte { margin-left: auto; font-family: var(--mono); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- l'écran */
+.entete { flex: none; display: flex; align-items: center; gap: 12px; height: 58px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+.entete h1 { margin: 0; font-size: 17px; font-weight: 600; }
+.puces { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
+.puce-cam { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 11px 0 4px; border-radius: 9px; border: 1px solid var(--line2); background: var(--card2); white-space: nowrap; }
+.puce-cam i { width: 38px; height: 22px; border-radius: 5px; background: linear-gradient(135deg, #2d3644, #161b23); }
+.puce-cam.active { border-color: var(--accent-ligne); background: var(--accent-soft); color: var(--accent); }
+.puce-cam.montree { border-color: var(--accent-ligne); }
+.plus { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; border: 1px solid var(--accent-ligne); background: var(--accent-soft); color: var(--accent); }
+.droite { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.btn { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 8px; background: var(--card2); border: 1px solid var(--line2);
+       color: var(--ink); white-space: nowrap; transition: background var(--vive) var(--douce), transform 60ms var(--douce), box-shadow var(--douceur) var(--douce), border-color var(--douceur) var(--douce); }
+.btn:hover { background: var(--card3); }
+.btn:active { transform: scale(.97); }
+.btn.petit { height: 26px; padding: 0 9px; font-size: 12px; }
+.btn.fantome { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.fantome:hover { background: var(--card2); color: var(--ink); }
+.btn.vert { background: var(--ok-soft); border-color: rgba(116,196,148,.35); color: var(--ok); }
+.btn.primaire { background: var(--accent); border-color: var(--accent); color: #1b1406; font-weight: 600; }
+.btn.actif { background: var(--accent-soft); border-color: var(--accent-ligne); color: var(--accent); }
+.btn[disabled] { opacity: .4; cursor: default; }
+.btn.icone { padding: 0; width: 30px; justify-content: center; }
+/* L'entrée de l'export : de l'or, sans le plein du bouton principal. */
+.btn.exporter { background: var(--accent-soft); border-color: var(--accent-ligne); color: var(--accent); font-weight: 600; }
+.btn.exporter:hover { background: rgba(220,169,92,.22); }
+/* Une plage posée d'office : ses poignées respirent trois fois — « ajuste-moi ». */
+.poignee.respire { animation: bat 1.2s var(--douce) 3; }
+.btn.petit.icone { width: 26px; }
+/* Le geste qui reste à faire se désigne : un halo d'or qui respire (opacité seulement). */
+.btn.attendu { border-color: var(--accent); color: var(--accent); position: relative; }
+.btn.attendu::after { content: ""; position: absolute; inset: -4px; border-radius: 11px; border: 2px solid var(--accent); opacity: 0; animation: respire 1.8s var(--douce) infinite; pointer-events: none; }
+@keyframes respire { 0%, 100% { opacity: 0; } 50% { opacity: .55; } }
+.touche { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 5px; border: 1px solid var(--line2); border-bottom-width: 2px;
+          font-family: var(--mono); font-size: 11px; color: var(--ink); background: var(--card2); }
+.jour { display: inline-flex; align-items: center; gap: 7px; }
+.jour .doux { color: var(--soft); }
+
+.contenu { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 12px; overflow: hidden; }
+.tuiles { flex: 1; min-height: 150px; display: grid; grid-template-columns: 1fr; gap: 10px; }
+.tuiles.deux { grid-template-columns: 1fr 1fr; }
+.tuile { display: flex; flex-direction: column; min-height: 0; border-radius: 12px; overflow: hidden; background: var(--card); border: 1px solid var(--line); }
+.tuile.active.multi { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.tuile .tete { flex: none; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px 0 13px; }
+.tuile .tete .nom { font-weight: 600; font-size: 14px; }
+.tuile .tete .heure { font-family: var(--mono); font-size: 14px; }
+.tuile .tete .def { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.tuile .tete .direct { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ok); }
+.tuile .tete .direct::before, .vif::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.tuile .tete .actions { margin-left: auto; display: flex; gap: 4px; }
+.mini { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 8px; border-radius: 7px; color: var(--muted); font-size: 12px; }
+.mini:hover { background: var(--card2); color: var(--ink); }
+.image { position: relative; flex: 1; min-height: 0; background:
+           radial-gradient(60% 80% at 70% 30%, rgba(134,175,207,.18), transparent 60%),
+           linear-gradient(180deg, #1b2230 0%, #121820 55%, #0d1116 56%, #151a12 100%); }
+.image .route { position: absolute; left: 30%; right: 22%; bottom: 0; height: 44%; background: linear-gradient(180deg, transparent, rgba(255,255,255,.04)); clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); }
+.image .invite { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 6px 12px; border-radius: 8px; background: rgba(12,15,20,.78); color: #c9ced6; white-space: nowrap; }
+
+.console { flex: none; padding: 10px 14px 9px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+.transport { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
+.lecture { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: #1b1406; flex: none; }
+.lecture[disabled] { opacity: .35; }
+.heure-lue { margin: 0 12px 0 9px; font-family: var(--mono); font-size: 16px; min-width: 76px; }
+.heure-lue.vif { display: inline-flex; align-items: center; gap: 7px; color: var(--ok); }
+.sep { width: 1px; height: 22px; background: var(--line2); margin: 0 6px; }
+.vitesse { margin-left: auto; display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: var(--card2); }
+.vitesse button { padding: 3px 8px; border-radius: 7px; color: var(--muted); font-size: 12px; }
+.vitesse button[aria-pressed="true"] { background: var(--card3); color: var(--ink); }
+
+.frise-tete { display: flex; align-items: center; gap: 8px; margin: 10px 0 5px; font-size: 12px; color: var(--muted); min-height: 26px; }
+.frise-tete .indice { margin-left: auto; color: var(--soft); }
+.frise-tete .zoom { margin-left: auto; display: flex; gap: 2px; }
+.frise { position: relative; }
+.barre-temps { position: relative; height: 52px; border-radius: 8px; background: var(--card2); overflow: hidden; cursor: crosshair; }
+.barre-temps .vue { position: absolute; inset: 0; animation: fondu var(--douceur) var(--douce) both; }
+@keyframes fondu { from { opacity: .25; } to { opacity: 1; } }
+.zone { position: absolute; top: 0; bottom: 0; }
+.grad { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.12); }
+.etiq { position: absolute; bottom: 3px; font-size: 10px; color: var(--soft); transform: translateX(-50%); font-variant-numeric: tabular-nums; pointer-events: none; }
+.marque { position: absolute; width: 3px; border-radius: 2px; transition: transform var(--vive) var(--douce), box-shadow var(--vive) var(--douce); }
+.marque.visee { transform: scaleX(1.7); }
+.tete-lecture { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--accent); box-shadow: 0 0 10px rgba(220,169,92,.8); }
+.maintenant { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ok); box-shadow: 0 0 10px rgba(116,196,148,.7); animation: bat 2.4s var(--douce) infinite; }
+@keyframes bat { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+.etiq-direct { position: absolute; top: 4px; transform: translateX(-100%); margin-left: -5px; padding: 1px 6px; border-radius: 5px; font-size: 10px; font-weight: 600; color: #0e131b; background: var(--ok); pointer-events: none; }
+.bande { position: absolute; top: 0; bottom: 0; background: rgba(220,169,92,.2); }
+.bande.ouverte { background: linear-gradient(90deg, rgba(220,169,92,.22), rgba(220,169,92,0)); }
+.coupure { position: absolute; top: 6px; bottom: 6px; width: 0; border-left: 1px dashed rgba(220,169,92,.85); }
+.poignee { position: absolute; top: 15px; width: 6px; height: 22px; margin-left: -3px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 0 2px rgba(14,19,27,.9); }
+.heure-poignee { position: absolute; top: 3px; padding: 1px 5px; border-radius: 4px; font: 10px var(--mono); color: var(--accent); background: rgba(14,19,27,.85); transform: translateX(-50%); white-space: nowrap; }
+.survol { position: absolute; top: -2px; bottom: 0; width: 1px; background: rgba(255,255,255,.4); }
+.sous-frise { display: flex; justify-content: center; gap: 8px; height: 20px; margin-top: 3px; font-size: 12px; }
+/* L'aperçu au survol : ce qu'on va voir, avant le clic — à la place de « cliquer pour voir ». */
+.apercu { position: absolute; bottom: calc(100% + 8px); width: 184px; transform: translateX(-50%); border-radius: 10px; overflow: hidden; background: var(--card3);
+          border: 1px solid var(--line2); box-shadow: 0 14px 34px rgba(0,0,0,.5); animation: surgit var(--douceur) var(--pose) both; z-index: 5; pointer-events: none; }
+.apercu .vignette { height: 100px; }
+.apercu .legende { display: flex; justify-content: space-between; gap: 8px; padding: 6px 9px; font-size: 12px; white-space: nowrap; }
+@keyframes surgit { from { opacity: 0; transform: translate3d(-50%, 6px, 0); } to { opacity: 1; transform: translate3d(-50%, 0, 0); } }
+
+.ligne { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 42px; padding: 6px 8px 6px 12px; border-radius: 9px;
+         border: 1px solid var(--line2); background: var(--card2); animation: pose var(--douceur) var(--pose) both; }
+@keyframes pose { from { opacity: 0; transform: translate3d(0, 4px, 0); } to { opacity: 1; transform: none; } }
+.ligne.avert { border-color: rgba(224,162,60,.45); }
+.ligne.ok { border-color: rgba(116,196,148,.35); }
+.ligne .titre { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+.ligne .titre.ok { color: var(--ok); }
+.ligne .bornes { font-family: var(--mono); white-space: nowrap; }
+.ligne .bornes .fl { color: var(--soft); margin: 0 6px; }
+.ligne .faits { color: var(--muted); white-space: nowrap; display: inline-flex; align-items: center; gap: 0; }
+.ligne .faits b { color: var(--ink); font-weight: 500; }
+.ligne .faits .pt { color: var(--soft); margin: 0 6px; }
+.ligne .faits .warn { color: var(--warn); }
+.ligne .fin { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.ligne .note { flex-basis: 100%; font-size: 12px; color: var(--muted); padding-bottom: 2px; }
+.ligne .note.warn { color: var(--warn); }
+.progres { width: 180px; height: 6px; border-radius: 3px; background: var(--card3); overflow: hidden; flex: none; }
+.progres i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; transition: transform var(--ample) var(--douce); }
+
+.pellicule { flex: none; }
+.filtres { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.filtres .p { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid var(--line2); color: var(--muted); font-size: 12px; display: inline-flex; align-items: center; }
+.filtres .p.on { background: var(--accent-soft); border-color: var(--accent-ligne); color: var(--accent); }
+.filtres .compte { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.vignettes { display: flex; gap: 8px; overflow: hidden; }
+.vign { flex: none; width: 112px; border-radius: 9px; overflow: hidden; border: 1px solid var(--line2); background: var(--card); }
+.vign.cours { border-color: var(--accent); }
+.vign .im { height: 60px; background: linear-gradient(135deg, #2b3442, #141920); }
+.vign .lg { display: flex; justify-content: space-between; gap: 4px; padding: 4px 7px; font-size: 11px; }
+.vign .lg .h { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.barre-etat { flex: none; display: flex; align-items: center; height: 30px; padding: 0 8px 0 12px; border-top: 1px solid var(--line); background: var(--card); font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.barre-etat .case { display: inline-flex; align-items: center; gap: 6px; padding: 0 11px; border-right: 1px solid var(--line2); }
+.barre-etat .case b { color: var(--ink); font-weight: 500; }
+.barre-etat .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+.barre-etat .export { color: var(--accent); }
+.barre-etat .export.signale { animation: signale 1.6s var(--douce) 2; border-radius: 6px; }
+@keyframes signale { 0%, 100% { background: transparent; } 40% { background: var(--accent-soft); } }
+.barre-etat .mini-progres { width: 46px; height: 5px; border-radius: 3px; background: var(--card3); overflow: hidden; }
+.barre-etat .mini-progres i { display: block; height: 100%; width: 17%; background: var(--accent); }
+.barre-etat .fin-barre { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+.info { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: var(--soft); cursor: help; position: relative; vertical-align: middle; }
+.info:hover { color: var(--ink); }
+.info svg.i { width: 14px; height: 14px; }
+.info .bulle { position: absolute; bottom: 24px; left: 50%; width: 270px; margin-left: -135px; padding: 9px 11px; border-radius: 9px; background: var(--card3); border: 1px solid var(--line2);
+               color: var(--ink); font-size: 12px; line-height: 1.5; white-space: normal; box-shadow: 0 12px 30px rgba(0,0,0,.45); opacity: 0; transform: translate3d(0, 4px, 0);
+               pointer-events: none; transition: opacity var(--douceur) var(--douce), transform var(--douceur) var(--pose); z-index: 20; }
+.info:hover .bulle { opacity: 1; transform: none; }
+[data-tip] { position: relative; }
+[data-tip]:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); padding: 5px 8px; border-radius: 7px;
+                         background: var(--card3); border: 1px solid var(--line2); color: var(--ink); font-size: 11px; white-space: nowrap; z-index: 20; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="banc">
+  <b>Export visible — Relecture</b>
+  <div class="seg" data-cle="vue">
+    <button data-v="avant">Avant</button><button data-v="apres">Après</button><button data-v="deux">Côte à côte</button>
+  </div>
+  <div class="seg" data-cle="cas">
+    <button data-v="direct">Rien de choisi</button><button data-v="lu">Instant lu</button><button data-v="clic">Clic sur « Exporter »</button><button data-v="clicDirect">Clic sur « Exporter » depuis le direct</button>
+  </div>
+  <span class="note">Avant : la 2.40.0. Après : le même écran, avec « Exporter » toujours là.</span>
+</div>
+<div id="vues"></div>
+
+<script>
+const ICONES = {
+  play: '<path d="M7 5v14l11-7z"/>',
+  pause: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+  precedente: '<path d="M18 6v12L9 12zM7 6v12"/>',
+  suivante: '<path d="M6 6v12l9-6zM17 6v12"/>',
+  debut: '<path d="M4 4v16M9 12h11M16 8l4 4-4 4"/>',
+  fin: '<path d="M20 4v16M15 12H4M8 8l-4 4 4 4"/>',
+  export: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  croix: '<path d="M6 6l12 12M18 6 6 18"/>',
+  dossier: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  calendrier: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
+  gauche: '<path d="m15 6-6 6 6 6"/>',
+  droite: '<path d="m9 6 6 6-6 6"/>',
+  radio: '<circle cx="12" cy="12" r="2"/><path d="M8 8a6 6 0 0 0 0 8M16 8a6 6 0 0 1 0 8"/>',
+  son: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/>',
+  image: '<rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.2"/><path d="M8 6l1.5-2h5L16 6"/>',
+  zoomPlus: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.3-4.3M11 8v6M8 11h6"/>',
+  zoomMoins: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.3-4.3M8 11h6"/>',
+  coche: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  bouclier: '<path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/>',
+};
+const ic = (n, plein) => `<svg class="i${plein ? ' plein' : ''}" viewBox="0 0 24 24">${ICONES[n]}</svg>`;
+const info = (texte) => `<span class="info">${ic('info')}<span class="bulle">${texte}</span></span>`;
+const etat = { vue: 'deux', cas: 'lu' };
+
+/* ---- le temps, en secondes depuis minuit ---- */
+const h = (hh, mm = 0, ss = 0) => hh * 3600 + mm * 60 + ss;
+const hms = (s) => [Math.floor(s / 3600), Math.floor(s / 60) % 60, Math.floor(s) % 60].map((n) => String(n).padStart(2, '0')).join(':');
+const hm = (s) => hms(s).slice(0, 5);
+const JOUR = 86400;
+const MAINTENANT = h(23, 41, 12);
+const TEINTE = { personne: '#dca95c', vehicule: '#86afcf', animal: '#74c494', son: '#c58bd6', mouvement: '#7d8796' };
+const NOM = { personne: 'Personne', vehicule: 'Véhicule', animal: 'Animal', son: 'Son', mouvement: 'Mouvement' };
+const GENRES = ['personne', 'mouvement', 'son', 'vehicule', 'mouvement', 'personne', 'animal'];
+/* Des détections plausibles, toujours les mêmes : toutes les 11 à 17 minutes, plus serrées le soir. */
+const DETECTIONS = [];
+for (let t = h(0, 7), i = 0; t < JOUR; i++) {
+  DETECTIONS.push({ t, genre: GENRES[i % GENRES.length], score: 70 + (i * 7) % 29 });
+  t += (t > h(18) ? 7 : 13) * 60 + (i % 5) * 50;
+}
+DETECTIONS.push({ t: h(22, 55, 0), genre: 'personne', score: 91 }, { t: h(22, 55, 41), genre: 'mouvement', score: 0 });
+DETECTIONS.sort((a, b) => a.t - b.t);
+while (DETECTIONS.length && DETECTIONS[DETECTIONS.length - 1].t > MAINTENANT) DETECTIONS.pop();
+
+/* ---- chaque cas : le jour, l'instant lu, la plage, la vue de la frise, l'export ---- */
+function cas(cote) {
+  const neuf = cote === 'apres';
+  switch (etat.cas) {
+    case 'direct': return { instant: null, plage: null, vue: [0, JOUR] };
+    case 'lu': return { instant: h(22, 55, 30), plage: null, vue: [0, JOUR] };
+    /* Une minute autour de l'instant lu ; la frise se resserre dessus, les poignées respirent. */
+    case 'clic': return neuf
+      ? { instant: h(22, 55, 30), plage: { d: h(22, 55, 0), f: h(22, 56, 0) }, vue: [h(22, 54, 45), h(22, 56, 15)], posee: true }
+      : { instant: h(22, 55, 30), plage: null, vue: [0, JOUR] };
+    /* Depuis le direct : la dernière minute, et la lecture s'y rend. */
+    case 'clicDirect': return neuf
+      ? { instant: MAINTENANT - 60, plage: { d: MAINTENANT - 60, f: MAINTENANT }, vue: [MAINTENANT - 75, MAINTENANT + 15], posee: true }
+      : { instant: null, plage: null, vue: [0, JOUR] };
+  }
+}
+
+const duree = (s) => (s >= 3600 ? `${Math.floor(s / 3600)} h ${String(Math.round(s / 60) % 60).padStart(2, '0')} min`
+  : s >= 60 ? (Math.round(s % 60) ? `${Math.floor(s / 60)} min ${Math.round(s % 60)} s` : `${Math.floor(s / 60)} min`) : `${Math.round(s)} s`);
+
+/* ---------------------------------------------------------------- en-tête */
+function entete(c, cote) {
+  const puce = (nom, cls) => `<span style="display:inline-flex;align-items:center;gap:4px"><button class="puce-cam ${cls}"><i></i>${nom}</button>${cls ? '' : `<button class="plus">${ic('plus')}</button>`}</span>`;
+  return `<header class="entete"><h1>Relecture</h1>
+    <div class="puces">${puce('Entrée', 'active')}${c.deux ? puce('Jardin', 'montree') : puce('Jardin', '')}</div>
+    <div class="droite">
+      ${c.instant !== null ? `<button class="btn vert">${ic('radio')}Revenir au direct</button>` : ''}
+      <button class="btn fantome icone">${ic('gauche')}</button>
+      <button class="btn">${ic('calendrier')}<span class="jour">${c.jour ?? 'Samedi 24 octobre'}${c.jour ? '' : '<span class="doux">Aujourd’hui</span>'}</span></button>
+      <button class="btn fantome icone" disabled>${ic('droite')}</button>
+    </div></header>`;
+}
+
+/* ---------------------------------------------------------------- les images */
+function tuiles(c, cote) {
+  const actions = `<div class="actions"><button class="mini">${ic('son')}Son</button><button class="mini">${ic('image')}Image</button></div>`;
+  const def = c.basse ? '<span class="def">1280 × 720 <span style="color:var(--warn)">· définition réduite</span></span>' : '<span class="def">2688 × 1512</span>';
+  /* AVANT : seule, la tuile dit la date et l'heure — que la console redit en grand. */
+  const teteSeule = cote === 'avant'
+    ? (c.instant === null ? `<span class="direct">Direct</span>` : `<span class="heure">24.10.2026&nbsp;&nbsp;${hms(c.instant)}</span>${def}`)
+    : `<span class="nom">Entrée</span>${c.instant === null ? '<span class="direct">Direct</span>' : def}`;
+  const invite = cote === 'avant' && c.instant === null ? '<span class="invite">Clique la frise ou une vignette pour remonter dans le temps</span>' : '';
+  if (!c.deux) {
+    return `<div class="tuiles"><div class="tuile active"><div class="tete">${teteSeule}${actions}</div><div class="image"><span class="route"></span>${invite}</div></div></div>`;
+  }
+  const t2 = (nom, active) => `<div class="tuile${active ? ' active multi' : ''}"><div class="tete"><span class="nom">${nom}</span><span class="def">2688 × 1512</span>${actions}</div><div class="image"><span class="route"></span></div></div>`;
+  return `<div class="tuiles deux">${t2('Entrée', true)}${t2('Jardin', false)}</div>`;
+}
+
+/* ---------------------------------------------------------------- la console */
+function transport(c, cote) {
+  const choisi = c.instant !== null;
+  /* APRÈS : sans instant choisi, l'heure est celle du direct, en vert — on voit où l'on est. */
+  const heure = choisi ? `<span class="heure-lue">${hms(c.instant)}</span>`
+    : cote === 'apres' ? `<span class="heure-lue vif horloge">${hms(MAINTENANT)}</span>` : '<span class="heure-lue">––:––:––</span>';
+  const finAttendue = cote === 'apres' && c.plage && c.plage.f === null;
+  return `<div class="transport">
+    <button class="lecture" ${choisi ? '' : 'disabled'}>${ic(choisi && c.cas !== 'longue' ? 'pause' : 'play', true)}</button>${heure}
+    <button class="btn fantome petit mono" ${choisi ? '' : 'disabled'}>−10 s</button>
+    <button class="btn fantome petit mono" ${choisi ? '' : 'disabled'}>+10 s</button>
+    <button class="btn fantome petit icone" ${choisi ? '' : 'disabled'}>${ic('precedente')}</button>
+    <button class="btn fantome petit icone" ${choisi ? '' : 'disabled'}>${ic('suivante')}</button>
+    <span class="sep"></span>
+    ${c.nouveau && !c.plage ? `<button class="btn petit exporter">${ic('export')}Exporter</button>` : ''}
+    <button class="btn petit${c.plage ? ' actif' : ''}" ${choisi ? '' : 'disabled'}>${ic('debut')}Début <span class="touche">I</span></button>
+    <button class="btn petit${c.plage && c.plage.f !== null ? ' actif' : ''}${finAttendue ? ' attendu' : ''}" ${choisi ? '' : 'disabled'}>${ic('fin')}Fin <span class="touche">O</span></button>
+    <span class="vitesse"><button>0,25×</button><button>0,5×</button><button aria-pressed="true">1×</button><button>2×</button></span>
+  </div>`;
+}
+
+function frise(c, cote) {
+  const [d0, d1] = c.vue;
+  const L = d1 - d0;
+  const x = (t) => ((t - d0) / L) * 100;
+  const zoome = L < JOUR;
+  const pas = L > 6 * 3600 ? 3 * 3600 : L > 2 * 3600 ? 1800 : L > 1800 ? 600 : 15;
+  let couches = '';
+  // enregistré jusqu'à maintenant (ou toute la journée, un autre jour)
+  const finEnr = c.jour ? JOUR : MAINTENANT;
+  couches += `<div class="zone" style="left:${Math.max(0, x(0))}%;right:${Math.max(0, 100 - x(finEnr))}%;background:repeating-linear-gradient(90deg,rgba(220,169,92,.13) 0 2px,rgba(220,169,92,.09) 2px 4px)"></div>`;
+  if (c.basse) couches += `<div class="zone" style="left:0;right:0;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(224,162,60,.13) 6px 12px)"></div>`;
+  if (finEnr < d1) couches += `<div class="zone" style="left:${x(finEnr)}%;right:0;background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.045) 5px 10px)"></div>`;
+  for (let t = Math.ceil(d0 / pas) * pas; t <= d1; t += pas) {
+    couches += `<div class="grad" style="left:${x(t)}%"></div><span class="etiq" style="left:${x(t)}%">${pas >= 3600 ? `${String(Math.floor(t / 3600)).padStart(2, '0')}h` : pas >= 60 ? hm(t) : hms(t)}</span>`;
+  }
+  for (const dt of DETECTIONS) {
+    if (dt.t < d0 || dt.t > d1) continue;
+    const m = dt.genre === 'mouvement';
+    const visee = c.survol === dt.t;
+    couches += `<div class="marque${visee ? ' visee' : ''}" style="left:${x(dt.t)}%;top:${m ? 18 : 8}px;height:${m ? 10 : 20}px;background:${TEINTE[dt.genre]};${visee ? `box-shadow:0 0 8px ${TEINTE[dt.genre]}` : ''}"></div>`;
+  }
+  if (c.plage) {
+    const f = c.plage.f ?? c.instant;
+    couches += `<div class="bande${c.plage.f === null ? ' ouverte' : ''}" style="left:${x(c.plage.d)}%;right:${100 - x(f)}%"></div>`;
+    /* APRÈS : une plage de plus d'une heure montre où passent ses coupures de fichier. */
+    if (cote === 'apres' && c.plage.f !== null && c.plage.f - c.plage.d > 3600) {
+      for (let t = c.plage.d + 3600; t < c.plage.f; t += 3600) couches += `<div class="coupure" style="left:${x(t)}%"></div>`;
+    }
+    for (const [quoi, t] of [['d', c.plage.d], ['f', c.plage.f]]) {
+      if (t === null) continue;
+      couches += `<div class="poignee${c.posee ? ' respire' : ''}" style="left:${x(t)}%"></div><span class="heure-poignee" style="left:${x(t) + (quoi === 'd' ? -4 : 4)}%">${hms(t)}</span>`;
+    }
+  }
+  if (c.instant !== null && c.instant >= d0 && c.instant <= d1) couches += `<div class="tete-lecture" style="left:${x(c.instant)}%"></div>`;
+  /* APRÈS : rien de choisi — un repère « Direct » au bout de ce qui est enregistré dit où l'on est,
+     et que tout ce qui précède se rejoue d'un clic. */
+  if (cote === 'apres' && c.instant === null) couches += `<div class="maintenant" style="left:${x(MAINTENANT)}%"></div><span class="etiq-direct" style="left:${x(MAINTENANT)}%">Direct</span>`;
+  if (c.survol) couches += `<div class="survol" style="left:${x(c.survol)}%"></div>`;
+
+  const detSurvol = c.survol ? DETECTIONS.find((dt) => dt.t === c.survol) : null;
+  const apercu = cote === 'apres' && detSurvol
+    ? `<div class="apercu" style="left:${x(detSurvol.t)}%"><div class="vignette image"><span class="route"></span></div>
+        <div class="legende"><span style="color:${TEINTE[detSurvol.genre]}">${NOM[detSurvol.genre]} · ${detSurvol.score} %</span><span class="mono" style="color:var(--muted)">${hms(detSurvol.t)}</span></div></div>` : '';
+  const sous = detSurvol
+    ? (cote === 'avant'
+      ? `<span class="mono" style="color:var(--muted)">${hms(detSurvol.t)}</span><span style="color:${TEINTE[detSurvol.genre]}">${NOM[detSurvol.genre]} · ${detSurvol.score} %<span style="color:var(--soft)"> — cliquer pour voir</span></span>`
+      : '') : '';
+  const gauche = zoome ? `<span class="mono">${hms(d0)} → ${hms(d1)}</span><button class="btn fantome petit">${ic('zoomMoins')}Tout voir</button>` : '<span>Journée entière</span>';
+  /* AVANT : le mode d'emploi en toutes lettres. APRÈS : deux loupes ; la molette se dit au survol. */
+  const droite = cote === 'avant' ? '<span class="indice">Molette pour zoomer, clic pour voir</span>'
+    : `<span class="zoom"><button class="btn fantome petit icone" data-tip="Élargir — molette">${ic('zoomMoins')}</button><button class="btn fantome petit icone" data-tip="Resserrer — molette">${ic('zoomPlus')}</button></span>`;
+  return `<div class="frise-tete">${gauche}${droite}</div>
+    <div class="frise">${apercu}<div class="barre-temps"><div class="vue" data-cle="${d0}-${d1}">${couches}</div></div></div>
+    <div class="sous-frise">${sous}</div>`;
+}
+
+function ligne(c, cote) {
+  if (c.export) {
+    return `<div class="ligne"><span class="titre">${ic('export')}Export</span><span style="color:var(--muted)">Entrée</span>
+      <span class="bornes">${hms(c.plage.d)}<span class="fl">→</span>${hms(c.plage.f)}</span>
+      <span class="progres"><i style="transform:scaleX(.17)"></i></span><span class="mono">17 %</span>
+      <span style="color:var(--muted)">1 Mo sur 5 Mo · encore 6 s</span>
+      <span class="fin"><button class="btn petit">${ic('croix')}Annuler</button></span>
+      ${cote === 'avant' ? '<span class="note">Tu peux continuer à relire, ou changer d’écran : l’export se poursuit, la barre d’état le suit.</span>' : ''}</div>`;
+  }
+  if (!c.plage) return '';
+  if (c.plage.f === null) {
+    return `<div class="ligne"><span class="titre">${ic('export')}Plage</span><span class="bornes">${hms(c.plage.d)}<span class="fl">→</span>…</span>
+      ${cote === 'avant' ? '<span style="color:var(--muted)">Pose la fin à l’instant voulu : bouton « Fin » ou touche O.</span>' : ''}
+      <span class="fin"><button class="btn fantome petit">${ic('croix')}Effacer</button></span></div>`;
+  }
+  const d = c.plage.f - c.plage.d;
+  const heures = Math.ceil(d / 3600);
+  const cams = c.deux ? 2 : 1;
+  const fichiers = heures * cams;
+  const poids = c.cas === 'longue' ? 'environ 2,4 Go' : c.deux ? 'environ 10 Mo' : 'environ 5 Mo';
+  const IMAGES_CLES = 'À quelques secondes près : le contrôleur coupe sur les images-clés, la vidéo déborde donc un peu de chaque côté.';
+  let faits;
+  let notes = '';
+  if (cote === 'avant') {
+    faits = [`<b>${duree(d)}</b>`, ...(cams > 1 ? ['2 caméras'] : []), poids, ...(cams === 1 && !c.basse ? ['2688 × 1512', 'son compris'] : cams === 1 ? ['son compris'] : [])];
+    if (cams > 1) notes += '<span class="note">Un fichier par caméra affichée, l’un après l’autre.</span>';
+    if (heures > 1) notes += `<span class="note warn">Plus d’une heure : ${fichiers} fichiers d’une heure au plus, l’un après l’autre.</span>`;
+    if (c.basse) notes += '<span class="note warn">Avant le 24.09.2026, seule la basse définition subsiste.</span>';
+    notes += `<span class="note">${IMAGES_CLES}</span>`;
+  } else {
+    /* APRÈS : tout tient dans la ligne des faits ; le pourquoi passe dans les « i ». */
+    faits = [`<b>≈ ${duree(d)}</b>${info(IMAGES_CLES)}`, ...(cams > 1 ? ['2 caméras'] : []), poids,
+      ...(cams === 1 && !c.basse ? ['2688 × 1512', 'son compris'] : cams === 1 ? ['son compris'] : []),
+      ...(fichiers > 1 ? [`${fichiers} fichiers${info(cams > 1 && heures === 1 ? 'Un fichier par caméra affichée, l’un après l’autre.' : 'Une heure au plus par fichier ; ils s’enregistrent l’un après l’autre. Les coupures se voient sur la frise.')}`] : []),
+      ...(c.basse ? ['<span class="warn">basse définition</span>' + info('Avant le 24.09.2026, seule la basse définition subsiste.')] : [])];
+  }
+  const avert = (heures > 1 || c.basse) ? ' avert' : '';
+  return `<div class="ligne${avert}"><span class="titre">${ic('export')}Plage</span>
+    <span class="bornes">${hms(c.plage.d)}<span class="fl">→</span>${hms(c.plage.f)}</span>
+    <span class="faits">${faits.map((f, i) => `${i ? '<span class="pt">·</span>' : ''}${f}`).join('')}</span>
+    <span class="fin"><button class="btn fantome petit">${ic('croix')}Effacer</button><button class="btn primaire petit">${ic('export')}${fichiers > 1 ? `Exporter en ${fichiers} fichiers…` : 'Exporter…'}</button></span>
+    ${notes}</div>`;
+}
+
+function pellicule(c) {
+  const liste = DETECTIONS.filter((d) => d.genre !== 'mouvement' || d.t % 2).slice(-9).reverse();
+  return `<div class="pellicule"><div class="filtres"><span class="p on">Tout</span><span class="p">Personnes</span><span class="p">Véhicules</span><span class="p">Animaux</span><span class="p">Sons</span>
+      <span class="compte">${DETECTIONS.length} détections</span></div>
+    <div class="vignettes">${liste.map((d) => `<div class="vign${c.instant !== null && Math.abs(c.instant - d.t) < 10 ? ' cours' : ''}"><div class="im"></div><div class="lg"><span class="h">${hm(d.t)}</span><span style="color:${TEINTE[d.genre]}">${NOM[d.genre]}</span></div></div>`).join('')}</div></div>`;
+}
+
+function barreEtat(c, cote) {
+  const exp = c.export ? `<span class="case export${cote === 'apres' ? ' signale' : ''}">${ic('export')}Export<span class="mini-progres"><i></i></span><b>17 %</b></span>` : '';
+  return `<footer class="barre-etat"><span class="case"><span class="pt"></span>Flux vidéo prêt.</span><span class="case">Contrôleur <b>Console</b></span><span class="case">Archive <b>5 mois</b></span>${exp}
+    <span class="fin-barre"><span style="display:inline-flex;align-items:center;gap:6px;color:var(--soft)">${ic('bouclier')}Aucune image ne quitte ton réseau</span><span class="mono horloge" style="color:var(--ink)">${hms(MAINTENANT)}</span><span>Raccourcis <span class="touche">?</span></span></span></footer>`;
+}
+
+function ecran(cote) {
+  const c = { ...cas(cote), cas: etat.cas, nouveau: cote === 'apres' };
+  const v = 'apres';   // la 2.40.0 des deux côtés
+  return `${entete(c, v)}<div class="contenu">${tuiles(c, v)}<div class="console">${transport(c, v)}${frise(c, v)}${ligne(c, v)}</div>${pellicule(c)}</div>${barreEtat(c, v)}`;
+}
+
+/* Les mots d'explication, pas ceux des données : heures, chiffres et pellicule ne comptent pas. */
+const mots = (html) => {
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  d.querySelectorAll('.bulle, .pellicule, .barre-etat, .etiq, .mono, .heure-poignee, .vitesse').forEach((b) => b.remove());
+  return d.textContent.replace(/[0-9:,.%×→…·−+–]+/g, ' ').trim().split(/\s+/).filter((w) => w.length > 1).length;
+};
+function rendre() {
+  const vues = document.getElementById('vues');
+  const a = ecran('avant');
+  const p = ecran('apres');
+  const blocA = `<div class="app" data-cote="avant"><div class="etiquette-vue"><b>Avant</b> la 2.40.0<span class="compte">${mots(a)} mots</span></div>${a}</div>`;
+  const blocP = `<div class="app" data-cote="apres"><div class="etiquette-vue"><b>Après</b> « Exporter » toujours là<span class="compte">${mots(p)} mots</span></div>${p}</div>`;
+  vues.className = etat.vue === 'deux' ? 'deux' : '';
+  vues.innerHTML = etat.vue === 'avant' ? blocA : etat.vue === 'apres' ? blocP : blocA + blocP;
+}
+
+/* L'horloge du direct bat : c'est ce qui la distingue d'une heure lue. */
+let seconde = 0;
+setInterval(() => {
+  seconde += 1;
+  for (const el of document.querySelectorAll('.horloge')) el.textContent = hms(MAINTENANT + seconde);
+}, 1000);
+
+for (const seg of document.querySelectorAll('.banc .seg')) {
+  const cle = seg.dataset.cle;
+  for (const b of seg.querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', String(b.dataset.v === etat[cle]));
+    b.addEventListener('click', () => {
+      etat[cle] = b.dataset.v;
+      for (const x of seg.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+      rendre();
+    });
+  }
+}
+rendre();
+</script>
+</body>
+</html>
