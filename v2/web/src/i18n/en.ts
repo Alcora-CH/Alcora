@@ -673,4 +673,8 @@ export const en: Record<Cle, string> = {
   'export.nFichiers': '{n} files',
   'export.fichiersDetail': 'At most one hour per file, saved one after the other: the cuts show on the timeline.',
   'export.basse': 'low definition',
+
+  // Relecture : l’export visible (27.10.2026)
+  'export.entree': 'Export',
+  'export.entreeTitre': 'Sets one minute to export; adjust it with the handles',
 };

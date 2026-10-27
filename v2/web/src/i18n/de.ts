@@ -674,4 +674,8 @@ export const de: Record<Cle, string> = {
   'export.nFichiers': '{n} Dateien',
   'export.fichiersDetail': 'Höchstens eine Stunde pro Datei, nacheinander gespeichert: Die Schnitte sind auf der Zeitleiste zu sehen.',
   'export.basse': 'niedrige Auflösung',
+
+  // Relecture : l’export visible (27.10.2026)
+  'export.entree': 'Exportieren',
+  'export.entreeTitre': 'Legt eine Minute zum Exportieren fest; mit den Griffen anpassen',
 };

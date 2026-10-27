@@ -672,4 +672,8 @@ export const it: Record<Cle, string> = {
   'export.nFichiers': '{n} file',
   'export.fichiersDetail': 'Al massimo un’ora per file, salvati uno dopo l’altro: i tagli si vedono sulla linea del tempo.',
   'export.basse': 'bassa definizione',
+
+  // Relecture : l’export visible (27.10.2026)
+  'export.entree': 'Esporta',
+  'export.entreeTitre': 'Imposta un minuto da esportare; regolalo con le maniglie',
 };

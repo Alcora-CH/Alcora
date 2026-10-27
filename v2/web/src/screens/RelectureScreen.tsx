@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, CalendarDays, Camera, ChevronLeft, ChevronRight, Pause, Play, Plus,
+  AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, CalendarDays, Camera, ChevronLeft, ChevronRight, Download, Pause, Play, Plus,
   Radio, SkipBack, SkipForward, Volume2, VolumeX, X, ZoomIn, ZoomOut,
 } from 'lucide-react';
 import { bridge } from '../lib/bridge';
@@ -44,6 +44,8 @@ import type { Archive, Detection, DiscoveredCamera, RaisonExport, RelaisAcces } 
 const JOUR_MS = 86_400_000;
 /** Une heure au plus par fichier exporté (v2/desktop/export-plage.js). */
 const HEURE_MS = 3_600_000;
+/** La plage que pose « Exporter » quand il n'y en a pas : une minute, à ajuster ensuite. */
+const MINUTE_MS = 60_000;
 /**
  * Deux durees, et c'est un compromis assume.
  *
@@ -183,6 +185,13 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
   const [refus, setRefus] = useState<{ raison: RaisonExport; fichier?: string | null } | null>(null);
   /** La frise se resserre sur une plage qu'on vient de completer : sinon, a l'echelle du jour, elle tient en un pixel. */
   const [cadrer, setCadrer] = useState<{ debut: number; fin: number } | null>(null);
+  /** Une plage posée d'office par « Exporter » : ses poignées respirent un instant — « ajuste-moi ». */
+  const [respire, setRespire] = useState(false);
+  useEffect(() => {
+    if (!respire) return;
+    const id = setTimeout(() => setRespire(false), 4200);   // trois respirations de .point-activite
+    return () => clearTimeout(id);
+  }, [respire]);
   /**
    * Le debit REEL des morceaux deja lus, par camera et par qualite : c'est lui qui estime le
    * poids d'un export. La basse definition, au-dela de la frontiere, pese dix fois moins ;
@@ -594,6 +603,29 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
     acquitterExport();
     setRefus(null);
   };
+  /*
+   * « Exporter » sans plage : une minute posée d'office, que l'on ajuste ensuite. Relevé de Thomas
+   * (27.10.2026) : l'export ne se trouvait pas — le mot n'apparaissait qu'une fois les deux bornes
+   * posées, et son journal ne portait aucun export. Autour de l'instant lu ; depuis le direct, la
+   * dernière minute, où la lecture se rend. Toujours dans ce qui est enregistré.
+   */
+  const poserMinute = () => {
+    const maintenant = Date.now();
+    const limite = Math.min(archive?.fin ?? maintenant, maintenant);
+    const centre = instant ?? limite - MINUTE_MS / 2;
+    let debut = centre - MINUTE_MS / 2;
+    let fin = centre + MINUTE_MS / 2;
+    if (fin > limite) { fin = limite; debut = limite - MINUTE_MS; }
+    const plancher = archive?.debut ?? debut;
+    if (debut < plancher) { debut = plancher; fin = Math.min(limite, plancher + MINUTE_MS); }
+    acquitterExport();
+    setRefus(null);
+    poserPlage({ debut, fin });
+    // Depuis le direct : le jour de cette minute, et la lecture s'y rend — on voit ce qu'on exporte.
+    if (instant === null) { setJour(minuit(debut)); void allerA(debut); }
+    setCadrer({ debut, fin });
+    setRespire(true);
+  };
 
   /**
    * Le poids attendu : le débit observé de CHAQUE caméra affichée, à chaque qualité. Une
@@ -981,6 +1013,13 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                 fin a l'instant voulu… » (clarte, 24.10.2026) ; meme respiration que le point
                 d'une detection en cours. */}
             <span className="ml-2.5 flex items-center gap-1 border-l border-line2 pl-3">
+              {/* L'entrée de l'export, toujours là tant qu'aucune plage n'est posée — depuis le direct
+                  aussi (relevé de Thomas, 27.10.2026 : il ne trouvait pas comment exporter). */}
+              {plage.debut === null && plage.fin === null && (
+                <Bouton taille="petit" variante="actif" icone={Download} titre={t('export.entreeTitre')} onClick={poserMinute}>
+                  {t('export.entree')}
+                </Bouton>
+              )}
               <Bouton taille="petit" variante={plage.debut !== null ? 'actif' : 'normal'} icone={ArrowRightFromLine}
                       titre={t('export.debutTitre')} disabled={instant === null} className="relative"
                       onClick={() => { if (instant !== null) poserBorne('debut', instant); }}>
@@ -1014,6 +1053,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
             plage={plage}
             onBorne={glisserBorne}
             cadrer={cadrer}
+            respirer={respire}
           />
 
           <LignePlage
@@ -1091,7 +1131,7 @@ function Halo() {
  *
  * La molette resserre la fenetre autour du curseur, de la journee entiere a la minute.
  */
-function Frise({ direct, jour, archive, instant, detections, onViser, plage, onBorne, cadrer }: {
+function Frise({ direct, jour, archive, instant, detections, onViser, plage, onBorne, cadrer, respirer }: {
   /** Rien de choisi, le direct à l'image : un repère le dit, au bout de ce qui est enregistré. */
   direct: boolean;
   jour: number;
@@ -1104,6 +1144,8 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
   onBorne: (quelle: 'debut' | 'fin', t: number) => void;
   /** Se resserrer sur cette plage — un objet neuf a chaque demande. */
   cadrer: { debut: number; fin: number } | null;
+  /** Une plage posée d'office : ses poignées respirent, pour inviter à l'ajuster. */
+  respirer: boolean;
 }) {
   useLangue();
   const barre = useRef<HTMLDivElement>(null);
@@ -1262,7 +1304,8 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
                const pas = e.shiftKey ? 10_000 : 1000;
                deplacer(quelle, temps + (e.key === 'ArrowLeft' ? -pas : pas));
              }}>
-          <span aria-hidden className="h-[22px] w-1.5 rounded-[3px] bg-accent shadow-[0_0_0_2px_rgba(14,19,27,.9)] group-focus-visible:shadow-[0_0_0_2px_rgba(14,19,27,.9),0_0_0_4px_var(--accent)]" />
+          <span aria-hidden className={cx('h-[22px] w-1.5 rounded-[3px] bg-accent shadow-[0_0_0_2px_rgba(14,19,27,.9)] group-focus-visible:shadow-[0_0_0_2px_rgba(14,19,27,.9),0_0_0_4px_var(--accent)]',
+            respirer && 'point-activite')} />
         </div>
         <span className={cx('pointer-events-none absolute top-[3px] z-10 whitespace-nowrap rounded px-[5px] py-0.5 font-mono text-micro text-accent', decalage)}
               style={{ left: x, background: 'rgba(14,19,27,.85)' }}>

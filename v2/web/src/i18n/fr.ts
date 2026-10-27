@@ -700,6 +700,10 @@ export const fr = {
   'export.nFichiers': '{n} fichiers',
   'export.fichiersDetail': 'Une heure au plus par fichier, enregistrés l’un après l’autre : les coupures se voient sur la frise.',
   'export.basse': 'basse définition',
+
+  // Relecture : l’export visible (27.10.2026)
+  'export.entree': 'Exporter',
+  'export.entreeTitre': 'Pose une minute à exporter, à ajuster aux poignées',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */
