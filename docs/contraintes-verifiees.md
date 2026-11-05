@@ -417,3 +417,33 @@ donne qu'a une page qui capture. Le decodage logiciel ne se voit qu'a la charge 
 environ 2,5 s. Un flux qui cale chez la camera le declenche sans aucune erreur cote relais. Depuis
 le 05.11.2026, chaque gel note au journal ce qui arrivait encore : `packets +0`, c'est en amont du
 poste ; des paquets et des images recues sans decodage, c'est le poste.
+
+## V-Ciel — une animation sans fin et la frequence de l'ecran (mesure du 05.11.2026, ecran a 360 Hz)
+
+Une animation CSS est recalculee a chaque rafraichissement : une seule suffit a tenir le compositeur
+a la frequence de l'ecran. Sur le mur reel (deux cameras, plein ecran) : ciel anime 54 % de la page,
+62 % du GPU et 1,3 Go ; ciel fixe 15 %, 17 % et 0,38 Go.
+
+Au banc, sans flux, fenetre de 2160 x 1440, la page voyant 361 images/s :
+
+| Ciel | Page | GPU |
+|---|---|---|
+| Fixe | 0,5 a 3 % | 2 a 7 % |
+| Animations CSS (frequence de l'ecran) | 67 a 81 % | 73 % |
+| Cadence a la main a 60 images/s | 24 % | 27 % |
+| Cadence a la main a 30 images/s | 12 a 13 % | 9 a 18 % |
+| Cadence a la main a 20 images/s | 13 % | 21 % |
+
+Au-dessous de 30, plus aucun gain. D'ou `lib/cadence.ts` : toute animation sans fin est mise en pause
+et son horloge avancee a 30 images/s, 46 animations a la fois sur le ciel et le logo. L'horloge du
+ciel reste exacte (+2046 ms en 2000 ms), son style change 31 fois par seconde.
+
+**Non mesure sur le mur reel au moment de l'ecrire** : l'effet sur le poste de reference, et la
+fluidite des etoiles filantes a l'oeil.
+
+## V-Relais — ce que le relais dit au niveau info (mesure du 05.11.2026, MediaMTX 1.21.2)
+
+Le niveau `warn` ne dit jamais pourquoi une session se ferme ; `info` le dit (`closed: source of path
+... has timed out`, `[RTSP source] stopped: timed out`). Verifie avec une source a identifiants
+fictifs, une session reussie et une source injoignable : ni l'alias, ni `rtsp://`, ni le mot de passe
+n'apparaissent dans la sortie.

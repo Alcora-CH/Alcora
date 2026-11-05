@@ -63,7 +63,13 @@ function parametresRelais({ ports, cameras, identifiant, origines, api = false }
   const admises = (origines ?? []).filter((o) => typeof o === 'string' && o && o !== '*');
   if (!admises.length) throw new Error('relay: no allowed origin — refusing a wildcard');
 
-  const p = { logLevel: 'warn' };
+  /*
+   * « info », et pas « warn » : c'est le seul niveau qui dit POURQUOI une session se ferme. Le
+   * 05.11.2026, une camera a gele soixante fois en quatre jours, plus aucun paquet n'arrivait
+   * au poste, et ce journal-ci n'en disait rien : impossible de departager la camera du relais.
+   * Quelques lignes par connexion, et ni mot de passe ni adresse de camera (verifie au banc).
+   */
+  const p = { logLevel: 'info' };
   for (const s of SERVEURS) p[s] = false;
   p.webrtc = true;
 

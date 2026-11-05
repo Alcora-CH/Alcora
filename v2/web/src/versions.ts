@@ -50,6 +50,18 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.41.1',
+    date: '05.11.2026',
+    fr: [
+      'Le ciel animé ne suit plus la fréquence de l’écran : sur un écran à 360 Hz, il consomme environ '
+      + 'sept fois moins, sans changer de dessin ni de vitesse.',
+    ],
+    en: [
+      'The animated sky no longer follows the screen refresh rate: on a 360 Hz screen it uses about '
+      + 'seven times less, with the same design and speed.',
+    ],
+  },
+  {
     version: '2.41.0',
     date: '05.11.2026',
     fr: [

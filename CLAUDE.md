@@ -160,6 +160,9 @@ soit ~185 Mo à chaque version, quel que soit le différentiel. Ne jamais promet
   pendant qu'un flux 4K décode — une exception assumée, le dépliement d'une veille) ;
   **le mouvement n'attend jamais l'information** (on anime l'arrivée, pas la
   disponibilité) ; `prefers-reduced-motion` coupe tout sans rien casser.
+  **Une animation sans fin ne suit jamais la fréquence de l'écran** : `lib/cadence.ts` les
+  tient toutes à 30 images/s, sans rien demander aux composants (à 360 Hz, le ciel animé
+  coûtait près de la moitié d'un cœur, deux fois — mesure du 05.11.2026).
   Six classes, pas davantage : `.m-ecran`, `.m-cascade`, `.m-voile`, `.m-boite`,
   `.m-surgit`, `.m-pression`. Une surface qui s'ouvre doit aussi **partir** animée —
   `useFermetureAnimee` (`lib/fermeture.ts`) tient l'état, écoute `animationend` plutôt

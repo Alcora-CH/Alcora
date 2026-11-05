@@ -242,6 +242,16 @@ const suites = [
   },
   {
     /*
+     * Sur un ecran a 360 Hz, le ciel anime tenait le compositeur a 360 images/s pour un ciel qui
+     * fait un tour par heure : pres de la moitie d'un coeur, deux fois (05.11.2026).
+     */
+    nom: 'Cadence des animations sans fin',
+    commande: 'node',
+    args: ['test-cadence.mjs'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * « tsc -b --force », et surtout PAS « tsc --noEmit ».
      *
      * Le tsconfig.json de v2/web est un fichier de references : « files: [] » puis deux

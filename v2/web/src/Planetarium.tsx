@@ -13,8 +13,10 @@
  *     et Mizar/Alcor battent comme un pouls ;
  *  7. un satellite clignotant traverse toutes les ~90 s.
  *
- * Tout est transform/opacity : le compositeur graphique fait tout, les flux 4K ne
- * sentent rien. prefers-reduced-motion fige l'ensemble (le ciel reste, immobile).
+ * Tout est transform/opacity : rien ne se repeint, les flux 4K ne sentent rien. Le tout bat a
+ * 30 images/s, pas a la frequence de l'ecran (lib/cadence.ts) : a 360 Hz, ce ciel coutait
+ * pres de la moitie d'un coeur, deux fois. prefers-reduced-motion fige l'ensemble (le ciel
+ * reste, immobile).
  * L'interrupteur « Fond anime » des reglages demonte simplement ce composant.
  */
 

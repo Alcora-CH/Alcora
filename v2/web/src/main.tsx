@@ -10,6 +10,9 @@ import '@fontsource-variable/atkinson-hyperlegible-next'
 import '@fontsource-variable/atkinson-hyperlegible-mono'
 import './index.css'
 import App from './App.tsx'
+import { cadencerLaPage } from './lib/cadence'
+
+cadencerLaPage()
 
 /*
  * Le mode strict de React est volontairement DESACTIVE.
