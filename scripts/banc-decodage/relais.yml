@@ -1,0 +1,32 @@
+# Relais de test du banc : boucle locale, mires seulement. Jamais celui de l'application.
+logLevel: warn
+logDestinations: [stdout]
+api: false
+metrics: false
+pprof: false
+playback: false
+rtmp: false
+hls: false
+srt: false
+moq: false
+rtsp: true
+rtspAddress: 127.0.0.1:28554
+rtspTransports: [tcp]
+webrtc: true
+webrtcAddress: 127.0.0.1:28889
+webrtcAllowOrigins: ['app://viewer']
+webrtcLocalUDPAddress: :28189
+webrtcLocalTCPAddress: 127.0.0.1:28289
+webrtcIPsFromInterfaces: true
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass: ""
+    ips: ['127.0.0.1', '::1']
+    permissions:
+      - action: publish
+        path: ""
+      - action: read
+        path: ""
+paths:
+  all_others:

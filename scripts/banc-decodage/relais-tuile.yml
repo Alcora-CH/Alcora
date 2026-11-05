@@ -1,0 +1,46 @@
+# Relais de test pour la demo : memes chemins, meme adresse et meme mot de passe que ceux, fictifs,
+# de v2/web/src/lib/bridge.ts. Boucle locale, mires seulement.
+logLevel: warn
+logDestinations: [stdout]
+api: false
+metrics: false
+pprof: false
+playback: false
+rtmp: false
+hls: false
+srt: false
+moq: false
+rtsp: true
+rtspAddress: 127.0.0.1:28554
+rtspTransports: [tcp]
+webrtc: true
+webrtcAddress: 127.0.0.1:8889
+webrtcAllowOrigins: ['http://localhost:5180', 'http://127.0.0.1:5180']
+webrtcLocalUDPAddress: :28189
+webrtcLocalTCPAddress: 127.0.0.1:28289
+webrtcIPsFromInterfaces: true
+authMethod: internal
+authInternalUsers:
+  - user: demo
+    pass: demo
+    ips: ['127.0.0.1', '::1']
+    permissions:
+      - action: read
+        path: ""
+  - user: any
+    pass: ""
+    ips: ['127.0.0.1', '::1']
+    permissions:
+      - action: publish
+        path: ""
+      - action: read
+        path: ""
+paths:
+  mire264:
+  mire265:
+  g6_low: { source: 'rtsp://127.0.0.1:28554/mire264', sourceOnDemand: true, sourceOnDemandCloseAfter: 15s, rtspTransport: tcp }
+  g6_medium: { source: 'rtsp://127.0.0.1:28554/mire264', sourceOnDemand: true, sourceOnDemandCloseAfter: 15s, rtspTransport: tcp }
+  g6_high: { source: 'rtsp://127.0.0.1:28554/mire264', sourceOnDemand: true, sourceOnDemandCloseAfter: 15s, rtspTransport: tcp }
+  g5_low: { source: 'rtsp://127.0.0.1:28554/mire265', sourceOnDemand: true, sourceOnDemandCloseAfter: 15s, rtspTransport: tcp }
+  g5_medium: { source: 'rtsp://127.0.0.1:28554/mire265', sourceOnDemand: true, sourceOnDemandCloseAfter: 15s, rtspTransport: tcp }
+  g5_high: { source: 'rtsp://127.0.0.1:28554/mire265', sourceOnDemand: true, sourceOnDemandCloseAfter: 15s, rtspTransport: tcp }

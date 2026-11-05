@@ -384,3 +384,36 @@ Corrige par un DOUBLE garde-fou : le nom de la cle, et une expression qui reconn
 valeur ressemblant a une plaque quelle que soit sa cle. De plus, un objet ou une liste n'est
 plus jamais serialise pour affichage — on n'en dit que la forme. Eprouve hors ligne sur les
 cas exacts qui ont fui, avec des plaques fictives.
+
+## V-Decodage — le direct quand le GPU tombe (mesure du 05.11.2026, Electron 45.0.0, Chromium 156)
+
+Banc : `scripts/banc-decodage` (relais de test, deux mires, GPU abattu). **A rejouer a chaque montee
+d'Electron** : c'est un comportement de Chromium, que rien d'autre ne garde.
+
+**H.265 n'a pas de decodeur logiciel dans Chromium.** Il se lit en WebRTC tant que le GPU decode.
+Une reinstallation du pilote graphique fait tomber le processus GPU (`exit 0x22`) ; Chromium le
+relance, mais la page garde ses decodeurs morts :
+
+| Apres la perte du GPU | H.264 | H.265 |
+|---|---|---|
+| Sans rien faire | continue, en logiciel (processeur x3 sur le poste de reference) | images recues, **zero decodee** |
+| Nouvelle session dans la meme page | decode | images recues, **zero decodee**, indefiniment |
+| Page rechargee | decode en 2 s | **decode en 2 s** |
+| GPU perdu, 5 s, page abattue, page rechargee (le chemin de l'application) | image a +8 s | **image a +8 s** |
+
+Sur le poste de reference, les quatre sorties `0x22` du GPU depuis octobre 2026 tombent toutes a
+quelques secondes d'un ajout du service `nvlddmkm` (journal Windows, UserPnp 20003) : ce n'est pas
+une panne rare, c'est chaque changement de pilote.
+
+**Une session gardee ouverte continue de decoder sans aucune video branchee.** Une video qui s'y
+rattache peint sa premiere image en 20 a 60 ms, contre 2 a 8 s pour une session neuve, qui attend
+la prochaine image cle de la camera (une toutes les 5 s) : le relais ne peut pas en demander une
+a une source RTSP. D'ou la reserve des flux (`v2/web/src/video/reserve.ts`).
+
+`decoderImplementation` et `powerEfficientDecoder` restent vides dans `getStats` : Chromium ne les
+donne qu'a une page qui capture. Le decodage logiciel ne se voit qu'a la charge du processus.
+
+**`ICE disconnected` ne dit pas que la connexion a coupe** : il dit que rien n'est arrive pendant
+environ 2,5 s. Un flux qui cale chez la camera le declenche sans aucune erreur cote relais. Depuis
+le 05.11.2026, chaque gel note au journal ce qui arrivait encore : `packets +0`, c'est en amont du
+poste ; des paquets et des images recues sans decodage, c'est le poste.
