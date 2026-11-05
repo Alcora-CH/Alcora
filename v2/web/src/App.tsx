@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Maximize2, Minimize2, PanelRightOpen, RotateCw } from 'lucide-react';
 import { CameraTile } from './video/CameraTile';
+import { reserveFlux } from './video/whep';
 import { SetupScreen } from './screens/SetupScreen';
 import { ReglagesScreen } from './screens/ReglagesScreen';
 import { RechercheScreen } from './screens/RechercheScreen';
@@ -173,6 +174,11 @@ export default function App() {
       return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
     } catch { return []; }
   });
+
+  /* Masquer une caméra, c'est la couper : son flux ne reste pas ouvert « pour le retour ». */
+  useEffect(() => {
+    reserveFlux.oublier((url) => masquees.some((id) => url.includes(`/${id}_`)));
+  }, [masquees]);
 
   const basculerMasquee = useCallback((id: string) => {
     setMasquees((v) => {

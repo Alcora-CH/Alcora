@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Camera, History, ScanSearch, Volume2, VolumeX } from 'lucide-react';
 import { BoutonBandeau } from './BoutonBandeau';
-import { connectWhep, type WhepSession } from './whep';
-import { attenteReprise, causeDeReprise } from './sante';
+import { reserveFlux, type WhepSession } from './whep';
+import type { PriseFlux } from './reserve';
+import {
+  attenteReprise, causeDeReprise, constatDeGel, lireDecodage, nomCodec, sansDecodeur, type Decodage,
+} from './sante';
 import { bestChannel, pickChannel, qualityLabel, relayPath } from './channel';
 import { nombre, t, useLangue } from '../i18n';
+import { bridge } from '../lib/bridge';
 import { cx } from '../ui/cx';
 
 /**
@@ -85,18 +89,30 @@ const GEL_MS = 6000;
 const PREMIERE_IMAGE_MS = 12000;
 /** Attente avant reprise : croissante, bornee, et decalee d'une tuile a l'autre. */
 const REPRISE_MS = [1000, 2000, 4000, 8000, 15000];
+/**
+ * Sessions d'affilee sans decodeur avant de le dire et de demander une relance de la page.
+ * Deux, et pas une : une camera a image cle tres espacee peut en faire attendre une seule.
+ */
+const SESSIONS_SANS_DECODEUR = 2;
+/**
+ * « Connexion… » attend ce delai pour se poser : retrouver un flux garde prend 50 ms, et le
+ * mot ne doit pas clignoter pour une attente qu'on ne voit pas.
+ */
+const DELAI_MOT_CONNEXION = '300ms';
 
-/** Images video decodees depuis le debut de la session, ou null si l'info manque. */
-async function imagesDecodees(pc: RTCPeerConnection): Promise<number | null> {
+/** Copie l'image montree par la video. Faux si elle n'en montre aucune. */
+function figerImage(video: HTMLVideoElement | null, toile: HTMLCanvasElement | null): boolean {
+  if (!video || !toile || !video.videoWidth) return false;
+  toile.width = video.videoWidth;
+  toile.height = video.videoHeight;
+  toile.getContext('2d')?.drawImage(video, 0, 0);
+  return true;
+}
+
+/** Ce que dit le navigateur du flux video de la session, ou null si l'info manque. */
+async function mesurer(pc: RTCPeerConnection): Promise<Decodage | null> {
   try {
-    let n: number | null = null;
-    (await pc.getStats()).forEach((r) => {
-      const s = r as RTCInboundRtpStreamStats & { framesDecoded?: number };
-      if (s.type === 'inbound-rtp' && s.kind === 'video' && typeof s.framesDecoded === 'number') {
-        n = s.framesDecoded;
-      }
-    });
-    return n;
+    return lireDecodage(await pc.getStats());
   } catch {
     return null;
   }
@@ -109,9 +125,26 @@ export function CameraTile({
   useLangue();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const sessionRef = useRef<WhepSession | null>(null);
+  const priseRef = useRef<PriseFlux | null>(null);
 
   const [status, setStatus] = useState<Status>('attente');
+  /** Le codec que ce poste ne sait pas decoder, une fois la chose etablie. */
+  const [illisible, setIllisible] = useState<string | null>(null);
+  const sessionsSansDecodeurRef = useRef(0);
+  /*
+   * La derniere image, attenuee, le temps d'une vraie reconnexion : la tuile ne tombe plus au
+   * noir pour quelques secondes. Attenuee et sous le mot, elle ne se prend pas pour le direct ;
+   * elle s'efface a la premiere vraie image, ou si la reprise echoue — jamais d'image d'il y
+   * a une heure sur une panne qui dure.
+   */
+  const figeeRef = useRef<HTMLCanvasElement>(null);
+  const [figee, setFigee] = useState(false);
+  /** Vrai pendant le demontage : figer une image que personne ne reverra coute pour rien. */
+  const partieRef = useRef(false);
+  useLayoutEffect(() => {
+    partieRef.current = false;
+    return () => { partieRef.current = true; };
+  }, []);
   /** Instant de la prochaine tentative, tant que la tuile est en erreur : il se dit. */
   const [repriseA, setRepriseA] = useState<number | null>(null);
   /** Incremente pour forcer une reconnexion : gel detecte, ou echec a reprendre. */
@@ -197,33 +230,60 @@ export function CameraTile({
     if (!video || !path) return;
 
     let cancelled = false;
-    // La session creee PAR CET effet. Fermer `sessionRef.current` a la place fermerait
-    // celle d'un montage suivant : en mode strict, React monte, demonte puis remonte, et
-    // le nettoyage du premier passage s'execute apres l'installation du second.
-    let mienne: WhepSession | null = null;
+    // La prise obtenue PAR CET effet. Rendre `priseRef.current` a la place rendrait celle
+    // d'un montage suivant : en mode strict, React monte, demonte puis remonte, et le
+    // nettoyage du premier passage s'execute apres l'installation du second.
+    let mienne: PriseFlux | null = null;
+    const debut = performance.now();
+    const toile = figeeRef.current;
 
     setStatus('connexion');
-    console.log(`[tuile ${camera.name}] appel ${relais.base}/${path}/whep`);
 
-    connectWhep(`${relais.base}/${path}/whep`, video, relais.autorisation)
-      .then((s) => {
-        if (cancelled) { s.close(); return; }
-        mienne = s;
-        sessionRef.current = s;
+    /*
+     * « direct » des que l'image est PEINTE : ni avant, ni plus tard.
+     *
+     * Seule la sonde le declarait, toutes les deux secondes : le mot restait donc jusqu'a deux
+     * secondes sur une image deja la (journal du 05.11.2026 : des delais tous multiples de
+     * 2,0 s). La sonde reste juge du gel, et du direct quand la fenetre est masquee — le
+     * navigateur ne peint plus rien, ce rappel se tait.
+     */
+    const image = video.requestVideoFrameCallback(() => {
+      if (cancelled) return;
+      essaisRef.current = 0;
+      sessionsSansDecodeurRef.current = 0;
+      setIllisible(null);
+      setFigee(false);
+      setStatus('direct');
+      const d = mienne?.neuve === false ? 'kept stream' : 'new session';
+      console.log(`[tuile ${camera.name}] first frame painted in ${Math.round(performance.now() - debut)} ms (${d})`);
+    });
+
+    reserveFlux.prendre(`${relais.base}/${path}/whep`, relais.autorisation)
+      .then((p) => {
+        if (cancelled) { p.rendre(); return; }
+        mienne = p;
+        priseRef.current = p;
         // PAS encore « direct » : la negociation a abouti, aucune image n'est arrivee.
-        // C'est la sonde qui le declarera, sur des images reellement decodees.
-        console.log(`[tuile ${camera.name}] session ouverte, en attente d’images`);
+        p.session.brancher(video);
+        console.log(`[tuile ${camera.name}] ${p.neuve ? 'session open, waiting for frames' : 'kept stream attached'}`);
       })
       .catch((e) => {
         if (cancelled) return;
+        setFigee(false);
         setStatus('erreur');
-        console.error(`[tuile ${camera.name}] échec : ${e?.message ?? e}`);
+        console.error(`[tuile ${camera.name}] failed: ${e?.message ?? e}`);
       });
 
     return () => {
       cancelled = true;
-      mienne?.close();
-      if (sessionRef.current === mienne) sessionRef.current = null;
+      video.cancelVideoFrameCallback(image);
+      if (mienne) {
+        // Changement de canal : la nouvelle qualite met quelques secondes a arriver.
+        if (!partieRef.current && figerImage(video, toile)) setFigee(true);
+        mienne.session.debrancher(video);
+        mienne.rendre();
+      }
+      if (priseRef.current === mienne) priseRef.current = null;
     };
   }, [path, relais.base, relais.autorisation, camera.name, generation]);
 
@@ -238,7 +298,7 @@ export function CameraTile({
     const attente = attenteReprise(essaisRef.current, REPRISE_MS);
     essaisRef.current += 1;
     setRepriseA(Date.now() + attente);
-    console.log(`[tuile ${camera.name}] nouvelle tentative dans ${attente} ms`);
+    console.log(`[tuile ${camera.name}] next attempt in ${attente} ms`);
     const t = window.setTimeout(() => setGeneration((g) => g + 1), attente);
     return () => clearTimeout(t);
   }, [status, camera.name]);
@@ -253,44 +313,68 @@ export function CameraTile({
   useEffect(() => {
     let arrete = false;
     let differe = 0;
-    /** Images decodees au dernier releve. -1 : jamais releve. */
-    let vues = -1;
+    /** La session observee : dans un flux retrouve, seules les images A VENIR comptent. */
+    let suivie: WhepSession | null = null;
+    /** Le dernier releve ou les images avancaient : le constat d'un gel part de lui. */
+    let repere: Decodage | null = null;
     /** Instant du dernier mouvement d'images, ou de l'ouverture tant qu'il n'y en a eu aucun. */
     let dernierMouvement = performance.now();
     /** Vrai des la premiere image reellement decodee. */
     let demarre = false;
+    /** La session condamnee : si la tuile part avant la reprise, elle n'ira pas en reserve. */
+    let condamnee: PriseFlux | null = null;
 
-    const reprendre = (cause: string) => {
+    const reprendre = (cause: string, constat: string) => {
       if (arrete) return;
       arrete = true;
+      condamnee = priseRef.current;
       const attente = attenteReprise(essaisRef.current, REPRISE_MS);
       essaisRef.current += 1;
-      console.warn(`[tuile ${camera.name}] ${cause} — reprise dans ${attente} ms`);
+      console.warn(`[tuile ${camera.name}] ${cause} — retry in ${attente} ms (${constat})`);
       setStatus('connexion');
-      differe = window.setTimeout(() => setGeneration((g) => g + 1), attente);
+      differe = window.setTimeout(() => {
+        // Une session qui n'a jamais rien livre : la reprise a echoue, l'image figee est trop
+        // vieille pour rester. Sinon, on la copie avant de fermer, qui l'effacerait.
+        setFigee(demarre && figerImage(videoRef.current, figeeRef.current));
+        // Jetee au dernier moment : l'image figee reste a l'ecran pendant l'attente, et la
+        // reserve ne rendra pas cette session a la reprise.
+        condamnee?.jeter();
+        setGeneration((g) => g + 1);
+      }, attente);
     };
 
     const battement = async () => {
-      const s = sessionRef.current;
+      const s = priseRef.current?.session;
       if (arrete || !s) return;
 
       const visible = document.visibilityState === 'visible';
       // Fenetre masquee : le compteur repart, pour ne rien conclure de l'absence.
       if (!visible) { dernierMouvement = performance.now(); return; }
 
-      const n = await imagesDecodees(s.pc);
+      const m = await mesurer(s.pc);
       if (arrete) return;
+
+      // Le premier releve d'une session ne prouve rien : un flux retrouve a deja decode des
+      // milliers d'images, peut-etre avant de se figer. On part de ce qu'il a deja fait.
+      if (s !== suivie) {
+        suivie = s;
+        repere = m;
+        demarre = (m?.decodees ?? 0) > 0;
+        dernierMouvement = performance.now();
+        return;
+      }
 
       // Une image de plus : le flux vit. Zero image decodee n'est PAS le direct — c'est
       // une session ouverte qui n'a encore rien recu.
-      if (n !== null && n > vues) {
-        vues = n;
+      if (m && m.decodees > (repere?.decodees ?? 0)) {
+        repere = m;
+        demarre = true;
         dernierMouvement = performance.now();
-        if (n > 0 && !demarre) {
-          demarre = true;
-          console.log(`[tuile ${camera.name}] première image décodée`);
-        }
-        if (n > 0) { essaisRef.current = 0; setStatus('direct'); }
+        essaisRef.current = 0;
+        sessionsSansDecodeurRef.current = 0;
+        setIllisible(null);
+        setFigee(false);
+        setStatus('direct');
         return;
       }
 
@@ -298,11 +382,26 @@ export function CameraTile({
         { connexion: s.pc.connectionState, demarre, immobileMs: performance.now() - dernierMouvement, visible },
         { gelMs: GEL_MS, premiereImageMs: PREMIERE_IMAGE_MS },
       );
-      if (cause) reprendre(cause);
+      if (!cause) return;
+
+      // Les images arrivent, rien ne les decode : rouvrir n'y changera rien (voir sante.ts).
+      if (!demarre && m && sansDecodeur(m)) {
+        sessionsSansDecodeurRef.current += 1;
+        if (sessionsSansDecodeurRef.current >= SESSIONS_SANS_DECODEUR) {
+          setIllisible(nomCodec(m.codec));
+          void bridge.decodeurPerdu();
+        }
+      }
+      reprendre(cause, m ? constatDeGel(repere, m, s.pc.iceConnectionState) : 'no stats');
     };
 
     const id = window.setInterval(() => { void battement(); }, SONDE_MS);
-    return () => { arrete = true; clearInterval(id); clearTimeout(differe); };
+    return () => {
+      arrete = true;
+      clearInterval(id);
+      clearTimeout(differe);
+      condamnee?.jeter();
+    };
   }, [camera.name, generation, path]);
 
 
@@ -406,6 +505,12 @@ export function CameraTile({
       <video ref={videoRef} muted playsInline
              className="absolute inset-0 h-full w-full object-contain" />
 
+      {/* Rendue a la page : 4K en memoire pour une image qu'on ne montre plus n'a pas de sens. */}
+      <canvas ref={figeeRef} aria-hidden
+              onTransitionEnd={(e) => { if (!figee) e.currentTarget.width = 0; }}
+              className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+              style={{ opacity: figee ? 0.45 : 0, transition: 'opacity var(--douceur) var(--douce)' }} />
+
       {/* Confirmation de capture : au CENTRE, et franche. Discrete dans un coin, elle
           laissait douter que quelque chose ait ete enregistre. */}
       {capture && (
@@ -430,18 +535,27 @@ export function CameraTile({
       )}
 
       {status !== 'direct' && (
-        <div className="absolute inset-0 grid place-items-center text-center">
-          <div>
-            <p className="text-muted">
-              {status === 'erreur' ? t('tuile.fluxIndisponible')
-                : status === 'attente' ? (sansFlux ? t('camera.rtspDesactive') : '') : t('tuile.connexion')}
-            </p>
-            {/* La prochaine tentative se dit : un « Flux indisponible » muet ressemble à
-                une panne définitive, alors que la tuile réessaie d'elle-même. */}
-            {status === 'erreur' && repriseA !== null && (
-              <p className="mt-1 text-meta text-soft"><Decompte jusqua={repriseA} /></p>
-            )}
-          </div>
+        <div className="m-surgit absolute inset-0 grid place-items-center text-center"
+             style={{ animationDelay: DELAI_MOT_CONNEXION }}>
+          {illisible ? (
+            /* La cause plutôt que « Connexion… » : le flux arrive, ce poste ne sait pas le lire. */
+            <div>
+              <p className="text-warn">{t('tuile.illisible', { codec: illisible })}</p>
+              {illisible === 'H.265' && <p className="mt-1 text-meta text-soft">{t('tuile.remedeH265')}</p>}
+            </div>
+          ) : (
+            <div>
+              <p className="text-muted">
+                {status === 'erreur' ? t('tuile.fluxIndisponible')
+                  : status === 'attente' ? (sansFlux ? t('camera.rtspDesactive') : '') : t('tuile.connexion')}
+              </p>
+              {/* La prochaine tentative se dit : un « Flux indisponible » muet ressemble à
+                  une panne définitive, alors que la tuile réessaie d'elle-même. */}
+              {status === 'erreur' && repriseA !== null && (
+                <p className="mt-1 text-meta text-soft"><Decompte jusqua={repriseA} /></p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -519,6 +633,8 @@ export function CameraTile({
         ) : sansFlux ? (
           /* La CAUSE plutôt que le silence : il manque un interrupteur sur la console. */
           <span className="shrink-0 whitespace-nowrap text-meta text-warn">{t('camera.rtspDesactive')}</span>
+        ) : illisible ? (
+          <span className="shrink-0 whitespace-nowrap text-meta text-warn">{t('tuile.illisibleCourt')}</span>
         ) : (
           <span className="shrink-0 text-meta text-soft">
             <span aria-hidden>…</span><span className="sr-only">{t('tuile.connexion')}</span>

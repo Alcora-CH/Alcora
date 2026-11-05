@@ -69,6 +69,9 @@ contextBridge.exposeInMainWorld('protect', {
   // laissait l'application definitivement figee, sans aucun recours pour l'utilisateur.
   pleinEcran: (actif) => ipcRenderer.invoke('protect:pleinEcran', actif),
 
+  // Une tuile recoit des images sans pouvoir les decoder : le processus principal decide.
+  decodeurPerdu: () => ipcRenderer.invoke('protect:decodeurPerdu'),
+
   retry: () => ipcRenderer.invoke('protect:retry'),
   reconfigure: () => ipcRenderer.invoke('protect:reconfigure'),
 

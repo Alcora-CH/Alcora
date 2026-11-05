@@ -230,6 +230,18 @@ const suites = [
   },
   {
     /*
+     * Revenir sur le direct rouvrait tout : 2 a 8 s de « Connexion… » a chaque ecran. Et une
+     * camera en H.265 restait noire pour toujours apres une perte du GPU, sous ce meme mot
+     * (05.11.2026). Tient la reserve des flux, et ce qui distingue un decodeur manquant d'un
+     * flux qui demarre ou d'un flux coupe en amont.
+     */
+    nom: 'Flux du direct (réserve, décodeur manquant, gels)',
+    commande: 'node',
+    args: ['test-flux.mjs'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * « tsc -b --force », et surtout PAS « tsc --noEmit ».
      *
      * Le tsconfig.json de v2/web est un fichier de references : « files: [] » puis deux

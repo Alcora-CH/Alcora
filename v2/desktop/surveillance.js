@@ -24,6 +24,8 @@
  *      toute facon : deux secondes de noir valent mieux qu'un gel indefini.
  *   2. La page meurt            -> on la recharge, dans la limite d'un budget.
  *   3. La page ne repond plus   -> un battement le constate et l'on revient au 1.
+ *   4. Le GPU meurt             -> on attend qu'il se calme, puis on revient au 1. La page
+ *      vit encore, mais elle a perdu le decodage materiel pour de bon (voir gpuPerdu).
  *
  * Tout est pur ici : ni Electron ni minuterie, donc eprouvable par test-surveillance.js.
  */
@@ -48,6 +50,26 @@ const RATES_AVANT_ABATTAGE = 2;
 const RECHARGEMENTS_MAX = 3;
 /** ...sur cette duree glissante. */
 const FENETRE_RECHARGEMENTS_MS = 5 * 60_000;
+
+/**
+ * Silence exige du GPU avant de relancer la page.
+ *
+ * Une reinstallation du pilote fait tomber le GPU, puis continue plusieurs secondes :
+ * relancer tout de suite, c'est risquer de recharger la page sur un pilote encore en place,
+ * sans decodeur. Chaque nouvelle mort remet ce delai a zero.
+ */
+const DELAI_APRES_GPU_MS = 5_000;
+
+/**
+ * Le filet « images recues, aucune decodee » : l'attente exigee avant chaque essai.
+ *
+ * Deux essais seulement : le premier rattrape un GPU revenu en retard, le second un pilote
+ * encore en place au premier. Au-dela, le poste n'a sans doute pas ce decodeur du tout, et
+ * relancer ne ferait que clignoter le mur : la tuile dit alors ce qui manque.
+ */
+const PALIERS_DECODEUR_MS = [0, 10 * 60_000];
+/** Un essai plus vieux que cela ne compte plus : la panne d'aujourd'hui en est une autre. */
+const OUBLI_DECODEUR_MS = 24 * 60 * 60_000;
 
 /**
  * Nom lisible d'un processus enfant disparu, pour le journal.
@@ -77,6 +99,22 @@ function faireTomberLaPage(details) {
   if (details.reason === 'clean-exit') return false;
   const nom = `${details.serviceName ?? ''} ${details.name ?? ''}`;
   return /NetworkService|Network Service/.test(nom);
+}
+
+/**
+ * Le processus GPU vient-il de disparaitre ?
+ *
+ * Le 05.11.2026, l'installeur du pilote NVIDIA a fait tomber le GPU (exit 0x22). Chromium le
+ * relance, mais la page garde ses decodeurs morts : H.264 repart en decodage logiciel, trois
+ * fois plus lourd, et H.265, qui n'a PAS de decodeur logiciel, ne decode plus une seule
+ * image. Rouvrir la connexion ne sert a rien : les images arrivent, rien ne les decode.
+ * La camera est restee noire sous un « Connexion… » sans fin, jusqu'au redemarrage.
+ *
+ * Eprouve au banc (voir scripts/banc-decodage) : recharger la page repare tout en deux
+ * secondes. Une sortie propre n'est jamais une panne.
+ */
+function gpuPerdu(details) {
+  return details?.type === 'GPU' && details.reason !== 'clean-exit';
 }
 
 /**
@@ -118,6 +156,27 @@ function rechargement(historique, maintenantMs, {
 }
 
 /**
+ * Une tuile recoit des images et n'en decode aucune : peut-on encore relancer la page ?
+ *
+ * Budget a part, bien plus avare que celui des pannes : ici, la page va bien, et le defaut
+ * peut etre permanent — un poste sans decodeur H.265 demanderait une relance a chaque
+ * demi-minute, pour toujours, et ferait clignoter les cameras qui marchent.
+ *
+ * @returns {{ permis: boolean, historique: number[] }}
+ */
+function rechargementDecodeur(historique, maintenantMs, {
+  paliers = PALIERS_DECODEUR_MS,
+  oubliMs = OUBLI_DECODEUR_MS,
+} = {}) {
+  const recents = (historique ?? [])
+    .filter((t) => Number.isFinite(t) && t <= maintenantMs && maintenantMs - t < oubliMs);
+  if (recents.length >= paliers.length) return { permis: false, historique: recents };
+  const dernier = recents.length ? Math.max(...recents) : -Infinity;
+  if (maintenantMs - dernier < paliers[recents.length]) return { permis: false, historique: recents };
+  return { permis: true, historique: [...recents, maintenantMs] };
+}
+
+/**
  * Le compte des sondes manquees d'affilee, et la decision qui en decoule.
  *
  * Une reponse remet le compte a zero : seules les sondes CONSECUTIVES comptent, sans quoi
@@ -134,5 +193,7 @@ function apresSonde(ratesAvant, repondu, seuil = RATES_AVANT_ABATTAGE) {
 module.exports = {
   PERIODE_BATTEMENT_MS, DELAI_REPONSE_MS, RATES_AVANT_ABATTAGE,
   RECHARGEMENTS_MAX, FENETRE_RECHARGEMENTS_MS,
-  nomDuProcessus, faireTomberLaPage, fautIlRecharger, rechargement, apresSonde,
+  DELAI_APRES_GPU_MS, PALIERS_DECODEUR_MS, OUBLI_DECODEUR_MS,
+  nomDuProcessus, faireTomberLaPage, gpuPerdu, fautIlRecharger, rechargement,
+  rechargementDecodeur, apresSonde,
 };

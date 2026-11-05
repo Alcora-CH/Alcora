@@ -149,6 +149,8 @@ app.on('child-process-gone', (_e, d) => {
   journal.erreur('process', `${surveillance.nomDuProcessus(d)} gone: ${d.reason}${code}`);
   if (surveillance.faireTomberLaPage(d)) {
     abattrePage('network service died — every video connection of the page died with it');
+  } else if (surveillance.gpuPerdu(d)) {
+    apresPerteDuGpu();
   }
 });
 
@@ -475,6 +477,24 @@ function relancerPage(raison) {
   }
   journal.erreur('ui', `page restarted too often — next attempt in ${Math.round(r.attenteMs / 1000)} s`);
   minuterieRechargement = setTimeout(() => relancerPage(raison), r.attenteMs);
+}
+
+/** Le filet des decodeurs : ses essais, et la minuterie qui attend que le GPU se calme. */
+let historiqueDecodeur = [];
+let minuterieGpu = null;
+
+/**
+ * Le GPU vient de tomber : la page ne retrouvera plus ses decodeurs materiels d'elle-meme
+ * (voir surveillance.gpuPerdu). Abattre et non recharger : les nettoyages des tuiles
+ * appelleraient pc.close() sur des decodeurs morts — l'appel qui s'est fige le 05.10.2026.
+ */
+function apresPerteDuGpu() {
+  clearTimeout(minuterieGpu);
+  historiqueDecodeur = [];                       // panne neuve : le filet retrouve ses essais
+  minuterieGpu = setTimeout(
+    () => abattrePage('GPU process lost — hardware video decoding does not come back in the same page'),
+    surveillance.DELAI_APRES_GPU_MS,
+  );
 }
 
 /**
@@ -1756,6 +1776,17 @@ ipcMain.handle('protect:pleinEcran', (_event, actif) => {
 });
 
 /** Retente sans redemarrer : une panne passagere ne doit pas condamner la session. */
+/*
+ * Une tuile recoit des images et n'en decode aucune. Le GPU a pu tomber sans que Chromium
+ * le signale, ou revenir trop tard pour la relance precedente : on retente, chichement.
+ */
+ipcMain.handle('protect:decodeurPerdu', () => {
+  const r = surveillance.rechargementDecodeur(historiqueDecodeur, Date.now());
+  historiqueDecodeur = r.historique;
+  if (r.permis) abattrePage('a stream receives frames but none decode');
+  return r.permis;
+});
+
 ipcMain.handle('protect:retry', async () => {
   if (perimee) return;
   clearTimeout(reprise);

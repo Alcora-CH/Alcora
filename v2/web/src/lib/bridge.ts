@@ -302,6 +302,7 @@ const mock: ProtectBridge = {
   // La demo n'a pas de vrai relais : l'en-tete est fictif, comme la camera.
   async relais() { return { base: 'http://127.0.0.1:8889', autorisation: 'Basic ZGVtbzpkZW1v' }; },
   async pleinEcran(actif: boolean) { return actif; },
+  async decodeurPerdu() { return false; },
   async retry() { /* simule */ },
   async reconfigure() { /* simule */ },
   async sauvegarde() { return { existe: true, date: new Date().toISOString(), host: '10.0.0.1' }; },

@@ -48,6 +48,40 @@ checkBool('une sortie propre n\'est jamais une panne',
   !s.faireTomberLaPage({ ...RESEAU, reason: 'clean-exit' }));
 checkBool('des details absents : on ne fait rien', !s.faireTomberLaPage(null));
 
+console.log('\n=== Le GPU perdu : la page ne recupere pas seule ses decodeurs ===');
+// Les champs releves le 05.11.2026 : reinstallation du pilote graphique, exit 0x22.
+const GPU = { type: 'GPU', reason: 'crashed', exitCode: 0x22, name: 'GPU' };
+checkBool('le GPU qui plante : perdu', s.gpuPerdu(GPU));
+checkBool('tue par le systeme : perdu aussi', s.gpuPerdu({ ...GPU, reason: 'killed' }));
+checkBool('une sortie propre n\'est jamais une panne', !s.gpuPerdu({ ...GPU, reason: 'clean-exit' }));
+checkBool('le service reseau n\'est pas le GPU', !s.gpuPerdu(RESEAU));
+checkBool('le service audio n\'est pas le GPU', !s.gpuPerdu(AUDIO));
+checkBool('des details absents : on ne fait rien', !s.gpuPerdu(null));
+// Trop court, on recharge sur un pilote en pleine installation ; trop long, la camera reste noire.
+checkBool('l\'attente laisse le pilote finir sans laisser durer le noir',
+  s.DELAI_APRES_GPU_MS >= 2_000 && s.DELAI_APRES_GPU_MS <= 15_000);
+
+console.log('\n=== Images recues, aucune decodee : relancer, mais pas indefiniment ===');
+const D = 1_800_000_000_000;
+const MINUTE = 60_000;
+let dec = s.rechargementDecodeur([], D);
+checkBool('premier constat : relance tout de suite', dec.permis && dec.historique.length === 1);
+let suite = s.rechargementDecodeur(dec.historique, D + 30_000);
+checkBool('trente secondes plus tard : on ne relance pas encore', !suite.permis);
+checkBool('un refus ne compte pas comme un essai', suite.historique.length === 1);
+suite = s.rechargementDecodeur(dec.historique, D + 10 * MINUTE);
+checkBool('dix minutes plus tard : second essai', suite.permis && suite.historique.length === 2);
+const fini = s.rechargementDecodeur(suite.historique, D + 11 * MINUTE);
+checkBool('apres deux essais : plus de relance, la tuile dit ce qui manque', !fini.permis);
+checkBool('toujours non le lendemain matin, tant que le jour n\'est pas ecoule',
+  !s.rechargementDecodeur(suite.historique, D + 20 * 60 * MINUTE).permis);
+const lendemain = s.rechargementDecodeur(suite.historique, D + 25 * 60 * MINUTE);
+checkBool('un jour apres : la panne d\'aujourd\'hui en est une autre',
+  lendemain.permis && lendemain.historique.length === 1);
+checkBool('un historique abime repart proprement',
+  s.rechargementDecodeur(['x', NaN, D + 999], D).permis);
+checkBool('un historique absent repart proprement', s.rechargementDecodeur(undefined, D).permis);
+
 console.log('\n=== Recharger une page disparue ===');
 checkBool('page plantee : on recharge', s.fautIlRecharger({ reason: 'crashed' }, false));
 checkBool('page abattue par nous : on recharge', s.fautIlRecharger({ reason: 'killed' }, false));

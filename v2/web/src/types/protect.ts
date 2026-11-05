@@ -259,6 +259,8 @@ export interface ProtectBridge {
   /** Bascule la FENETRE en plein ecran. Renvoie l'etat obtenu. */
   pleinEcran(actif: boolean): Promise<boolean>;
   /** Retente la connexion au controleur sans redemarrer l'application. */
+  /** Une tuile reçoit des images sans pouvoir les décoder. Vrai si la page va être relancée. */
+  decodeurPerdu(): Promise<boolean>;
   retry(): Promise<void>;
   /** Met la connexion de cote, l'efface, et ramene a l'ecran de connexion. */
   reconfigure(): Promise<void>;

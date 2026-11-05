@@ -1,3 +1,5 @@
+import { creerReserve } from './reserve';
+
 /**
  * Client WHEP minimal : negocie un flux WebRTC en lecture seule aupres du relais local.
  *
@@ -8,6 +10,10 @@
 
 export interface WhepSession {
   readonly pc: RTCPeerConnection;
+  /** Montre le flux dans cette video : tout de suite s'il est deja la, sinon a son arrivee. */
+  brancher(video: HTMLVideoElement): void;
+  /** La video s'en va ; la session continue, voir reserve.ts. */
+  debrancher(video: HTMLVideoElement): void;
   close(): void;
 }
 
@@ -42,13 +48,20 @@ async function cheminRetenu(pc: RTCPeerConnection): Promise<string | null> {
 
 export async function connectWhep(
   url: string,
-  video: HTMLVideoElement,
   /** En-tete exige par le relais : sans lui, 401 (voir relais-config.js). */
   autorisation: string,
 ): Promise<WhepSession> {
   const pc = new RTCPeerConnection({ iceServers: [] });
   /** Adresse de la session cote relais, pour la clore proprement (en-tete Location). */
   let ressource: string | null = null;
+  /** Le flux recu, et les videos qui le montrent : plusieurs tuiles peuvent le partager. */
+  let flux: MediaStream | null = null;
+  const videos = new Set<HTMLVideoElement>();
+  const montrer = (video: HTMLVideoElement) => {
+    if (!flux || video.srcObject === flux) return;
+    video.srcObject = flux;
+    void video.play().catch(() => { /* lecture differee par le navigateur */ });
+  };
 
   /*
    * Tout echec ferme la connexion.
@@ -61,7 +74,6 @@ export async function connectWhep(
     return await negocier();
   } catch (e) {
     try { pc.close(); } catch { /* deja fermee */ }
-    video.srcObject = null;
     throw e;
   }
 
@@ -106,8 +118,8 @@ export async function connectWhep(
   pc.addTransceiver('audio', { direction: 'recvonly' });
 
   pc.ontrack = (e) => {
-    if (video.srcObject !== e.streams[0]) video.srcObject = e.streams[0];
-    void video.play().catch(() => { /* lecture differee par le navigateur */ });
+    flux = e.streams[0];
+    videos.forEach(montrer);
   };
 
   const offer = await pc.createOffer();
@@ -139,14 +151,14 @@ export async function connectWhep(
     });
   } catch (e) {
     throw abandon.signal.aborted
-      ? new Error('Le relais n’a pas répondu à temps.')
+      ? new Error('the relay did not answer in time')
       : (e as Error);
   } finally {
     clearTimeout(echeance);
   }
 
   if (!response.ok) {
-    throw new Error(`Le relais a refusé la connexion (${response.status}).`);
+    throw new Error(`the relay refused the connection (${response.status})`);
   }
 
   // Le relais designe la session par cet en-tete : sans DELETE a la fermeture, il la
@@ -160,9 +172,22 @@ export async function connectWhep(
 
   await pc.setRemoteDescription({ type: 'answer', sdp });
 
+  let fermee = false;
+  const debrancher = (video: HTMLVideoElement) => {
+    videos.delete(video);
+    if (flux && video.srcObject === flux) video.srcObject = null;
+  };
   return {
     pc,
+    brancher(video) {
+      videos.add(video);
+      montrer(video);
+    },
+    debrancher,
     close() {
+      // Plusieurs tuiles peuvent jeter la meme session : une seule fermeture part au relais.
+      if (fermee) return;
+      fermee = true;
       // « keepalive » : la fermeture survient souvent au demontage de la page, ou une
       // requete ordinaire serait annulee avant d'etre partie.
       if (ressource) {
@@ -172,8 +197,11 @@ export async function connectWhep(
       }
       pc.getReceivers().forEach((r) => r.track?.stop());
       pc.close();
-      video.srcObject = null;
+      [...videos].forEach(debrancher);
     },
   };
   }
 }
+
+/** La reserve de l'application : une seule, tuiles du mur et de la relecture confondues. */
+export const reserveFlux = creerReserve({ connecter: connectWhep });
