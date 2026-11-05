@@ -50,6 +50,30 @@ export function changementsDe(v: Version): string[] {
 
 export const VERSIONS: Version[] = [
   {
+    version: '2.41.0',
+    date: '05.11.2026',
+    fr: [
+      'Revenir sur le direct ne reconnecte plus les caméras : l’image est là aussitôt, sans '
+      + '« Connexion… ». Les flux restent ouverts dix minutes hors du direct ; masquer une caméra '
+      + 'coupe le sien tout de suite.',
+      'Une mise à jour du pilote graphique ne laisse plus une caméra H.265 au noir : Alcora relance '
+      + 'sa page d’elle-même, et l’image revient en quelques secondes. Si ce poste ne peut vraiment '
+      + 'pas lire ce format, la tuile le dit au lieu d’attendre sans fin.',
+      'Pendant une reconnexion, la dernière image reste à l’écran, atténuée, au lieu d’un écran '
+      + 'noir ; et « Direct » s’affiche dès que l’image arrive.',
+    ],
+    en: [
+      'Coming back to live no longer reconnects the cameras: the picture is there at once, with no '
+      + '“Connecting…”. Streams stay open for ten minutes away from live; hiding a camera closes its '
+      + 'stream right away.',
+      'A graphics driver update no longer leaves an H.265 camera black: Alcora restarts its page on '
+      + 'its own, and the picture returns within seconds. If this computer truly cannot read that '
+      + 'format, the tile says so instead of waiting forever.',
+      'During a reconnection, the last picture stays on screen, dimmed, instead of a black screen; '
+      + 'and “Live” shows as soon as the picture arrives.',
+    ],
+  },
+  {
     version: '2.40.1',
     date: '27.10.2026',
     fr: [
