@@ -16,7 +16,7 @@ import { construireNotices } from './notices.mjs';
 import { ecrireDeclaration } from './declaration.mjs';
 import { embarquerGuide } from './guide.mjs';
 import {
-  defautsPolitique, eprouverExecutable, intrusDansArchive, poserFusibles,
+  defautsPolitique, eprouverExecutable, intrusDansArchive, poserFusibles, simulateurEmbarque,
 } from './durcissement.mjs';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -227,6 +227,12 @@ exigerFichier(path.join(web, 'dist', 'index.html'), 'la page de l\'interface');
     process.exit(1);
   }
   console.log('  politique de contenu resserrée');
+  const simulateur = simulateurEmbarque(path.join(web, 'dist'));
+  if (simulateur.length) {
+    console.error(`\nLa page construite emporte le simulateur (VITE_DEMO_PUBLIQUE ?) : ${simulateur.join(', ')}`);
+    process.exit(1);
+  }
+  console.log('  aucun simulateur dans la page');
 }
 
 // L'interface est embarquee dans l'application : aucun serveur n'est necessaire a l'usage.

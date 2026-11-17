@@ -17,7 +17,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
-import { defautsPolitique, intrusDansArchive } from './durcissement.mjs';
+import { defautsPolitique, intrusDansArchive, simulateurEmbarque, TEMOIN_SIMULATEUR } from './durcissement.mjs';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const web = path.join(racine, 'v2', 'web');
@@ -74,15 +74,42 @@ console.log('\n=== L archive n emporte que le code et l interface ===');
 }
 
 console.log('\n=== La page reellement construite ===');
+const requireWeb = createRequire(path.join(web, 'package.json'));
+const vite = await import(pathToFileURL(requireWeb.resolve('vite')).href);
 const sortie = mkdtempSync(path.join(os.tmpdir(), 'alcora-page-'));
 try {
-  const requireWeb = createRequire(path.join(web, 'package.json'));
-  const vite = await import(pathToFileURL(requireWeb.resolve('vite')).href);
   await vite.build({ root: web, logLevel: 'error', build: { outDir: sortie, emptyOutDir: true } });
   const defauts = defautsPolitique(readFileSync(path.join(sortie, 'index.html'), 'utf8'));
   check('la page construite porte la politique resserree', defauts.length === 0, defauts.join(' ; '));
+  const simulateur = simulateurEmbarque(sortie);
+  check('elle n emporte pas le simulateur', simulateur.length === 0, simulateur.join(', '));
 } finally {
   rmSync(sortie, { recursive: true, force: true });
+}
+
+/*
+ * La demonstration publique du site alcora.ch (17.11.2026) : la meme page, construite avec
+ * VITE_DEMO_PUBLIQUE=1. Elle DOIT emporter le simulateur — c'est aussi la preuve que le
+ * controle ci-dessus le verrait — et ne doit pouvoir joindre aucun port de la machine.
+ */
+console.log('\n=== La demonstration publique (site alcora.ch) ===');
+check('le temoin du simulateur est dans sa source',
+  readFileSync(path.join(web, 'src', 'lib', 'bridge.ts'), 'utf8').includes(TEMOIN_SIMULATEUR));
+const demo = mkdtempSync(path.join(os.tmpdir(), 'alcora-demo-'));
+const drapeau = process.env.VITE_DEMO_PUBLIQUE;
+try {
+  process.env.VITE_DEMO_PUBLIQUE = '1';
+  await vite.build({ root: web, base: '/demo/', logLevel: 'error', build: { outDir: demo, emptyOutDir: true } });
+  check('elle emporte le simulateur (le controle le voit)', simulateurEmbarque(demo).length > 0);
+  const html = readFileSync(path.join(demo, 'index.html'), 'utf8');
+  const defauts = defautsPolitique(html);
+  check('sa politique est resserree', defauts.length === 0, defauts.join(' ; '));
+  const csp = html.match(/http-equiv="Content-Security-Policy"\s+content="([^"]*)"/)?.[1] ?? '127.0.0.1';
+  check('elle ne peut joindre aucun port de la machine', !/127\.0\.0\.1|localhost/.test(csp), csp.replace(/\s+/g, ' '));
+} finally {
+  if (drapeau === undefined) delete process.env.VITE_DEMO_PUBLIQUE;
+  else process.env.VITE_DEMO_PUBLIQUE = drapeau;
+  rmSync(demo, { recursive: true, force: true });
 }
 
 console.log('\n' + (echecs === 0 ? 'TOUS LES TESTS PASSENT' : `${echecs} TEST(S) EN ECHEC`));

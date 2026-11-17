@@ -499,12 +499,18 @@ const mock: ProtectBridge = {
  *
  * « import.meta.env.DEV » est resolu a la construction : en production, le simulateur et
  * ses fausses cameras sont retires du paquet, ils ne peuvent donc plus surgir.
+ *
+ * Une seule autre construction l'emporte : la demonstration publique du site alcora.ch
+ * (VITE_DEMO_PUBLIQUE=1, 17.11.2026), une page sans Electron ou il n'y a rien d'autre a
+ * montrer. Ce drapeau-la aussi est resolu a la construction ; celle de l'application relit
+ * son paquet et refuse d'y trouver le simulateur (scripts/durcissement.mjs).
  */
-export const pontDisponible = Boolean(window.protect) || import.meta.env.DEV;
+const simulateurAdmis = import.meta.env.DEV || import.meta.env.VITE_DEMO_PUBLIQUE === '1';
+export const pontDisponible = Boolean(window.protect) || simulateurAdmis;
 
 // La conversion est sure derriere « pontDisponible », que l'interface verifie avant tout
 // autre affichage — sans quoi elle refuse de se dessiner.
-export const bridge = (window.protect ?? (import.meta.env.DEV ? mock : undefined)) as ProtectBridge;
+export const bridge = (window.protect ?? (simulateurAdmis ? mock : undefined)) as ProtectBridge;
 
 export const isMocked = !window.protect;
 

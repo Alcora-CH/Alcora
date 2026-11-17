@@ -70,6 +70,27 @@ export function defautsPolitique(html) {
   return defauts;
 }
 
+/**
+ * Le simulateur (v2/web/src/lib/bridge.ts) ne voyage JAMAIS dans l'application : il y
+ * passerait pour une installation en ordre, avec deux cameras inventees. Seule la
+ * demonstration publique du site alcora.ch (VITE_DEMO_PUBLIQUE=1, 17.11.2026) l'emporte, et
+ * elle ne se construit jamais par ici. Jusque-la, seul « import.meta.env.DEV » l'ecartait :
+ * un second drapeau est une seconde porte, on relit donc le resultat (17.11.2026).
+ *
+ * Le temoin est le compte fictif du simulateur ; test-durcissement exige de le trouver dans
+ * la source, et dans une construction de la demonstration.
+ */
+export const TEMOIN_SIMULATEUR = 'demo@exemple.test';
+
+/**
+ * @param {string} dossier  la page construite (v2/web/dist)
+ * @returns {string[]}      les fichiers qui emportent le simulateur ; vide si aucun
+ */
+export function simulateurEmbarque(dossier) {
+  return fs.readdirSync(dossier, { recursive: true }).map(String).filter((f) => f.endsWith('.js'))
+    .filter((f) => fs.readFileSync(`${dossier}/${f}`, 'utf8').includes(TEMOIN_SIMULATEUR)).sort();
+}
+
 /*
  * TOUS les fusibles sont tranches, y compris ceux que l'on laisse a leur reglage d'usine
  * (releve sur Electron 44.9.3) : `strictlyRequireAllFuses` fait echouer la construction le
