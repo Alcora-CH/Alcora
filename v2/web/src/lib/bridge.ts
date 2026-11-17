@@ -97,7 +97,9 @@ const pousserAlertesDemo = () => { for (const h of ecouteursAlertes) h({ nonVues
  * ressemblera a un plantage le jour ou il echouera.
  */
 const mock: ProtectBridge = {
-  async isConfigured() { return false; },
+  // La demonstration publique s'ouvre deja connectee, sur le direct : une page web publique qui
+  // accueillerait le visiteur par « identifiant, mot de passe » l'inviterait a y taper les vrais.
+  async isConfigured() { return DEMO_PUBLIQUE; },
 
   async testConnection(credentials, onStep): Promise<TestOutcome> {
     const fail = (step: StepResult, after: StepResult['step'][]): TestOutcome => {
