@@ -80,6 +80,14 @@ const suites = [
     dossier: racine,
   },
   {
+    // Ajoutee le 17.11.2026 : les archives Linux 2.25.0 a 2.29.0 portaient le nom du compte WSL
+    // de qui les construisait comme proprietaire de chaque fichier.
+    nom: 'Archive Linux sans nom de compte',
+    commande: 'node',
+    args: ['scripts/test-archive-neutre.mjs'],
+    dossier: racine,
+  },
+  {
     nom: "Bornes de l'archive (frise temporelle)",
     commande: 'node',
     args: ['test-archive.js'],

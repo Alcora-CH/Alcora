@@ -26,6 +26,7 @@ import {
 import { construireNotices } from './notices.mjs';
 import { embarquerGuide } from './guide.mjs';
 import { defautsPolitique, intrusDansArchive, poserFusibles } from './durcissement.mjs';
+import { proprietaireNeutre } from './archive-neutre.mjs';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
@@ -244,7 +245,9 @@ const { texte: sortieWsl } = dansWsl([
   'done',
   '[ -e chrome-sandbox ] && chmod 4755 chrome-sandbox || true',
   'cd "$atelier"',
-  `tar czf "${cibleReleases}/${archive}" "${nomDossier}"`,
+  // Proprietaire neutre (0/0, sans nom) : sinon tar inscrit dans l'archive publiee le nom du compte
+  // WSL de qui la construit (constate le 17.11.2026 sur les archives 2.25.0 a 2.29.0).
+  `tar --owner=0 --group=0 --numeric-owner -czf "${cibleReleases}/${archive}" "${nomDossier}"`,
   // On RELIT l'archive : le bit d'execution du lanceur est la seule chose qui separe une
   // livraison utilisable d'un fichier que Linux refuse d'ouvrir.
   `tar tvzf "${cibleReleases}/${archive}" | grep -E "${nomDossier}/(${PACK_ID}|resources/relay/mediamtx)$"`,
@@ -262,6 +265,11 @@ if (!/rwxr-xr-x.*\/(Alcora|mediamtx)$/m.test(sortieWsl)) {
   process.exit(1);
 }
 console.log('  droits d\'exécution vérifiés dans l\'archive');
+if (!proprietaireNeutre(sortieWsl)) {
+  console.error('\nL\'archive porte le nom d\'un compte comme propriétaire : elle ne doit montrer que 0/0.');
+  process.exit(1);
+}
+console.log('  propriétaire neutre (0/0) vérifié dans l\'archive');
 
 const taille = (p) => (statSync(p).size / 1024 / 1024).toFixed(1);
 console.log(`\nArchive prête : ${path.relative(racine, cheminArchive)}  (${taille(cheminArchive)} Mo)`);
