@@ -30,6 +30,7 @@ import { placerBandeau } from './lib/placementBandeau';
 import { useAbsence } from './lib/useAbsence';
 import { useGesteNote, type OrigineSequence } from './lib/gestes';
 import { bridge, pontDisponible } from './lib/bridge';
+import { DEMO_PUBLIQUE } from './lib/medias';
 import { FournisseurActivite } from './lib/FournisseurActivite';
 import { definirLangue, t, useLangue } from './i18n';
 import type { Cle } from './i18n/fr';
@@ -211,8 +212,12 @@ export default function App() {
   }, [fondAnime]);
   const [maj, setMaj] = useState<MajState | null>(null);
   const [progression, setProgression] = useState<Progression>({ etape: 'demarrage' });
-  /** L'introduction ne se joue qu'une fois par session : jamais au retour des reglages. */
-  const [introFinie, setIntroFinie] = useState(false);
+  /**
+   * L'introduction ne se joue qu'une fois par session : jamais au retour des reglages.
+   * Ni dans la demonstration publique du site : elle y couvrirait une connexion qui n'existe
+   * pas, soit dix secondes d'attente artificielle apres « Lancer la demonstration ».
+   */
+  const [introFinie, setIntroFinie] = useState(DEMO_PUBLIQUE);
   const [ordre, setOrdre] = useState<string[]>(() => {
     try {
       const v = JSON.parse(localStorage.getItem(CLE_ORDRE) ?? '[]');
