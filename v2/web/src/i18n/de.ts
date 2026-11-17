@@ -592,11 +592,11 @@ export const de: Record<Cle, string> = {
 
   // Dispositions du mur (maquette docs/maquette-dispositions.html, 23.10.2026)
   'dispositions.bouton': 'Anordnung',
-  'dispositions.titreBouton': 'Anordnungen der Bildwand (Ctrl + 1 bis 9)',
+  'dispositions.titreBouton': 'Anordnungen der Videowand (Ctrl + 1 bis 9)',
   'dispositions.titre': 'Anordnungen',
   'dispositions.vide': 'Eine Anordnung merkt sich die angezeigten Kameras und ihre Reihenfolge. Speichere diese, um mit einem Klick – oder Ctrl + Ziffer – zurückzukehren.',
   'dispositions.modifiee': 'geändert',
-  'dispositions.modifieeDetail': 'Die Bildwand entspricht nicht mehr «{nom}»: Eine Kamera wurde verschoben, ausgeblendet oder wieder eingeblendet.',
+  'dispositions.modifieeDetail': 'Die Videowand entspricht nicht mehr «{nom}»: Eine Kamera wurde verschoben, ausgeblendet oder wieder eingeblendet.',
   'dispositions.mettreAJour': '«{nom}» aktualisieren',
   'dispositions.revenir': 'Zurück zu «{nom}»',
   'dispositions.uneAbsente': '1 Kamera fehlt',
