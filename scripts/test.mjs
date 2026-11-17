@@ -260,6 +260,17 @@ const suites = [
   },
   {
     /*
+     * La demonstration publique du site alcora.ch est la page meme de l'application, construite
+     * avec VITE_DEMO_PUBLIQUE=1 (17.11.2026). Tient les deux moities : dans l'application, aucune
+     * adresse de media ne change ; dans la demonstration, chacune mene a un fichier pose a cote.
+     */
+    nom: 'Adresses des médias (application, démonstration publique)',
+    commande: 'node',
+    args: ['test-medias.mjs'],
+    dossier: path.join(racine, 'v2', 'desktop'),
+  },
+  {
+    /*
      * « tsc -b --force », et surtout PAS « tsc --noEmit ».
      *
      * Le tsconfig.json de v2/web est un fichier de references : « files: [] » puis deux

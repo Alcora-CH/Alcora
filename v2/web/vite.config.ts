@@ -24,7 +24,15 @@ function politiqueStricte(): Plugin {
       if (!html.includes(scripts) || !html.includes(local)) {
         throw new Error('politique de contenu : ancre introuvable dans index.html, rien ne serait resserre');
       }
-      return html.replace(scripts, "script-src 'self'").replace(local, '');
+      const stricte = html.replace(scripts, "script-src 'self'").replace(local, '');
+      // La demonstration publique (site alcora.ch) n'a ni relais ni processus principal : une page
+      // servie par Internet n'a aucune raison de pouvoir joindre un port de la machine qui la lit.
+      if (process.env.VITE_DEMO_PUBLIQUE !== '1') return stricte;
+      const relais = ' http://127.0.0.1:*';
+      if (!stricte.includes(relais)) {
+        throw new Error('politique de contenu : 127.0.0.1 introuvable, la demonstration ne serait pas resserree');
+      }
+      return stricte.replace(relais, '');
     },
   };
 }

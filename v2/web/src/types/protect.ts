@@ -212,6 +212,8 @@ export type EtatExport =
 export interface RelaisAcces {
   base: string;
   autorisation: string;
+  /** Demonstration publique (site alcora.ch) : pas de relais, une video en boucle par camera. */
+  demo?: boolean;
 }
 
 export interface ProtectBridge {

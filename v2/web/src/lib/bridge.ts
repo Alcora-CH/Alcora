@@ -1,4 +1,5 @@
-import { LANGUES, t, type CodeLangue } from '../i18n';
+import { CODES_LANGUE, definirLangue, LANGUES, t, type CodeLangue } from '../i18n';
+import { DEMO_PUBLIQUE, VERSION_DEMO, urlMedia } from './medias';
 import type {
   Credentials, DiscoveredCamera, EntreeAlerte, EtatExport, ProtectBridge, RelayState, StepResult, TestOutcome,
 } from '../types/protect';
@@ -6,13 +7,27 @@ import type {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Choix de langue du mode demonstration — vit le temps de la session, rien de plus. */
-let langueDemo: CodeLangue | null = null;
+let langueDemo: CodeLangue | null = DEMO_PUBLIQUE ? langueDeLAdresse() : null;
+
+/**
+ * La demonstration publique s'ouvre dans la langue de la page du site qui l'a lancee (?langue=fr).
+ * La liste des codes, pas `in` : l'adresse est ecrite par n'importe qui, et « constructor » est
+ * aussi une cle de tout objet.
+ */
+function langueDeLAdresse(): CodeLangue | null {
+  const code = new URLSearchParams(location.search).get('langue');
+  return CODES_LANGUE.find((c) => c === code) ?? null;
+}
 
 /** La langue du navigateur si on la connait, l'anglais sinon — meme regle que le principal. */
 function langueNavigateur(): CodeLangue {
   const code = (navigator.language || 'en').toLowerCase().slice(0, 2);
   return code in LANGUES ? (code as CodeLangue) : 'en';
 }
+
+// Des la premiere image : sans cela, la page s'afficherait un instant en francais (la langue par
+// defaut du module i18n) avant que App ne demande la langue au simulateur.
+if (DEMO_PUBLIQUE) definirLangue(langueDemo ?? langueNavigateur());
 
 const JOUR = 86_400_000;
 
@@ -59,8 +74,8 @@ function alertesDeDemo(): EntreeAlerte[] {
       sujets: [sujet], score: 81 },
     cameraNom: NOMS_DEMO[camera], veilleId: veille[0], veilleNom: veille[1], sujet, image: true, son: true, retenues: 0, ...extra,
   });
-  const personne: [string, string] = ['personne', 'Une personne est détectée'];
-  const urgence: [string, string] = ['urgence', 'Bris de verre, fumée, sirène, monoxyde'];
+  const personne: [string, string] = ['personne', t('demo.veille.personne')];
+  const urgence: [string, string] = ['urgence', t('demo.veille.urgence')];
   alertesDemo = [
     une(14, 'person', 'g6', personne, { retenues: 3 }),
     une(100, 'person', 'g5', personne, { image: false }),
@@ -190,7 +205,7 @@ const mock: ProtectBridge = {
       etatDisque: 'ok', enregistrementSuspendu: false,
       cameras: { total: 2, enLigne: 2 },
       archive: [archiveDemo()],
-      alcora: '0.0.0-démo',
+      alcora: VERSION_DEMO,
     };
   },
   /*
@@ -243,13 +258,13 @@ const mock: ProtectBridge = {
   async veilles() {
     return {
       armee: true,
-      profils: [{ id: 'nuit', nom: 'Nuit',
+      profils: [{ id: 'nuit', nom: t('demo.profil.nuit'),
         plages: [{ jours: [0, 1, 2, 3, 4, 5, 6], debut: '22:00', fin: '07:00' }] }],
       veilles: [
-        { id: 'personne', nom: 'Une personne est détectée', actif: true,
+        { id: 'personne', nom: t('demo.veille.personne'), actif: true,
           sujets: ['person'], cameras: [], quand: 'armee' as const, profils: ['nuit'],
           son: true, retenueMs: 300_000 },
-        { id: 'urgences', nom: 'Bris de verre, fumée, sirène, monoxyde', actif: true,
+        { id: 'urgences', nom: t('demo.veille.urgence'), actif: true,
           sujets: ['verre', 'fumee', 'sirene', 'co'], cameras: [], quand: 'toujours' as const,
           profils: [], son: true, retenueMs: 60_000 },
       ],
@@ -300,7 +315,11 @@ const mock: ProtectBridge = {
     return () => {};
   },
   // La demo n'a pas de vrai relais : l'en-tete est fictif, comme la camera.
-  async relais() { return { base: 'http://127.0.0.1:8889', autorisation: 'Basic ZGVtbzpkZW1v' }; },
+  async relais() {
+    return DEMO_PUBLIQUE
+      ? { base: '', autorisation: '', demo: true }
+      : { base: 'http://127.0.0.1:8889', autorisation: 'Basic ZGVtbzpkZW1v' };
+  },
   async pleinEcran(actif: boolean) { return actif; },
   async decodeurPerdu() { return false; },
   async retry() { /* simule */ },
@@ -310,7 +329,7 @@ const mock: ProtectBridge = {
   async journalPath() { return 'C:\\…\\Alcora\\journal.txt'; },
   async infos() {
     return {
-      version: '0.0.0-démo', journal: 'C:\\…\\journal.txt', donnees: 'C:\\…\\Alcora',
+      version: VERSION_DEMO, journal: 'C:\\…\\journal.txt', donnees: 'C:\\…\\Alcora',
       host: '10.0.0.1', username: 'demo@exemple.test', appaire: true,
       electron: '0.0.0-démo', relais: 'v0.0.0-démo',
     };
@@ -367,7 +386,7 @@ const mock: ProtectBridge = {
    * compteur qui defile — chaque image differe —, details fins a retrouver au zoom, et un
    * la 440 Hz pour la piste audio. Aucune donnee reelle.
    */
-  async extraire() { await sleep(700); return { url: '/demo-extrait.mp4', octets: 219_596, marge: 3000 }; },
+  async extraire() { await sleep(700); return { url: urlMedia('/demo-extrait.mp4'), octets: 219_596, marge: 3000 }; },
   onExtraitProgres(handler: (e: { jeton: string; etat: 'demande' | 'obtention' | 'pret'; pourcent: number }) => void) {
     const t: number[] = [];
     for (const p of [15, 45, 80, 100]) {
@@ -383,7 +402,7 @@ const mock: ProtectBridge = {
     const debut = Number.isFinite(depuis)
       ? depuis!
       : Math.floor((instant ?? Date.now()) / duree) * duree;
-    return { url: `/demo-extrait.mp4#${debut}`, debut, fin: debut + duree, octets: 219_596 };
+    return { url: urlMedia(`/demo-extrait.mp4#${debut}`), debut, fin: debut + duree, octets: 219_596 };
   },
   async enregistrerExtrait() { return { enregistre: false }; },
   async exporterPlage({ camera, autres = [], debut, fin, estimation }) {
@@ -457,6 +476,8 @@ const mock: ProtectBridge = {
   // En demonstration on presente les trois dernieres versions : l'ecran se regarde
   // et se regle sans attendre une vraie mise a jour.
   async nouveautes() {
+    // La demonstration publique n'annonce aucune mise a jour : elle EST la version montree.
+    if (DEMO_PUBLIQUE) return null;
     const { VERSIONS } = await import('../versions');
     return VERSIONS.length > 3
       ? { de: VERSIONS[3].version, a: VERSIONS[0].version }

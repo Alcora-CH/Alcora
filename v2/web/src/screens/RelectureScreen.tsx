@@ -21,6 +21,7 @@ import { useMaintenant } from '../lib/useMaintenant';
 import { Segment } from '../ui/Segment';
 import { cx } from '../ui/cx';
 import type { Cle } from '../i18n/fr';
+import { urlMedia } from '../lib/medias';
 import type { Archive, Detection, DiscoveredCamera, RaisonExport, RelaisAcces } from '../types/protect';
 
 /**
@@ -773,7 +774,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                             : montree ? 'border-accent-ligne bg-card2 text-ink hover:bg-card3'
                               : 'border-line2 bg-card2 text-ink hover:bg-card3')}>
                   <span className="h-[26px] w-11 shrink-0 overflow-hidden rounded-[5px] bg-black max-[1180px]:hidden">
-                    <img src={`/instantane/${c.id}?t=${montage}`} alt="" loading="lazy" className="h-full w-full object-cover"
+                    <img src={urlMedia(`/instantane/${c.id}?t=${montage}`)} alt="" loading="lazy" className="h-full w-full object-cover"
                          onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
                   </span>
                   {c.name}
@@ -1092,7 +1093,7 @@ export function RelectureScreen({ cameras, relais, cameraInitiale, instantInitia
                           enCours ? 'border-accent' : 'border-line2 hover:border-line2 hover:bg-card2')}>
                   <div className="aspect-video bg-black">
                     {d.vignette && (
-                      <img src={`/vignette/${d.id}`} alt="" loading="lazy"
+                      <img src={urlMedia(`/vignette/${d.id}`)} alt="" loading="lazy"
                            className="h-full w-full object-cover"
                            onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
                     )}
@@ -1349,7 +1350,7 @@ function Frise({ direct, jour, archive, instant, detections, onViser, plage, onB
              style={{ left: Math.max(0, Math.min(survol.largeur - 184, enFraction(survol.d.debut) * survol.largeur - 92)) }}>
           <div className="aspect-video bg-black">
             {survol.d.vignette && (
-              <img src={`/vignette/${survol.d.id}`} alt="" className="h-full w-full object-cover"
+              <img src={urlMedia(`/vignette/${survol.d.id}`)} alt="" className="h-full w-full object-cover"
                    onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
             )}
           </div>

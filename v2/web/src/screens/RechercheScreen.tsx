@@ -9,6 +9,7 @@ import { Carte, EnTete } from '../ui/Cadre';
 import { Champ } from '../ui/Champ';
 import { Puce } from '../ui/Puce';
 import { Segment } from '../ui/Segment';
+import { urlMedia } from '../lib/medias';
 import { cx } from '../ui/cx';
 import type {
   CriteresRecherche, Detection, DiscoveredCamera, ObjetDetecte, Recensement,
@@ -281,7 +282,7 @@ export function RechercheScreen({ cameras, cameraInitiale, onRevoir }: {
                       {/* La vignette nette : plus rien posé dessus, sinon le badge. */}
                       <div className="relative aspect-video bg-black">
                         {o.vignette && o.id && (
-                          <img src={`/vignette/${o.id}`} alt="" loading="lazy"
+                          <img src={urlMedia(`/vignette/${o.id}`)} alt="" loading="lazy"
                                className="h-full w-full object-cover"
                                onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
                         )}

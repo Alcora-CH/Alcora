@@ -679,4 +679,9 @@ export const it: Record<Cle, string> = {
   // Relecture : l’export visible (27.10.2026)
   'export.entree': 'Esporta',
   'export.entreeTitre': 'Imposta un minuto da esportare; regolalo con le maniglie',
+
+  // La demonstration publique du site alcora.ch (lib/bridge.ts) : noms des veilles d'exemple (17.11.2026)
+  'demo.veille.personne': 'Rilevata una persona',
+  'demo.veille.urgence': 'Vetro rotto, fumo, sirena, monossido',
+  'demo.profil.nuit': 'Notte',
 };

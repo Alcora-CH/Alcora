@@ -38,6 +38,9 @@ export function definirLangue(langue: string) {
   const propre: CodeLangue = langue in LANGUES ? (langue as CodeLangue) : 'fr';
   if (propre === courante) return;
   courante = propre;
+  // Un lecteur d'ecran choisit sa voix d'apres la langue de la page : index.html dit « fr »,
+  // une interface en allemand lue avec une voix francaise est incomprehensible (17.11.2026).
+  if (typeof document !== 'undefined') document.documentElement.lang = propre;
   abonnes.forEach((a) => a());
 }
 

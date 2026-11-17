@@ -20,6 +20,7 @@ import { cx } from '../ui/cx';
 const STABILISATION_MS = 400;
 import { useZoomVideo } from './useZoomVideo';
 import type { DiscoveredCamera, RelaisAcces } from '../types/protect';
+import { videoDemo } from '../lib/medias';
 
 export interface CameraTileProps {
   camera: DiscoveredCamera;
@@ -258,6 +259,23 @@ export function CameraTile({
       console.log(`[tuile ${camera.name}] first frame painted in ${Math.round(performance.now() - debut)} ms (${d})`);
     });
 
+    // Demonstration publique (site alcora.ch) : ni relais ni WebRTC, une video en boucle tient
+    // lieu de flux. Le reste de la tuile est le meme : « direct » a la premiere image peinte,
+    // zoom et capture sur de vrais pixels ; la sonde n'a aucune session a surveiller.
+    if (relais.demo) {
+      video.src = videoDemo(path);
+      video.loop = true;
+      video.muted = true;
+      void video.play().catch(() => {});
+      return () => {
+        cancelled = true;
+        video.cancelVideoFrameCallback(image);
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      };
+    }
+
     reserveFlux.prendre(`${relais.base}/${path}/whep`, relais.autorisation)
       .then((p) => {
         if (cancelled) { p.rendre(); return; }
@@ -285,7 +303,7 @@ export function CameraTile({
       }
       if (priseRef.current === mienne) priseRef.current = null;
     };
-  }, [path, relais.base, relais.autorisation, camera.name, generation]);
+  }, [path, relais.base, relais.autorisation, relais.demo, camera.name, generation]);
 
   /*
    * Reprise apres un echec de connexion.

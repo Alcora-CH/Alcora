@@ -9,6 +9,7 @@ import { Carte } from '../ui/Cadre';
 import { Puce } from '../ui/Puce';
 import { cx } from '../ui/cx';
 import type { DetectionVive, EntreeAlerte } from '../types/protect';
+import { urlMedia } from '../lib/medias';
 
 /**
  * L'historique des alertes — variante 1 « onglet » de docs/maquette-historique-alertes.html,
@@ -47,7 +48,7 @@ function Vignette({ id }: { id: string | null }) {
     );
   }
   return (
-    <img src={`/vignette/${id}`} alt="" loading="lazy" onError={() => setRate(true)}
+    <img src={urlMedia(`/vignette/${id}`)} alt="" loading="lazy" onError={() => setRate(true)}
          className="h-[63px] w-28 shrink-0 rounded-[7px] bg-black object-cover" />
   );
 }

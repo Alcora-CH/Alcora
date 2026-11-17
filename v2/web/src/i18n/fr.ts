@@ -707,6 +707,11 @@ export const fr = {
   // Relecture : l’export visible (27.10.2026)
   'export.entree': 'Exporter',
   'export.entreeTitre': 'Pose une minute à exporter, à ajuster aux poignées',
+
+  // La demonstration publique du site alcora.ch (lib/bridge.ts) : noms des veilles d'exemple (17.11.2026)
+  'demo.veille.personne': 'Une personne est détectée',
+  'demo.veille.urgence': 'Bris de verre, fumée, sirène, monoxyde',
+  'demo.profil.nuit': 'Nuit',
 } as const;
 
 /** Toute cle de traduction est une cle de CE dictionnaire : le reste est refuse. */

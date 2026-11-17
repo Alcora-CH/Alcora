@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Detection, DetectionVive } from '../types/protect';
+import { urlMedia } from './medias';
 
 /**
  * L'activite du jour : sa forme, sa lecture, et ce qu'on en tire. Le fournisseur qui la
@@ -67,8 +68,8 @@ export function dernieres({ dujour, vives }: ActiviteJour, n: number): (Detectio
  */
 export function imageDe(d: DetectionVive & { vignette?: boolean }): string | null {
   const finie = Boolean(d.fin && d.id);
-  if (finie && d.vignette !== false) return `/vignette/${d.id}`;
-  return !finie && d.camera ? `/instantane/${d.camera}?t=${d.debut ?? 0}` : null;
+  if (finie && d.vignette !== false) return urlMedia(`/vignette/${d.id}`);
+  return !finie && d.camera ? urlMedia(`/instantane/${d.camera}?t=${d.debut ?? 0}`) : null;
 }
 
 /** La détection court encore : commencée, pas finie. */
